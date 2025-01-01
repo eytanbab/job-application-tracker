@@ -26,9 +26,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='en' suppressHydrationWarning>
+    <html lang='en' className='dark'>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen bg-indigo-950 text-slate-100`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-indigo-950 text-slate-100 h-screen flex  flex-col flex-none`}
       >
         <ThemeProvider
           attribute='class'
@@ -37,7 +37,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Nav />
-          <div className='flex w-full h-full'>
+          <div className='flex h-full'>
             <SideNav />
             {children}
           </div>
