@@ -6,9 +6,8 @@ import { data } from '@/data';
 
 export default function Home() {
   return (
-    <div className='p-6 flex flex-col items-center justify-center w-full'>
-      <h1>Dashboard</h1>
-      <Link href='/new'>
+    <div className='p-6 flex flex-col items-center justify-center w-full gap-2'>
+      <Link href='/new' className='self-end'>
         <Button variant='outline'>Add new</Button>
       </Link>
       <DataTable columns={columns} data={data} />
