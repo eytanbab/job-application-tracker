@@ -98,9 +98,7 @@ export const columns: ColumnDef<Application>[] = [
   },
   {
     id: 'actions',
-    cell: ({ row }) => {
-      const application = row.original;
-
+    cell: () => {
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
