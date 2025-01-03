@@ -11,10 +11,10 @@ const SideNav = () => {
   return (
     <div className='border-r-2 border-indigo-900 p-4 flex flex-col gap-2 h-full text-xl w-96'>
       <Link
-        href='/'
+        href='/dashboard'
         className={cn(
           'rounded-sm w-full px-4 py-2 hover:bg-indigo-800',
-          pathname === '/' ? 'bg-indigo-900' : ''
+          pathname === '/dashboard' ? 'bg-indigo-900' : ''
         )}
       >
         Dashboard
