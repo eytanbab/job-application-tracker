@@ -28,20 +28,20 @@ export default function RootLayout({
   return (
     <html lang='en' className='dark'>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-indigo-950 text-slate-100 h-screen flex  flex-col flex-none`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-indigo-950 text-slate-100 h-screen max-h-screen`}
       >
-        <ThemeProvider
+        {/* <ThemeProvider
           attribute='class'
           defaultTheme='system'
           enableSystem
           disableTransitionOnChange
-        >
-          <Nav />
-          <div className='flex h-full'>
-            <SideNav />
-            {children}
-          </div>
-        </ThemeProvider>
+        > */}
+        <Nav />
+        <div className='flex h-[calc(100vh-4rem)]'>
+          <SideNav />
+          {children}
+        </div>
+        {/* </ThemeProvider> */}
       </body>
     </html>
   );
