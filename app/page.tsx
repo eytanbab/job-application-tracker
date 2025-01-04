@@ -11,7 +11,7 @@ export default function Home() {
             Organized and Effortless.
           </h2>
         </div>
-        <p className='max-w-2xl text-indigo-400 text-2xl font-normal leading-7'>
+        <p className='max-w-2xl text-indigo-400 text-xl font-light leading-7'>
           Say goodbye to scattered notes and missed deadlines. Job Application
           Tracker helps you manage your applications, interviews, and follow-ups
           in one place.
@@ -19,12 +19,10 @@ export default function Home() {
       </div>
       <div className='flex items-center gap-4'>
         <Link href='/dashboard'>
-          <Button className='text-xl font-semibold'>
-            Start Tracking Today
-          </Button>
+          <Button className='text-xl font-normal'>Start Tracking Today</Button>
         </Link>
 
-        <Button variant='outline' className='text-xl font-semibold'>
+        <Button variant='outline' className='text-xl font-normal'>
           See How It Works
         </Button>
       </div>
