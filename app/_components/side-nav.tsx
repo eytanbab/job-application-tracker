@@ -10,7 +10,7 @@ const SideNav = () => {
 
   const navItems = ['dashboard', 'charts'];
   return (
-    <div className='border-r-2 border-indigo-900 p-4 flex flex-col gap-2 h-full text-xl w-96'>
+    <div className='border-r border-indigo-600/25 p-4 flex flex-col gap-2 h-full text-xl w-96'>
       {navItems.map((item) => {
         return (
           <Link
