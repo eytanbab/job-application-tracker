@@ -28,6 +28,7 @@ export const columns: ColumnDef<Application>[] = [
       return (
         <Button
           variant='ghost'
+          className='font-semibold'
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Role
@@ -42,6 +43,7 @@ export const columns: ColumnDef<Application>[] = [
       return (
         <Button
           variant='ghost'
+          className='font-semibold'
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Company
@@ -56,6 +58,7 @@ export const columns: ColumnDef<Application>[] = [
       return (
         <Button
           variant='ghost'
+          className='font-semibold'
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Date Applied
@@ -74,6 +77,7 @@ export const columns: ColumnDef<Application>[] = [
       return (
         <Button
           variant='ghost'
+          className='font-semibold'
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Platform
@@ -88,6 +92,7 @@ export const columns: ColumnDef<Application>[] = [
       return (
         <Button
           variant='ghost'
+          className='font-semibold'
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Status
