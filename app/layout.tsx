@@ -26,9 +26,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='en' className='dark'>
+    <html lang='en'>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-indigo-950 text-slate-100 h-screen max-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-100 text-indigo-600 h-screen`}
       >
         {/* <ThemeProvider
           attribute='class'
