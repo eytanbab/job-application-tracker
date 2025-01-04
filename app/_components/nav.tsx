@@ -1,13 +1,21 @@
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import React from 'react';
 
 const Nav = () => {
   return (
-    <div className='w-full px-6 flex items-center justify-between border-b-2 border-indigo-900 h-16'>
-      <Link href='/' className='font-bold'>
-        Logo
+    <div className='w-full px-6 flex items-center justify-between border-b border-indigo-600/25 h-16'>
+      <Link href='/' className='font-bold text-2xl'>
+        JAT
       </Link>
-      <div className='size-10 bg-gray-300 rounded-full'></div>
+      <div className=''>
+        <SignedOut>
+          <SignInButton />
+        </SignedOut>
+        <SignedIn>
+          <UserButton />
+        </SignedIn>
+      </div>
     </div>
   );
 };
