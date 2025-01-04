@@ -112,14 +112,14 @@ export const columns: ColumnDef<Application>[] = [
               <MoreHorizontal className='h-4 w-4' />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className='flex items-center justify-center w-fit'>
-            <DropdownMenuItem className='flex gap-1'>
+          <DropdownMenuContent className='flex items-center justify-center w-fit bg-slate-100 text-indigo-600'>
+            <DropdownMenuItem className='flex gap-1 focus:text-indigo-400'>
               {/* Implement edit functionality */}
               <button>
                 <Pencil className='size-6' />
               </button>
             </DropdownMenuItem>
-            <DropdownMenuItem className='flex gap-1'>
+            <DropdownMenuItem className='flex gap-1 focus:text-[#F16366]'>
               {/* Implement delete functionality */}
               <button>
                 <Trash2 className='size-6' />
