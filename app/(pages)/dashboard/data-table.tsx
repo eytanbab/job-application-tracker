@@ -56,7 +56,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className='w-full col-span-10 p-6'>
+    <div className='w-full'>
       <div className='flex items-center py-4 justify-between'>
         <Input
           placeholder='Search...'
@@ -120,23 +120,28 @@ export function DataTable<TData, TValue>({
       </Table>
 
       {/* Pagination buttons */}
-      <div className='flex items-center justify-end space-x-2 py-4'>
-        <Button
-          variant='outline'
-          size='sm'
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Previous
-        </Button>
-        <Button
-          variant='outline'
-          size='sm'
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Next
-        </Button>
+      <div className='flex items-center justify-between py-4'>
+        <h1>
+          Showing {table.getRowModel().rows.length} / {data.length}
+        </h1>
+        <div className='space-x-2'>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+        </div>
       </div>
     </div>
   );
