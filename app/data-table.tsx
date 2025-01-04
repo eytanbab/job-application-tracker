@@ -74,13 +74,13 @@ export function DataTable<TData, TValue>({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow
               key={headerGroup.id}
-              className='border-b border-indigo-800'
+              className='border-b border-indigo-600'
             >
               {headerGroup.headers.map((header) => {
                 return (
                   <TableHead
                     key={header.id}
-                    className='font-semibold text-slate-100'
+                    className=' text-indigo-600 font-bold'
                   >
                     {header.isPlaceholder
                       ? null
@@ -100,7 +100,7 @@ export function DataTable<TData, TValue>({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && 'selected'}
-                className='text-indigo-300  hover:text-slate-100 hover:bg-indigo-900 border-b border-indigo-800 '
+                className='text-indigo-500  hover:text-slate-100 hover:bg-indigo-600 border-b border-indigo-200 '
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id} className='truncate max-w-60'>
