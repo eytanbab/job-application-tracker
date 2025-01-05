@@ -104,7 +104,16 @@ export function DataTable<TData, TValue>({
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id} className='truncate max-w-60'>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    {cell.id.includes('link') ? (
+                      <Link href={cell.getValue()!}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </Link>
+                    ) : (
+                      flexRender(cell.column.columnDef.cell, cell.getContext())
+                    )}
                   </TableCell>
                 ))}
               </TableRow>
