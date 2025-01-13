@@ -95,6 +95,7 @@ export default function New() {
         variant: 'default',
       });
       form.reset();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       toast({
         description: 'Failed to submit application.',
