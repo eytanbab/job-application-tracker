@@ -6,7 +6,18 @@ import { auth } from '@clerk/nextjs/server';
 
 const sql = neon(process.env.DATABASE_URL!);
 
-export async function getApplications() {}
+export async function getApplications() {
+  const { userId } = await auth();
+  try {
+    const res = await sql(
+      'SELECT * FROM job_applications WHERE user_id = ($1)',
+      [userId]
+    );
+    return res;
+  } catch (err) {
+    console.log('err', err);
+  }
+}
 
 export async function create(values: FormSchema) {
   const { userId } = await auth();
