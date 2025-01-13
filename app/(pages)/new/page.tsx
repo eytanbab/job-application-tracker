@@ -14,6 +14,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { create } from '@/app/actions';
+import { redirect } from 'next/navigation';
 
 const formSchema = z.object({
   role: z.string().min(2, {
@@ -32,8 +34,10 @@ const formSchema = z.object({
   }),
 });
 
+export type FormSchema = z.infer<typeof formSchema>;
+
 export default function New() {
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       role: '',
@@ -81,9 +85,7 @@ export default function New() {
 
   // 2. Define a submit handler.
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+    create(values);
   }
 
   return (
@@ -111,7 +113,11 @@ export default function New() {
 
         <div className='mt-4 flex flex-col gap-2 w-full'>
           <Button type='submit'>Submit</Button>
-          <Button type='reset' variant='outline'>
+          <Button
+            type='button'
+            variant='outline'
+            onClick={() => redirect('/dashboard')}
+          >
             Cancel
           </Button>
         </div>
