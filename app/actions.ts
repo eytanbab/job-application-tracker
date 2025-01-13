@@ -2,7 +2,6 @@
 
 import { neon } from '@neondatabase/serverless';
 import { FormSchema } from './(pages)/new/page';
-import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
 
 export async function create(values: FormSchema) {
@@ -21,6 +20,4 @@ export async function create(values: FormSchema) {
       values.status,
     ]
   );
-
-  revalidatePath('/dashboard');
 }
