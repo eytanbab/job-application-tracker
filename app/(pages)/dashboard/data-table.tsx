@@ -23,6 +23,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
+import { format } from 'date-fns';
+
 import { useState } from 'react';
 import Link from 'next/link';
 
@@ -111,6 +113,12 @@ export function DataTable<TData, TValue>({
                           cell.getContext()
                         )}
                       </Link>
+                    ) : cell.id.includes('date') ? (
+                      format(
+                        new Date(cell.getValue()),
+
+                        'dd/MM/yyyy'
+                      )
                     ) : (
                       flexRender(cell.column.columnDef.cell, cell.getContext())
                     )}
