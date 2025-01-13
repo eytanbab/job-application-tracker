@@ -1,7 +1,12 @@
 import { DataTable } from './data-table';
 import { columns } from './columns';
-import { data } from '@/data';
+import { getApplications } from '@/app/actions';
 
-export default function Dashboard() {
-  return <DataTable columns={columns} data={data} />;
+export default async function Dashboard() {
+  try {
+    const data = (await getApplications()) 
+    return <DataTable columns={columns} data={data} />;
+  } catch (err) {
+    console.log('error fetching data from db.', err);
+  }
 }
