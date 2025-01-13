@@ -7,6 +7,8 @@ import SideNav from './_components/side-nav';
 import Nav from './_components/nav';
 // import { ThemeProvider } from './_components/theme-provider';
 
+import { Toaster } from '@/components/ui/toaster';
+
 import { ClerkProvider } from '@clerk/nextjs';
 
 const roboto = Work_Sans({
@@ -37,7 +39,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
           > */}
-
+          <Toaster />
           <Nav />
           <div className='flex h-[calc(100vh-4rem)]'>
             <SideNav />
