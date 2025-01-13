@@ -16,6 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { create } from '@/app/actions';
 import { redirect } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   role: z.string().min(2, {
@@ -37,6 +38,8 @@ const formSchema = z.object({
 export type FormSchema = z.infer<typeof formSchema>;
 
 export default function New() {
+  const { toast } = useToast();
+
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -84,8 +87,20 @@ export default function New() {
   ];
 
   // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    create(values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      await create(values);
+      toast({
+        description: 'Application submitted successfully!',
+        variant: 'default',
+      });
+      form.reset();
+    } catch (err) {
+      toast({
+        description: 'Failed to submit application.',
+        variant: 'destructive',
+      });
+    }
   }
 
   return (
