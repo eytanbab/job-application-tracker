@@ -39,11 +39,11 @@ export const ApplicationForm = ({ defaultValues, onSubmit }: Props) => {
   }
 
   // Finish form schema
-  // const formSchema = z.object({
-  //   role_name: z.string().min(2, {
-  //     message: 'Role name must be at least 2 characters.',
-  //   }),
-  // });
+  const formSchema = z.object({
+    role_name: z.string().min(2, {
+      message: 'Role name must be at least 2 characters.',
+    }),
+  });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
