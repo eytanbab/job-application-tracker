@@ -3,6 +3,7 @@
 import { neon } from '@neondatabase/serverless';
 import { FormSchema } from './(pages)/new/page';
 import { auth } from '@clerk/nextjs/server';
+import { revalidatePath } from 'next/cache';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -19,7 +20,7 @@ export async function getApplications() {
   }
 }
 
-export async function create(values: FormSchema) {
+export async function createApplication(values: FormSchema) {
   const { userId } = await auth();
   try {
     await sql(
@@ -38,3 +39,19 @@ export async function create(values: FormSchema) {
     throw err;
   }
 }
+
+export async function deleteApplication(id: string) {
+  console.log('application id: ', id);
+  const { userId } = await auth();
+  try {
+    await sql(
+      'DELETE FROM job_applications WHERE user_id = ($1) AND id = ($2)',
+      [userId, id]
+    );
+    revalidatePath('/dashboard');
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function editApplication(id: string) {}

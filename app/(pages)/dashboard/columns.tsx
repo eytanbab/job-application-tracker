@@ -11,12 +11,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import Link from 'next/link';
+import { parseUrl } from 'next/dist/shared/lib/router/utils/parse-url';
+import { deleteApplication } from '@/app/actions';
+import { formatDate } from 'date-fns';
 
 export type Application = {
+  id: string;
   role_name: string;
   company: string;
   date_applied: string;
-  link: string;
+  link: URL;
   platform: string;
   status: string;
 };
@@ -66,10 +71,21 @@ export const columns: ColumnDef<Application>[] = [
         </Button>
       );
     },
+    cell: ({ row }) => {
+      const formattedDate = formatDate(
+        new Date(row.getValue('date_applied')),
+        'dd/MM/yyyy'
+      );
+      return <div>{formattedDate}</div>;
+    },
   },
   {
     accessorKey: 'link',
     header: 'Link',
+    cell: ({ row }) => {
+      const url = parseUrl(row.getValue('link'));
+      return <Link href={url}>{row.getValue('link')}</Link>;
+    },
   },
   {
     accessorKey: 'platform',
@@ -103,7 +119,7 @@ export const columns: ColumnDef<Application>[] = [
   },
   {
     id: 'actions',
-    cell: () => {
+    cell: ({ row }) => {
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -121,7 +137,11 @@ export const columns: ColumnDef<Application>[] = [
             </DropdownMenuItem>
             <DropdownMenuItem className='flex gap-1 focus:text-[#F16366]'>
               {/* Implement delete functionality */}
-              <button>
+              <button
+                onClick={() => {
+                  deleteApplication(row.original.id);
+                }}
+              >
                 <Trash2 className='size-6' />
               </button>
             </DropdownMenuItem>
