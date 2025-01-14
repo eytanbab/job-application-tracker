@@ -3,7 +3,7 @@ import { pgTable, varchar, text, date, uuid } from 'drizzle-orm/pg-core';
 import { createInsertSchema } from 'drizzle-zod';
 
 export const jobApplications = pgTable('job_applications', {
-  id: uuid().defaultRandom().primaryKey().notNull(),
+  id: uuid().defaultRandom().primaryKey(),
   userId: varchar('user_id', { length: 255 }).notNull(), // Clerk user ID
   role_name: text('role_name').notNull(),
   company_name: text('company_name').notNull(),
