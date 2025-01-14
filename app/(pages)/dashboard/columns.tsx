@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { parseUrl } from 'next/dist/shared/lib/router/utils/parse-url';
 import { deleteApplication } from '@/app/actions';
 import { formatDate } from 'date-fns';
+import { toast } from '@/hooks/use-toast';
 
 export type Application = {
   id: string;
@@ -24,6 +25,15 @@ export type Application = {
   link: URL;
   platform: string;
   status: string;
+};
+
+const handleApplicationDelete = async (id: string) => {
+  try {
+    await deleteApplication(id);
+    toast({ description: 'successfully deleted application!' });
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 export const columns: ColumnDef<Application>[] = [
@@ -137,11 +147,7 @@ export const columns: ColumnDef<Application>[] = [
             </DropdownMenuItem>
             <DropdownMenuItem className='flex gap-1 focus:text-[#F16366]'>
               {/* Implement delete functionality */}
-              <button
-                onClick={() => {
-                  deleteApplication(row.original.id);
-                }}
-              >
+              <button onClick={() => handleApplicationDelete(row.original.id)}>
                 <Trash2 className='size-6' />
               </button>
             </DropdownMenuItem>
