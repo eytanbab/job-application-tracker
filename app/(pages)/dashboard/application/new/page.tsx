@@ -15,15 +15,6 @@ type FormValues = z.input<typeof formSchema>;
 export default function NewApplication() {
   const { toast } = useToast();
 
-  const defaultValues = {
-    role_name: '',
-    company_name: '',
-    date_applied: '',
-    link: '',
-    status: '',
-    platform: '',
-  };
-
   // 2. Define a submit handler.
   const onSubmit = async (values: FormValues) => {
     try {
@@ -42,5 +33,5 @@ export default function NewApplication() {
     }
   };
 
-  return <ApplicationForm defaultValues={defaultValues} onSubmit={onSubmit} />;
+  return <ApplicationForm onSubmit={onSubmit} />;
 }
