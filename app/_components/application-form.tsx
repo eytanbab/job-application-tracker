@@ -1,10 +1,10 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { insertApplicationSchema } from '../db/schema';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 
-import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -14,58 +14,50 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { createApplication } from '@/app/actions';
+import { Button } from '@/components/ui/button';
 import { redirect } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
 
-const formSchema = z.object({
-  role: z.string().min(2, {
-    message: 'Role name must be at least 2 characters.',
-  }),
-  company: z.string().min(2, {
-    message: 'Company name must be at least 2 characters.',
-  }),
-  date: z.string().date(),
-  link: z.string().optional(),
-  status: z.string().min(2, {
-    message: 'Status must be at least 2 characters.',
-  }),
-  platform: z.string().min(2, {
-    message: 'Platform must be at least 2 characters.',
-  }),
-});
+const formSchema = insertApplicationSchema.omit({ userId: true });
 
-export type FormSchema = z.infer<typeof formSchema>;
+export type FormValues = z.input<typeof formSchema>;
 
-export default function New() {
-  const { toast } = useToast();
+type Props = {
+  id?: string;
+  defaultValues: FormValues;
+  onSubmit: (values: FormValues) => Promise<void>;
+};
 
-  const form = useForm<FormSchema>({
+export const ApplicationForm = ({ defaultValues, onSubmit }: Props) => {
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      role: '',
-      company: '',
-      date: '',
-      link: '',
-      status: '',
-      platform: '',
-    },
+    defaultValues,
   });
 
   type Field = {
-    name: 'role' | 'company' | 'date' | 'link' | 'status' | 'platform';
+    name:
+      | 'role_name'
+      | 'company_name'
+      | 'date_applied'
+      | 'link'
+      | 'status'
+      | 'platform';
     label: string;
     placeholder: string;
   };
+
   const fields: Field[] = [
-    { name: 'role', label: 'Role Title', placeholder: 'Frontend developer' },
     {
-      name: 'company',
+      name: 'role_name',
+      label: 'Role Title',
+      placeholder: 'Frontend developer',
+    },
+    {
+      name: 'company_name',
       label: 'Company Name',
       placeholder: 'Apple | Facebook | etc..',
     },
     {
-      name: 'date',
+      name: 'date_applied',
       label: 'Date Applied',
       placeholder: '2025-01-01',
     },
@@ -86,28 +78,16 @@ export default function New() {
     },
   ];
 
-  // 2. Define a submit handler.
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      await createApplication(values);
-      toast({
-        description: 'Application submitted successfully!',
-        variant: 'default',
-      });
-      form.reset();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (err) {
-      toast({
-        description: 'Failed to submit application.',
-        variant: 'destructive',
-      });
-    }
-  }
+  const handleSubmit = (values: FormValues) => {
+    onSubmit(values);
+  };
+
+  console.log('Form current values:', form.watch());
 
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit(handleSubmit)}
         className='flex flex-col w-96 gap-2'
       >
         {fields.map((f) => (
@@ -140,4 +120,4 @@ export default function New() {
       </form>
     </Form>
   );
-}
+};
