@@ -16,6 +16,7 @@ import { parseUrl } from 'next/dist/shared/lib/router/utils/parse-url';
 import { deleteApplication } from '@/app/actions';
 import { formatDate } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
+import { redirect } from 'next/navigation';
 
 export type Application = {
   id: string;
@@ -141,7 +142,11 @@ export const columns: ColumnDef<Application>[] = [
           <DropdownMenuContent className='flex items-center justify-center w-fit bg-slate-100 text-indigo-600'>
             <DropdownMenuItem className='flex gap-1 focus:text-indigo-400'>
               {/* Implement edit functionality */}
-              <button>
+              <button
+                onClick={() =>
+                  redirect(`/dashboard/application/${row.original.id}`)
+                }
+              >
                 <Pencil className='size-6' />
               </button>
             </DropdownMenuItem>
