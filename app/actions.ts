@@ -4,8 +4,10 @@ import { neon } from '@neondatabase/serverless';
 import { auth } from '@clerk/nextjs/server';
 import { revalidatePath } from 'next/cache';
 
-import { insertApplicationSchema } from './db/schema';
+import { insertApplicationSchema, jobApplications } from './db/schema';
 import { z } from 'zod';
+import { db } from './db';
+import { and, eq } from 'drizzle-orm';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
@@ -60,7 +62,6 @@ export async function createApplication(values: FormValues) {
 }
 
 export async function deleteApplication(id: string) {
-  console.log('application id: ', id);
   const { userId } = await auth();
   try {
     await sql(
@@ -73,4 +74,24 @@ export async function deleteApplication(id: string) {
   }
 }
 
-// export async function editApplication(id: string) {}
+export async function updateApplication(values: FormValues) {
+  const { userId } = await auth();
+  if (!userId || !values.id) {
+    return;
+  }
+
+  try {
+    await db
+      .update(jobApplications)
+      .set(values)
+      .where(
+        and(
+          eq(jobApplications.userId, userId),
+          eq(jobApplications.id, values.id)
+        )
+      );
+    revalidatePath('/dashboard');
+  } catch (err) {
+    console.log(err);
+  }
+}
