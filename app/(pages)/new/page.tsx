@@ -14,7 +14,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { create } from '@/app/actions';
+import { createApplication } from '@/app/actions';
 import { redirect } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
@@ -89,7 +89,7 @@ export default function New() {
   // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await create(values);
+      await createApplication(values);
       toast({
         description: 'Application submitted successfully!',
         variant: 'default',
@@ -112,7 +112,7 @@ export default function New() {
       >
         {fields.map((f) => (
           <FormField
-            key={Math.random() * 1000}
+            key={f.name}
             control={form.control}
             name={f.name}
             render={({ field }) => (
