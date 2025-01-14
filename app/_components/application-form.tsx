@@ -19,12 +19,13 @@ import { Button } from '@/components/ui/button';
 import { redirect } from 'next/navigation';
 import { formatDate } from 'date-fns';
 
-const inserApplicationSchema = insertApplicationSchema.omit({ userId: true });
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const createApplicationSchema = insertApplicationSchema.omit({ userId: true });
 
-export type FormValues = z.input<typeof inserApplicationSchema>;
+export type FormValues = z.input<typeof createApplicationSchema>;
 
 type Props = {
-  defaultValues?: FormValues;
+  defaultValues: FormValues;
   onSubmit: (values: FormValues) => Promise<void>;
 };
 
@@ -38,16 +39,28 @@ export const ApplicationForm = ({ defaultValues, onSubmit }: Props) => {
     defaultValues = { ...defaultValues, date_applied: formattedDate };
   }
 
-  // Finish form schema
   const formSchema = z.object({
+    id: z.string().optional(),
+    userId: z.string().optional(),
     role_name: z.string().min(2, {
       message: 'Role name must be at least 2 characters.',
+    }),
+    company_name: z.string().min(2, {
+      message: 'Company name must be at least 2 characters.',
+    }),
+    date_applied: z.string().date(),
+    link: z.string().url(),
+    platform: z.string().min(2, {
+      message: 'Platform name must be at least 2 characters.',
+    }),
+    status: z.string().min(2, {
+      message: 'Status name must be at least 2 characters.',
     }),
   });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues,
+    defaultValues: defaultValues,
   });
 
   type Field = {
@@ -99,7 +112,9 @@ export const ApplicationForm = ({ defaultValues, onSubmit }: Props) => {
     onSubmit(values);
   };
 
+  // for debugging:
   // console.log('Form current values:', form.watch());
+  // console.log('Form errors:', form.formState.errors);
 
   return (
     <Form {...form}>
@@ -126,6 +141,7 @@ export const ApplicationForm = ({ defaultValues, onSubmit }: Props) => {
 
         <div className='mt-4 flex flex-col gap-2 w-full'>
           <Button type='submit'>Submit</Button>
+          {/* Cancel button */}
           <Button
             type='button'
             variant='outline'
