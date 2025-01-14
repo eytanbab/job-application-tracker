@@ -15,19 +15,36 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+
 import { redirect } from 'next/navigation';
+import { formatDate } from 'date-fns';
 
-const formSchema = insertApplicationSchema.omit({ userId: true });
+const inserApplicationSchema = insertApplicationSchema.omit({ userId: true });
 
-export type FormValues = z.input<typeof formSchema>;
+export type FormValues = z.input<typeof inserApplicationSchema>;
 
 type Props = {
-  id?: string;
-  defaultValues: FormValues;
+  defaultValues?: FormValues;
   onSubmit: (values: FormValues) => Promise<void>;
 };
 
 export const ApplicationForm = ({ defaultValues, onSubmit }: Props) => {
+  // convert date to yyyy-MM-dd before showing the user
+  if (defaultValues) {
+    const formattedDate = formatDate(
+      new Date(defaultValues.date_applied),
+      'yyyy-MM-dd'
+    );
+    defaultValues = { ...defaultValues, date_applied: formattedDate };
+  }
+
+  // Finish form schema
+  // const formSchema = z.object({
+  //   role_name: z.string().min(2, {
+  //     message: 'Role name must be at least 2 characters.',
+  //   }),
+  // });
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
@@ -82,24 +99,24 @@ export const ApplicationForm = ({ defaultValues, onSubmit }: Props) => {
     onSubmit(values);
   };
 
-  console.log('Form current values:', form.watch());
+  // console.log('Form current values:', form.watch());
 
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
-        className='flex flex-col w-96 gap-2'
+        className='flex flex-col w-full max-w-96 gap-2'
       >
-        {fields.map((f) => (
+        {fields.map((fld) => (
           <FormField
-            key={f.name}
+            key={fld.name}
             control={form.control}
-            name={f.name}
+            name={fld.name}
             render={({ field }) => (
               <FormItem className='space-y-0'>
-                <FormLabel>{f.label}</FormLabel>
+                <FormLabel>{fld.label}</FormLabel>
                 <FormControl>
-                  <Input placeholder={f.placeholder} {...field} />
+                  <Input placeholder={fld.placeholder} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
