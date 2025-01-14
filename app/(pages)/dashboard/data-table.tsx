@@ -106,22 +106,7 @@ export function DataTable<TData, TValue>({
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id} className='truncate max-w-60'>
-                    {cell.id.includes('link') ? (
-                      <Link href={cell.getValue()!}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </Link>
-                    ) : cell.id.includes('date') ? (
-                      format(
-                        new Date(cell.getValue()),
-
-                        'dd/MM/yyyy'
-                      )
-                    ) : (
-                      flexRender(cell.column.columnDef.cell, cell.getContext())
-                    )}
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
               </TableRow>
