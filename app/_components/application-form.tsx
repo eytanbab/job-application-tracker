@@ -158,7 +158,7 @@ export const ApplicationForm = ({ defaultValues, onSubmit }: Props) => {
                     >
                       <Calendar
                         mode='single'
-                        selected={field.value}
+                        selected={new Date(field.value)}
                         onSelect={field.onChange}
                         disabled={(date: Date) =>
                           date > new Date() || date < new Date('1900-01-01')
