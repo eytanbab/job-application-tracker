@@ -8,7 +8,7 @@ export const jobApplications = pgTable('job_applications', {
   role_name: text('role_name').notNull(),
   company_name: text('company_name').notNull(),
   date_applied: date('date_applied').notNull(),
-  link: text('link'),
+  link: text('link').notNull(),
   platform: varchar('platform', { length: 255 }).notNull(),
   status: varchar('status', { length: 255 }).notNull(),
 });
