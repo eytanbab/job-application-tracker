@@ -15,9 +15,19 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+
+import { CalendarIcon } from 'lucide-react';
 
 import { redirect } from 'next/navigation';
-import { formatDate } from 'date-fns';
+import { format } from 'date-fns';
+
+import { cn } from '@/lib/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const createApplicationSchema = insertApplicationSchema.omit({ userId: true });
@@ -30,15 +40,6 @@ type Props = {
 };
 
 export const ApplicationForm = ({ defaultValues, onSubmit }: Props) => {
-  // convert date to yyyy-MM-dd before showing the user
-  if (defaultValues) {
-    const formattedDate = formatDate(
-      new Date(defaultValues.date_applied),
-      'yyyy-MM-dd'
-    );
-    defaultValues = { ...defaultValues, date_applied: formattedDate };
-  }
-
   const formSchema = z.object({
     id: z.string().optional(),
     userId: z.string().optional(),
@@ -48,7 +49,7 @@ export const ApplicationForm = ({ defaultValues, onSubmit }: Props) => {
     company_name: z.string().min(2, {
       message: 'Company name must be at least 2 characters.',
     }),
-    date_applied: z.string().date(),
+    date_applied: z.date(),
     link: z.string().url(),
     platform: z.string().min(2, {
       message: 'Platform name must be at least 2 characters.',
@@ -127,15 +128,58 @@ export const ApplicationForm = ({ defaultValues, onSubmit }: Props) => {
             key={fld.name}
             control={form.control}
             name={fld.name}
-            render={({ field }) => (
-              <FormItem className='space-y-0'>
-                <FormLabel>{fld.label}</FormLabel>
-                <FormControl>
-                  <Input placeholder={fld.placeholder} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) =>
+              // Render date field
+              fld.name === 'date_applied' ? (
+                <FormItem className='flex flex-col'>
+                  <FormLabel>Date of birth</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={'outline'}
+                          className={cn(
+                            'flex h-10 w-full rounded-md border border-indigo-600 px-4 bg-transparent py-2 text-base font-normal disabled:cursor-not-allowed disabled:opacity-50 md:text-sm text-indigo-600 group',
+                            !field.value && 'text-indigo-300'
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, 'PPP')
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className='ml-auto h-4 w-4 text-indigo-600 group-hover:text-slate-50' />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className='w-auto p-0 bg-slate-100'
+                      align='start'
+                    >
+                      <Calendar
+                        mode='single'
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date: Date) =>
+                          date > new Date() || date < new Date('1900-01-01')
+                        }
+                      />
+                    </PopoverContent>
+                  </Popover>
+
+                  <FormMessage />
+                </FormItem>
+              ) : (
+                // Render other fields
+                <FormItem className='space-y-0'>
+                  <FormLabel>{fld.label}</FormLabel>
+                  <FormControl>
+                    <Input placeholder={fld.placeholder} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )
+            }
           />
         ))}
 
