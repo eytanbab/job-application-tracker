@@ -30,7 +30,10 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const createApplicationSchema = insertApplicationSchema.omit({ userId: true });
+const createApplicationSchema = insertApplicationSchema.omit({
+  userId: true,
+  id: true,
+});
 
 export type FormValues = z.input<typeof createApplicationSchema>;
 
@@ -131,8 +134,8 @@ export const ApplicationForm = ({ defaultValues, onSubmit }: Props) => {
             render={({ field }) =>
               // Render date field
               fld.name === 'date_applied' ? (
-                <FormItem className='flex flex-col'>
-                  <FormLabel>Date of birth</FormLabel>
+                <FormItem className='space-y-0'>
+                  <FormLabel>Date applied</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
