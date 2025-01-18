@@ -16,6 +16,7 @@ type FormValues = z.input<typeof formSchema>;
 
 const sql = neon(process.env.DATABASE_URL!);
 
+// Get all applications of current user
 export async function getApplications() {
   const { userId } = await auth();
   try {
@@ -28,24 +29,19 @@ export async function getApplications() {
     console.log('err', err);
   }
 }
+
+// Get a single application with id for current user
 export async function getApplication(id: string) {
   const { userId } = await auth();
   if (!userId) return;
-  // try {
-  //   const res = await sql(
-  //     'SELECT * FROM job_applications WHERE user_id = ($1) AND id = ($2)',
-  //     [userId, id]
-  //   );
-  //   return res[0];
-  // } catch (err) {
-  //   console.log('err', err);
-  // }
+
   return db
     .select()
     .from(jobApplications)
     .where(and(eq(jobApplications.userId, userId), eq(jobApplications.id, id)));
 }
 
+// Create a new application for the current user
 export async function createApplication(values: FormValues) {
   const { userId } = await auth();
   if (!userId) return;
@@ -61,6 +57,7 @@ export async function createApplication(values: FormValues) {
     .returning({ insertedId: jobApplications.id });
 }
 
+// Delete a single application with id for current user
 export async function deleteApplication(id: string) {
   const { userId } = await auth();
   try {
