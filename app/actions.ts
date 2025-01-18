@@ -19,15 +19,12 @@ const sql = neon(process.env.DATABASE_URL!);
 // Get all applications of current user
 export async function getApplications() {
   const { userId } = await auth();
-  try {
-    const res = await sql(
-      'SELECT * FROM job_applications WHERE user_id = ($1)',
-      [userId]
-    );
-    return res;
-  } catch (err) {
-    console.log('err', err);
-  }
+  if (!userId) return;
+
+  return db
+    .select()
+    .from(jobApplications)
+    .where(eq(jobApplications.userId, userId));
 }
 
 // Get a single application with id for current user
