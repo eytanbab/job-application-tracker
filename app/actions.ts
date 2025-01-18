@@ -30,15 +30,20 @@ export async function getApplications() {
 }
 export async function getApplication(id: string) {
   const { userId } = await auth();
-  try {
-    const res = await sql(
-      'SELECT * FROM job_applications WHERE user_id = ($1) AND id = ($2)',
-      [userId, id]
-    );
-    return res[0];
-  } catch (err) {
-    console.log('err', err);
-  }
+  if (!userId) return;
+  // try {
+  //   const res = await sql(
+  //     'SELECT * FROM job_applications WHERE user_id = ($1) AND id = ($2)',
+  //     [userId, id]
+  //   );
+  //   return res[0];
+  // } catch (err) {
+  //   console.log('err', err);
+  // }
+  return db
+    .select()
+    .from(jobApplications)
+    .where(and(eq(jobApplications.userId, userId), eq(jobApplications.id, id)));
 }
 
 export async function createApplication(values: FormValues) {
@@ -50,7 +55,10 @@ export async function createApplication(values: FormValues) {
     userId,
   };
 
-  return db.insert(jobApplications).values(application).returning({ insertedId: jobApplications.id });
+  return db
+    .insert(jobApplications)
+    .values(application)
+    .returning({ insertedId: jobApplications.id });
 }
 
 export async function deleteApplication(id: string) {
