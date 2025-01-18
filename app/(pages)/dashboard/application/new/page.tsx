@@ -33,5 +33,14 @@ export default function NewApplication() {
     }
   };
 
-  return <ApplicationForm onSubmit={onSubmit} />;
+  const defaultValues = {
+    role_name: '',
+    company_name: '',
+    date_applied: '',
+    link: '',
+    status: '',
+    platform: '',
+  };
+
+  return <ApplicationForm defaultValues={defaultValues} onSubmit={onSubmit} />;
 }
