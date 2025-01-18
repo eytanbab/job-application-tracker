@@ -1,20 +1,17 @@
 'use server';
 
-import { neon } from '@neondatabase/serverless';
 import { auth } from '@clerk/nextjs/server';
 import { revalidatePath } from 'next/cache';
 
+import { db } from './db';
 import { insertApplicationSchema, jobApplications } from './db/schema';
 import { z } from 'zod';
-import { db } from './db';
 import { and, eq } from 'drizzle-orm';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
 
 type FormValues = z.input<typeof formSchema>;
-
-const sql = neon(process.env.DATABASE_URL!);
 
 // Get all applications of current user
 export async function getApplications() {
