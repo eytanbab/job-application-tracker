@@ -128,6 +128,9 @@ export const columns: ColumnDef<FormValues>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
+      //Convert date string to Date object
+      const date = new Date(row.original.date_applied);
+      row.original.date_applied = date;
       // console.log('row:', row.original);
       const onSubmit = async (values: FormValues) => {
         try {
