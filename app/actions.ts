@@ -43,22 +43,14 @@ export async function getApplication(id: string) {
 
 export async function createApplication(values: FormValues) {
   const { userId } = await auth();
-  try {
-    await sql(
-      'INSERT INTO job_applications (user_id, role_name, company_name, date_applied, link, platform, status) VALUES($1, $2, $3, $4, $5, $6, $7)',
-      [
-        userId,
-        values.role_name,
-        values.company_name,
-        values.date_applied,
-        values.link,
-        values.platform,
-        values.status,
-      ]
-    );
-  } catch (err) {
-    throw err;
-  }
+  if (!userId) return;
+
+  const application: z.input<typeof insertApplicationSchema> = {
+    ...values,
+    userId,
+  };
+
+  return db.insert(jobApplications).values(application).returning({ insertedId: jobApplications.id });
 }
 
 export async function deleteApplication(id: string) {
