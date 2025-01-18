@@ -57,15 +57,13 @@ export async function createApplication(values: FormValues) {
 // Delete a single application with id for current user
 export async function deleteApplication(id: string) {
   const { userId } = await auth();
-  try {
-    await sql(
-      'DELETE FROM job_applications WHERE user_id = ($1) AND id = ($2)',
-      [userId, id]
-    );
-    revalidatePath('/dashboard');
-  } catch (err) {
-    throw err;
-  }
+  if (!userId) return;
+
+  await db
+    .delete(jobApplications)
+    .where(and(eq(jobApplications.userId, userId), eq(jobApplications.id, id)));
+
+  revalidatePath('/dashboard');
 }
 
 export async function updateApplication(values: FormValues) {
