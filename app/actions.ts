@@ -16,7 +16,7 @@ type FormValues = z.input<typeof formSchema>;
 // Get all applications of current user
 export async function getApplications() {
   const { userId } = await auth();
-  if (!userId) return;
+  if (!userId) return [];
 
   return db
     .select()
