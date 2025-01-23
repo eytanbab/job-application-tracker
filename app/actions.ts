@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from './db';
 import { insertApplicationSchema, jobApplications } from './db/schema';
 import { z } from 'zod';
-import { and, eq } from 'drizzle-orm';
+import { and, count, desc, eq } from 'drizzle-orm';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
@@ -63,24 +63,34 @@ export async function deleteApplication(id: string) {
   revalidatePath('/dashboard');
 }
 
+// Update an application of current user
 export async function updateApplication(values: FormValues) {
   const { userId } = await auth();
   if (!userId || !values.id) {
     return;
   }
 
-  try {
-    await db
-      .update(jobApplications)
-      .set(values)
-      .where(
-        and(
-          eq(jobApplications.userId, userId),
-          eq(jobApplications.id, values.id)
-        )
-      );
-    revalidatePath('/dashboard');
-  } catch (err) {
-    console.log(err);
-  }
+  await db
+    .update(jobApplications)
+    .set(values)
+    .where(
+      and(eq(jobApplications.userId, userId), eq(jobApplications.id, values.id))
+    );
+  revalidatePath('/dashboard');
+}
+
+export async function getTop5Companies() {
+  const { userId } = await auth();
+  if (!userId) return [];
+
+  return db
+    .select({
+      name: jobApplications.company_name,
+      freq: count(jobApplications.company_name),
+    })
+    .from(jobApplications)
+    .where(eq(jobApplications.userId, userId))
+    .groupBy(jobApplications.company_name)
+    .orderBy(desc(count(jobApplications.company_name)))
+    .limit(5);
 }
