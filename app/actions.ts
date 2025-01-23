@@ -94,3 +94,18 @@ export async function getTop5Companies() {
     .orderBy(desc(count(jobApplications.company_name)))
     .limit(5);
 }
+
+export async function getStatuses() {
+  const { userId } = await auth();
+  if (!userId) return [];
+
+  return db
+    .select({
+      name: jobApplications.status,
+      freq: count(jobApplications.status),
+    })
+    .from(jobApplications)
+    .where(eq(jobApplications.userId, userId))
+    .groupBy(jobApplications.status)
+    .orderBy(desc(count(jobApplications.status)));
+}
