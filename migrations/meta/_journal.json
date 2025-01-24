@@ -15,6 +15,13 @@
       "when": 1737468887884,
       "tag": "0001_plain_carmella_unuscione",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1737717180750,
+      "tag": "0002_lowly_thanos",
+      "breakpoints": true
     }
   ]
 }

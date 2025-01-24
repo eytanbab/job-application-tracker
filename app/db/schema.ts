@@ -1,4 +1,11 @@
-import { pgTable, varchar, text, date, uuid } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  varchar,
+  text,
+  date,
+  uuid,
+  integer,
+} from 'drizzle-orm/pg-core';
 
 import { createInsertSchema } from 'drizzle-zod';
 
@@ -11,6 +18,8 @@ export const jobApplications = pgTable('job_applications', {
   link: text('link').notNull(),
   platform: varchar('platform', { length: 255 }).notNull(),
   status: varchar('status', { length: 255 }).notNull(),
+  month: integer('month'),
+  year: integer('year'),
 });
 
 export const insertApplicationSchema = createInsertSchema(jobApplications);
