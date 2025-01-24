@@ -6,7 +6,9 @@ import { revalidatePath } from 'next/cache';
 import { db } from './db';
 import { insertApplicationSchema, jobApplications } from './db/schema';
 import { z } from 'zod';
-import { and, count, desc, eq } from 'drizzle-orm';
+import { and, between, count, desc, eq } from 'drizzle-orm';
+
+import { format } from 'date-fns';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
@@ -43,6 +45,8 @@ export async function createApplication(values: FormValues) {
   const application: z.input<typeof insertApplicationSchema> = {
     ...values,
     userId,
+    month: +format(new Date(values.date_applied), 'MM'),
+    year: +format(new Date(values.date_applied), 'yyyy'),
   };
 
   return db
@@ -70,11 +74,20 @@ export async function updateApplication(values: FormValues) {
     return;
   }
 
+  const application = {
+    ...values,
+    month: +format(new Date(values.date_applied), 'MM'),
+    year: +format(new Date(values.date_applied), 'yyyy'),
+  };
+
   await db
     .update(jobApplications)
-    .set(values)
+    .set(application)
     .where(
-      and(eq(jobApplications.userId, userId), eq(jobApplications.id, values.id))
+      and(
+        eq(jobApplications.userId, userId),
+        eq(jobApplications.id, application.id!)
+      )
     );
   revalidatePath('/dashboard');
 }
