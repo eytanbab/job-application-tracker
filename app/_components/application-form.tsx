@@ -113,6 +113,15 @@ export const ApplicationForm = ({ defaultValues, onSubmit }: Props) => {
   ];
 
   const handleSubmit = (values: FormValues) => {
+    // convert all form values to lower case for ignoring duplicates such was Waiting and waiting when fetching from db
+    values = {
+      ...values,
+      role_name: values.role_name.toLowerCase(),
+      company_name: values.company_name.toLowerCase(),
+      link: values.link.toLowerCase(),
+      platform: values.platform.toLowerCase(),
+      status: values.status.toLowerCase(),
+    };
     onSubmit(values);
   };
 
