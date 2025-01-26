@@ -54,8 +54,6 @@ export function PieChartComponent({ title, data }: Props) {
     item['fill'] = `hsl(var(--chart-${i + 1}))`;
   });
 
-  console.log(data);
-
   return (
     <Card className='flex flex-col'>
       <CardHeader className='items-center'>
