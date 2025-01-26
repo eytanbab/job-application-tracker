@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from './db';
 import { insertApplicationSchema, jobApplications } from './db/schema';
 import { z } from 'zod';
-import { and, between, count, desc, eq } from 'drizzle-orm';
+import { and, count, desc, eq } from 'drizzle-orm';
 
 import { format } from 'date-fns';
 
