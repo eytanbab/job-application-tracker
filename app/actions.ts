@@ -108,7 +108,23 @@ export async function getTop5Companies() {
     .limit(5);
 }
 
-export async function getStatuses() {
+export async function getTop5Platforms() {
+  const { userId } = await auth();
+  if (!userId) return [];
+
+  return db
+    .select({
+      name: jobApplications.platform,
+      freq: count(jobApplications.platform),
+    })
+    .from(jobApplications)
+    .where(eq(jobApplications.userId, userId))
+    .groupBy(jobApplications.platform)
+    .orderBy(desc(count(jobApplications.platform)))
+    .limit(5);
+}
+
+export async function getTop5Statuses() {
   const { userId } = await auth();
   if (!userId) return [];
 
@@ -120,5 +136,80 @@ export async function getStatuses() {
     .from(jobApplications)
     .where(eq(jobApplications.userId, userId))
     .groupBy(jobApplications.status)
-    .orderBy(desc(count(jobApplications.status)));
+    .orderBy(desc(count(jobApplications.status)))
+    .limit(5);
+}
+
+export async function getApplicationsPerMonth() {
+  const { userId } = await auth();
+  if (!userId) return [];
+
+  const data = await db
+    .select({
+      month: jobApplications.month,
+      year: jobApplications.year,
+      status: jobApplications.status,
+      status_count: count(jobApplications.status),
+    })
+    .from(jobApplications)
+    .where(eq(jobApplications.userId, userId))
+    .groupBy(
+      jobApplications.month,
+      jobApplications.status,
+      jobApplications.year
+    );
+
+  const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  type TransformedItem = {
+    month: string;
+    [status: string]: string | number; // Dynamic keys for statuses
+  };
+
+  const transformedData: TransformedItem[] = Object.values(
+    data.reduce<Record<string, TransformedItem>>(
+      (acc, { month, status, status_count }) => {
+        const monthName = monthNames[month! - 1]; // Convert month number to name
+
+        // Ensure the month exists in the accumulator
+        if (!acc[monthName]) {
+          acc[monthName] = { month: monthName };
+        }
+
+        // Add the status dynamically to the month's object
+        acc[monthName][status] =
+          ((acc[monthName][status] as number) || 0) + status_count;
+
+        return acc;
+      },
+      {}
+    )
+  );
+
+  return transformedData;
+}
+
+export async function getYears() {
+  const { userId } = await auth();
+  if (!userId) return [];
+
+  return db
+    .selectDistinct({
+      year: jobApplications.year,
+    })
+    .from(jobApplications)
+    .where(eq(jobApplications.userId, userId));
 }
