@@ -2,27 +2,19 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 
-import { Pencil, Trash2, ArrowUpDown } from 'lucide-react';
+import { Trash2, ArrowUpDown } from 'lucide-react';
 
 import Link from 'next/link';
 import { parseUrl } from 'next/dist/shared/lib/router/utils/parse-url';
+
+import { EditApplicationSheet } from '@/app/_components/edit-application-sheet';
 
 import { deleteApplication, updateApplication } from '@/app/actions';
 import { formatDate } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 
-import {
-  ApplicationForm,
-  FormValues,
-} from '@/app/_components/application-form';
+import { FormValues } from '@/app/_components/application-form';
 
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -153,7 +145,7 @@ export const columns: ColumnDef<FormValues>[] = [
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err) {
           toast({
-            description: 'Failed to submit application.',
+            description: 'Failed to update application.',
             variant: 'destructive',
           });
         }
@@ -161,25 +153,7 @@ export const columns: ColumnDef<FormValues>[] = [
       return (
         <div className='flex gap-2 items-center'>
           {/* Implement edit functionality */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <button className='hover:text-[#38CA8C]'>
-                <Pencil className='size-4' />
-              </button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle className='font-normal text-indigo-600'>
-                  Edit profile
-                </SheetTitle>
-              </SheetHeader>
-              {/* Edit */}
-              <ApplicationForm
-                defaultValues={row.original}
-                onSubmit={onSubmit}
-              />
-            </SheetContent>
-          </Sheet>
+          <EditApplicationSheet row={row} onSubmit={onSubmit} />
           {/* Delete button */}
           <Dialog>
             <DialogTrigger>
