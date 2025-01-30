@@ -24,7 +24,6 @@ import { Calendar } from '@/components/ui/calendar';
 
 import { CalendarIcon } from 'lucide-react';
 
-import { redirect } from 'next/navigation';
 import { format } from 'date-fns';
 
 import { cn } from '@/lib/utils';
