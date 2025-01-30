@@ -24,6 +24,16 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 const handleApplicationDelete = async (id: string) => {
   try {
@@ -171,12 +181,34 @@ export const columns: ColumnDef<FormValues>[] = [
             </SheetContent>
           </Sheet>
           {/* Delete button */}
-          <button
-            className='hover:text-[#CA3876]'
-            onClick={() => handleApplicationDelete(row.original.id as string)}
-          >
-            <Trash2 className='size-4' />
-          </button>
+          <Dialog>
+            <DialogTrigger>
+              <Trash2 className='size-4 hover:text-[#CA3876]' />
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Are you absolutely sure?</DialogTitle>
+                <DialogDescription>
+                  This action cannot be undone. This will permanently delete
+                  your application and remove your data from our servers.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button
+                    onClick={() => handleApplicationDelete(row.original.id)}
+                  >
+                    Delete
+                  </Button>
+                </DialogClose>
+                <DialogClose asChild>
+                  <Button type='button' variant='ghost'>
+                    Cancel
+                  </Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       );
     },
