@@ -40,9 +40,14 @@ export type FormValues = z.input<typeof createApplicationSchema>;
 type Props = {
   defaultValues: FormValues;
   onSubmit: (values: FormValues) => Promise<void>;
+  onClose: () => void;
 };
 
-export const ApplicationForm = ({ defaultValues, onSubmit }: Props) => {
+export const ApplicationForm = ({
+  defaultValues,
+  onSubmit,
+  onClose,
+}: Props) => {
   const formSchema = z.object({
     id: z.string().optional(),
     userId: z.string().optional(),
@@ -123,6 +128,7 @@ export const ApplicationForm = ({ defaultValues, onSubmit }: Props) => {
       status: values.status.toLowerCase(),
     };
     onSubmit(values);
+    onClose();
   };
 
   // for debugging:
@@ -198,11 +204,7 @@ export const ApplicationForm = ({ defaultValues, onSubmit }: Props) => {
         <div className='mt-4 flex flex-col gap-2 w-full'>
           <Button type='submit'>Submit</Button>
           {/* Cancel button */}
-          <Button
-            type='button'
-            variant='outline'
-            onClick={() => redirect('/dashboard')}
-          >
+          <Button type='button' variant='outline' onClick={onClose}>
             Cancel
           </Button>
         </div>
