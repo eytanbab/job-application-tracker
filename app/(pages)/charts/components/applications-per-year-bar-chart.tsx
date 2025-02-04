@@ -80,7 +80,12 @@ export function ApplicationsPerYearBarChart({ years, data }: Props) {
               tickMargin={10}
               axisLine={false}
             />
-            <YAxis allowDecimals={false} />
+            <YAxis
+              allowDecimals={false}
+              tickLine={false}
+              tickMargin={10}
+              axisLine={false}
+            />
             <ChartTooltip content={<ChartTooltipContent />} />
             <Bar
               dataKey='numOfApplications'
