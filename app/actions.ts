@@ -230,7 +230,8 @@ export async function getYears() {
       year: jobApplications.year,
     })
     .from(jobApplications)
-    .where(eq(jobApplications.userId, userId));
+    .where(eq(jobApplications.userId, userId))
+    .orderBy(desc(jobApplications.year));
 
   const yearsArray: number[] = [];
 
