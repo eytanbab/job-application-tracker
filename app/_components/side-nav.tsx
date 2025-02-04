@@ -8,7 +8,7 @@ import React from 'react';
 const SideNav = () => {
   const pathname = usePathname();
 
-  const navItems = ['dashboard', 'charts'];
+  const navItems = ['applications', 'analytics'];
   return (
     <div className='border-r border-indigo-600/25 p-4 flex flex-col gap-2 h-full text-xl w-96'>
       {navItems.map((item) => {
