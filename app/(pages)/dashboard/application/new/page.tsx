@@ -42,5 +42,11 @@ export default function NewApplication() {
     platform: '',
   };
 
-  return <ApplicationForm defaultValues={defaultValues} onSubmit={onSubmit} />;
+  return (
+    <ApplicationForm
+      onClose={() => {}}
+      defaultValues={defaultValues}
+      onSubmit={onSubmit}
+    />
+  );
 }
