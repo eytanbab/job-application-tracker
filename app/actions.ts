@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { and, count, desc, eq } from 'drizzle-orm';
 
 import { format } from 'date-fns';
+import { formatApplicationsPerYear } from '@/lib/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
@@ -46,7 +47,7 @@ export async function createApplication(values: FormValues) {
     ...values,
     userId,
     month: +format(new Date(values.date_applied), 'MM'),
-    year: +format(new Date(values.date_applied), 'yyyy'),
+    year: format(new Date(values.date_applied), 'yyyy'),
   };
 
   return db
@@ -77,7 +78,7 @@ export async function updateApplication(values: FormValues) {
   const application = {
     ...values,
     month: +format(new Date(values.date_applied), 'MM'),
-    year: +format(new Date(values.date_applied), 'yyyy'),
+    year: format(new Date(values.date_applied), 'yyyy'),
   };
 
   await db
@@ -149,13 +150,13 @@ export async function getApplicationsPerYear() {
     .select({
       year: jobApplications.year,
       month: jobApplications.month,
-      numOfApplications: count(jobApplications.month),
+      numOfApplications: count(jobApplications.id),
     })
     .from(jobApplications)
     .where(eq(jobApplications.userId, userId))
     .groupBy(jobApplications.month, jobApplications.year);
 
-  return data;
+  return formatApplicationsPerYear(data);
 }
 
 // Applications status per year
@@ -233,7 +234,7 @@ export async function getYears() {
     .where(eq(jobApplications.userId, userId))
     .orderBy(desc(jobApplications.year));
 
-  const yearsArray: number[] = [];
+  const yearsArray: string[] = [];
 
   years?.map((year) => {
     yearsArray.push(year.year!);

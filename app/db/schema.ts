@@ -19,7 +19,7 @@ export const jobApplications = pgTable('job_applications', {
   platform: varchar('platform', { length: 255 }).notNull(),
   status: varchar('status', { length: 255 }).notNull(),
   month: integer('month'),
-  year: integer('year'),
+  year: varchar('year'),
 });
 
 export const insertApplicationSchema = createInsertSchema(jobApplications);

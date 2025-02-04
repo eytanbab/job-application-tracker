@@ -1,0 +1,1 @@
+ALTER TABLE "job_applications" ALTER COLUMN "year" SET DATA TYPE varchar;
