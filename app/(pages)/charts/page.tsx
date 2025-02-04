@@ -24,10 +24,10 @@ export default async function Charts() {
       {/* Overview Row */}
       <div>
         <h1 className='text-2xl'>Overview</h1>
-        <div className='w-full h-0.5 bg-slate-200' />
+        <div className='w-full h-px bg-slate-300' />
       </div>
       {/* Overview charts */}
-      <div className='w-full flex gap-4 bg-red-500'>
+      <div className='w-full flex gap-4'>
         <PieChartComponent title='Top 5 companies' data={top5Companies} />
         <PieChartComponent title='Top 5 platforms' data={top5Platforms} />
         <PieChartComponent title='Applications status' data={top5Statuses} />
