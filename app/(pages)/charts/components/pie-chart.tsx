@@ -55,8 +55,8 @@ export function PieChartComponent({ title, data }: Props) {
   });
 
   return (
-    <Card className='flex flex-col'>
-      <CardHeader className='items-center'>
+    <Card>
+      <CardHeader className='items-center mt-2'>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent className='flex-1'>
