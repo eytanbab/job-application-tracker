@@ -27,6 +27,7 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 
 import { cn } from '@/lib/utils';
+import { redirect } from 'next/navigation';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const createApplicationSchema = insertApplicationSchema.omit({
@@ -70,6 +71,11 @@ export const ApplicationForm = ({
     resolver: zodResolver(formSchema),
     defaultValues: defaultValues,
   });
+
+  const onCancel = () => {
+    onClose();
+    redirect('/applications');
+  };
 
   type Field = {
     name:
@@ -203,7 +209,7 @@ export const ApplicationForm = ({
         <div className='mt-4 flex flex-col gap-2 w-full'>
           <Button type='submit'>Submit</Button>
           {/* Cancel button */}
-          <Button type='button' variant='outline' onClick={onClose}>
+          <Button type='button' variant='outline' onClick={onCancel}>
             Cancel
           </Button>
         </div>
