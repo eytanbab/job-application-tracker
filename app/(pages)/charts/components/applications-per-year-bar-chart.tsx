@@ -1,6 +1,6 @@
 'use client';
 
-import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 import {
   ChartConfig,
@@ -20,19 +20,19 @@ import {
 import { useEffect, useState } from 'react';
 
 const chartConfig = {
-  month: {
+  numOfApplications: {
     label: 'Applications',
   },
 } satisfies ChartConfig;
 
 type Data = {
-  year: number;
+  year: string;
   month: string;
   numOfApplications: number;
 };
 
 type Props = {
-  years: number[] | [];
+  years: string[] | [];
   data: Data[];
 };
 
@@ -47,11 +47,11 @@ export function ApplicationsPerYearBarChart({ years, data }: Props) {
   }, [data, selectedYear]);
 
   return (
-    <Card className='w-full'>
-      <CardHeader className='flex-row justify-between items-center'>
+    <Card className='flex-1'>
+      <CardHeader className='w-full flex-row justify-between items-center'>
         <CardTitle>Applications per year</CardTitle>
         <Select value={selectedYear} onValueChange={setSelectedYear}>
-          <SelectTrigger className='w-40'>
+          <SelectTrigger className='w-40 h-10'>
             <SelectValue placeholder='Select a year' />
           </SelectTrigger>
           <SelectContent>
@@ -67,8 +67,11 @@ export function ApplicationsPerYearBarChart({ years, data }: Props) {
           </SelectContent>
         </Select>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className='min-h-[200px] w-full'>
+      <CardContent className='w-full'>
+        <ChartContainer
+          config={chartConfig}
+          className='min-h-[320px] w-full space-y-4'
+        >
           <BarChart accessibilityLayer data={filteredData}>
             <CartesianGrid vertical={false} />
             <XAxis
@@ -77,8 +80,13 @@ export function ApplicationsPerYearBarChart({ years, data }: Props) {
               tickMargin={10}
               axisLine={false}
             />
+            <YAxis allowDecimals={false} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey='month' fill='var(--color-desktop)' radius={4} />
+            <Bar
+              dataKey='numOfApplications'
+              fill='hsl(var(--chart-3))'
+              radius={4}
+            />
           </BarChart>
         </ChartContainer>
       </CardContent>
