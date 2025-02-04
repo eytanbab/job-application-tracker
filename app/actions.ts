@@ -140,7 +140,26 @@ export async function getTop5Statuses() {
     .limit(5);
 }
 
-export async function getApplicationsPerMonth() {
+// Total applications per year
+export async function getApplicationsPerYear() {
+  const { userId } = await auth();
+  if (!userId) return [];
+
+  const data = await db
+    .select({
+      year: jobApplications.year,
+      month: jobApplications.month,
+      numOfApplications: count(jobApplications.month),
+    })
+    .from(jobApplications)
+    .where(eq(jobApplications.userId, userId))
+    .groupBy(jobApplications.month, jobApplications.year);
+
+  return data;
+}
+
+// Applications status per year
+export async function getApplicationsStatusPerYear() {
   const { userId } = await auth();
   if (!userId) return [];
 
@@ -206,10 +225,18 @@ export async function getYears() {
   const { userId } = await auth();
   if (!userId) return [];
 
-  return db
+  const years = await db
     .selectDistinct({
       year: jobApplications.year,
     })
     .from(jobApplications)
     .where(eq(jobApplications.userId, userId));
+
+  const yearsArray: number[] = [];
+
+  years?.map((year) => {
+    yearsArray.push(year.year!);
+  });
+
+  return yearsArray;
 }
