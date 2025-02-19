@@ -159,69 +159,6 @@ export async function getApplicationsPerYear() {
   return formatApplicationsPerYear(data);
 }
 
-// Applications status per year
-export async function getApplicationsStatusPerYear() {
-  const { userId } = await auth();
-  if (!userId) return [];
-
-  const data = await db
-    .select({
-      month: jobApplications.month,
-      year: jobApplications.year,
-      status: jobApplications.status,
-      status_count: count(jobApplications.status),
-    })
-    .from(jobApplications)
-    .where(eq(jobApplications.userId, userId))
-    .groupBy(
-      jobApplications.month,
-      jobApplications.status,
-      jobApplications.year
-    );
-
-  const monthNames = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
-
-  type TransformedItem = {
-    month: string;
-    [status: string]: string | number; // Dynamic keys for statuses
-  };
-
-  const transformedData: TransformedItem[] = Object.values(
-    data.reduce<Record<string, TransformedItem>>(
-      (acc, { month, status, status_count }) => {
-        const monthName = monthNames[month! - 1]; // Convert month number to name
-
-        // Ensure the month exists in the accumulator
-        if (!acc[monthName]) {
-          acc[monthName] = { month: monthName };
-        }
-
-        // Add the status dynamically to the month's object
-        acc[monthName][status] =
-          ((acc[monthName][status] as number) || 0) + status_count;
-
-        return acc;
-      },
-      {}
-    )
-  );
-
-  return transformedData;
-}
-
 export async function getYears() {
   const { userId } = await auth();
   if (!userId) return [];
@@ -241,4 +178,33 @@ export async function getYears() {
   });
 
   return yearsArray;
+}
+
+export async function getStatusPerPlatform() {
+  const { userId } = await auth();
+  if (!userId) return [];
+
+  const data = await db
+    .select({
+      platformName: jobApplications.platform,
+      status: jobApplications.status,
+      numOfApplications: count(jobApplications.platform),
+    })
+    .from(jobApplications)
+    .where(eq(jobApplications.userId, userId))
+    .groupBy(jobApplications.platform, jobApplications.status);
+
+  const grouped = new Map();
+
+  data.forEach(({ platformName, status, numOfApplications }) => {
+    if (!grouped.has(platformName)) {
+      grouped.set(platformName, []);
+    }
+    grouped.get(platformName).push({ status, value: numOfApplications });
+  });
+
+  return Array.from(grouped.entries()).map(([platformName, statuses]) => ({
+    platformName,
+    statuses,
+  }));
 }
