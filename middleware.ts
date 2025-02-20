@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
 
 const isProtectedRoute = createRouteMatcher([
   '/applications(.*)',
@@ -6,6 +7,13 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
+  const { userId } = await auth();
+
+  // Redirect logged-in users from the homepage to /applications
+  if (userId && req.nextUrl.pathname === '/') {
+    return NextResponse.redirect(new URL('/applications', req.url));
+  }
+
   if (isProtectedRoute(req)) await auth.protect();
 });
 
