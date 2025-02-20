@@ -38,7 +38,7 @@ export default async function Charts() {
         <div className='w-full h-px bg-slate-300' />
       </div>
       {/* Status per platform charts */}
-      <div className='w-full flex gap-4 overflow-x-scroll py-2'>
+      <div className='w-full flex flex-wrap gap-4 py-2'>
         {statusPerPlatform.map((platform) => {
           return (
             <StatusPerPlatformPieChart
