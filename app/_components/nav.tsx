@@ -4,7 +4,7 @@ import React from 'react';
 
 const Nav = () => {
   return (
-    <div className='w-full px-6 flex items-center justify-between border-b border-indigo-600/25 h-16'>
+    <div className='w-full px-6 flex items-center justify-between border-b border-indigo-600/25 h-16 sticky top-0 bg-slate-100 z-50'>
       <Link href='/' className='font-bold text-2xl'>
         JAT
       </Link>
