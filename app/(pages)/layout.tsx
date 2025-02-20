@@ -4,7 +4,7 @@ export default function PagesLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <main className='p-8 flex items-center justify-center w-full '>
+    <main className='p-8 flex items-center justify-center w-full'>
       {children}
     </main>
   );
