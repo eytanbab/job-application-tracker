@@ -192,7 +192,8 @@ export async function getStatusPerPlatform() {
     })
     .from(jobApplications)
     .where(eq(jobApplications.userId, userId))
-    .groupBy(jobApplications.platform, jobApplications.status);
+    .groupBy(jobApplications.platform, jobApplications.status)
+    .orderBy(desc(jobApplications.status));
 
   const grouped = new Map();
 
