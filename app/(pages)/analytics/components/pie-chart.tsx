@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+
 import {
   ChartConfig,
   ChartContainer,
@@ -19,22 +20,6 @@ import {
 const chartConfig = {
   companies: {
     label: 'comapanies',
-  },
-  label1: {
-    label: 'label test',
-    color: 'hsl(var(--chart-1))',
-  },
-  label2: {
-    color: 'hsl(var(--chart-2))',
-  },
-  label3: {
-    color: 'hsl(var(--chart-3))',
-  },
-  label4: {
-    color: 'hsl(var(--chart-4))',
-  },
-  other: {
-    color: 'hsl(var(--chart-5))',
   },
 } satisfies ChartConfig;
 
