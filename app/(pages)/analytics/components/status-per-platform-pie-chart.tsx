@@ -2,7 +2,13 @@
 
 import { Pie, PieChart } from 'recharts';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   ChartConfig,
   ChartContainer,
@@ -17,7 +23,9 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 type Status = {
-  [x: string]: number;
+  status: string;
+  value: number;
+  fill: string;
 };
 
 type Data = {
@@ -30,6 +38,9 @@ type Props = {
 };
 
 export function StatusPerPlatformPieChart({ data }: Props) {
+  data.statuses.map((item, i) => {
+    item['fill'] = `hsl(var(--chart-${i + 1}))`;
+  });
   return (
     <Card>
       <CardHeader className='items-center mt-2'>
@@ -38,12 +49,12 @@ export function StatusPerPlatformPieChart({ data }: Props) {
       <CardContent className='flex-1'>
         <ChartContainer
           config={chartConfig}
-          className='mx-auto aspect-square max-h-[192px] pb-0 [&_.recharts-pie-label-text]:fill-foreground'
+          className='mx-auto aspect-square pb-0 [&_.recharts-pie-label-text]:fill-foreground'
         >
           <PieChart>
             <ChartTooltip content={<ChartTooltipContent hideLabel />} />
             <Pie
-              paddingAngle={data.statuses.length === 1 ? 0 : 4}
+              // paddingAngle={data.statuses.length === 1 ? 0 : 4}
               data={data.statuses}
               dataKey='value'
               nameKey='status'
@@ -52,6 +63,17 @@ export function StatusPerPlatformPieChart({ data }: Props) {
             />
           </PieChart>
         </ChartContainer>
+        <CardFooter>
+          <ul className='flex flex-col text-sm'>
+            {data.statuses.map((item) => {
+              return (
+                <li key={item.status}>
+                  {item.status}: {item.value}
+                </li>
+              );
+            })}
+          </ul>
+        </CardFooter>
       </CardContent>
     </Card>
   );
