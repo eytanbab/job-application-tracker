@@ -5,7 +5,7 @@ import './globals.css';
 
 import SideNav from './_components/side-nav';
 import Nav from './_components/nav';
-// import { ThemeProvider } from './_components/theme-provider';
+import { ThemeProvider } from './_components/theme-provider';
 
 import { Toaster } from '@/components/ui/toaster';
 
@@ -33,19 +33,19 @@ export default function RootLayout({
         <body
           className={`${roboto.className} antialiased bg-slate-100 text-indigo-600 h-screen`}
         >
-          {/* <ThemeProvider
-          attribute='class'
-          defaultTheme='system'
-          enableSystem
-          disableTransitionOnChange
-          > */}
-          <Toaster />
-          <Nav />
-          <div className='flex'>
-            <SideNav />
-            {children}
-          </div>
-          {/* </ThemeProvider> */}
+          <ThemeProvider
+            attribute='class'
+            defaultTheme='system'
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Toaster />
+            <Nav />
+            <div className='flex'>
+              <SideNav />
+              {children}
+            </div>
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

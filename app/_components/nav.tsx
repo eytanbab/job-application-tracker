@@ -1,6 +1,7 @@
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import React from 'react';
+import { ModeToggle } from './mode-toggle';
 
 const Nav = () => {
   return (
@@ -8,7 +9,8 @@ const Nav = () => {
       <Link href='/' className='font-bold text-2xl'>
         JAT
       </Link>
-      <div className=''>
+      <div className='flex gap-4'>
+        <ModeToggle />
         <SignedOut>
           <SignInButton />
         </SignedOut>
