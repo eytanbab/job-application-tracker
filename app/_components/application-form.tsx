@@ -28,6 +28,7 @@ import { format } from 'date-fns';
 
 import { cn } from '@/lib/utils';
 import { redirect } from 'next/navigation';
+import { Textarea } from '@/components/ui/textarea';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const createApplicationSchema = insertApplicationSchema.omit({
@@ -59,6 +60,12 @@ export const ApplicationForm = ({
     }),
     date_applied: z.date(),
     link: z.string().url(),
+    description: z.string().min(2, {
+      message: 'Description must be at least 2 characters.',
+    }),
+    location: z.string().min(2, {
+      message: 'Location must be at least 2 characters.',
+    }),
     platform: z.string().min(2, {
       message: 'Platform name must be at least 2 characters.',
     }),
@@ -83,6 +90,8 @@ export const ApplicationForm = ({
       | 'company_name'
       | 'date_applied'
       | 'link'
+      | 'description'
+      | 'location'
       | 'status'
       | 'platform';
     label: string;
@@ -111,6 +120,16 @@ export const ApplicationForm = ({
       placeholder: 'https://www.linkedin.com/jobs/view/123456789/',
     },
     {
+      name: 'description',
+      label: 'Description',
+      placeholder: 'Role description',
+    },
+    {
+      name: 'location',
+      label: 'Location',
+      placeholder: 'Tel Aviv',
+    },
+    {
       name: 'status',
       label: 'Status',
       placeholder: 'Waiting | Interview | Rejected | etc..',
@@ -123,12 +142,19 @@ export const ApplicationForm = ({
   ];
 
   const handleSubmit = (values: FormValues) => {
-    // convert all form values to lower case for ignoring duplicates such was Waiting and waiting when fetching from db
+    console.log('values: ', values);
+    if (!values.description) {
+      values.description = '';
+    }
+    values.description = values.description ?? '';
+    // convert form values to lower case for ignoring duplicates such was Waiting and waiting when fetching from db
     values = {
       ...values,
       role_name: values.role_name.toLowerCase(),
       company_name: values.company_name.toLowerCase(),
       link: values.link.toLowerCase(),
+      description: values.description ?? undefined,
+      location: values.location,
       platform: values.platform.toLowerCase(),
       status: values.status.toLowerCase(),
     };
@@ -190,6 +216,14 @@ export const ApplicationForm = ({
                     </PopoverContent>
                   </Popover>
 
+                  <FormMessage />
+                </FormItem>
+              ) : fld.name === 'description' ? (
+                <FormItem className='space-y-0'>
+                  <FormLabel>{fld.label}</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder={fld.placeholder} {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               ) : (
