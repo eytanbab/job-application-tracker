@@ -150,10 +150,10 @@ export const ApplicationForm = ({
     // convert form values to lower case for ignoring duplicates such was Waiting and waiting when fetching from db
     values = {
       ...values,
-      role_name: values.role_name.toLowerCase(),
-      company_name: values.company_name.toLowerCase(),
+      role_name: values.role_name,
+      company_name: values.company_name,
       link: values.link.toLowerCase(),
-      description: values.description ?? undefined,
+      description: values.description,
       location: values.location,
       platform: values.platform.toLowerCase(),
       status: values.status.toLowerCase(),
