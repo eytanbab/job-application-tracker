@@ -80,7 +80,7 @@ export function DataTable<TData, TValue>({
                 return (
                   <TableHead
                     key={header.id}
-                    className=' text-indigo-600 font-bold p-0'
+                    className=' text-indigo-600 font-bold p-0 dark:text-indigo-100'
                   >
                     {header.isPlaceholder
                       ? null
@@ -100,7 +100,7 @@ export function DataTable<TData, TValue>({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && 'selected'}
-                className='text-indigo-500  hover:text-slate-100 hover:bg-indigo-600 border-b border-indigo-200 '
+                className='text-indigo-500  hover:text-slate-100 hover:bg-indigo-600 border-b border-indigo-200 dark:text-indigo-100 dark:border-indigo-800'
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id} className='truncate max-w-60'>

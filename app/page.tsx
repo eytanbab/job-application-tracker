@@ -4,13 +4,13 @@ export default function Home() {
   return (
     <div className='p-6 flex flex-col items-center justify-center w-full gap-8'>
       <div className='flex flex-col gap-4'>
-        <div>
+        <div className='dark:text-indigo-50'>
           <h1 className='text-8xl font-black uppercase'>Your job hunt</h1>
           <h2 className='text-5xl font-black uppercase'>
             Organized and Effortless.
           </h2>
         </div>
-        <p className='max-w-2xl text-indigo-500 text-xl font-normal leading-6'>
+        <p className='max-w-2xl text-indigo-500 text-xl font-normal leading-6 dark:text-indigo-200'>
           Say goodbye to scattered notes and missed deadlines. Job Application
           Tracker helps you manage your applications, interviews, and follow-ups
           in one place.

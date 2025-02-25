@@ -188,7 +188,7 @@ export const ApplicationForm = ({
                         <Button
                           variant={'outline'}
                           className={cn(
-                            'flex h-10 w-full rounded-md border border-indigo-600 px-4 bg-transparent py-2 text-base font-normal disabled:cursor-not-allowed disabled:opacity-50 md:text-sm text-indigo-600 group',
+                            'flex h-10 w-full rounded-md border border-indigo-600 px-4 bg-transparent py-2 text-base font-normal disabled:cursor-not-allowed disabled:opacity-50 md:text-sm text-indigo-600 dark:text-indigo-100 group',
                             !field.value && 'text-indigo-300'
                           )}
                         >

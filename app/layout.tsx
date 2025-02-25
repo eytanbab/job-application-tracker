@@ -29,9 +29,9 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang='en'>
+      <html lang='en' suppressHydrationWarning>
         <body
-          className={`${roboto.className} antialiased bg-slate-100 text-indigo-600 h-screen`}
+          className={`${roboto.className} antialiased bg-slate-100 dark:bg-slate-900 dark:text-indigo-50 text-indigo-600 h-screen`}
         >
           <ThemeProvider
             attribute='class'
