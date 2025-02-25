@@ -207,7 +207,7 @@ export const ApplicationForm = ({
                     >
                       <Calendar
                         mode='single'
-                        selected={new Date(field.value)}
+                        selected={new Date(field.value!)}
                         onSelect={field.onChange}
                         disabled={(date: Date) =>
                           date > new Date() || date < new Date('1900-01-01')
@@ -222,7 +222,11 @@ export const ApplicationForm = ({
                 <FormItem className='space-y-0'>
                   <FormLabel>{fld.label}</FormLabel>
                   <FormControl>
-                    <Textarea placeholder={fld.placeholder} {...field} />
+                    <Textarea
+                      placeholder={fld.placeholder}
+                      {...field}
+                      value={field.value as string}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -231,7 +235,11 @@ export const ApplicationForm = ({
                 <FormItem className='space-y-0'>
                   <FormLabel>{fld.label}</FormLabel>
                   <FormControl>
-                    <Input placeholder={fld.placeholder} {...field} />
+                    <Input
+                      placeholder={fld.placeholder}
+                      {...field}
+                      value={field.value as string}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
