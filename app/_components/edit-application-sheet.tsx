@@ -10,8 +10,9 @@ import {
 import { Pencil } from 'lucide-react';
 import { ApplicationForm } from './application-form';
 
-import { FormValues } from '@/app/_components/application-form';
 import { useState } from 'react';
+import { insertApplicationSchema } from '../db/schema';
+import { z } from 'zod';
 
 type Row = {
   row: {
@@ -19,6 +20,11 @@ type Row = {
   };
   onSubmit: (values: FormValues) => Promise<void>;
 };
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const editApplicationSchema = insertApplicationSchema.omit({ userId: true });
+
+type FormValues = z.input<typeof editApplicationSchema>;
 
 export const EditApplicationSheet = ({ row, onSubmit }: Row) => {
   const [open, setOpen] = useState(false);

@@ -13,8 +13,6 @@ import { deleteApplication, updateApplication } from '@/app/actions';
 import { formatDate } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 
-import { FormValues } from '@/app/_components/application-form';
-
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -27,6 +25,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
+import { z } from 'zod';
+import { insertApplicationSchema } from '@/app/db/schema';
+
 const handleApplicationDelete = async (id: string) => {
   try {
     await deleteApplication(id);
@@ -35,6 +36,11 @@ const handleApplicationDelete = async (id: string) => {
     console.log(err);
   }
 };
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const columnsSchema = insertApplicationSchema.omit({ userId: true });
+
+type FormValues = z.input<typeof columnsSchema>;
 
 export const columns: ColumnDef<FormValues>[] = [
   {
@@ -164,7 +170,7 @@ export const columns: ColumnDef<FormValues>[] = [
     cell: ({ row }) => {
       //Convert date string to Date object
       const date = new Date(row.original.date_applied);
-      row.original.date_applied = date;
+      row.original.date_applied = date as unknown as string;
       // console.log('row:', row.original);
       const onSubmit = async (values: FormValues) => {
         try {
@@ -202,7 +208,7 @@ export const columns: ColumnDef<FormValues>[] = [
               <DialogFooter>
                 <DialogClose asChild>
                   <Button
-                    onClick={() => handleApplicationDelete(row.original.id)}
+                    onClick={() => handleApplicationDelete(row.original.id!)}
                   >
                     Delete
                   </Button>
