@@ -38,8 +38,12 @@ export default function NewApplication() {
     company_name: '',
     date_applied: '',
     link: '',
+    description: '',
+    location: '',
     status: '',
     platform: '',
+    month: '',
+    year: '',
   };
 
   return (
