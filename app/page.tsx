@@ -3,14 +3,16 @@ import Link from 'next/link';
 export default function Home() {
   return (
     <div className='p-6 flex flex-col items-center justify-center w-full gap-8'>
-      <div className='flex flex-col gap-4'>
-        <div className='dark:text-indigo-50'>
-          <h1 className='text-8xl font-black uppercase'>Your job hunt</h1>
-          <h2 className='text-5xl font-black uppercase'>
+      <div className='flex flex-col gap-2'>
+        <div className='bg-gradient-to-r to-[#E52E80] from-indigo-600 drop-shadow-xl bg-clip-text'>
+          <h1 className='text-8xl font-black uppercase text-transparent'>
+            Your job hunt
+          </h1>
+          <h2 className='text-5xl font-black uppercase text-transparent'>
             Organized and Effortless.
           </h2>
         </div>
-        <p className='max-w-2xl text-indigo-500 text-xl font-normal leading-6 dark:text-indigo-200'>
+        <p className='max-w-2xl text-indigo-500 text-xl font-light leading-6 dark:text-indigo-200'>
           Say goodbye to scattered notes and missed deadlines. Job Application
           Tracker helps you manage your applications, interviews, and follow-ups
           in one place.
