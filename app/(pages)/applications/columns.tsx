@@ -101,7 +101,12 @@ export const columns: ColumnDef<FormValues>[] = [
       return <p className='font-semibold px-4 py-2'>Link</p>;
     },
     cell: ({ row }) => {
-      const url = parseUrl(row.getValue('link'));
+      let url;
+      if (row.getValue('link')) {
+        url = parseUrl(row.getValue('link'));
+      } else {
+        url = '';
+      }
       return <Link href={url}>{row.getValue('link')}</Link>;
     },
   },
