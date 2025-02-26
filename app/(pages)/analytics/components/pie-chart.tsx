@@ -38,9 +38,12 @@ export function PieChartComponent({ title, data }: Props) {
   data.map((item, i) => {
     item['fill'] = `hsl(var(--chart-${i + 1}))`;
   });
+  console.log(data);
+
+  const totalFreq = data.reduce((sum, item) => sum + item.freq, 0);
 
   return (
-    <Card>
+    <Card className='max-w-96'>
       <CardHeader className='items-center mt-2'>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
@@ -57,9 +60,12 @@ export function PieChartComponent({ title, data }: Props) {
         <CardFooter>
           <ul className='flex flex-col text-sm'>
             {data.map((item) => {
+              const percentage =
+                Math.floor(((item.freq * 100) / totalFreq) * 100) / 100;
               return (
                 <li key={item.name}>
-                  {item.name}: {item.freq}
+                  {item.name}: {item.freq} ({percentage}
+                  %)
                 </li>
               );
             })}
