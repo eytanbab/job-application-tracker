@@ -146,7 +146,10 @@ export const ApplicationForm = ({
     if (!values.description) {
       values.description = '';
     }
-    values.description = values.description ?? '';
+    if (!values.location) {
+      values.location = '';
+    }
+
     // convert form values to lower case for ignoring duplicates such was Waiting and waiting when fetching from db
     values = {
       ...values,
