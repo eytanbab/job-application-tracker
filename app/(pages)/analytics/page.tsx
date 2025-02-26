@@ -9,6 +9,7 @@ import {
 import { PieChartComponent } from './components/pie-chart';
 import { ApplicationsPerYearBarChart } from './components/applications-per-year-bar-chart';
 import { StatusPerPlatformPieChart } from './components/status-per-platform-pie-chart';
+import { Section } from './components/Section';
 
 export default async function Charts() {
   const top5Companies = await getTop5Companies();
@@ -23,31 +24,28 @@ export default async function Charts() {
   return (
     <div className='w-full flex flex-col h-full gap-8'>
       {/* Overview charts */}
-      <div>
-        <h1 className='text-2xl'>Overview</h1>
-        <div className='w-full h-px bg-slate-300' />
-      </div>
-      <div className='w-full flex gap-4'>
+      <Section title='Overview'>
         <PieChartComponent title='Top 5 companies' data={top5Companies} />
         <PieChartComponent title='Top 5 platforms' data={top5Platforms} />
-        <PieChartComponent title='Applications status' data={top5Statuses} />
+        <PieChartComponent
+          title='Top 5 Applications status'
+          data={top5Statuses}
+        />
         <ApplicationsPerYearBarChart years={years} data={applicationsPerYear} />
-      </div>
-      <div>
-        <h1 className='text-2xl'>Status per platform</h1>
-        <div className='w-full h-px bg-slate-300' />
-      </div>
+      </Section>
       {/* Status per platform charts */}
-      <div className='w-full flex flex-wrap gap-4 py-2'>
-        {statusPerPlatform.map((platform) => {
-          return (
-            <StatusPerPlatformPieChart
-              key={platform.platformName}
-              data={platform}
-            />
-          );
-        })}
-      </div>
+      <Section title='Status per Platform'>
+        <div className='grid grid-cols-6 gap-4'>
+          {statusPerPlatform.map((platform) => {
+            return (
+              <StatusPerPlatformPieChart
+                key={platform.platformName}
+                data={platform}
+              />
+            );
+          })}
+        </div>
+      </Section>
     </div>
   );
 }
