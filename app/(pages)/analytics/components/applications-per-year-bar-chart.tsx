@@ -89,7 +89,7 @@ export function ApplicationsPerYearBarChart({ years, data }: Props) {
             <ChartTooltip content={<ChartTooltipContent />} />
             <Bar
               dataKey='numOfApplications'
-              fill='hsl(var(--chart-3))'
+              fill='hsl(var(--chart-1))'
               radius={4}
             />
           </BarChart>
