@@ -2,6 +2,10 @@
 
 A simple and efficient job application tracking website built with modern web technologies. This project helps users keep track of their job applications, including details like role, company, application status, and more.
 
+![Applications](https://i.imgur.com/0J7KPba.png)
+![Overview](https://i.imgur.com/fISBzzl.png)
+![Overview](https://i.imgur.com/UlTGmGi.png)
+
 ## 🚀 Tech Stack
 
 - **Next.js 15** - For the frontend and server-side rendering.
@@ -49,4 +53,3 @@ This project is licensed under the [MIT License](LICENSE).
 ---
 
 Feel free to contribute or suggest improvements! 🚀
-
