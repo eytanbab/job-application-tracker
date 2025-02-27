@@ -41,6 +41,9 @@ export function StatusPerPlatformPieChart({ data }: Props) {
   data.statuses.map((item, i) => {
     item['fill'] = `hsl(var(--chart-${i + 1}))`;
   });
+
+  const totalFreq = data.statuses.reduce((sum, item) => sum + item.value, 0);
+
   return (
     <Card>
       <CardHeader className='items-center mt-2'>
@@ -66,9 +69,18 @@ export function StatusPerPlatformPieChart({ data }: Props) {
         <CardFooter>
           <ul className='flex flex-col text-sm'>
             {data.statuses.map((item) => {
+              // return (
+              //   <li key={item.status}>
+              //     {' '}
+              //     {item.status}: {item.value}
+              //   </li>
+              // );
+              const percentage =
+                Math.floor(((item.value * 100) / totalFreq) * 100) / 100;
               return (
-                <li key={item.status}>
-                  {item.status}: {item.value}
+                <li key={item.status} className='lowercase'>
+                  {item.status}: {item.value} ({percentage}
+                  %)
                 </li>
               );
             })}
