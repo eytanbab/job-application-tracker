@@ -47,7 +47,7 @@ export function StatusPerPlatformPieChart({ data }: Props) {
   return (
     <Card>
       <CardHeader className='items-center mt-2'>
-        <CardTitle>{data.platformName}</CardTitle>
+        <CardTitle className='capitalize'>{data.platformName}</CardTitle>
       </CardHeader>
       <CardContent className='flex-1'>
         <ChartContainer
@@ -78,7 +78,7 @@ export function StatusPerPlatformPieChart({ data }: Props) {
               const percentage =
                 Math.floor(((item.value * 100) / totalFreq) * 100) / 100;
               return (
-                <li key={item.status} className='lowercase'>
+                <li key={item.status} className='capitalize'>
                   {item.status}: {item.value} ({percentage}
                   %)
                 </li>
