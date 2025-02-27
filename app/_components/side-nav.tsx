@@ -17,7 +17,7 @@ const SideNav = () => {
             key={item}
             href={`/${item}`}
             className={cn(
-              'rounded-sm w-full px-4 py-2 hover:bg-indigo-500 hover:text-slate-100 capitalize',
+              'rounded-sm w-full px-4 py-2 hover:bg-indigo-500 hover:text-slate-100 capitalize transition-colors duration-300',
               pathname === `/${item}` ? 'bg-indigo-600 text-slate-100' : ''
             )}
           >
