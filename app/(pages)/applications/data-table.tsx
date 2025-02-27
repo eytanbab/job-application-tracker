@@ -121,9 +121,10 @@ export function DataTable<TData, TValue>({
 
       {/* Pagination buttons */}
       <div className='flex items-center justify-between py-4'>
-        <h1>
-          Showing {table.getRowModel().rows.length} / {data.length}
-        </h1>
+        <p>
+          Showing {table.getRowModel().rows.length} of{' '}
+          {table.getFilteredRowModel().rows.length} row(s).
+        </p>
         <div className='space-x-2'>
           <Button
             variant='outline'
