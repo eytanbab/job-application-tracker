@@ -63,7 +63,7 @@ export function PieChartComponent({ title, data }: Props) {
               const percentage =
                 Math.floor(((item.freq * 100) / totalFreq) * 100) / 100;
               return (
-                <li key={item.name}>
+                <li key={item.name} className='capitalize'>
                   {item.name}: {item.freq} ({percentage}
                   %)
                 </li>
