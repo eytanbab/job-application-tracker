@@ -5,6 +5,12 @@ import { StatusPerPlatformPieChart } from '../components/status-per-platform-pie
 export default async function Overview() {
   const statusPerPlatform = await getStatusPerPlatform();
 
+  console.log(statusPerPlatform);
+  if (statusPerPlatform.length === 0)
+    return (
+      <p>No applications found. Add an application to see the analytics.</p>
+    );
+
   return (
     <Section>
       <div className='grid grid-cols-6 gap-4'>

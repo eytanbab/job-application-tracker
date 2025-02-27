@@ -17,6 +17,11 @@ export default async function Overview() {
   const applicationsPerYear = await getApplicationsPerYear();
   const years = await getYears();
 
+  if (top5Companies.length === 0)
+    return (
+      <p>No applications found. Add an application to see the analytics.</p>
+    );
+
   return (
     <Section>
       <PieChartComponent title='Top 5 companies' data={top5Companies} />
