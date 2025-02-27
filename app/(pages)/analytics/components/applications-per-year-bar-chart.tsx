@@ -47,7 +47,7 @@ export function ApplicationsPerYearBarChart({ years, data }: Props) {
   }, [data, selectedYear]);
 
   return (
-    <Card className='flex-1'>
+    <Card className='flex-1  max-w-5xl'>
       <CardHeader className='w-full flex-row justify-between items-center'>
         <CardTitle>Applications per year</CardTitle>
         <Select value={selectedYear} onValueChange={setSelectedYear}>
