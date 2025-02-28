@@ -191,7 +191,7 @@ export const ApplicationForm = ({
                         <Button
                           variant={'outline'}
                           className={cn(
-                            'flex h-10 w-full rounded-md border border-indigo-600 px-4 bg-transparent py-2 text-base font-normal disabled:cursor-not-allowed disabled:opacity-50 md:text-sm text-indigo-600 dark:text-indigo-100 group',
+                            'flex h-10 w-full rounded-md border border-indigo-600 dark:border-indigo-400 px-4 bg-transparent py-2 text-base font-normal disabled:cursor-not-allowed disabled:opacity-50 md:text-sm text-indigo-600 dark:text-indigo-100 group',
                             !field.value && 'text-indigo-300'
                           )}
                         >
@@ -200,7 +200,7 @@ export const ApplicationForm = ({
                           ) : (
                             <span>Pick a date</span>
                           )}
-                          <CalendarIcon className='ml-auto h-4 w-4 text-indigo-600 group-hover:text-slate-50' />
+                          <CalendarIcon className='ml-auto h-4 w-4 text-indigo-600 dark:text-indigo-400 group-hover:text-slate-50' />
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
