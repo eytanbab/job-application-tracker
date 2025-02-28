@@ -141,6 +141,38 @@ export async function getTop5Statuses() {
     .limit(5);
 }
 
+export async function getTop5Locations() {
+  const { userId } = await auth();
+  if (!userId) return [];
+
+  return db
+    .select({
+      name: jobApplications.location,
+      freq: count(jobApplications.location),
+    })
+    .from(jobApplications)
+    .where(eq(jobApplications.userId, userId))
+    .groupBy(jobApplications.location)
+    .orderBy(desc(count(jobApplications.location)))
+    .limit(5);
+}
+
+export async function getTop5RoleNames() {
+  const { userId } = await auth();
+  if (!userId) return [];
+
+  return db
+    .select({
+      name: jobApplications.role_name,
+      freq: count(jobApplications.role_name),
+    })
+    .from(jobApplications)
+    .where(eq(jobApplications.userId, userId))
+    .groupBy(jobApplications.role_name)
+    .orderBy(desc(count(jobApplications.role_name)))
+    .limit(5);
+}
+
 // Total applications per year
 export async function getApplicationsPerYear() {
   const { userId } = await auth();
