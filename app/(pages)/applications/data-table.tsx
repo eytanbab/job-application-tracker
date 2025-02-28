@@ -125,7 +125,7 @@ export function DataTable<TData, TValue>({
           Showing {table.getRowModel().rows.length} of{' '}
           {table.getFilteredRowModel().rows.length} row(s).
         </p>
-        <div className='space-x-2'>
+        <div className='flex gap-2 justify-end'>
           <Button
             variant='outline'
             size='sm'

@@ -12,17 +12,15 @@ export default async function Overview() {
     );
 
   return (
-    <Section>
-      <div className='col-span-full grid grid-cols-6 gap-4'>
-        {statusPerPlatform.map((platform) => {
-          return (
-            <StatusPerPlatformPieChart
-              key={platform.platformName}
-              data={platform}
-            />
-          );
-        })}
-      </div>
-    </Section>
+    <div className='col-span-full grid grid-cols-1 2xl:grid-cols-6 gap-4'>
+      {statusPerPlatform.map((platform) => {
+        return (
+          <StatusPerPlatformPieChart
+            key={platform.platformName}
+            data={platform}
+          />
+        );
+      })}
+    </div>
   );
 }
