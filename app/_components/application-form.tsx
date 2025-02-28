@@ -22,13 +22,14 @@ import {
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Loader2 } from 'lucide-react';
 
 import { format } from 'date-fns';
 
 import { cn } from '@/lib/utils';
 import { redirect } from 'next/navigation';
 import { Textarea } from '@/components/ui/textarea';
+import { useTransition } from 'react';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const createApplicationSchema = insertApplicationSchema.omit({
@@ -49,6 +50,8 @@ export const ApplicationForm = ({
   onSubmit,
   onClose,
 }: Props) => {
+  const [isPending, startTransition] = useTransition();
+
   const formSchema = z.object({
     id: z.string().optional(),
     userId: z.string().optional(),
@@ -142,13 +145,6 @@ export const ApplicationForm = ({
   ];
 
   const handleSubmit = (values: FormValues) => {
-    if (!values.description) {
-      values.description = '';
-    }
-    if (!values.location) {
-      values.location = '';
-    }
-
     // convert form values to lower case for ignoring duplicates such was Waiting and waiting when fetching from db
     values = {
       ...values,
@@ -160,9 +156,12 @@ export const ApplicationForm = ({
       platform: values.platform.toLowerCase(),
       status: values.status.toLowerCase(),
     };
-    onSubmit(values);
-    onClose();
-    redirect('/applications');
+
+    startTransition(async () => {
+      onSubmit(values);
+      onClose();
+      redirect('/applications');
+    });
   };
 
   // for debugging:
@@ -252,7 +251,9 @@ export const ApplicationForm = ({
         ))}
 
         <div className='mt-4 flex flex-col gap-2 w-full'>
-          <Button type='submit'>Submit</Button>
+          <Button type='submit'>
+            {isPending ? <Loader2 className='size-8 animate-spin' /> : 'Submit'}
+          </Button>
           {/* Cancel button */}
           <Button type='button' variant='outline' onClick={onCancel}>
             Cancel
