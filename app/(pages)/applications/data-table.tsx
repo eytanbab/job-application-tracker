@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -100,10 +101,24 @@ export function DataTable<TData, TValue>({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && 'selected'}
-                className='text-indigo-500  hover:text-slate-100 hover:bg-indigo-600 border-b border-indigo-200 dark:text-indigo-100 dark:border-indigo-800'
+                className={cn(
+                  'text-indigo-500  hover:text-slate-100 hover:bg-indigo-600 border-b border-indigo-200 dark:text-indigo-100 dark:border-indigo-800 capitalize',
+                  row.original.status.toLowerCase().includes('waiting') &&
+                    'bg-indigo-100',
+                  row.original.status.toLowerCase().includes('rejected') &&
+                    'bg-rose-100 text-rose-600',
+                  row.original.status.toLowerCase().includes('accepted') &&
+                    'bg-emerald-100 text-emerald-600'
+                )}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className='truncate max-w-60'>
+                  <TableCell
+                    key={cell.id}
+                    className={cn(
+                      'truncate max-w-60 ',
+                      cell.column.id === 'link' && 'lowercase'
+                    )}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
