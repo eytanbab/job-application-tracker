@@ -162,6 +162,7 @@ export const ApplicationForm = ({
     };
     onSubmit(values);
     onClose();
+    redirect('/applications');
   };
 
   // for debugging:
