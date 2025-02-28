@@ -3,5 +3,5 @@ type Props = {
 };
 
 export function Section({ children }: Props) {
-  return <div className='w-full flex gap-4'>{children}</div>;
+  return <div className='w-full grid grid-cols-5 gap-4'>{children}</div>;
 }

@@ -13,7 +13,7 @@ export default async function Overview() {
 
   return (
     <Section>
-      <div className='grid grid-cols-6 gap-4'>
+      <div className='col-span-full grid grid-cols-6 gap-4'>
         {statusPerPlatform.map((platform) => {
           return (
             <StatusPerPlatformPieChart
