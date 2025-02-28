@@ -142,7 +142,6 @@ export const ApplicationForm = ({
   ];
 
   const handleSubmit = (values: FormValues) => {
-    console.log('values: ', values);
     if (!values.description) {
       values.description = '';
     }
