@@ -2,6 +2,7 @@ import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import React from 'react';
 import { ModeToggle } from './mode-toggle';
+import { MobileSideNav } from './side-nav-mobile';
 
 const Nav = () => {
   return (
@@ -9,7 +10,7 @@ const Nav = () => {
       <Link href='/' className='font-bold text-2xl'>
         JAT
       </Link>
-      <div className='flex gap-4'>
+      <div className='flex gap-4 items-center'>
         <ModeToggle />
         <SignedOut>
           <SignInButton />
@@ -17,6 +18,7 @@ const Nav = () => {
         <SignedIn>
           <UserButton />
         </SignedIn>
+        <MobileSideNav />
       </div>
     </div>
   );
