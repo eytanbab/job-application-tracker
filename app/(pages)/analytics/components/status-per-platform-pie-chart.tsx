@@ -49,7 +49,7 @@ export function StatusPerPlatformPieChart({ data }: Props) {
       <CardHeader className='items-center mt-2'>
         <CardTitle className='capitalize'>{data.platformName}</CardTitle>
       </CardHeader>
-      <CardContent className='flex-1'>
+      <CardContent className='flex-1 w-full'>
         <ChartContainer
           config={chartConfig}
           className='mx-auto aspect-square pb-0 [&_.recharts-pie-label-text]:fill-foreground'
