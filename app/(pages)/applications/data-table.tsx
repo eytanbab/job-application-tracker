@@ -102,13 +102,13 @@ export function DataTable<TData, TValue>({
                 key={row.id}
                 data-state={row.getIsSelected() && 'selected'}
                 className={cn(
-                  'text-indigo-500  hover:text-slate-100 hover:bg-indigo-600 border-b border-indigo-200 dark:text-indigo-100 dark:border-indigo-800 capitalize',
+                  'text-indigo-500  hover:text-slate-100 hover:bg-indigo-600 dark:hover:bg-indigo-800 border-b border-indigo-200 dark:text-indigo-100 dark:border-indigo-800 capitalize',
                   row.original.status.toLowerCase().includes('waiting') &&
-                    'bg-indigo-100',
+                    'bg-indigo-100 dark:bg-indigo-950/50',
                   row.original.status.toLowerCase().includes('rejected') &&
-                    'bg-rose-100 text-rose-600',
+                    'bg-rose-100 text-rose-600 dark:bg-rose-950/75 dark:text-rose-500',
                   row.original.status.toLowerCase().includes('accepted') &&
-                    'bg-emerald-100 text-emerald-600'
+                    'bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300'
                 )}
               >
                 {row.getVisibleCells().map((cell) => (
