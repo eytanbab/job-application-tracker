@@ -24,7 +24,7 @@ const navItems = [
   },
 ];
 
-export function SheetDemo() {
+export function MobileSideNav() {
   const [open, setOpen] = useState(false);
 
   const pathname = usePathname();
