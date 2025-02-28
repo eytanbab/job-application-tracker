@@ -251,7 +251,7 @@ export const ApplicationForm = ({
         ))}
 
         <div className='mt-4 flex flex-col gap-2 w-full'>
-          <Button type='submit'>
+          <Button type='submit' disabled={isPending}>
             {isPending ? <Loader2 className='size-8 animate-spin' /> : 'Submit'}
           </Button>
           {/* Cancel button */}
