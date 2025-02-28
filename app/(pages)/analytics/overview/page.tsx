@@ -1,7 +1,9 @@
 import {
   getApplicationsPerYear,
   getTop5Companies,
+  getTop5Locations,
   getTop5Platforms,
+  getTop5RoleNames,
   getTop5Statuses,
   getYears,
 } from '@/app/actions';
@@ -13,6 +15,8 @@ export default async function Overview() {
   const top5Companies = await getTop5Companies();
   const top5Statuses = await getTop5Statuses();
   const top5Platforms = await getTop5Platforms();
+  const top5Locations = await getTop5Locations();
+  const top5RoleNames = await getTop5RoleNames();
 
   const applicationsPerYear = await getApplicationsPerYear();
   const years = await getYears();
@@ -30,6 +34,8 @@ export default async function Overview() {
         title='Top 5 Applications status'
         data={top5Statuses}
       />
+      <PieChartComponent title='Top 5 Locations' data={top5Locations} />
+      <PieChartComponent title='Top 5 Locations' data={top5RoleNames} />
       <ApplicationsPerYearBarChart years={years} data={applicationsPerYear} />
     </Section>
   );
