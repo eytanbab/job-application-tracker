@@ -41,11 +41,11 @@ export function PieChartComponent({ title, data }: Props) {
   const totalFreq = data.reduce((sum, item) => sum + item.freq, 0);
 
   return (
-    <Card className='max-w-96'>
+    <Card>
       <CardHeader className='items-center mt-2'>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <CardContent className='flex-1'>
+      <CardContent className='flex-1 w-full'>
         <ChartContainer
           config={chartConfig}
           className='mx-auto aspect-square pb-0 [&_.recharts-pie-label-text]:fill-foreground'
@@ -55,8 +55,8 @@ export function PieChartComponent({ title, data }: Props) {
             <Pie data={data} dataKey='freq' label />
           </PieChart>
         </ChartContainer>
-        <CardFooter>
-          <ul className='flex flex-col text-sm'>
+        <CardFooter className='w-full'>
+          <ul className='flex flex-col text-sm w-full text-left'>
             {data.map((item) => {
               const percentage =
                 Math.floor(((item.freq * 100) / totalFreq) * 100) / 100;
