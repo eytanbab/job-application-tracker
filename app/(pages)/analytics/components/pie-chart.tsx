@@ -38,8 +38,6 @@ export function PieChartComponent({ title, data }: Props) {
   data.map((item, i) => {
     item['fill'] = `hsl(var(--chart-${i + 1}))`;
   });
-  console.log(data);
-
   const totalFreq = data.reduce((sum, item) => sum + item.freq, 0);
 
   return (
