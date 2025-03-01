@@ -31,6 +31,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang='en' suppressHydrationWarning>
         <body
+          suppressHydrationWarning
           className={`${roboto.className} antialiased bg-slate-100 dark:bg-slate-900 dark:text-indigo-50 text-indigo-600 h-screen`}
         >
           <ThemeProvider
