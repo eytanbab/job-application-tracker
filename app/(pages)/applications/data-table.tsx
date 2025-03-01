@@ -58,8 +58,6 @@ export function DataTable<TData extends { status: string }, TValue>({
     },
   });
 
-  console.log(table.getRowModel().rows[0].original.status);
-
   return (
     <div className='w-full'>
       <div className='flex items-center py-4 justify-between'>
