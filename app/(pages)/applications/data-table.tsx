@@ -27,12 +27,12 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
-interface DataTableProps<TData, TValue> {
+interface DataTableProps<TData extends { status: string }, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends { status: string }, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
@@ -58,6 +58,7 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  console.log(table.getRowModel().rows[0].original.status);
 
   return (
     <div className='w-full'>
