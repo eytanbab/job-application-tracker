@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 interface DataTableProps<TData extends { status: string }, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -103,27 +104,55 @@ export function DataTable<TData extends { status: string }, TValue>({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && 'selected'}
-                className={cn(
-                  'text-indigo-500  hover:text-slate-100 hover:bg-indigo-600 dark:hover:bg-indigo-800 border-b border-indigo-200 dark:text-indigo-100 dark:border-indigo-800 capitalize',
-                  row.original.status.toLowerCase().includes('waiting') &&
-                    'bg-indigo-100 dark:bg-indigo-950/50',
-                  row.original.status.toLowerCase().includes('rejected') &&
-                    'bg-rose-100 text-rose-600 dark:bg-rose-950/75 dark:text-rose-500',
-                  row.original.status.toLowerCase().includes('accepted') &&
-                    'bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300'
-                )}
+                className='text-indigo-500  hover:text-slate-100 hover:bg-indigo-600 dark:hover:bg-indigo-800 border-b border-indigo-200 dark:text-indigo-100 dark:border-indigo-800 capitalize'
               >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell
-                    key={cell.id}
-                    className={cn(
-                      'truncate max-w-60 ',
-                      cell.column.id === 'link' && 'lowercase'
-                    )}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
+                {row.getVisibleCells().map((cell) =>
+                  cell.column.id === 'status' ? (
+                    <TableCell
+                      key={cell.id}
+                      className={cn('truncate max-w-60 ')}
+                    >
+                      <Badge
+                        className={cn(
+                          (cell.getValue() as string)
+                            .toLowerCase()
+                            .includes('reject') &&
+                            'bg-red-200 text-red-950 dark:bg-red-950/75 dark:text-red-500',
+                          (cell.getValue() as string)
+                            .toLowerCase()
+                            .includes('wait') &&
+                            'bg-indigo-200 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300',
+                          (cell.getValue() as string)
+                            .toLowerCase()
+                            .includes('accept') &&
+                            'bg-emerald-200 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-300',
+                          (cell.getValue() as string)
+                            .toLowerCase()
+                            .includes('ghost') &&
+                            'bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-slate-300'
+                        )}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </Badge>
+                    </TableCell>
+                  ) : (
+                    <TableCell
+                      key={cell.id}
+                      className={cn(
+                        'truncate max-w-60 ',
+                        cell.column.id === 'link' && 'lowercase'
+                      )}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  )
+                )}
               </TableRow>
             ))
           ) : (
