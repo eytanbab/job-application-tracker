@@ -36,7 +36,9 @@ export function DataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'date_applied', desc: true },
+  ]);
   const [globalFilter, setGlobalFilter] = useState('');
 
   const table = useReactTable({
@@ -55,6 +57,7 @@ export function DataTable<TData, TValue>({
       globalFilter,
     },
   });
+
 
   return (
     <div className='w-full'>
