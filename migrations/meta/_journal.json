@@ -43,6 +43,13 @@
       "when": 1740737887484,
       "tag": "0005_gifted_alice",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1741101027881,
+      "tag": "0006_heavy_thaddeus_ross",
+      "breakpoints": true
     }
   ]
 }

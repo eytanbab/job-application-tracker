@@ -18,3 +18,9 @@ export const jobApplications = pgTable('job_applications', {
 });
 
 export const insertApplicationSchema = createInsertSchema(jobApplications);
+
+export const documents = pgTable('documents', {
+  id: uuid().defaultRandom().primaryKey(),
+  title: varchar('title').notNull(),
+  doc_url: varchar('doc_url').notNull(),
+});
