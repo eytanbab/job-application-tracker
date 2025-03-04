@@ -11,10 +11,19 @@ import { and, count, desc, eq } from 'drizzle-orm';
 import { format } from 'date-fns';
 import { formatApplicationsPerYear } from '@/lib/utils';
 
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { ListObjectsV2Command, PutObjectCommand } from '@aws-sdk/client-s3';
+import { s3Client } from '@/lib/s3-client';
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
 
 type FormValues = z.input<typeof formSchema>;
+
+const fileSchema = z.object({
+  fileName: z.string().min(2, 'File name is required'),
+  contentType: z.string().min(1, 'Content type is required'),
+});
 
 // Get all applications of current user
 export async function getApplications() {
@@ -240,4 +249,85 @@ export async function getStatusPerPlatform() {
     platformName,
     statuses,
   }));
+}
+
+export async function generatePresignedUrl(
+  fileName: string,
+  contentType: string
+) {
+  try {
+    const { userId } = await auth();
+    if (!fileName || !contentType || !userId) {
+      throw new Error(
+        'Missing required parameters: fileName and contentType and userId'
+      );
+    }
+
+    // Allowed file types (modify this based on your needs)
+    const allowedFileTypes = ['application/pdf'];
+    if (!allowedFileTypes.includes(contentType)) {
+      throw new Error('Invalid file type');
+    }
+
+    // Generate a unique filename for the file in the S3 bucket
+    const fileKey = `${userId}/${Date.now().toString()}-${fileName}`;
+
+    const uploadParams = {
+      Bucket: process.env.NEXT_AWS_S3_BUCKET_NAME || '', // Get the bucket name from env variable
+      Key: fileKey,
+      ContentType: contentType,
+      Metadata: {
+        userId, // Store userId as metadata
+      },
+    };
+
+    if (!uploadParams.Bucket) {
+      throw new Error('AWS S3 bucket name is missing in environment variables');
+    }
+
+    // Generate the pre-signed URL
+    const command = new PutObjectCommand(uploadParams);
+    const signedUrl = await getSignedUrl(s3Client, command, {
+      expiresIn: 3600, // URL expiry time
+    });
+
+    return { signedUrl };
+  } catch (error) {
+    console.error('Error generating pre-signed URL:', error);
+    return { error: error.message };
+  }
+}
+
+export async function getFiles() {
+  const { userId } = await auth();
+  if (!userId) return;
+
+  try {
+    const listParams = {
+      Bucket: process.env.NEXT_AWS_S3_BUCKET_NAME || '',
+      Prefix: `${userId}/`, // Filter files by userId (directory prefix)
+    };
+
+    if (!listParams.Bucket) {
+      throw new Error('AWS S3 bucket name is missing in environment variables');
+    }
+
+    // List the files in the bucket for the specific userId
+    const command = new ListObjectsV2Command(listParams);
+    const { Contents } = await s3Client.send(command);
+
+    if (!Contents) {
+      return []; // No files found
+    }
+
+    // Map through the files and return necessary info
+    return Contents.map((file) => ({
+      key: file.Key,
+      lastModified: file.LastModified,
+      size: file.Size,
+    }));
+  } catch (error) {
+    console.error('Error listing user files:', error);
+    return { error: error.message };
+  }
 }
