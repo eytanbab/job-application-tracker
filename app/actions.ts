@@ -46,7 +46,7 @@ export async function createApplication(values: FormValues) {
   const application: z.input<typeof insertApplicationSchema> = {
     ...values,
     userId,
-    month: format(new Date(values.date_applied), 'MM'),
+    month: format(new Date(values.date_applied), 'M'),
     year: format(new Date(values.date_applied), 'yyyy'),
   };
 
@@ -77,7 +77,7 @@ export async function updateApplication(values: FormValues) {
 
   const application = {
     ...values,
-    month: format(new Date(values.date_applied), 'MM'),
+    month: format(new Date(values.date_applied), 'M'),
     year: format(new Date(values.date_applied), 'yyyy'),
   };
 
