@@ -21,6 +21,7 @@ export const insertApplicationSchema = createInsertSchema(jobApplications);
 
 export const documents = pgTable('documents', {
   id: uuid().defaultRandom().primaryKey(),
+  userId: varchar('user_id', { length: 255 }).notNull(),
   title: varchar('title').notNull(),
   doc_url: varchar('doc_url').notNull(),
 });

@@ -50,6 +50,13 @@
       "when": 1741101027881,
       "tag": "0006_heavy_thaddeus_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1741134327839,
+      "tag": "0007_chilly_thundra",
+      "breakpoints": true
     }
   ]
 }
