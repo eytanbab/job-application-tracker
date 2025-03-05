@@ -42,7 +42,7 @@ export default function RootLayout({
           >
             <Toaster />
             <Nav />
-            <div className='flex'>
+            <div className='flex h-[calc(100%-4rem)]'>
               <SideNav />
               {children}
             </div>
