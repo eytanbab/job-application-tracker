@@ -2,9 +2,10 @@
 
 A simple and efficient job application tracking website built with modern web technologies. This project helps users keep track of their job applications, including details like role, company, application status, and more.
 
-![Applications](https://i.imgur.com/0J7KPba.png)
-![Overview](https://i.imgur.com/fISBzzl.png)
-![Overview](https://i.imgur.com/UlTGmGi.png)
+![Applications](https://i.imgur.com/OYboJSX.png)
+![Overview](https://i.imgur.com/0EL2I1M.png)
+![Status Per Platform](https://i.imgur.com/RVQKgYR.png)
+![Documents](https://i.imgur.com/GUSqnik.png)
 
 ## 🚀 Tech Stack
 
@@ -12,13 +13,15 @@ A simple and efficient job application tracking website built with modern web te
 - **Neon** - A scalable and serverless PostgreSQL database.
 - **Drizzle ORM** - For type-safe and efficient database interactions.
 - **shadcn/ui** - For clean and accessible UI components.
+- **Amazon S3** - For secure storage of uploaded PDF documents.
 
 ## 📌 Features
 
-- **Add Applications** – Easily log your job applications with relevant details.
+- **Manage Applications** – Log, edit, and delete job applications with ease.
 - **Track Status** – Monitor the progress of each application (Applied, Interviewing, Rejected, etc.).
 - **Organized View** – Filter by platform, status, or date.
-- **Responsive UI** – Works seamlessly on desktop and mobile devices.
+- **Upload Documents** – Store and manage resumes, CVs, and application letters securely.
+- **Responsive UI** – Works seamlessly on desktop, tablet and mobile devices.
 
 ## 🛠 Installation & Setup
 
@@ -32,7 +35,7 @@ A simple and efficient job application tracking website built with modern web te
    npm install
    ```
 3. Set up environment variables:
-   - Create a `.env.local` file and add the necessary environment variables for database connection and other settings.
+   - Create a `.env` file and add the necessary environment variables for database connection and other settings.
 4. Run the development server:
    ```sh
    npm run dev
