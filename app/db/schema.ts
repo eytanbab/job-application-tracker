@@ -1,4 +1,11 @@
-import { pgTable, varchar, text, date, uuid } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  varchar,
+  text,
+  date,
+  uuid,
+  timestamp,
+} from 'drizzle-orm/pg-core';
 
 import { createInsertSchema } from 'drizzle-zod';
 
@@ -24,4 +31,6 @@ export const documents = pgTable('documents', {
   userId: varchar('user_id', { length: 255 }).notNull(),
   title: varchar('title').notNull(),
   doc_url: varchar('doc_url').notNull(),
+  created_at: timestamp().defaultNow().notNull(),
+  file_name: varchar('file_name').notNull(),
 });
