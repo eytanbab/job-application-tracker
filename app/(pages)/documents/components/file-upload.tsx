@@ -37,10 +37,12 @@ export function FileUpload() {
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
+    defaultValues: {
+      title: '',
+    },
   });
 
   const onSubmit = async (data: z.infer<typeof FormSchema>) => {
-    console.log('data: ', data);
     const { title, file } = data;
 
     try {
@@ -78,10 +80,18 @@ export function FileUpload() {
           });
         } else {
           console.error('Failed to upload file');
+          toast({
+            description: 'Failed to upload file.',
+            variant: 'destructive',
+          });
         }
       }
     } catch (err) {
       console.error('Upload failed:', err);
+      toast({
+        description: 'Failed to upload file.',
+        variant: 'destructive',
+      });
     }
   };
 
