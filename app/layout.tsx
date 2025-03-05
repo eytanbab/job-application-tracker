@@ -32,7 +32,7 @@ export default function RootLayout({
       <html lang='en' suppressHydrationWarning>
         <body
           suppressHydrationWarning
-          className={`${roboto.className} antialiased bg-slate-100 dark:bg-slate-900 dark:text-indigo-50 text-indigo-600 h-screen`}
+          className={`${roboto.className} antialiased bg-slate-100 dark:bg-slate-900 dark:text-indigo-50 text-indigo-600 min-h-screen`}
         >
           <ThemeProvider
             attribute='class'
@@ -42,7 +42,7 @@ export default function RootLayout({
           >
             <Toaster />
             <Nav />
-            <div className='flex h-[calc(100%-4rem)]'>
+            <div className='flex'>
               <SideNav />
               {children}
             </div>
