@@ -298,11 +298,11 @@ export async function generatePresignedUrl(
 export async function createFile(title: string, doc_url: string) {
   const { userId } = await auth();
   if (!userId) return;
-
-  return db
+  await db
     .insert(documents)
     .values({ title, doc_url, userId })
     .returning({ insertedId: documents.id });
+  revalidatePath('/documents');
 }
 
 export async function getFiles() {

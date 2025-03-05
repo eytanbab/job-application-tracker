@@ -71,7 +71,7 @@ export function FileUpload() {
 
         if (res.ok) {
           const fileUrl = signedUrl.split('?')[0]; // Extract file url
-          await createFile(title, fileUrl); // Add title and file url to neon db
+          createFile(title, fileUrl); // Add title and file url to neon db
           toast({
             description: 'File uploaded successfully!',
             variant: 'default',
