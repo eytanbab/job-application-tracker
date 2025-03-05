@@ -14,7 +14,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
-import { generatePresignedUrl } from '@/app/actions'; // API route for generating signed URL
+import { createFile, generatePresignedUrl } from '@/app/actions'; // API route for generating signed URL
+import { useToast } from '@/hooks/use-toast';
 
 const FILE_SIZE_LIMIT = 5 * 1024 * 1024; // 5MB
 
@@ -32,11 +33,14 @@ const FormSchema = z.object({
 });
 
 export function FileUpload() {
+  const { toast } = useToast();
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
 
   const onSubmit = async (data: z.infer<typeof FormSchema>) => {
+    console.log('data: ', data);
     const { title, file } = data;
 
     try {
@@ -48,22 +52,33 @@ export function FileUpload() {
 
       if (error) {
         console.error('Error generating signed URL:', error);
+        toast({
+          description: 'Failed to upload.',
+          variant: 'destructive',
+        });
         return;
       }
 
       // Upload the file to S3 using the pre-signed URL
-      const res = await fetch(signedUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': file.type,
-        },
-      });
+      if (signedUrl) {
+        const res = await fetch(signedUrl, {
+          method: 'PUT',
+          body: file,
+          headers: {
+            'Content-Type': file.type,
+          },
+        });
 
-      if (res.ok) {
-        console.log('File uploaded successfully');
-      } else {
-        console.error('Failed to upload file');
+        if (res.ok) {
+          const fileUrl = signedUrl.split('?')[0]; // Extract file url
+          await createFile(title, fileUrl); // Add title and file url to neon db
+          toast({
+            description: 'File uploaded successfully!',
+            variant: 'default',
+          });
+        } else {
+          console.error('Failed to upload file');
+        }
       }
     } catch (err) {
       console.error('Upload failed:', err);
@@ -72,7 +87,10 @@ export function FileUpload() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='w-2/3 space-y-6'>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className='max-w-96 space-y-2'
+      >
         {/* Title Input */}
         <FormField
           control={form.control}
