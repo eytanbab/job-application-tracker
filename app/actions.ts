@@ -295,12 +295,17 @@ export async function generatePresignedUrl(
   }
 }
 
-export async function createFile(title: string, doc_url: string) {
+export async function createFile(
+  title: string,
+  doc_url: string,
+  file_name: string
+) {
   const { userId } = await auth();
   if (!userId) return;
+
   await db
     .insert(documents)
-    .values({ title, doc_url, userId })
+    .values({ title, doc_url, userId, file_name })
     .returning({ insertedId: documents.id });
   revalidatePath('/documents');
 }
