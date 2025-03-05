@@ -311,3 +311,14 @@ export async function getFiles() {
 
   return db.select().from(documents).where(eq(documents.userId, userId));
 }
+
+export async function deleteFile(id: string) {
+  const { userId } = await auth();
+  if (!userId) return;
+
+  await db
+    .delete(documents)
+    .where(and(eq(documents.userId, userId), eq(documents.id, id)));
+
+  revalidatePath('/documents');
+}
