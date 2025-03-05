@@ -7,22 +7,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { cn } from '@/lib/utils';
+import { cn, navItems } from '@/lib/utils';
 import { Menu } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-
-const navItems = [
-  {
-    url: '/applications',
-    name: 'applications',
-  },
-  {
-    url: '/analytics/overview',
-    name: 'analytics',
-  },
-];
 
 export function MobileSideNav() {
   const [open, setOpen] = useState(false);
