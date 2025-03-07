@@ -117,10 +117,6 @@ export function DataTable<TData extends { status: string }, TValue>({
                         className={cn(
                           (cell.getValue() as string)
                             .toLowerCase()
-                            .includes('reject') &&
-                            'bg-red-200 text-red-950 dark:bg-red-950/75 dark:text-red-500',
-                          (cell.getValue() as string)
-                            .toLowerCase()
                             .includes('applied') &&
                             'bg-indigo-200 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300',
                           (cell.getValue() as string)
@@ -138,7 +134,11 @@ export function DataTable<TData extends { status: string }, TValue>({
                           (cell.getValue() as string)
                             .toLowerCase()
                             .includes('interview') &&
-                            'bg-cyan-200 text-cyan-900 dark:bg-cyan-800 dark:text-cyan-300'
+                            'bg-cyan-200 text-cyan-900 dark:bg-cyan-800 dark:text-cyan-300',
+                          (cell.getValue() as string)
+                            .toLowerCase()
+                            .includes('reject') &&
+                            'bg-red-200 text-red-950 dark:bg-red-950/75 dark:text-red-500'
                         )}
                       >
                         {flexRender(
