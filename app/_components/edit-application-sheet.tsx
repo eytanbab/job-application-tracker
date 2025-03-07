@@ -36,7 +36,7 @@ export const EditApplicationSheet = ({ row, onSubmit }: Row) => {
           <Pencil className='size-4' />
         </button>
       </SheetTrigger>
-      <SheetContent>
+      <SheetContent className='w-full overflow-y-auto'>
         <SheetHeader>
           <SheetTitle className='font-normal text-indigo-600'>
             Edit profile
