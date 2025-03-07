@@ -27,6 +27,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Plus } from 'lucide-react';
 
 interface DataTableProps<TData extends { status: string }, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -68,7 +69,7 @@ export function DataTable<TData extends { status: string }, TValue>({
           onChange={(e) => table.setGlobalFilter(String(e.target.value))}
           className='max-w-sm'
         />
-        <Link href='/applications/new'>
+        <Link href='/applications/new' className='hidden md:inline-block'>
           <Button variant='outline'>New application</Button>
         </Link>
       </div>
@@ -198,6 +199,14 @@ export function DataTable<TData extends { status: string }, TValue>({
           </Button>
         </div>
       </div>
+      <Link
+        href='/applications/new'
+        className='md:hidden fixed bottom-4 right-4'
+      >
+        <Button className='size-10'>
+          <Plus />
+        </Button>
+      </Link>
     </div>
   );
 }
