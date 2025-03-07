@@ -35,7 +35,7 @@ export default async function Overview() {
         data={top5Statuses}
       />
       <PieChartComponent title='Top 5 Locations' data={top5Locations} />
-      <PieChartComponent title='Top 5 Locations' data={top5RoleNames} />
+      <PieChartComponent title='Top 5 Roles' data={top5RoleNames} />
       <ApplicationsPerYearBarChart years={years} data={applicationsPerYear} />
     </Section>
   );
