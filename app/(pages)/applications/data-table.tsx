@@ -28,6 +28,13 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Plus } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface DataTableProps<TData extends { status: string }, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -198,6 +205,26 @@ export function DataTable<TData extends { status: string }, TValue>({
             Next
           </Button>
         </div>
+      </div>
+      <div className='flex items-center space-x-2'>
+        <p className='text-sm font-medium'>Rows per page</p>
+        <Select
+          value={`${table.getState().pagination.pageSize}`}
+          onValueChange={(value) => {
+            table.setPageSize(Number(value));
+          }}
+        >
+          <SelectTrigger className='h-8 w-[70px]'>
+            <SelectValue placeholder={table.getState().pagination.pageSize} />
+          </SelectTrigger>
+          <SelectContent side='top'>
+            {[5, 10, 15, 20, 25].map((pageSize) => (
+              <SelectItem key={pageSize} value={`${pageSize}`}>
+                {pageSize}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <Link
         href='/applications/new'
