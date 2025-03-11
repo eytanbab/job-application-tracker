@@ -16,6 +16,8 @@ import { Input } from '@/components/ui/input';
 
 import { createFile, generatePresignedUrl } from '@/app/actions'; // API route for generating signed URL
 import { useToast } from '@/hooks/use-toast';
+import { useTransition } from 'react';
+import { Loader2 } from 'lucide-react';
 
 const FILE_SIZE_LIMIT = 5 * 1024 * 1024; // 5MB
 
@@ -34,6 +36,7 @@ const FormSchema = z.object({
 
 export function FileUpload() {
   const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -44,56 +47,57 @@ export function FileUpload() {
 
   const onSubmit = async (data: z.infer<typeof FormSchema>) => {
     const { title, file } = data;
+    startTransition(async () => {
+      try {
+        // Generate the pre-signed URL
+        const { signedUrl, error } = await generatePresignedUrl(
+          file.name,
+          file.type
+        );
 
-    try {
-      // Generate the pre-signed URL
-      const { signedUrl, error } = await generatePresignedUrl(
-        file.name,
-        file.type
-      );
-
-      if (error) {
-        console.error('Error generating signed URL:', error);
-        toast({
-          description: 'Failed to upload.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Upload the file to S3 using the pre-signed URL
-      if (signedUrl) {
-        const res = await fetch(signedUrl, {
-          method: 'PUT',
-          body: file,
-          headers: {
-            'Content-Type': file.type,
-          },
-        });
-
-        if (res.ok) {
-          const fileUrl = signedUrl.split('?')[0]; // Extract file url
-          const fileName = file.name;
-          createFile(title, fileUrl, fileName); // Add title, file url and file name to neon db
+        if (error) {
+          console.error('Error generating signed URL:', error);
           toast({
-            description: 'File uploaded successfully!',
-            variant: 'default',
-          });
-        } else {
-          console.error('Failed to upload file');
-          toast({
-            description: 'Failed to upload file.',
+            description: 'Failed to upload.',
             variant: 'destructive',
           });
+          return;
         }
+
+        // Upload the file to S3 using the pre-signed URL
+        if (signedUrl) {
+          const res = await fetch(signedUrl, {
+            method: 'PUT',
+            body: file,
+            headers: {
+              'Content-Type': file.type,
+            },
+          });
+
+          if (res.ok) {
+            const fileUrl = signedUrl.split('?')[0]; // Extract file url
+            const fileName = file.name;
+            createFile(title, fileUrl, fileName); // Add title, file url and file name to neon db
+            toast({
+              description: 'File uploaded successfully!',
+              variant: 'default',
+            });
+          } else {
+            console.error('Failed to upload file');
+            toast({
+              description: 'Failed to upload file.',
+              variant: 'destructive',
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Upload failed:', err);
+        toast({
+          description: 'Failed to upload file.',
+          variant: 'destructive',
+        });
       }
-    } catch (err) {
-      console.error('Upload failed:', err);
-      toast({
-        description: 'Failed to upload file.',
-        variant: 'destructive',
-      });
-    }
+    });
   };
 
   return (
@@ -138,7 +142,9 @@ export function FileUpload() {
           )}
         />
 
-        <Button type='submit'>Submit</Button>
+        <Button disabled={isPending} type='submit' className='w-full'>
+          {isPending ? <Loader2 className='size-8 animate-spin' /> : 'Submit'}
+        </Button>
       </form>
     </Form>
   );
