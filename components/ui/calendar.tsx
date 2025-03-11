@@ -147,11 +147,11 @@ function Calendar({
     props.rangeMiddleClassName
   );
   const _selectedClassName = cn(
-    '[&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground',
+    '[&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground dark:[&>button]:bg-indigo-700 dark:[&>button]:text-indigo-100',
     props.selectedClassName
   );
   const _todayClassName = cn(
-    '[&>button]:bg-accent [&>button]:text-accent-foreground',
+    '[&>button]:text-accent-foreground [&>button]:text-accent-foreground',
     props.todayClassName
   );
   const _outsideClassName = cn(
@@ -167,7 +167,7 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn('p-3', className)}
+      className={cn('p-3  dark:bg-slate-900 ', className)}
       style={{
         width: 248.8 * (columnsDisplayed ?? 1) + 'px',
       }}
