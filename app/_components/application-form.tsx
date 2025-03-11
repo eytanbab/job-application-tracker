@@ -209,6 +209,7 @@ export const ApplicationForm = ({
                     >
                       <Calendar
                         mode='single'
+                        showYearSwitcher={false}
                         selected={new Date(field.value!)}
                         onSelect={field.onChange}
                         disabled={(date: Date) =>
