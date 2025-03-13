@@ -36,7 +36,7 @@ type Props = {
   data: Data[];
 };
 
-export function ApplicationsPerYearBarChart({ years, data }: Props) {
+export function TotalApplicationsPerYearBarChart({ years, data }: Props) {
   const [selectedYear, setSelectedYear] = useState(years[0]);
   const [filteredData, setFilteredData] = useState(data);
 
@@ -47,7 +47,7 @@ export function ApplicationsPerYearBarChart({ years, data }: Props) {
   }, [data, selectedYear]);
 
   return (
-    <Card className='col-span-full'>
+    <Card className='w-1/2'>
       <CardHeader className='w-full flex-row justify-between items-center'>
         <CardTitle>Applications per year</CardTitle>
         <Select value={selectedYear} onValueChange={setSelectedYear}>
