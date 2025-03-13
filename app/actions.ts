@@ -199,6 +199,27 @@ export async function getApplicationsPerYear() {
   return formatApplicationsPerYear(data);
 }
 
+// Statuses per year
+export async function getStasusesPerYear() {
+  const { userId } = await auth();
+  if (!userId) return [];
+
+  return await db
+    .select({
+      year: jobApplications.year,
+      month: jobApplications.month,
+      status: jobApplications.status,
+      statusCount: count(jobApplications.status),
+    })
+    .from(jobApplications)
+    .where(eq(jobApplications.userId, userId))
+    .groupBy(
+      jobApplications.month,
+      jobApplications.year,
+      jobApplications.status
+    );
+}
+
 export async function getYears() {
   const { userId } = await auth();
   if (!userId) return [];
