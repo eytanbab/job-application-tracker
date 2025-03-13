@@ -90,7 +90,7 @@ export function TotalApplicationsPerYearBarChart({ years, data }: Props) {
             <Bar
               dataKey='numOfApplications'
               fill='hsl(var(--chart-1))'
-              radius={4}
+              radius={0}
             />
           </BarChart>
         </ChartContainer>
