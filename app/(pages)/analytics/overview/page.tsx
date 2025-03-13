@@ -1,5 +1,6 @@
 import {
   getApplicationsPerYear,
+  getStasusesPerYear,
   getTop5Companies,
   getTop5Locations,
   getTop5Platforms,
@@ -7,9 +8,11 @@ import {
   getTop5Statuses,
   getYears,
 } from '@/app/actions';
-import { ApplicationsPerYearBarChart } from '../components/applications-per-year-bar-chart';
+
 import { PieChartComponent } from '../components/pie-chart';
 import { Section } from '../components/Section';
+import { StatusesPerYearBarChart } from '../components/statuses-per-year';
+import { TotalApplicationsPerYearBarChart } from '../components/total-applications-per-year-bar-chart';
 
 export default async function Overview() {
   const top5Companies = await getTop5Companies();
@@ -20,6 +23,8 @@ export default async function Overview() {
 
   const applicationsPerYear = await getApplicationsPerYear();
   const years = await getYears();
+
+  const statusesPerYear = await getStasusesPerYear();
 
   if (top5Companies.length === 0)
     return (
@@ -36,7 +41,13 @@ export default async function Overview() {
       />
       <PieChartComponent title='Top 5 Locations' data={top5Locations} />
       <PieChartComponent title='Top 5 Roles' data={top5RoleNames} />
-      <ApplicationsPerYearBarChart years={years} data={applicationsPerYear} />
+      <div className='col-span-full flex w-full gap-4'>
+        <StatusesPerYearBarChart years={years} rawData={statusesPerYear} />
+        <TotalApplicationsPerYearBarChart
+          years={years}
+          data={applicationsPerYear}
+        />
+      </div>
     </Section>
   );
 }
