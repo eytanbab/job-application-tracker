@@ -41,7 +41,7 @@ export default async function Overview() {
       />
       <PieChartComponent title='Top 5 Locations' data={top5Locations} />
       <PieChartComponent title='Top 5 Roles' data={top5RoleNames} />
-      <div className='col-span-full flex w-full gap-4'>
+      <div className='col-span-full flex flex-col 2xl:flex-row w-full gap-4'>
         <StatusesPerYearBarChart years={years} rawData={statusesPerYear} />
         <TotalApplicationsPerYearBarChart
           years={years}
