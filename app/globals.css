@@ -32,12 +32,12 @@ body {
     --chart-3: 241, 80%, 51%;
     --chart-4: 220, 80%, 51%;
     --chart-5: 198, 80%, 51%;
-    /* zinc-400 */
-    --status-ghosted: 240, 5.03%, 64.9%;
+    /* zinc-300 */
+    --status-ghosted: 213, 27%, 84%;
     /* rose-600 */
     --status-rejected: 346.84, 77.17%, 49.8%;
-    /* indigo-600 */
-    --status-applied: 262.12, 83.26%, 57.84%;
+    /* indigo-300 */
+    --status-applied: 230, 94%, 82%;
     /* emerald-600 */
     --status-accepted: 161.38, 93.55%, 30.39%;
 
@@ -68,6 +68,14 @@ body {
     --chart-3: 241, 64%, 44%;
     --chart-4: 220, 64%, 44%;
     --chart-5: 198, 64%, 44%;
+    /* slate-700 */
+    --status-ghosted: 215, 19%, 35%;
+    /* rose-800 */
+    --status-rejected: 343, 80%, 35%;
+    /* indigo-600 */
+    --status-applied: 262.12, 83.26%, 57.84%;
+    /* emerald-600 */
+    --status-accepted: 161.38, 93.55%, 30.39%;
   }
 }
 
