@@ -11,7 +11,7 @@ import {
 
 import { PieChartComponent } from '../components/pie-chart';
 import { Section } from '../components/Section';
-import { StatusesPerYearBarChart } from '../components/statuses-per-year';
+import { StatusesPerYearBarChart } from '../components/statuses-per-year-bar-chart';
 import { TotalApplicationsPerYearBarChart } from '../components/total-applications-per-year-bar-chart';
 
 export default async function Overview() {
