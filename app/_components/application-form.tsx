@@ -145,9 +145,13 @@ export const ApplicationForm = ({
   ];
 
   const handleSubmit = (values: FormValues) => {
+    // fix (production): date is selected as the previous day
+    const formattedDate = format(values.date_applied, 'yyyy-MM-dd');
+
     // convert form values to lower case for ignoring duplicates such was Waiting and waiting when fetching from db
     values = {
       ...values,
+      date_applied: formattedDate,
       role_name: values.role_name,
       company_name: values.company_name,
       link: values.link.toLowerCase(),
