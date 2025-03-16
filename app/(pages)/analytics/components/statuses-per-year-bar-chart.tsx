@@ -48,29 +48,32 @@ const predefinedColors: Record<string, string> = {
   rejected: 'hsl(var(--status-rejected))',
   applied: 'hsl(var(--status-applied))',
   accepted: 'hsl(var(--status-accepted))',
+  review: 'hsl(var(--status-review))',
+  interview: 'hsl(var(--status-interview))',
+  other: 'hsl(var(--status-other))',
 };
 
 const getColor = (status: string) => {
   if (status.includes('applied')) {
     return predefinedColors['applied'];
-  }
-  if (status.includes('reject')) {
+  } else if (status.includes('reject')) {
     return predefinedColors['rejected'];
-  }
-  if (status.includes('ghost')) {
+  } else if (status.includes('ghost')) {
     return predefinedColors['ghosted'];
-  }
-
-  if (status.includes('accept')) {
+  } else if (status.includes('accept')) {
     return predefinedColors['accepted'];
+  } else if (status.includes('review')) {
+    return predefinedColors['review'];
+  } else if (status.includes('interview')) {
+    return predefinedColors['interview'];
+  } else {
+    return predefinedColors['other'];
   }
 };
 
 export function StatusesPerYearBarChart({ years, rawData }: Props) {
   const [selectedYear, setSelectedYear] = useState(years[0]);
   const [chartData, setChartData] = useState<ChartData[]>([]);
-
-  console.log(chartData);
 
   useEffect(() => {
     setChartData(transformApplicationsData(rawData, selectedYear));
