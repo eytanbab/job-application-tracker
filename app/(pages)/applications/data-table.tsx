@@ -27,7 +27,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -72,13 +72,20 @@ export function DataTable<TData extends { status: string }, TValue>({
   return (
     <div className='w-full'>
       <div className='flex items-center py-4 justify-between'>
-        <Input
-          placeholder='Search...'
-          type='search'
-          value={globalFilter}
-          onChange={(e) => table.setGlobalFilter(String(e.target.value))}
-          className='max-w-sm'
-        />
+        <div className='relative w-96 max-w-xl'>
+          <Input
+            placeholder='Search...'
+            value={globalFilter}
+            onChange={(e) => table.setGlobalFilter(String(e.target.value))}
+            className='max-w-sm'
+          />
+          {globalFilter.length > 0 && (
+            <X
+              className='absolute top-1/2 -translate-y-1/2 right-2 size-6 cursor-pointer hover:bg-indigo-200 dark:hover:bg-indigo-900 p-1 rounded-full transition-colors'
+              onClick={() => table.setGlobalFilter('')}
+            />
+          )}
+        </div>
         <Link href='/applications/new' className='hidden md:inline-block'>
           <Button variant='outline'>New application</Button>
         </Link>
