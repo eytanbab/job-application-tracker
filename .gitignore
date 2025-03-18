@@ -43,3 +43,6 @@ next-env.d.ts
 
 applications.xlsx
 importJobs.ts
+
+/app/(pages)/applications/new/ai/page.tsx
+/lib/open-ai.ts
