@@ -9,7 +9,9 @@ import { z } from 'zod';
 import { and, eq } from 'drizzle-orm';
 
 import { format } from 'date-fns';
-// import { openAiclient } from '@/lib/open-ai';
+import { openAiclient } from '@/lib/open-ai';
+import { scrape } from '@/scrape';
+import { aiFormSchema, AiFormValues, AiData } from '@/lib/types';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
@@ -95,38 +97,77 @@ export async function updateApplication(values: FormValues) {
 
 /* ----------------- OPEN AI ------------------ */
 
-// export async function getAiApplication(url: string) {
-//   const completion = await openAiclient.chat.completions.create({
-//     model: 'gpt-4o-mini',
-//     messages: [
-//       {
-//         role: 'system',
-//         content: `You are an AI assistant that extracts structured job application data from a given URL and formats it as JSON.
-// Follow these instructions carefully:
+export async function extractAiApplication(url: string) {
+  const webpage = await scrape(url);
+  if (!webpage) {
+    return;
+  }
 
-// 1. **Extract the following fields** from the provided URL:
-//    - **role_name**: The job title.
-//    - **company_name**: The company offering the job.
-//    - **date_applied**: Today's date in ISO format (YYYY-MM-DD).
-//    - **link**: The provided URL.
-//    - **platform**: The name of the job listing platform (e.g., LinkedIn, Indeed, company website).
-//    - **status**: Always set this to "Applied".
-//    - **month**: Extracted from date_applied (a number between 1-12).
-//    - **year**: Extracted from date_applied (YYYY format).
-//    - **description**: The full job description text extracted from the provided URL.
-//    - **location**: The job location (if available).
+  const platform = new URL(url).hostname.replace('www.', '').split('.')[0];
 
-// 2. **Return the output as a valid JSON object** with no extra text.
+  const completion = await openAiclient.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'system',
+        content: `You are an AI that extracts job application details from raw text.
+        if the data is not of an application, return status: 'fail'.
+        Your task is to return a valid JSON object with these fields:
+        - **status**: 'success'.
+        - **application: {
+          - **role_name**: The job title.
+          - **company_name**: The company offering the job.
+          - **date_applied**: Today's date in ISO format (YYYY-MM-DD).
+        - **link**: The provided URL - ${url}.
+        - **platform**: The job listing platform, inferred from the URL (${platform}).
+        - **status**: Always set this to "Applied".
+        - **description**: The full job description extracted from the text.
+        - **location**: The job location (if available).
+        }
 
-// 3. **If any field is missing or unavailable, return null for that field.**`,
-//       },
-//       {
-//         role: 'user',
-//         content: `URL: ${url}`,
-//       },
-//     ],
-//     response_format: { type: 'json_object' },
-//   });
+        If any field is missing, return null for that field.
+        Your response must be a strict JSON object with no extra text.
+        `,
+      },
+      {
+        role: 'user',
+        content: `Extract job details from the following text:\n\n${webpage}`,
+      },
+    ],
+    response_format: { type: 'json_object' },
+  });
 
-//   return completion.choices[0].message.content;
-// }
+  const data = completion.choices[0].message.content;
+
+  if (!data) {
+    throw new Error('AI did not return a response.');
+  }
+
+  const application: AiData = JSON.parse(data);
+
+  if (application.status === 'fail') {
+    return JSON.parse('{"status": "fail"}');
+  }
+
+  return application;
+}
+
+export async function createAiApplication(values: AiFormValues) {
+  const { userId } = await auth();
+  if (!userId) return;
+
+  const date_applied = format(Date.now(), 'yyyy-MM-dd');
+
+  const application: z.input<aiFormSchema> = {
+    ...values,
+    date_applied,
+    userId,
+    month: format(new Date(values.date_applied), 'M'),
+    year: format(new Date(values.date_applied), 'yyyy'),
+  };
+
+  return db
+    .insert(jobApplications)
+    .values(application)
+    .returning({ insertedId: jobApplications.id });
+}
