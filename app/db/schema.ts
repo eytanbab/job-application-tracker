@@ -33,4 +33,5 @@ export const documents = pgTable('documents', {
   doc_url: varchar('doc_url').notNull(),
   created_at: timestamp().defaultNow().notNull(),
   file_name: varchar('file_name').notNull(),
+  file_key: varchar('file_key').notNull(),
 });
