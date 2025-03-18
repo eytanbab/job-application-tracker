@@ -11,7 +11,7 @@ import { and, eq } from 'drizzle-orm';
 import { format } from 'date-fns';
 import { openAiclient } from '@/lib/open-ai';
 import { scrape } from '@/scrape';
-import { aiFormSchema, AiFormValues, AiData } from '@/lib/types';
+import { AiFormValues, AiData } from '@/lib/types';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
@@ -158,7 +158,7 @@ export async function createAiApplication(values: AiFormValues) {
 
   const date_applied = format(Date.now(), 'yyyy-MM-dd');
 
-  const application: z.input<aiFormSchema> = {
+  const application: AiFormValues = {
     ...values,
     date_applied,
     userId,

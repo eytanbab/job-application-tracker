@@ -20,18 +20,9 @@ export type ChartData = {
 };
 
 /* ------ Open AI ------------*/
-const Application = insertApplicationSchema.omit({
-  userId: true,
-  date_applied: true,
-});
-
-export type Application = z.input<typeof insertApplicationSchema>;
-
 export type AiData = {
   status: 'fail' | 'success';
-  application?: Application;
+  application?: AiFormValues;
 };
-
-export type aiFormSchema = typeof insertApplicationSchema;
 
 export type AiFormValues = z.input<typeof insertApplicationSchema>;
