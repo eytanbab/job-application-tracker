@@ -1,6 +1,6 @@
 'use client';
 
-import { deleteFile } from '@/app/actions';
+import { deleteFile } from '@/app/actions/documents';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,

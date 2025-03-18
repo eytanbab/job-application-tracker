@@ -1,6 +1,6 @@
 import { DataTable } from './data-table';
 import { columns } from './columns';
-import { getApplications } from '@/app/actions';
+import { getApplications } from '@/app/actions/applications';
 
 export default async function Dashboard() {
   try {

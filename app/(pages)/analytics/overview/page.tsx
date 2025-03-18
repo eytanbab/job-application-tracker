@@ -7,7 +7,7 @@ import {
   getTop5RoleNames,
   getTop5Statuses,
   getYears,
-} from '@/app/actions';
+} from '@/app/actions/analytics';
 
 import { PieChartComponent } from '../components/pie-chart';
 import { Section } from '../components/Section';

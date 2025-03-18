@@ -9,7 +9,7 @@ import { parseUrl } from 'next/dist/shared/lib/router/utils/parse-url';
 
 import { EditApplicationSheet } from '@/app/_components/edit-application-sheet';
 
-import { deleteApplication, updateApplication } from '@/app/actions';
+import { deleteApplication, updateApplication } from '@/app/actions/applications';
 import { formatDate } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 

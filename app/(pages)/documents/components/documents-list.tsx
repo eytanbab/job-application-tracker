@@ -1,4 +1,4 @@
-import { getFiles } from '@/app/actions';
+import { getFiles } from '@/app/actions/documents';
 import { Document } from './document';
 
 export const DocumentsList = async () => {

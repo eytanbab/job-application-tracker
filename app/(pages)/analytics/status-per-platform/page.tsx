@@ -1,4 +1,4 @@
-import { getStatusPerPlatform } from '@/app/actions';
+import { getStatusPerPlatform } from '@/app/actions/analytics';
 import { StatusPerPlatformPieChart } from '../components/status-per-platform-pie-chart';
 
 export default async function Overview() {

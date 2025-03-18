@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 
-import { createApplication } from '@/app/actions';
+import { createApplication } from '@/app/actions/applications';
 import { useToast } from '@/hooks/use-toast';
 import { ApplicationForm } from '@/app/_components/application-form';
 import { insertApplicationSchema } from '@/app/db/schema';

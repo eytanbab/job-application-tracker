@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
-import { createFile, generatePresignedUrl } from '@/app/actions'; // API route for generating signed URL
+import { createFile, generatePresignedUrl } from '@/app/actions/documents'; // API route for generating signed URL
 import { useToast } from '@/hooks/use-toast';
 import { useTransition } from 'react';
 import { Loader2 } from 'lucide-react';
