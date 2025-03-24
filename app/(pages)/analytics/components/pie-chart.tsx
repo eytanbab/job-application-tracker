@@ -16,6 +16,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
+import { getColor } from '@/lib/utils';
 
 const chartConfig = {
   companies: {
@@ -35,9 +36,16 @@ type Props = {
 };
 
 export function PieChartComponent({ title, data }: Props) {
-  data.map((item, i) => {
-    item['fill'] = `hsl(var(--chart-${i + 1}))`;
-  });
+  if (title === 'Top 5 Applications status') {
+    data.map((item) => {
+      item['fill'] = getColor(item.name);
+    });
+  } else {
+    data.map((item, i) => {
+      item['fill'] = `hsl(var(--chart-${i + 1}))`;
+    });
+  }
+
   const totalFreq = data.reduce((sum, item) => sum + item.freq, 0);
 
   return (

@@ -15,6 +15,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
+import { getColor } from '@/lib/utils';
 
 const chartConfig = {
   status: {
@@ -38,8 +39,8 @@ type Props = {
 };
 
 export function StatusPerPlatformPieChart({ data }: Props) {
-  data.statuses.map((item, i) => {
-    item['fill'] = `hsl(var(--chart-${i + 1}))`;
+  data.statuses.map((item) => {
+    item['fill'] = getColor(item.status);
   });
 
   const totalFreq = data.statuses.reduce((sum, item) => sum + item.value, 0);
@@ -62,19 +63,13 @@ export function StatusPerPlatformPieChart({ data }: Props) {
               dataKey='value'
               nameKey='status'
               label
-              fill='hsl(var(--chart-1))'
+              fill=''
             />
           </PieChart>
         </ChartContainer>
         <CardFooter>
           <ul className='flex flex-col text-sm'>
             {data.statuses.map((item) => {
-              // return (
-              //   <li key={item.status}>
-              //     {' '}
-              //     {item.status}: {item.value}
-              //   </li>
-              // );
               const percentage =
                 Math.floor(((item.value * 100) / totalFreq) * 100) / 100;
               return (
