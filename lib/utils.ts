@@ -108,3 +108,31 @@ export function transformApplicationsData(
 
   return chartData;
 }
+
+const predefinedColors: Record<string, string> = {
+  ghosted: 'hsl(var(--status-ghosted))',
+  rejected: 'hsl(var(--status-rejected))',
+  applied: 'hsl(var(--status-applied))',
+  accepted: 'hsl(var(--status-accepted))',
+  review: 'hsl(var(--status-review))',
+  interview: 'hsl(var(--status-interview))',
+  other: 'hsl(var(--status-other))',
+};
+
+export const getColor = (status: string) => {
+  if (status.includes('applied')) {
+    return predefinedColors['applied'];
+  } else if (status.includes('reject')) {
+    return predefinedColors['rejected'];
+  } else if (status.includes('ghost')) {
+    return predefinedColors['ghosted'];
+  } else if (status.includes('accept')) {
+    return predefinedColors['accepted'];
+  } else if (status.includes('review')) {
+    return predefinedColors['review'];
+  } else if (status.includes('interview')) {
+    return predefinedColors['interview'];
+  } else {
+    return predefinedColors['other'];
+  }
+};
