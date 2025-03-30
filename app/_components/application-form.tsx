@@ -260,7 +260,12 @@ export const ApplicationForm = ({
             {isPending ? <Loader2 className='size-8 animate-spin' /> : 'Submit'}
           </Button>
           {/* Cancel button */}
-          <Button type='button' variant='outline' onClick={onCancel}>
+          <Button
+            type='button'
+            variant='outline'
+            onClick={onCancel}
+            disabled={isPending}
+          >
             Cancel
           </Button>
         </div>
