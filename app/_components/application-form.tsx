@@ -61,7 +61,7 @@ export const ApplicationForm = ({
     company_name: z.string().min(2, {
       message: 'Company name must be at least 2 characters.',
     }),
-    date_applied: z.date(),
+    date_applied: z.string().or(z.date()),
     link: z.string().url(),
     description: z.string().min(2, {
       message: 'Description must be at least 2 characters.',
