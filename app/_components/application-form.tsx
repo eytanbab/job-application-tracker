@@ -152,13 +152,13 @@ export const ApplicationForm = ({
     values = {
       ...values,
       date_applied: formattedDate,
-      role_name: values.role_name,
-      company_name: values.company_name,
-      link: values.link.toLowerCase(),
+      role_name: values.role_name.trim(),
+      company_name: values.company_name.trim(),
+      link: values.link.toLowerCase().trim(),
       description: values.description,
-      location: values.location,
-      platform: values.platform.toLowerCase(),
-      status: values.status.toLowerCase(),
+      location: values.location.trim(),
+      platform: values.platform.toLowerCase().trim(),
+      status: values.status.toLowerCase().trim(),
     };
 
     startTransition(async () => {
