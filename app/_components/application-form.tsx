@@ -135,7 +135,7 @@ export const ApplicationForm = ({
     {
       name: 'status',
       label: 'Status',
-      placeholder: 'Waiting | Interview | Rejected | etc..',
+      placeholder: 'Applied | Interview | Rejected | etc..',
     },
     {
       name: 'platform',
