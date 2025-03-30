@@ -6,6 +6,7 @@ import { createApplication } from '@/app/actions/applications';
 import { useToast } from '@/hooks/use-toast';
 import { ApplicationForm } from '@/app/_components/application-form';
 import { insertApplicationSchema } from '@/app/db/schema';
+import { format } from 'date-fns';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
@@ -36,7 +37,7 @@ export default function NewApplication() {
   const defaultValues = {
     role_name: '',
     company_name: '',
-    date_applied: '',
+    date_applied: format(Date.now(), 'yyyy-MM-dd'),
     link: '',
     description: '',
     location: '',
