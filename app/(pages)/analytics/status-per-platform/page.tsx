@@ -1,6 +1,12 @@
 import { getStatusPerPlatform } from '@/app/actions/analytics';
 import { StatusPerPlatformPieChart } from '../components/status-per-platform-pie-chart';
 
+export async function generateMetadata() {
+  return {
+    title: 'JAT | Status Per Platform',
+  };
+}
+
 export default async function Overview() {
   const statusPerPlatform = await getStatusPerPlatform();
 

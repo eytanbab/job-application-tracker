@@ -14,6 +14,12 @@ import { Section } from '../components/Section';
 import { StatusesPerYearBarChart } from '../components/statuses-per-year-bar-chart';
 import { TotalApplicationsPerYearBarChart } from '../components/total-applications-per-year-bar-chart';
 
+export async function generateMetadata() {
+  return {
+    title: 'JAT | Overview',
+  };
+}
+
 export default async function Overview() {
   const top5Companies = await getTop5Companies();
   const top5Statuses = await getTop5Statuses();
