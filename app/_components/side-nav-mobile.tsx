@@ -19,7 +19,7 @@ export function MobileSideNav() {
   const pathname = usePathname();
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild className='2xl:hidden'>
+      <SheetTrigger asChild className='2xl:hidden cursor-pointer'>
         <Menu />
       </SheetTrigger>
       <SheetContent className='w-full flex flex-col gap-2 h-full items-center justify-center '>
