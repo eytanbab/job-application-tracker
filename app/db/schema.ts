@@ -22,6 +22,7 @@ export const jobApplications = pgTable('job_applications', {
   year: varchar('year').notNull(),
   description: text('description'),
   location: text('location').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
 export const insertApplicationSchema = createInsertSchema(jobApplications);
