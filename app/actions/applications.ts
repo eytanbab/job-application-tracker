@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/app/db';
 import { insertApplicationSchema, jobApplications } from '@/app/db/schema';
 import { z } from 'zod';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 
 import { format } from 'date-fns';
 import { openAiclient } from '@/lib/open-ai';
@@ -26,7 +26,11 @@ export async function getApplications() {
   return db
     .select()
     .from(jobApplications)
-    .where(eq(jobApplications.userId, userId));
+    .where(eq(jobApplications.userId, userId))
+    .orderBy(
+      desc(jobApplications.date_applied),
+      desc(jobApplications.createdAt)
+    );
 }
 
 // Get a single application with id for current user
