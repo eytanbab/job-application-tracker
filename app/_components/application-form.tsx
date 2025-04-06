@@ -208,7 +208,7 @@ export const ApplicationForm = ({
 
       // ✅ Update form state so react-hook-form knows about the changes
       Object.entries(test).forEach(([key, value]) => {
-        form.setValue(key, value);
+        form.setValue(key as keyof FormValues, value);
       });
 
       setAiValues(test);
@@ -239,9 +239,9 @@ export const ApplicationForm = ({
     });
   };
 
-  // for debugging:
-  console.log('Form current values:', form.watch());
-  console.log('Form errors:', form.formState.errors);
+  // // for debugging:
+  // console.log('Form current values:', form.watch());
+  // console.log('Form errors:', form.formState.errors);
 
   return (
     <div className='w-96 flex flex-col gap-2 items-center'>
