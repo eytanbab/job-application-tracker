@@ -121,7 +121,6 @@ export async function extractAiApplication(url: string) {
         - **application: {
           - **role_name**: The job title.
           - **company_name**: The company offering the job.
-          - **date_applied**: Today's date in ISO format (YYYY-MM-DD).
         - **link**: The provided URL - ${url}.
         - **platform**: The job listing platform, inferred from the URL (${platform}).
         - **status**: Always set this to "Applied".
