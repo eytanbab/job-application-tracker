@@ -10,8 +10,8 @@ import { and, desc, eq } from 'drizzle-orm';
 
 import { format } from 'date-fns';
 import { openAiclient } from '@/lib/open-ai';
-import { scrape } from '@/scrape';
 import { AiFormValues, AiData } from '@/lib/types';
+import { scraper } from '@/lib/scraper';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
@@ -102,10 +102,12 @@ export async function updateApplication(values: FormValues) {
 /* ----------------- OPEN AI ------------------ */
 
 export async function extractAiApplication(url: string) {
-  const webpage = await scrape(url);
+  const webpage = await scraper(url);
   if (!webpage) {
     return;
   }
+
+  const htmlPreview = webpage.replace(/\s+/g, ' ').slice(0, 10000); // trim + slice
 
   const platform = new URL(url).hostname.replace('www.', '').split('.')[0];
 
@@ -134,7 +136,7 @@ export async function extractAiApplication(url: string) {
       },
       {
         role: 'user',
-        content: `Extract job details from the following text:\n\n${webpage}`,
+        content: `Extract job details from the following text:\n\n${htmlPreview}`,
       },
     ],
     response_format: { type: 'json_object' },
