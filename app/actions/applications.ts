@@ -107,27 +107,29 @@ export async function extractAiApplication(url: string) {
     return;
   }
 
-  const htmlPreview = webpage.replace(/\s+/g, ' ').slice(0, 10000); // trim + slice
-
-  const platform = new URL(url).hostname.replace('www.', '').split('.')[0];
-
   const completion = await openAiclient.chat.completions.create({
-    model: 'gpt-4o',
+    model: 'gpt-4o-mini',
     messages: [
       {
         role: 'system',
         content: `You are an AI that extracts job application details from raw text.
-        if the data is not of an application, return status: 'fail'.
+        if the data is not of an application, return {
+        status: 'fail',
+        message: explain why the extraction failed
+        }
+
         Your task is to return a valid JSON object with these fields:
-        - **status**: 'success'.
-        - **application: {
-          - **role_name**: The job title.
-          - **company_name**: The company offering the job.
-        - **link**: The provided URL - ${url}.
-        - **platform**: The job listing platform, inferred from the URL (${platform}).
-        - **status**: Always set this to "Applied".
-        - **description**: The full job description extracted from the text.
-        - **location**: The job location (if available).
+        {
+          status: 'success'.
+          application: {
+            role_name: The job title.
+            company_name: The company offering the job.
+            link: The provided URL  ${url}.
+            platform: The job listing platform in title case, inferred from the URL  (${url}).
+            status: Always set this to "Applied".
+            description: Extract the full job description from the text.
+            location: The job location's city (if available).
+            }
         }
 
         If any field is missing, return null for that field.
@@ -136,7 +138,7 @@ export async function extractAiApplication(url: string) {
       },
       {
         role: 'user',
-        content: `Extract job details from the following text:\n\n${htmlPreview}`,
+        content: `Extract job details from the following text:\n\n${webpage}`,
       },
     ],
     response_format: { type: 'json_object' },
@@ -150,14 +152,18 @@ export async function extractAiApplication(url: string) {
 
   const application: AiData = JSON.parse(data);
 
-  if (application.status === 'fail') {
-    return JSON.parse('{"status": "fail"}');
-  }
+  // console.log('application: ', application);
+
+  // if (application.status === 'fail') {
+  //   return JSON.parse(
+  //     `{"status": "fail", "message":"${application.message}"}`
+  //   );
+  // }
 
   return application;
 }
 
-export async function createAiApplication(values: AiFormValues) {
+export async function createAiApplication(values: FormValues) {
   const { userId } = await auth();
   if (!userId) return;
 
