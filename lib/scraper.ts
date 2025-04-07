@@ -12,7 +12,9 @@ export const scraper = async (url: string): Promise<string> => {
     }
   );
 
-  if (!res.ok) throw new Error('Failed to scrape page');
+  if (!res.ok) {
+    return '';
+  }
 
   return await res.text(); // raw HTML
 };
