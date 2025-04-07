@@ -1,3 +1,4 @@
+import { FormValues } from '@/app/_components/application-form';
 import { insertApplicationSchema } from '@/app/db/schema';
 import { z } from 'zod';
 
@@ -20,9 +21,16 @@ export type ChartData = {
 };
 
 /* ------ Open AI ------------*/
-export type AiData = {
-  status: 'fail' | 'success';
-  application?: AiFormValues;
+type SuccessData = {
+  status: 'success';
+  application?: FormValues;
 };
+
+type FailData = {
+  status: 'fail';
+  message: string;
+};
+
+export type AiData = SuccessData | FailData;
 
 export type AiFormValues = z.input<typeof insertApplicationSchema>;
