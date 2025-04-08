@@ -70,7 +70,7 @@ export const ApplicationForm = ({
   onClose,
 }: Props) => {
   const [isPending, startTransition] = useTransition();
-  const [aiValues, setAiValues] = useState<AiValues | null>(null);
+  const [aiValues, setAiValues] = useState<AiValues | null>(defaultValues);
 
   const formSchema = z.object({
     id: z.string().optional(),
@@ -173,16 +173,15 @@ export const ApplicationForm = ({
 
   const handleAiSubmit = async (values: z.infer<typeof aiFormSchema>) => {
     startTransition(async () => {
-      const aiAutoFill: AiData | undefined = await extractAiApplication(
-        values.url
-      );
+      const aiAutoFill: AiData = await extractAiApplication(values.url);
       console.log('aiAutoFill', aiAutoFill);
 
-      if (aiAutoFill === undefined || aiAutoFill.status === 'fail') {
+      if (aiAutoFill.status === 'fail') {
+        setAiValues(null);
         return;
       }
 
-      const test: FormValues = {
+      const autoFillValues: FormValues = {
         date_applied: format(Date.now(), 'yyyy-MM-dd'),
         role_name: aiAutoFill.application.role_name,
         company_name: aiAutoFill.application.company_name,
@@ -195,12 +194,12 @@ export const ApplicationForm = ({
         year: '',
       };
 
-      // ✅ Update form state so react-hook-form knows about the changes
-      Object.entries(test).forEach(([key, value]) => {
+      // update form state so react-hook-form knows about the changes
+      Object.entries(autoFillValues).forEach(([key, value]) => {
         form.setValue(key as keyof FormValues, value);
       });
 
-      setAiValues(test);
+      setAiValues(autoFillValues);
     });
   };
 
@@ -251,7 +250,7 @@ export const ApplicationForm = ({
                     {...field}
                   />
                 </FormControl>
-                {aiValues === undefined && (
+                {aiValues === null && (
                   <p className='text-sm font-medium text-destructive dark:text-rose-500'>
                     Failed to extract information from the URL.
                   </p>
