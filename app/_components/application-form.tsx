@@ -31,6 +31,7 @@ import { redirect } from 'next/navigation';
 import { Textarea } from '@/components/ui/textarea';
 import { useState, useTransition } from 'react';
 import { extractAiApplication } from '../actions/applications';
+import { AiData } from '@/lib/types';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const createApplicationSchema = insertApplicationSchema.omit({
@@ -56,7 +57,7 @@ type AiValues = {
   link: string;
   platform: string;
   status: string;
-  description: string;
+  description?: string | undefined | null;
   location: string;
   date_applied: Date | string;
   month: string;
@@ -69,7 +70,7 @@ export const ApplicationForm = ({
   onClose,
 }: Props) => {
   const [isPending, startTransition] = useTransition();
-  const [aiValues, setAiValues] = useState<AiValues | null | undefined>(null);
+  const [aiValues, setAiValues] = useState<AiValues | null>(null);
 
   const formSchema = z.object({
     id: z.string().optional(),
@@ -170,38 +171,26 @@ export const ApplicationForm = ({
     },
   ];
 
-  type AiAutoFill = {
-    status: 'success' | 'fail';
-    application: {
-      role_name: string;
-      company_name: string;
-      link: string;
-      platform: string;
-      status: 'Applied';
-      description: string;
-      location: string;
-    };
-  };
-
   const handleAiSubmit = async (values: z.infer<typeof aiFormSchema>) => {
     startTransition(async () => {
-      const aiAutoFill: AiAutoFill = await extractAiApplication(values.url);
+      const aiAutoFill: AiData | undefined = await extractAiApplication(
+        values.url
+      );
       console.log('aiAutoFill', aiAutoFill);
 
       if (aiAutoFill === undefined || aiAutoFill.status === 'fail') {
-        setAiValues(undefined);
         return;
       }
 
-      const test: AiValues = {
+      const test: FormValues = {
         date_applied: format(Date.now(), 'yyyy-MM-dd'),
         role_name: aiAutoFill.application.role_name,
         company_name: aiAutoFill.application.company_name,
         link: aiAutoFill.application.link,
         platform: aiAutoFill.application.platform,
         status: 'Applied',
-        description: aiAutoFill.application.description,
-        location: aiAutoFill.application.location, // <- fix this too!
+        description: aiAutoFill.application.description ?? '',
+        location: aiAutoFill.application.location,
         month: '',
         year: '',
       };
