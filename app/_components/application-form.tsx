@@ -232,7 +232,7 @@ export const ApplicationForm = ({
   // console.log('Form errors:', form.formState.errors);
 
   return (
-    <div className='w-96 flex flex-col gap-2 items-center'>
+    <div className='w-full max-w-96 flex flex-col gap-2 items-center'>
       <Form {...aiForm}>
         <form
           onSubmit={aiForm.handleSubmit(handleAiSubmit)}
