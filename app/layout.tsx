@@ -5,11 +5,12 @@ import './globals.css';
 
 import SideNav from './_components/side-nav';
 import Nav from './_components/nav';
-import { ThemeProvider } from './_components/theme-provider';
+import { ThemeProvider } from '../lib/context/theme-provider';
 
 import { Toaster } from '@/components/ui/toaster';
 
 import { ClerkProvider } from '@clerk/nextjs';
+import { GuestDataMigrator } from './_components/guest-data-migrator';
 
 const roboto = Work_Sans({
   weight: ['300', '400', '500', '700', '900'],
@@ -44,6 +45,7 @@ export default function RootLayout({
             <Nav />
             <div className='flex'>
               <SideNav />
+              <GuestDataMigrator />
               {children}
             </div>
           </ThemeProvider>
