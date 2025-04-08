@@ -23,7 +23,7 @@ export type ChartData = {
 /* ------ Open AI ------------*/
 type SuccessData = {
   status: 'success';
-  application?: FormValues;
+  application: FormValues;
 };
 
 type FailData = {
