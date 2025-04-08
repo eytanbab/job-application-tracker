@@ -7,10 +7,20 @@ import { jobApplications } from '@/app/db/schema';
 import { count, desc, eq } from 'drizzle-orm';
 
 import { formatApplicationsPerYear } from '@/lib/utils';
+import { cookies } from 'next/headers';
 
 export async function getTop5Companies() {
-  const { userId } = await auth();
-  if (!userId) return [];
+  const { userId: clerkUserId } = await auth();
+
+  const cookieStore = cookies();
+
+  const guestId = (await cookieStore).get('guest_id')?.value;
+
+  const userId = clerkUserId ?? guestId;
+
+  if (!userId) {
+    throw new Error('No user or guest ID available');
+  }
 
   return db
     .select({
@@ -25,8 +35,17 @@ export async function getTop5Companies() {
 }
 
 export async function getTop5Platforms() {
-  const { userId } = await auth();
-  if (!userId) return [];
+  const { userId: clerkUserId } = await auth();
+
+  const cookieStore = cookies();
+
+  const guestId = (await cookieStore).get('guest_id')?.value;
+
+  const userId = clerkUserId ?? guestId;
+
+  if (!userId) {
+    throw new Error('No user or guest ID available');
+  }
 
   return db
     .select({
@@ -41,8 +60,17 @@ export async function getTop5Platforms() {
 }
 
 export async function getTop5Statuses() {
-  const { userId } = await auth();
-  if (!userId) return [];
+  const { userId: clerkUserId } = await auth();
+
+  const cookieStore = cookies();
+
+  const guestId = (await cookieStore).get('guest_id')?.value;
+
+  const userId = clerkUserId ?? guestId;
+
+  if (!userId) {
+    throw new Error('No user or guest ID available');
+  }
 
   return db
     .select({
@@ -57,8 +85,17 @@ export async function getTop5Statuses() {
 }
 
 export async function getTop5Locations() {
-  const { userId } = await auth();
-  if (!userId) return [];
+  const { userId: clerkUserId } = await auth();
+
+  const cookieStore = cookies();
+
+  const guestId = (await cookieStore).get('guest_id')?.value;
+
+  const userId = clerkUserId ?? guestId;
+
+  if (!userId) {
+    throw new Error('No user or guest ID available');
+  }
 
   return db
     .select({
@@ -73,8 +110,17 @@ export async function getTop5Locations() {
 }
 
 export async function getTop5RoleNames() {
-  const { userId } = await auth();
-  if (!userId) return [];
+  const { userId: clerkUserId } = await auth();
+
+  const cookieStore = cookies();
+
+  const guestId = (await cookieStore).get('guest_id')?.value;
+
+  const userId = clerkUserId ?? guestId;
+
+  if (!userId) {
+    throw new Error('No user or guest ID available');
+  }
 
   return db
     .select({
@@ -90,8 +136,17 @@ export async function getTop5RoleNames() {
 
 // Total applications per year
 export async function getApplicationsPerYear() {
-  const { userId } = await auth();
-  if (!userId) return [];
+  const { userId: clerkUserId } = await auth();
+
+  const cookieStore = cookies();
+
+  const guestId = (await cookieStore).get('guest_id')?.value;
+
+  const userId = clerkUserId ?? guestId;
+
+  if (!userId) {
+    throw new Error('No user or guest ID available');
+  }
 
   const data = await db
     .select({
@@ -108,8 +163,17 @@ export async function getApplicationsPerYear() {
 
 // Statuses per year
 export async function getStasusesPerYear() {
-  const { userId } = await auth();
-  if (!userId) return [];
+  const { userId: clerkUserId } = await auth();
+
+  const cookieStore = cookies();
+
+  const guestId = (await cookieStore).get('guest_id')?.value;
+
+  const userId = clerkUserId ?? guestId;
+
+  if (!userId) {
+    throw new Error('No user or guest ID available');
+  }
 
   return await db
     .select({
@@ -128,8 +192,17 @@ export async function getStasusesPerYear() {
 }
 
 export async function getYears() {
-  const { userId } = await auth();
-  if (!userId) return [];
+  const { userId: clerkUserId } = await auth();
+
+  const cookieStore = cookies();
+
+  const guestId = (await cookieStore).get('guest_id')?.value;
+
+  const userId = clerkUserId ?? guestId;
+
+  if (!userId) {
+    throw new Error('No user or guest ID available');
+  }
 
   const years = await db
     .selectDistinct({
@@ -149,8 +222,17 @@ export async function getYears() {
 }
 
 export async function getStatusPerPlatform() {
-  const { userId } = await auth();
-  if (!userId) return [];
+  const { userId: clerkUserId } = await auth();
+
+  const cookieStore = cookies();
+
+  const guestId = (await cookieStore).get('guest_id')?.value;
+
+  const userId = clerkUserId ?? guestId;
+
+  if (!userId) {
+    throw new Error('No user or guest ID available');
+  }
 
   const data = await db
     .select({

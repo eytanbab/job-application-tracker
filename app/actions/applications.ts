@@ -13,6 +13,7 @@ import { openAiclient } from '@/lib/open-ai';
 // import { AiFormValues, AiData } from '@/lib/types';
 import { scraper } from '@/lib/scraper';
 import { AiData } from '@/lib/types';
+import { cookies } from 'next/headers';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
@@ -21,8 +22,17 @@ type FormValues = z.input<typeof formSchema>;
 
 // Get all applications of current user
 export async function getApplications() {
-  const { userId } = await auth();
-  if (!userId) return [];
+  const { userId: clerkUserId } = await auth();
+
+  const cookieStore = cookies();
+
+  const guestId = (await cookieStore).get('guest_id')?.value;
+
+  const userId = clerkUserId ?? guestId;
+
+  if (!userId) {
+    throw new Error('No user or guest ID available');
+  }
 
   return db
     .select()
@@ -36,8 +46,17 @@ export async function getApplications() {
 
 // Get a single application with id for current user
 export async function getApplication(id: string) {
-  const { userId } = await auth();
-  if (!userId) return;
+  const { userId: clerkUserId } = await auth();
+
+  const cookieStore = cookies();
+
+  const guestId = (await cookieStore).get('guest_id')?.value;
+
+  const userId = clerkUserId ?? guestId;
+
+  if (!userId) {
+    throw new Error('No user or guest ID available');
+  }
 
   return db
     .select()
@@ -47,8 +66,17 @@ export async function getApplication(id: string) {
 
 // Create a new application for the current user
 export async function createApplication(values: FormValues) {
-  const { userId } = await auth();
-  if (!userId) return;
+  const { userId: clerkUserId } = await auth();
+
+  const cookieStore = cookies();
+
+  const guestId = (await cookieStore).get('guest_id')?.value;
+
+  const userId = clerkUserId ?? guestId;
+
+  if (!userId) {
+    throw new Error('No user or guest ID available');
+  }
 
   const application: z.input<typeof insertApplicationSchema> = {
     ...values,
@@ -65,8 +93,17 @@ export async function createApplication(values: FormValues) {
 
 // Delete a single application with id for current user
 export async function deleteApplication(id: string) {
-  const { userId } = await auth();
-  if (!userId) return;
+  const { userId: clerkUserId } = await auth();
+
+  const cookieStore = cookies();
+
+  const guestId = (await cookieStore).get('guest_id')?.value;
+
+  const userId = clerkUserId ?? guestId;
+
+  if (!userId) {
+    throw new Error('No user or guest ID available');
+  }
 
   await db
     .delete(jobApplications)
@@ -77,7 +114,14 @@ export async function deleteApplication(id: string) {
 
 // Update an application of current user
 export async function updateApplication(values: FormValues) {
-  const { userId } = await auth();
+  const { userId: clerkUserId } = await auth();
+
+  const cookieStore = cookies();
+
+  const guestId = (await cookieStore).get('guest_id')?.value;
+
+  const userId = clerkUserId ?? guestId;
+
   if (!userId || !values.id) {
     return;
   }

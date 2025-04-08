@@ -10,13 +10,25 @@ import { and, eq } from 'drizzle-orm';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { s3Client } from '@/lib/s3-client';
+import { cookies } from 'next/headers';
 
 export async function generatePresignedUrl(
   fileName: string,
   contentType: string
 ) {
   try {
-    const { userId } = await auth();
+    const { userId: clerkUserId } = await auth();
+
+    const cookieStore = cookies();
+
+    const guestId = (await cookieStore).get('guest_id')?.value;
+
+    const userId = clerkUserId ?? guestId;
+
+    if (!userId) {
+      throw new Error('No user or guest ID available');
+    }
+
     if (!fileName || !contentType || !userId) {
       throw new Error(
         'Missing required parameters: fileName and contentType and userId'
@@ -60,8 +72,17 @@ export async function createFile(
   file_name: string,
   file_key: string
 ) {
-  const { userId } = await auth();
-  if (!userId) return;
+  const { userId: clerkUserId } = await auth();
+
+  const cookieStore = cookies();
+
+  const guestId = (await cookieStore).get('guest_id')?.value;
+
+  const userId = clerkUserId ?? guestId;
+
+  if (!userId) {
+    throw new Error('No user or guest ID available');
+  }
 
   await db
     .insert(documents)
@@ -71,15 +92,33 @@ export async function createFile(
 }
 
 export async function getFiles() {
-  const { userId } = await auth();
-  if (!userId) return;
+  const { userId: clerkUserId } = await auth();
+
+  const cookieStore = cookies();
+
+  const guestId = (await cookieStore).get('guest_id')?.value;
+
+  const userId = clerkUserId ?? guestId;
+
+  if (!userId) {
+    throw new Error('No user or guest ID available');
+  }
 
   return db.select().from(documents).where(eq(documents.userId, userId));
 }
 
 export async function deleteFile(id: string) {
-  const { userId } = await auth();
-  if (!userId) return;
+  const { userId: clerkUserId } = await auth();
+
+  const cookieStore = cookies();
+
+  const guestId = (await cookieStore).get('guest_id')?.value;
+
+  const userId = clerkUserId ?? guestId;
+
+  if (!userId) {
+    throw new Error('No user or guest ID available');
+  }
 
   try {
     const deletedDocument = await db
