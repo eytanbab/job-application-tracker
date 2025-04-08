@@ -10,8 +10,9 @@ import { and, desc, eq } from 'drizzle-orm';
 
 import { format } from 'date-fns';
 import { openAiclient } from '@/lib/open-ai';
-import { AiFormValues, AiData } from '@/lib/types';
+// import { AiFormValues, AiData } from '@/lib/types';
 import { scraper } from '@/lib/scraper';
+import { AiData } from '@/lib/types';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
@@ -103,9 +104,6 @@ export async function updateApplication(values: FormValues) {
 
 export async function extractAiApplication(url: string) {
   const webpage = await scraper(url);
-  if (!webpage) {
-    return;
-  }
 
   const completion = await openAiclient.chat.completions.create({
     model: 'gpt-4o-mini',
@@ -152,33 +150,5 @@ export async function extractAiApplication(url: string) {
 
   const application: AiData = JSON.parse(data);
 
-  // console.log('application: ', application);
-
-  // if (application.status === 'fail') {
-  //   return JSON.parse(
-  //     `{"status": "fail", "message":"${application.message}"}`
-  //   );
-  // }
-
   return application;
-}
-
-export async function createAiApplication(values: FormValues) {
-  const { userId } = await auth();
-  if (!userId) return;
-
-  const date_applied = format(Date.now(), 'yyyy-MM-dd');
-
-  const application: AiFormValues = {
-    ...values,
-    date_applied,
-    userId,
-    month: format(new Date(values.date_applied), 'M'),
-    year: format(new Date(values.date_applied), 'yyyy'),
-  };
-
-  return db
-    .insert(jobApplications)
-    .values(application)
-    .returning({ insertedId: jobApplications.id });
 }
