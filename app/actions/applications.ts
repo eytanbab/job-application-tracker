@@ -145,7 +145,10 @@ export async function extractAiApplication(url: string) {
   const data = completion.choices[0].message.content;
 
   if (!data) {
-    throw new Error('AI did not return a response.');
+    return {
+      status: 'fail' as const,
+      message: 'Failed to extract data from the URL.',
+    };
   }
 
   const application: AiData = JSON.parse(data);
