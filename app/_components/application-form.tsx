@@ -263,7 +263,7 @@ export const ApplicationForm = ({
             {isPending ? (
               <Loader2 className='size-8 animate-spin' />
             ) : (
-              'Extract application'
+              'Auto-Extract Details'
             )}
           </Button>
         </form>
