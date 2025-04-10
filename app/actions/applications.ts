@@ -9,11 +9,11 @@ import { z } from 'zod';
 import { and, desc, eq } from 'drizzle-orm';
 
 import { format } from 'date-fns';
-import { openAiclient } from '@/lib/open-ai';
 // import { AiFormValues, AiData } from '@/lib/types';
 import { scraper } from '@/lib/scraper';
-import { AiData } from '@/lib/types';
+// import { AiData } from '@/lib/types';
 import { cookies } from 'next/headers';
+import { geminiClient } from '@/lib/gemini';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
@@ -147,55 +147,104 @@ export async function updateApplication(values: FormValues) {
 /* ----------------- OPEN AI ------------------ */
 
 export async function extractAiApplication(url: string) {
-  const webpage = await scraper(url);
+  try {
+    const webpage = await scraper(url);
+    const prompt = `You are an AI that extracts job application details from raw text.
+if the data is not of an application, return {
+status: 'fail',
+message: 'Failed to extract data from the URL.'
+}
 
-  const completion = await openAiclient.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [
-      {
-        role: 'system',
-        content: `You are an AI that extracts job application details from raw text.
-        if the data is not of an application, return {
-        status: 'fail',
-        message: explain why the extraction failed
-        }
+Your task is to return a valid JSON object with these fields:
+{
+  status: 'success',
+  application: {
+    role_name: The job title.
+    company_name: The company offering the job.
+    link: The provided URL ${url}.
+    platform: The job listing platform in title case, inferred from the URL (${url}).
+    status: Always set this to "Applied".
+    description: Extract the full job description from the text.
+    location: The job location's city (if available).
+  }
+}
 
-        Your task is to return a valid JSON object with these fields:
-        {
-          status: 'success'.
-          application: {
-            role_name: The job title.
-            company_name: The company offering the job.
-            link: The provided URL  ${url}.
-            platform: The job listing platform in title case, inferred from the URL  (${url}).
-            status: Always set this to "Applied".
-            description: Extract the full job description from the text.
-            location: The job location's city (if available).
-            }
-        }
+    If any field is missing, return null for that field.
+Your response must be a strict JSON object with no extra text.
 
-        If any field is missing, return null for that field.
-        Your response must be a strict JSON object with no extra text.
-        `,
+Extract job details from the following text:\n\n${webpage}`;
+
+    const response = await geminiClient.models.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      model: 'gemini-2.0-flash',
+      config: {
+        responseMimeType: 'application/json',
       },
-      {
-        role: 'user',
-        content: `Extract job details from the following text:\n\n${webpage}`,
-      },
-    ],
-    response_format: { type: 'json_object' },
-  });
+    });
+    const res = response.text;
 
-  const data = completion.choices[0].message.content;
-
-  if (!data) {
+    if (!res) {
+      return {
+        status: 'fail' as const,
+        message: 'Failed to extract data from the URL.',
+      };
+    }
+    return JSON.parse(res);
+  } catch (error) {
+    console.error('Error calling Gemini API:', error);
     return {
-      status: 'fail' as const,
-      message: 'Failed to extract data from the URL.',
+      status: 'fail',
+      message: 'Failed to extract information due to an API error.',
     };
   }
 
-  const application: AiData = JSON.parse(data);
+  // const completion = await openAiclient.chat.completions.create({
+  //   model: 'gpt-4o-mini',
+  //   messages: [
+  //     {
+  //       role: 'system',
+  //       content: `You are an AI that extracts job application details from raw text.
+  //       if the data is not of an application, return {
+  //       status: 'fail',
+  //       message: explain why the extraction failed
+  //       }
 
-  return application;
+  //       Your task is to return a valid JSON object with these fields:
+  //       {
+  //         status: 'success'.
+  //         application: {
+  //           role_name: The job title.
+  //           company_name: The company offering the job.
+  //           link: The provided URL  ${url}.
+  //           platform: The job listing platform in title case, inferred from the URL  (${url}).
+  //           status: Always set this to "Applied".
+  //           description: Extract the full job description from the text.
+  //           location: The job location's city (if available).
+  //           }
+  //       }
+
+  //       If any field is missing, return null for that field.
+  //       Your response must be a strict JSON object with no extra text.
+  //       `,
+  //     },
+  //     {
+  //       role: 'user',
+  //       content: `Extract job details from the following text:\n\n${webpage}`,
+  //     },
+  //   ],
+  //   response_format: { type: 'json_object' },
+  // });
+
+  // const data = completion.choices[0].message.content;
+
+  // if (!data) {
+  //   return {
+  //     status: 'fail' as const,
+  //     message: 'Failed to extract data from the URL.',
+  //   };
+  // }
+
+  // const application: AiData = JSON.parse(data);
+
+  // return application;
 }
