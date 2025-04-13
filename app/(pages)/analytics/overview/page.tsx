@@ -21,16 +21,25 @@ export async function generateMetadata() {
 }
 
 export default async function Overview() {
-  const top5Companies = await getTop5Companies();
-  const top5Statuses = await getTop5Statuses();
-  const top5Platforms = await getTop5Platforms();
-  const top5Locations = await getTop5Locations();
-  const top5RoleNames = await getTop5RoleNames();
-
-  const applicationsPerYear = await getApplicationsPerYear();
-  const years = await getYears();
-
-  const statusesPerYear = await getStasusesPerYear();
+  const [
+    top5Companies,
+    top5Statuses,
+    top5Platforms,
+    top5Locations,
+    top5RoleNames,
+    applicationsPerYear,
+    years,
+    statusesPerYear,
+  ] = await Promise.all([
+    getTop5Companies(),
+    getTop5Statuses(),
+    getTop5Platforms(),
+    getTop5Locations(),
+    getTop5RoleNames(),
+    getApplicationsPerYear(),
+    getYears(),
+    getStasusesPerYear(),
+  ]);
 
   if (top5Companies.length === 0)
     return (
