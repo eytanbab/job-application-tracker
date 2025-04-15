@@ -71,6 +71,7 @@ export const ApplicationForm = ({
 }: Props) => {
   const [isPending, startTransition] = useTransition();
   const [aiValues, setAiValues] = useState<AiValues | null>(defaultValues);
+  const [isLoading, setIsLoading] = useState(false);
 
   const formSchema = z.object({
     id: z.string().optional(),
@@ -172,7 +173,8 @@ export const ApplicationForm = ({
   ];
 
   const handleAiSubmit = async (values: z.infer<typeof aiFormSchema>) => {
-    startTransition(async () => {
+    setIsLoading(true);
+    try {
       const aiAutoFill: AiData = await extractAiApplication(values.url);
       console.log('aiAutoFill', aiAutoFill);
 
@@ -200,7 +202,12 @@ export const ApplicationForm = ({
       });
 
       setAiValues(autoFillValues);
-    });
+    } catch (error) {
+      console.error('Error extracting AI application data:', error);
+      setAiValues(null);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubmit = (values: FormValues) => {
@@ -259,8 +266,8 @@ export const ApplicationForm = ({
               </FormItem>
             )}
           />
-          <Button type='submit' disabled={isPending}>
-            {isPending ? (
+          <Button type='submit' disabled={isPending || isLoading}>
+            {isLoading ? (
               <Loader2 className='size-8 animate-spin' />
             ) : (
               'Auto-Extract Details'
