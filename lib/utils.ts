@@ -21,7 +21,7 @@ export const navItems = [
   },
 ];
 
-export const monthNames = [
+const MONTH_NAMES = [
   'Jan',
   'Feb',
   'Mar',
@@ -34,46 +34,52 @@ export const monthNames = [
   'Oct',
   'Nov',
   'Dec',
-];
+] as const;
 
-// --- Format Data to Ensure All Months Exist ---
-export function formatApplicationsPerYear(data: Data[]) {
-  // Group data by year using a Map
-  const groupedByYear = new Map<string, Map<number, number>>();
+type MonthName = (typeof MONTH_NAMES)[number];
 
-  data.forEach(({ year, month, numOfApplications }) => {
-    if (!groupedByYear.has(year)) groupedByYear.set(year, new Map());
-    groupedByYear.get(year)!.set(+month, numOfApplications);
-  });
+/**
+ * Formats application data per year, ensuring all months are present with a count of 0 if no data exists for that month.
+ *
+ * @param data An array of data entries with year, month (as string), and numOfApplications.
+ * @returns An array of objects, each representing a month in a year with the number of applications.
+ */
+export function formatApplicationsPerYear(
+  data: Data[]
+): { year: string; month: MonthName; numOfApplications: number }[] {
+  // Group data by year
+  const groupedByYear = data.reduce(
+    (acc, { year, month, numOfApplications }) => {
+      acc.set(year, acc.get(year) || new Map());
+      // Ensure month is treated as a number for consistent indexing
+      const monthNumber = parseInt(month, 10);
+      acc.get(year)!.set(monthNumber, numOfApplications);
+      return acc;
+    },
+    new Map<string, Map<number, number>>()
+  );
 
   // Generate the final structured result
   return Array.from(groupedByYear.entries()).flatMap(([year, applications]) =>
     Array.from({ length: 12 }, (_, index) => {
-      const month = index + 1;
+      const monthNumber = index + 1;
       return {
         year,
-        month: monthNames[index], // Convert to 'Jan', 'Feb', etc.
-        numOfApplications: applications.get(month) || 0, // Use existing data or default to 0
+        month: MONTH_NAMES[index],
+        numOfApplications: applications.get(monthNumber) || 0,
       };
     })
   );
 }
 
-const MONTHS_MAP: Record<string, string> = {
-  '1': 'Jan',
-  '2': 'Feb',
-  '3': 'Mar',
-  '4': 'Apr',
-  '5': 'May',
-  '6': 'Jun',
-  '7': 'Jul',
-  '8': 'Aug',
-  '9': 'Sep',
-  '10': 'Oct',
-  '11': 'Nov',
-  '12': 'Dec',
-};
-
+/**
+ * Transforms raw application data for a specific year into a chart-ready format,
+ * ensuring all months are present and missing statuses have a count of 0.
+ *
+ * @param rawData An array of raw data entries with year, month (as string), status, and statusCount.
+ * @param selectedYear The year for which to transform the data.
+ * @returns An array of objects, each representing a month with counts for different statuses.
+ */
 export function transformApplicationsData(
   rawData: RawData[],
   selectedYear: string
@@ -82,31 +88,30 @@ export function transformApplicationsData(
   const filteredData = rawData.filter((entry) => entry.year === selectedYear);
 
   // Group data by month
-  const groupedData: Record<string, ChartData> = {};
+  const groupedData: Partial<Record<MonthName, ChartData>> = {};
 
   filteredData.forEach(({ month, status, statusCount }) => {
-    const monthName = MONTHS_MAP[month];
+    const monthNumber = parseInt(month, 10);
+    const monthName = MONTH_NAMES[monthNumber - 1];
 
     if (!groupedData[monthName]) {
       groupedData[monthName] = { month: monthName };
     }
-
-    groupedData[monthName][status] = statusCount;
+    groupedData[monthName]![status] = statusCount;
   });
 
   // Ensure all months exist and missing statuses are filled with 0
-  const allMonths = Object.values(MONTHS_MAP);
   const uniqueStatuses = [...new Set(rawData.map(({ status }) => status))];
 
-  const chartData = allMonths.map((month) => {
-    const data = groupedData[month] || { month };
+  return MONTH_NAMES.map((month) => {
+    const data: ChartData = groupedData[month] || { month };
     uniqueStatuses.forEach((status) => {
-      if (!data[status]) data[status] = 0; // Ensure missing statuses are 0
+      if (!(status in data)) {
+        data[status] = 0;
+      }
     });
     return data;
   });
-
-  return chartData;
 }
 
 const predefinedColors: Record<string, string> = {
