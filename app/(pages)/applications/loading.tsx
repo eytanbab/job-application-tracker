@@ -98,18 +98,18 @@ export default function DataTableSkeleton() {
                 <TableCell
                   key={cell.id}
                   className={cn(
-                    'truncate max-w-60',
+                    'truncate max-w-60 p-3.5',
                     cell.column.id === 'link' && 'lowercase'
                   )}
                 >
                   {cell.column.id === 'status' ? (
                     <div className='inline-flex'>
-                      <div className='h-6 w-20 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse' />
+                      <div className='h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse' />
                     </div>
                   ) : (
                     <div
                       className={cn(
-                        'h-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse',
+                        'h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse',
                         // Vary widths based on actual column IDs
                         cell.column.id === 'role_name' && 'w-full max-w-48',
                         cell.column.id === 'company_name' && 'w-full max-w-32',
