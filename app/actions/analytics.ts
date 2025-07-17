@@ -255,7 +255,10 @@ export async function getStatusPerPlatform() {
       platformTotals.set(platformName, 0);
     }
     grouped.get(platformName).push({ status, value: numOfApplications });
-    platformTotals.set(platformName, platformTotals.get(platformName) + numOfApplications);
+    platformTotals.set(
+      platformName,
+      platformTotals.get(platformName) + numOfApplications
+    );
   });
 
   // Convert to array and sort by total applications
