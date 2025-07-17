@@ -246,16 +246,29 @@ export async function getStatusPerPlatform() {
     .orderBy(desc(jobApplications.status));
 
   const grouped = new Map();
+  const platformTotals = new Map();
 
+  // First pass: group by platform and calculate totals
   data.forEach(({ platformName, status, numOfApplications }) => {
     if (!grouped.has(platformName)) {
       grouped.set(platformName, []);
+      platformTotals.set(platformName, 0);
     }
     grouped.get(platformName).push({ status, value: numOfApplications });
+    platformTotals.set(platformName, platformTotals.get(platformName) + numOfApplications);
   });
 
-  return Array.from(grouped.entries()).map(([platformName, statuses]) => ({
-    platformName,
-    statuses,
-  }));
+  // Convert to array and sort by total applications
+  return Array.from(grouped.entries())
+    .map(([platformName, statuses]) => ({
+      platformName,
+      // Sort statuses by value (number of applications) in descending order
+      statuses: [...statuses].sort((a, b) => b.value - a.value),
+      total: platformTotals.get(platformName),
+    }))
+    .sort((a, b) => b.total - a.total)
+    .map(({ platformName, statuses }) => ({
+      platformName,
+      statuses,
+    }));
 }
