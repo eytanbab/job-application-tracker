@@ -9,7 +9,7 @@ const SideNav = () => {
   const pathname = usePathname();
 
   return (
-    <div className='hidden border-r border-indigo-600/25 p-4 2xl:flex flex-col gap-2 text-xl w-96 sticky top-16 left-0 h-[calc(100vh-4rem)] bg-slate-100 dark:bg-slate-900 z-50'>
+    <div className='hidden border-r border-indigo-600/25 p-4 2xl:flex flex-col gap-2 text-xl w-80 sticky top-16 left-0 h-[calc(100vh-4rem)] bg-slate-100 dark:bg-slate-900 z-50 flex-none'>
       {navItems.map((item) => {
         return (
           <Link
