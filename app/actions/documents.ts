@@ -1,7 +1,6 @@
 'use server';
 
-import { auth } from '@clerk/nextjs/server';
-import { revalidatePath } from 'next/cache';
+import { revalidateTag, unstable_cache } from 'next/cache';
 
 import { db } from '@/app/db';
 import { documents } from '@/app/db/schema';
@@ -10,26 +9,20 @@ import { and, eq } from 'drizzle-orm';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { s3Client } from '@/lib/s3-client';
-import { cookies } from 'next/headers';
+import {
+  CACHE_REVALIDATE_SECONDS,
+  documentsTag,
+} from './_utils/cache-tags';
+import { getCurrentUserIdOrThrow } from './_utils/user-context';
 
 export async function generatePresignedUrl(
   fileName: string,
   contentType: string
 ) {
   try {
-    const { userId: clerkUserId } = await auth();
+    const userId = await getCurrentUserIdOrThrow();
 
-    const cookieStore = cookies();
-
-    const guestId = (await cookieStore).get('guest_id')?.value;
-
-    const userId = clerkUserId ?? guestId;
-
-    if (!userId) {
-      throw new Error('No user or guest ID available');
-    }
-
-    if (!fileName || !contentType || !userId) {
+    if (!fileName || !contentType) {
       throw new Error(
         'Missing required parameters: fileName and contentType and userId'
       );
@@ -72,53 +65,30 @@ export async function createFile(
   file_name: string,
   file_key: string
 ) {
-  const { userId: clerkUserId } = await auth();
-
-  const cookieStore = cookies();
-
-  const guestId = (await cookieStore).get('guest_id')?.value;
-
-  const userId = clerkUserId ?? guestId;
-
-  if (!userId) {
-    throw new Error('No user or guest ID available');
-  }
+  const userId = await getCurrentUserIdOrThrow();
 
   await db
     .insert(documents)
     .values({ title, doc_url, userId, file_name, file_key })
     .returning({ insertedId: documents.id });
-  revalidatePath('/documents');
+  revalidateTag(documentsTag(userId));
 }
 
 export async function getFiles() {
-  const { userId: clerkUserId } = await auth();
+  const userId = await getCurrentUserIdOrThrow();
 
-  const cookieStore = cookies();
-
-  const guestId = (await cookieStore).get('guest_id')?.value;
-
-  const userId = clerkUserId ?? guestId;
-
-  if (!userId) {
-    throw new Error('No user or guest ID available');
-  }
-
-  return db.select().from(documents).where(eq(documents.userId, userId));
+  return unstable_cache(
+    async () => db.select().from(documents).where(eq(documents.userId, userId)),
+    ['documents', 'list', userId],
+    {
+      revalidate: CACHE_REVALIDATE_SECONDS,
+      tags: [documentsTag(userId)],
+    }
+  )();
 }
 
 export async function deleteFile(id: string) {
-  const { userId: clerkUserId } = await auth();
-
-  const cookieStore = cookies();
-
-  const guestId = (await cookieStore).get('guest_id')?.value;
-
-  const userId = clerkUserId ?? guestId;
-
-  if (!userId) {
-    throw new Error('No user or guest ID available');
-  }
+  const userId = await getCurrentUserIdOrThrow();
 
   try {
     const deletedDocument = await db
@@ -136,5 +106,5 @@ export async function deleteFile(id: string) {
     console.log('Error', err);
   }
 
-  revalidatePath('/documents');
+  revalidateTag(documentsTag(userId));
 }
