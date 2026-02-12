@@ -1,7 +1,6 @@
 'use server';
 
-import { auth } from '@clerk/nextjs/server';
-import { revalidatePath } from 'next/cache';
+import { revalidateTag, unstable_cache } from 'next/cache';
 
 import { db } from '@/app/db';
 import { insertApplicationSchema, jobApplications } from '@/app/db/schema';
@@ -12,8 +11,12 @@ import { format } from 'date-fns';
 // import { AiFormValues, AiData } from '@/lib/types';
 import { scraper } from '@/lib/scraper';
 // import { AiData } from '@/lib/types';
-import { cookies } from 'next/headers';
 import { geminiClient } from '@/lib/gemini';
+import {
+  applicationsTag,
+  CACHE_REVALIDATE_SECONDS,
+} from './_utils/cache-tags';
+import { getCurrentUserIdOrThrow } from './_utils/user-context';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
@@ -22,61 +25,49 @@ type FormValues = z.input<typeof formSchema>;
 
 // Get all applications of current user
 export async function getApplications() {
-  const { userId: clerkUserId } = await auth();
+  const userId = await getCurrentUserIdOrThrow();
 
-  const cookieStore = cookies();
-
-  const guestId = (await cookieStore).get('guest_id')?.value;
-
-  const userId = clerkUserId ?? guestId;
-
-  if (!userId) {
-    throw new Error('No user or guest ID available');
-  }
-
-  return db
-    .select()
-    .from(jobApplications)
-    .where(eq(jobApplications.userId, userId))
-    .orderBy(
-      desc(jobApplications.date_applied),
-      desc(jobApplications.createdAt)
-    );
+  return unstable_cache(
+    async () =>
+      db
+        .select()
+        .from(jobApplications)
+        .where(eq(jobApplications.userId, userId))
+        .orderBy(
+          desc(jobApplications.date_applied),
+          desc(jobApplications.createdAt)
+        ),
+    ['applications', 'list', userId],
+    {
+      revalidate: CACHE_REVALIDATE_SECONDS,
+      tags: [applicationsTag(userId)],
+    }
+  )();
 }
 
 // Get a single application with id for current user
 export async function getApplication(id: string) {
-  const { userId: clerkUserId } = await auth();
+  const userId = await getCurrentUserIdOrThrow();
 
-  const cookieStore = cookies();
-
-  const guestId = (await cookieStore).get('guest_id')?.value;
-
-  const userId = clerkUserId ?? guestId;
-
-  if (!userId) {
-    throw new Error('No user or guest ID available');
-  }
-
-  return db
-    .select()
-    .from(jobApplications)
-    .where(and(eq(jobApplications.userId, userId), eq(jobApplications.id, id)));
+  return unstable_cache(
+    async () =>
+      db
+        .select()
+        .from(jobApplications)
+        .where(
+          and(eq(jobApplications.userId, userId), eq(jobApplications.id, id))
+        ),
+    ['applications', 'detail', userId, id],
+    {
+      revalidate: CACHE_REVALIDATE_SECONDS,
+      tags: [applicationsTag(userId)],
+    }
+  )();
 }
 
 // Create a new application for the current user
 export async function createApplication(values: FormValues) {
-  const { userId: clerkUserId } = await auth();
-
-  const cookieStore = cookies();
-
-  const guestId = (await cookieStore).get('guest_id')?.value;
-
-  const userId = clerkUserId ?? guestId;
-
-  if (!userId) {
-    throw new Error('No user or guest ID available');
-  }
+  const userId = await getCurrentUserIdOrThrow();
 
   const application: z.input<typeof insertApplicationSchema> = {
     ...values,
@@ -85,46 +76,31 @@ export async function createApplication(values: FormValues) {
     year: format(new Date(values.date_applied), 'yyyy'),
   };
 
-  return db
+  const result = await db
     .insert(jobApplications)
     .values(application)
     .returning({ insertedId: jobApplications.id });
+  revalidateTag(applicationsTag(userId));
+  return result;
 }
 
 // Delete a single application with id for current user
 export async function deleteApplication(id: string) {
-  const { userId: clerkUserId } = await auth();
-
-  const cookieStore = cookies();
-
-  const guestId = (await cookieStore).get('guest_id')?.value;
-
-  const userId = clerkUserId ?? guestId;
-
-  if (!userId) {
-    throw new Error('No user or guest ID available');
-  }
+  const userId = await getCurrentUserIdOrThrow();
 
   await db
     .delete(jobApplications)
     .where(and(eq(jobApplications.userId, userId), eq(jobApplications.id, id)));
 
-  revalidatePath('/dashboard');
+  revalidateTag(applicationsTag(userId));
 }
 
 // Update an application of current user
 export async function updateApplication(values: FormValues) {
-  const { userId: clerkUserId } = await auth();
-
-  const cookieStore = cookies();
-
-  const guestId = (await cookieStore).get('guest_id')?.value;
-
-  const userId = clerkUserId ?? guestId;
-
-  if (!userId || !values.id) {
+  if (!values.id) {
     return;
   }
+  const userId = await getCurrentUserIdOrThrow();
 
   const application = {
     ...values,
@@ -141,7 +117,7 @@ export async function updateApplication(values: FormValues) {
         eq(jobApplications.id, application.id!)
       )
     );
-  revalidatePath('/dashboard');
+  revalidateTag(applicationsTag(userId));
 }
 
 /* ----------------- OPEN AI ------------------ */
