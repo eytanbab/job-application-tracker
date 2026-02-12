@@ -173,10 +173,10 @@ export const columns: ColumnDef<FormValues>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
-      //Convert date string to Date object
-      const date = new Date(row.original.date_applied);
-      row.original.date_applied = date as unknown as string;
-      // console.log('row:', row.original);
+      const editDefaults = {
+        ...row.original,
+      } as FormValues;
+
       const onSubmit = async (values: FormValues) => {
         try {
           await updateApplication(values);
@@ -196,7 +196,7 @@ export const columns: ColumnDef<FormValues>[] = [
       return (
         <div className='flex gap-2 items-center'>
           {/* Implement edit functionality */}
-          <EditApplicationSheet row={row} onSubmit={onSubmit} />
+          <EditApplicationSheet row={{ original: editDefaults }} onSubmit={onSubmit} />
           {/* Delete button */}
           <Dialog>
             <DialogTrigger>
