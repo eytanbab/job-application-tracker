@@ -32,13 +32,13 @@ export const EditApplicationSheet = ({ row, onSubmit }: Row) => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <button className='hover:text-[#38CA8C]' onClick={() => setOpen(true)}>
+        <button className='hover:text-primary' onClick={() => setOpen(true)}>
           <Pencil className='size-4' />
         </button>
       </SheetTrigger>
       <SheetContent className='w-full space-y-4 overflow-y-auto flex flex-col items-center sm:items-start'>
         <SheetHeader>
-          <SheetTitle className='font-normal text-indigo-600 dark:text-indigo-100 '>
+          <SheetTitle className='font-normal'>
             Edit application
           </SheetTitle>
         </SheetHeader>

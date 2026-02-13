@@ -79,7 +79,7 @@ export function DataTable<TData extends { status: string }, TValue>({
           />
           {globalFilter.length > 0 && (
             <X
-              className='absolute top-1/2 -translate-y-1/2 right-2 size-6 cursor-pointer hover:bg-indigo-200 dark:hover:bg-indigo-900 p-1 rounded-full transition-colors'
+              className='absolute right-2 top-1/2 size-6 -translate-y-1/2 cursor-pointer rounded-full p-1 transition-colors hover:bg-accent'
               onClick={() => table.setGlobalFilter('')}
             />
           )}
@@ -92,15 +92,12 @@ export function DataTable<TData extends { status: string }, TValue>({
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow
-              key={headerGroup.id}
-              className='border-b border-indigo-600'
-            >
+            <TableRow key={headerGroup.id} className='border-b border-border'>
               {headerGroup.headers.map((header) => {
                 return (
                   <TableHead
                     key={header.id}
-                    className=' text-indigo-600 font-bold p-0 dark:text-indigo-100'
+                    className='p-0 font-bold text-foreground'
                   >
                     {header.isPlaceholder
                       ? null
@@ -120,7 +117,7 @@ export function DataTable<TData extends { status: string }, TValue>({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && 'selected'}
-                className='text-indigo-500  hover:text-slate-100 hover:bg-indigo-600 dark:hover:bg-indigo-800 border-b border-indigo-200 dark:text-indigo-100 dark:border-indigo-800 capitalize'
+                className='capitalize border-b border-border text-foreground hover:bg-accent hover:text-accent-foreground'
               >
                 {row.getVisibleCells().map((cell) =>
                   cell.column.id === 'status' ? (
@@ -133,27 +130,27 @@ export function DataTable<TData extends { status: string }, TValue>({
                           (cell.getValue() as string)
                             .toLowerCase()
                             .includes('applied') &&
-                            'bg-indigo-200 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300',
+                            'bg-primary/15 text-primary',
                           (cell.getValue() as string)
                             .toLowerCase()
                             .includes('accept') &&
-                            'bg-emerald-200 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-300',
+                            'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-300',
                           (cell.getValue() as string)
                             .toLowerCase()
                             .includes('ghost') &&
-                            'bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-slate-300',
+                            'bg-muted text-muted-foreground',
                           (cell.getValue() as string)
                             .toLowerCase()
                             .includes('review') &&
-                            'bg-blue-200 text-blue-900 dark:bg-blue-800 dark:text-blue-300',
+                            'bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300',
                           (cell.getValue() as string)
                             .toLowerCase()
                             .includes('interview') &&
-                            'bg-cyan-200 text-cyan-900 dark:bg-cyan-800 dark:text-cyan-300',
+                            'bg-cyan-100 text-cyan-900 dark:bg-cyan-900/30 dark:text-cyan-300',
                           (cell.getValue() as string)
                             .toLowerCase()
                             .includes('reject') &&
-                            'bg-red-200 text-red-950 dark:bg-red-950/75 dark:text-red-500'
+                            'bg-destructive/15 text-destructive'
                         )}
                       >
                         {flexRender(

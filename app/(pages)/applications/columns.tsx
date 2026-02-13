@@ -196,11 +196,14 @@ export const columns: ColumnDef<FormValues>[] = [
       return (
         <div className='flex gap-2 items-center'>
           {/* Implement edit functionality */}
-          <EditApplicationSheet row={{ original: editDefaults }} onSubmit={onSubmit} />
+          <EditApplicationSheet
+            row={{ original: editDefaults }}
+            onSubmit={onSubmit}
+          />
           {/* Delete button */}
           <Dialog>
             <DialogTrigger>
-              <Trash2 className='size-4 hover:text-[#CA3876]' />
+              <Trash2 className='size-4 hover:text-destructive' />
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>

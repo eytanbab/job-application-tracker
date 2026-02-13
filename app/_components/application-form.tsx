@@ -258,7 +258,7 @@ export const ApplicationForm = ({
                   />
                 </FormControl>
                 {aiValues === null && (
-                  <p className='text-sm font-medium text-destructive dark:text-rose-500'>
+                  <p className='text-sm font-medium text-destructive'>
                     Failed to extract information from the URL.
                   </p>
                 )}
@@ -277,9 +277,9 @@ export const ApplicationForm = ({
       </Form>
       {/* Divider */}
       <div className='w-full flex gap-1 items-center justify-center'>
-        <div className='w-full h-px bg-indigo-400'></div>
+        <div className='h-px w-full bg-border'></div>
         <span>OR</span>
-        <div className='w-full h-px bg-indigo-400'></div>
+        <div className='h-px w-full bg-border'></div>
       </div>
       <Form {...form}>
         <form
@@ -326,8 +326,8 @@ export const ApplicationForm = ({
                           <Button
                             variant={'outline'}
                             className={cn(
-                              'flex h-10 w-full rounded-md border border-indigo-600 dark:border-indigo-400 px-4 bg-transparent py-2 text-base font-normal disabled:cursor-not-allowed disabled:opacity-50 md:text-sm text-indigo-600 dark:text-indigo-100 group',
-                              !field.value && 'text-indigo-300'
+                              'group flex h-10 w-full rounded-md border border-input bg-background px-4 py-2 text-base font-normal text-foreground disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+                              !field.value && 'text-muted-foreground'
                             )}
                           >
                             {field.value ? (
@@ -335,12 +335,12 @@ export const ApplicationForm = ({
                             ) : (
                               <span>Pick a date</span>
                             )}
-                            <CalendarIcon className='ml-auto h-4 w-4 text-indigo-600 dark:text-indigo-400 group-hover:text-slate-50' />
+                            <CalendarIcon className='ml-auto h-4 w-4 text-muted-foreground group-hover:text-foreground' />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
                       <PopoverContent
-                        className='w-auto p-0 bg-slate-100'
+                        className='w-auto p-0'
                         align='start'
                       >
                         <Calendar

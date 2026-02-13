@@ -6,7 +6,7 @@ export default function PagesLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <main className='p-6 flex items-center justify-center w-full overflow-hidden'>
+    <main className='p-4 md:p-6 flex items-center justify-center w-full overflow-hidden'>
       {children}
     </main>
   );

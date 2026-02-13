@@ -6,8 +6,8 @@ import { MobileSideNav } from './side-nav-mobile';
 
 const Nav = () => {
   return (
-    <div className='w-full px-6 flex items-center justify-between border-b border-indigo-600/25 h-16 sticky top-0 bg-slate-100 z-50 dark:bg-slate-900'>
-      <Link href='/' className='font-bold text-2xl'>
+    <div className='sticky top-0 z-50 flex h-14 w-full items-center justify-between border-b border-border/60 bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/80'>
+      <Link href='/' className='text-2xl font-black tracking-tight text-foreground'>
         JAT
       </Link>
       <div className='flex gap-4 items-center'>

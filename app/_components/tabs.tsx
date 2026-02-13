@@ -13,15 +13,17 @@ export default function Tabs() {
   ];
 
   return (
-    <div className='flex flex-row w-full gap-2'>
+    <div className='flex w-full flex-row gap-2 rounded-lg border border-border/50 bg-background/60 p-1 backdrop-blur'>
       {tabs.map((item) => {
         return (
           <Link
             key={item.url}
             href={`${item.url}`}
             className={cn(
-              'rounded-sm px-4 py-2 hover:bg-indigo-500 hover:text-slate-100 capitalize transition-colors duration-300',
-              pathname === `${item.url}` ? 'bg-indigo-600 text-slate-100' : ''
+              'rounded-md px-4 py-2 capitalize text-muted-foreground transition-colors duration-300 hover:bg-accent/70 hover:text-foreground',
+              pathname === `${item.url}`
+                ? 'bg-primary/15 text-foreground'
+                : ''
             )}
           >
             {item.name}

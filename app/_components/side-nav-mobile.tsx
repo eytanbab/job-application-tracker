@@ -33,9 +33,9 @@ export function MobileSideNav() {
               href={`${item.url}`}
               onClick={() => setOpen(false)}
               className={cn(
-                'rounded-sm w-full px-4 py-2 hover:bg-indigo-500 hover:text-slate-100 capitalize transition-colors duration-300 text-xl',
+                'w-full rounded-md px-4 py-2 text-lg capitalize text-muted-foreground transition-colors duration-200 hover:bg-accent/70 hover:text-foreground',
                 pathname.includes(item.name)
-                  ? 'bg-indigo-600 text-slate-100'
+                  ? 'border border-border/60 bg-primary/15 text-foreground shadow-sm'
                   : ''
               )}
             >

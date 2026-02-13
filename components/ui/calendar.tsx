@@ -147,7 +147,7 @@ function Calendar({
     props.rangeMiddleClassName
   );
   const _selectedClassName = cn(
-    '[&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground dark:[&>button]:bg-indigo-700 dark:[&>button]:text-indigo-100',
+    '[&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground',
     props.selectedClassName
   );
   const _todayClassName = cn(
@@ -167,7 +167,7 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn('p-3  dark:bg-slate-900 ', className)}
+      className={cn('p-3', className)}
       style={{
         width: 248.8 * (columnsDisplayed ?? 1) + 'px',
       }}

@@ -50,12 +50,12 @@ export const Document = ({ file }: Props) => {
     });
   };
   return (
-    <div className='bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 dark:hover:bg-indigo-900 border border-indigo-200 dark:border-indigo-800 p-4 flex flex-col justify-between items-start gap-2 rounded-sm max-w-96'>
+    <div className='max-w-96 rounded-sm border bg-card p-4 text-card-foreground transition-colors hover:bg-accent/40'>
       <div className='flex justify-between w-full'>
         <h1 className='text-xl font-bold truncate'>{file.title}</h1>
         <Dialog>
           <DialogTrigger disabled={isPending}>
-            <Trash2 className='size-5 hover:text-[#CA3876]' />
+            <Trash2 className='size-5 hover:text-destructive' />
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -91,7 +91,7 @@ export const Document = ({ file }: Props) => {
       >
         {file.file_name}
       </Link>
-      <p className='text-sm text-indigo-400'>
+      <p className='text-sm text-muted-foreground'>
         Created at: {format(file.created_at, 'Pp')}
       </p>
     </div>

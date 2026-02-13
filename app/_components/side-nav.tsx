@@ -9,15 +9,17 @@ const SideNav = () => {
   const pathname = usePathname();
 
   return (
-    <div className='hidden border-r border-indigo-600/25 p-4 2xl:flex flex-col gap-2 text-xl w-80 sticky top-16 left-0 h-[calc(100vh-4rem)] bg-slate-100 dark:bg-slate-900 z-50 flex-none'>
+    <div className='sticky left-0 top-14 z-40 hidden h-[calc(100vh-3.5rem)] w-72 flex-none flex-col gap-1 border-r border-border/50 bg-gradient-to-b from-background/85 to-accent/20 p-3 text-base backdrop-blur 2xl:flex'>
       {navItems.map((item) => {
         return (
           <Link
             key={item.url}
             href={`${item.url}`}
             className={cn(
-              'rounded-sm w-full px-4 py-2 hover:bg-indigo-500 hover:text-slate-100 capitalize transition-colors duration-300',
-              pathname.includes(item.name) ? 'bg-indigo-600 text-slate-100' : ''
+              'w-full rounded-md px-3 py-2 capitalize text-muted-foreground transition-colors duration-200 hover:bg-accent/70 hover:text-foreground',
+              pathname.includes(item.name)
+                ? 'border border-border/60 bg-primary/15 text-foreground shadow-sm'
+                : ''
             )}
           >
             {item.name}

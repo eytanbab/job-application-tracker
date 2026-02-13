@@ -64,15 +64,12 @@ export default function DataTableSkeleton() {
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow
-              key={headerGroup.id}
-              className='border-b border-indigo-600'
-            >
+            <TableRow key={headerGroup.id} className='border-b border-border'>
               {headerGroup.headers.map((header) => {
                 return (
                   <TableHead
                     key={header.id}
-                    className='text-indigo-600 font-bold p-0 dark:text-indigo-100'
+                    className='p-0 font-bold text-foreground'
                   >
                     {header.isPlaceholder
                       ? null
@@ -92,7 +89,7 @@ export default function DataTableSkeleton() {
           {table.getRowModel().rows.map((row) => (
             <TableRow
               key={row.id}
-              className='text-indigo-500 hover:text-slate-100 hover:bg-indigo-600 dark:hover:bg-indigo-800 border-b border-indigo-200 dark:text-indigo-100 dark:border-indigo-800 capitalize'
+              className='capitalize border-b border-border text-foreground hover:bg-accent hover:text-accent-foreground'
             >
               {row.getVisibleCells().map((cell) => (
                 <TableCell
