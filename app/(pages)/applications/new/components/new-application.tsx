@@ -45,6 +45,7 @@ export default function NewApplication() {
     platform: '',
     month: '',
     year: '',
+    salary: '',
   };
 
   return (
