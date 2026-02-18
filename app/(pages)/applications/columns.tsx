@@ -9,7 +9,10 @@ import { parseUrl } from 'next/dist/shared/lib/router/utils/parse-url';
 
 import { EditApplicationSheet } from '@/app/_components/edit-application-sheet';
 
-import { deleteApplication, updateApplication } from '@/app/actions/applications';
+import {
+  deleteApplication,
+  updateApplication,
+} from '@/app/actions/applications';
 import { formatDate } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 
@@ -135,6 +138,21 @@ export const columns: ColumnDef<FormValues>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Location
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
+  },
+  {
+    accessorKey: 'salary',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          className='font-semibold'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Salary
           <ArrowUpDown className='ml-2 h-4 w-4' />
         </Button>
       );
