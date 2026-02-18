@@ -2,6 +2,7 @@
 
 import {
   ColumnDef,
+  PaginationState,
   SortingState,
   flexRender,
   getCoreRowModel,
@@ -23,7 +24,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -35,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 interface DataTableProps<TData extends { status: string }, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -42,13 +44,83 @@ interface DataTableProps<TData extends { status: string }, TValue> {
 }
 
 const TABLE_ROWS = [5, 10, 15, 20, 25];
+const MOBILE_DEFAULT_PAGE_SIZE = 5;
+const DESKTOP_DEFAULT_PAGE_SIZE = 10;
 
 export function DataTable<TData extends { status: string }, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState('');
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const initialSort = searchParams.get('sort');
+  const initialDir = searchParams.get('dir');
+  const initialPage = Number(searchParams.get('page') ?? '1');
+  const sizeParam = searchParams.get('size');
+  const hasSizeParam = sizeParam !== null;
+  const initialSize = Number(sizeParam ?? `${MOBILE_DEFAULT_PAGE_SIZE}`);
+
+  const [sorting, setSorting] = useState<SortingState>(
+    initialSort ? [{ id: initialSort, desc: initialDir === 'desc' }] : []
+  );
+  const [globalFilter, setGlobalFilter] = useState(searchParams.get('q') ?? '');
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex:
+      Number.isFinite(initialPage) && initialPage > 0 ? initialPage - 1 : 0,
+    pageSize: TABLE_ROWS.includes(initialSize)
+      ? initialSize
+      : MOBILE_DEFAULT_PAGE_SIZE,
+  });
+
+  useEffect(() => {
+    if (hasSizeParam) return;
+    if (typeof window === 'undefined') return;
+
+    const isDesktop = window.matchMedia('(min-width: 768px)').matches;
+    const defaultPageSize = isDesktop
+      ? DESKTOP_DEFAULT_PAGE_SIZE
+      : MOBILE_DEFAULT_PAGE_SIZE;
+
+    setPagination((prev) =>
+      prev.pageSize === defaultPageSize
+        ? prev
+        : {
+            ...prev,
+            pageSize: defaultPageSize,
+          }
+    );
+  }, [hasSizeParam]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    const currentSort = sorting[0];
+
+    if (globalFilter) params.set('q', globalFilter);
+    if (currentSort) {
+      params.set('sort', currentSort.id);
+      params.set('dir', currentSort.desc ? 'desc' : 'asc');
+    }
+    if (pagination.pageIndex > 0) {
+      params.set('page', `${pagination.pageIndex + 1}`);
+    }
+    if (pagination.pageSize !== MOBILE_DEFAULT_PAGE_SIZE) {
+      params.set('size', `${pagination.pageSize}`);
+    }
+
+    const nextUrl = params.toString()
+      ? `${pathname}?${params.toString()}`
+      : pathname;
+    router.replace(nextUrl, { scroll: false });
+  }, [
+    globalFilter,
+    pagination.pageIndex,
+    pagination.pageSize,
+    pathname,
+    router,
+    sorting,
+  ]);
 
   const table = useReactTable({
     data,
@@ -60,10 +132,12 @@ export function DataTable<TData extends { status: string }, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     globalFilterFn: 'includesString', // built-in filter function
     onGlobalFilterChange: setGlobalFilter,
+    onPaginationChange: setPagination,
 
     state: {
       sorting,
       globalFilter,
+      pagination,
     },
   });
 
@@ -74,7 +148,7 @@ export function DataTable<TData extends { status: string }, TValue>({
           <Input
             placeholder='Search...'
             value={globalFilter}
-            onChange={(e) => table.setGlobalFilter(String(e.target.value))}
+            onChange={(e) => setGlobalFilter(String(e.target.value))}
             className='max-w-sm'
           />
           {globalFilter.length > 0 && (
