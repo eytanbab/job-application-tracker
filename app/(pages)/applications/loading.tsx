@@ -32,6 +32,7 @@ const createSkeletonData = (count: number) => {
     month: '',
     year: '',
     location: '',
+    salary: '',
     // Optional properties
     id: `skeleton-${index}`,
     description: '',
@@ -111,6 +112,7 @@ export default function DataTableSkeleton() {
                         cell.column.id === 'role_name' && 'w-full max-w-48',
                         cell.column.id === 'company_name' && 'w-full max-w-32',
                         cell.column.id === 'location' && 'w-full max-w-24',
+                        cell.column.id === 'salary' && 'w-full max-w-24',
                         cell.column.id === 'platform' && 'w-full max-w-20',
                         cell.column.id === 'date_applied' && 'w-full max-w-24',
                         cell.column.id === 'month' && 'w-full max-w-16',
@@ -122,6 +124,7 @@ export default function DataTableSkeleton() {
                           'role_name',
                           'company_name',
                           'location',
+                          'salary',
                           'platform',
                           'date_applied',
                           'month',
