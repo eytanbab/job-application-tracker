@@ -62,6 +62,7 @@ type AiValues = {
   date_applied: Date | string;
   month: string;
   year: string;
+  salary?: string | null;
 };
 
 export const ApplicationForm = ({
@@ -96,6 +97,7 @@ export const ApplicationForm = ({
     status: z.string().min(2, {
       message: 'Status name must be at least 2 characters.',
     }),
+    salary: z.string().nullable().optional(),
   });
 
   const aiForm = useForm<z.infer<typeof aiFormSchema>>({
@@ -114,63 +116,6 @@ export const ApplicationForm = ({
     onClose();
     redirect('/applications');
   };
-
-  type Field = {
-    name:
-      | 'role_name'
-      | 'company_name'
-      | 'date_applied'
-      | 'link'
-      | 'description'
-      | 'location'
-      | 'status'
-      | 'platform';
-    label: string;
-    placeholder: string;
-  };
-
-  const fields: Field[] = [
-    {
-      name: 'role_name',
-      label: 'Role Title',
-      placeholder: 'Frontend developer',
-    },
-    {
-      name: 'company_name',
-      label: 'Company Name',
-      placeholder: 'Apple | Facebook | etc..',
-    },
-    {
-      name: 'date_applied',
-      label: 'Date Applied',
-      placeholder: '2025-01-01',
-    },
-    {
-      name: 'link',
-      label: 'Link',
-      placeholder: 'https://www.linkedin.com/jobs/view/123456789/',
-    },
-    {
-      name: 'description',
-      label: 'Description',
-      placeholder: 'Role description',
-    },
-    {
-      name: 'location',
-      label: 'Location',
-      placeholder: 'Tel Aviv',
-    },
-    {
-      name: 'status',
-      label: 'Status',
-      placeholder: 'Applied | Interview | Rejected | etc..',
-    },
-    {
-      name: 'platform',
-      label: 'Platform',
-      placeholder: 'Linkedin | Indeed | Company website | etc..',
-    },
-  ];
 
   const handleAiSubmit = async (values: z.infer<typeof aiFormSchema>) => {
     setIsLoading(true);
@@ -194,6 +139,7 @@ export const ApplicationForm = ({
         location: aiAutoFill.application.location,
         month: '',
         year: '',
+        salary: '',
       };
 
       // update form state so react-hook-form knows about the changes
@@ -225,6 +171,7 @@ export const ApplicationForm = ({
       location: values.location.trim(),
       platform: values.platform.toLowerCase().trim(),
       status: values.status.toLowerCase().trim(),
+      salary: values.salary?.trim() || '',
     };
 
     startTransition(async () => {
@@ -239,11 +186,11 @@ export const ApplicationForm = ({
   // console.log('Form errors:', form.formState.errors);
 
   return (
-    <div className='w-full max-w-96 flex flex-col gap-2 items-center'>
+    <div className='w-full flex flex-col gap-2 items-center'>
       <Form {...aiForm}>
         <form
           onSubmit={aiForm.handleSubmit(handleAiSubmit)}
-          className='flex flex-col w-full max-w-96 gap-2'
+          className='flex flex-col w-full gap-2 max-w-lg'
         >
           <FormField
             control={aiForm.control}
@@ -284,157 +231,187 @@ export const ApplicationForm = ({
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
-          className='flex flex-col w-full max-w-96 gap-2'
+          className='grid grid-cols-2 w-full gap-3 max-w-lg'
         >
-          {fields.map((fld) => (
-            <FormField
-              key={fld.name}
-              control={form.control}
-              name={fld.name}
-              render={({ field }) =>
-                // Render date field
-                fld.name === 'role_name' ? (
-                  <FormItem className='space-y-0'>
-                    <FormLabel>{fld.label}</FormLabel>
+          <FormField
+            control={form.control}
+            name='role_name'
+            render={({ field }) => (
+              <FormItem className='space-y-0 col-span-2'>
+                <FormLabel>Role Title</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder='Frontend developer'
+                    {...field}
+                    value={field.value || ''}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='company_name'
+            render={({ field }) => (
+              <FormItem className='space-y-0 col-span-2'>
+                <FormLabel>Company Name</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder='Apple | Facebook | etc..'
+                    {...field}
+                    value={field.value || ''}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='salary'
+            render={({ field }) => (
+              <FormItem className='space-y-0 col-span-1'>
+                <FormLabel>Salary</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder='e.g. 30k - 40k'
+                    {...field}
+                    value={field.value || ''}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='location'
+            render={({ field }) => (
+              <FormItem className='space-y-0 col-span-1'>
+                <FormLabel>Location</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder='Tel Aviv'
+                    {...field}
+                    value={field.value || ''}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='status'
+            render={({ field }) => (
+              <FormItem className='space-y-0 col-span-1'>
+                <FormLabel>Status</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder='Applied'
+                    {...field}
+                    value={field.value || ''}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='platform'
+            render={({ field }) => (
+              <FormItem className='space-y-0 col-span-1'>
+                <FormLabel>Platform</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder='Linkedin'
+                    {...field}
+                    value={field.value || ''}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='date_applied'
+            render={({ field }) => (
+              <FormItem className='space-y-0 col-span-2'>
+                <FormLabel>Date applied</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
                     <FormControl>
-                      <Input
-                        placeholder={fld.placeholder}
-                        {...field}
-                        value={field.value as string}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                ) : fld.name === 'company_name' ? (
-                  <FormItem className='space-y-0'>
-                    <FormLabel>{fld.label}</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={fld.placeholder}
-                        {...field}
-                        value={field.value as string}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                ) : fld.name === 'date_applied' ? (
-                  <FormItem className='space-y-0'>
-                    <FormLabel>Date applied</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={'outline'}
-                            className={cn(
-                              'group flex h-10 w-full rounded-md border border-input bg-background px-4 py-2 text-base font-normal text-foreground disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
-                              !field.value && 'text-muted-foreground'
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, 'PPP')
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className='ml-auto h-4 w-4 text-muted-foreground group-hover:text-foreground' />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent
-                        className='w-auto p-0'
-                        align='start'
+                      <Button
+                        variant={'outline'}
+                        className={cn(
+                          'group flex h-10 w-full rounded-md border border-input bg-background px-4 py-2 text-base font-normal text-foreground disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+                          !field.value && 'text-muted-foreground'
+                        )}
                       >
-                        <Calendar
-                          mode='single'
-                          showYearSwitcher={false}
-                          selected={new Date(field.value!)}
-                          onSelect={field.onChange}
-                          disabled={(date: Date) =>
-                            date > new Date() || date < new Date('1900-01-01')
-                          }
-                        />
-                      </PopoverContent>
-                    </Popover>
+                        {field.value ? (
+                          format(field.value, 'PPP')
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className='ml-auto h-4 w-4 text-muted-foreground group-hover:text-foreground' />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className='w-auto p-0' align='start'>
+                    <Calendar
+                      mode='single'
+                      showYearSwitcher={false}
+                      selected={new Date(field.value!)}
+                      onSelect={field.onChange}
+                      disabled={(date: Date) =>
+                        date > new Date() || date < new Date('1900-01-01')
+                      }
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='link'
+            render={({ field }) => (
+              <FormItem className='space-y-0 col-span-2'>
+                <FormLabel>Link</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder='https://www.linkedin.com/jobs/view/123456789/'
+                    {...field}
+                    value={field.value || ''}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='description'
+            render={({ field }) => (
+              <FormItem className='space-y-0 col-span-2'>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder='Role description'
+                    {...field}
+                    value={field.value || ''}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-                    <FormMessage />
-                  </FormItem>
-                ) : fld.name === 'link' ? (
-                  <FormItem className='space-y-0'>
-                    <FormLabel>{fld.label}</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={fld.placeholder}
-                        {...field}
-                        value={field.value as string}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                ) : fld.name === 'description' ? (
-                  <FormItem className='space-y-0'>
-                    <FormLabel>{fld.label}</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder={fld.placeholder}
-                        {...field}
-                        value={field.value as string}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                ) : fld.name === 'location' ? (
-                  <FormItem className='space-y-0'>
-                    <FormLabel>{fld.label}</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={fld.placeholder}
-                        {...field}
-                        value={field.value as string}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                ) : fld.name === 'status' ? (
-                  <FormItem className='space-y-0'>
-                    <FormLabel>{fld.label}</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={fld.placeholder}
-                        {...field}
-                        value={field.value as string}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                ) : fld.name === 'platform' ? (
-                  <FormItem className='space-y-0'>
-                    <FormLabel>{fld.label}</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={fld.placeholder}
-                        {...field}
-                        value={field.value as string}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                ) : (
-                  <FormItem className='space-y-0'>
-                    <FormLabel>{fld.label}</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={fld.placeholder}
-                        {...field}
-                        value={field.value as string}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )
-              }
-            />
-          ))}
-
-          <div className='mt-4 flex flex-col gap-2 w-full'>
+          <div className='mt-4 flex flex-col gap-2 w-full col-span-2'>
             <Button type='submit' disabled={isPending}>
               {isPending ? (
                 <Loader2 className='size-8 animate-spin' />
