@@ -23,6 +23,7 @@ export const jobApplications = pgTable('job_applications', {
   description: text('description'),
   location: text('location').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  salary: text('salary'),
 });
 
 export const insertApplicationSchema = createInsertSchema(jobApplications);
