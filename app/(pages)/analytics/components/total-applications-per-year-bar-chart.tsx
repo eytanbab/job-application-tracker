@@ -70,7 +70,7 @@ export function TotalApplicationsPerYearBarChart({ years, data }: Props) {
       <CardContent className='w-full'>
         <ChartContainer
           config={chartConfig}
-          className='min-h-[320px] w-full space-y-4'
+          className='h-[220px] w-full'
         >
           <BarChart accessibilityLayer data={filteredData}>
             <CartesianGrid vertical={false} />
