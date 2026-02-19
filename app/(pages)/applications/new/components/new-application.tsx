@@ -41,7 +41,7 @@ export default function NewApplication() {
     link: '',
     description: '',
     location: '',
-    status: '',
+    status: 'Applied',
     platform: '',
     month: '',
     year: '',
