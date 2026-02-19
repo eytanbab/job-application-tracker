@@ -223,7 +223,7 @@ export const ApplicationForm = ({
         </form>
       </Form>
       {/* Divider */}
-      <div className='w-full flex gap-1 items-center justify-center'>
+      <div className='w-full flex gap-1 items-center justify-center max-w-lg'>
         <div className='h-px w-full bg-border'></div>
         <span>OR</span>
         <div className='h-px w-full bg-border'></div>
