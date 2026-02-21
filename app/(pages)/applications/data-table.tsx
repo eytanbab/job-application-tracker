@@ -122,6 +122,10 @@ export function DataTable<TData extends { status: string }, TValue>({
     sorting,
   ]);
 
+  useEffect(() => {
+    setPagination((prev) => (prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 }));
+  }, [globalFilter, sorting]);
+
   const table = useReactTable({
     data,
     columns,
@@ -133,6 +137,7 @@ export function DataTable<TData extends { status: string }, TValue>({
     globalFilterFn: 'includesString', // built-in filter function
     onGlobalFilterChange: setGlobalFilter,
     onPaginationChange: setPagination,
+    autoResetPageIndex: false,
 
     state: {
       sorting,
