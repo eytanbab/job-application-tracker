@@ -19,6 +19,10 @@ export const navItems = [
     url: '/documents',
     name: 'documents',
   },
+  {
+    url: '/ai-insights',
+    name: 'ai-insights',
+  },
 ];
 
 const MONTH_NAMES = [
