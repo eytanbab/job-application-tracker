@@ -1,10 +1,10 @@
 'use server';
-
+import { addDays, format, subDays } from 'date-fns';
+import { and, count, desc, eq, gte, lt } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 
 import { db } from '@/app/db';
 import { jobApplications } from '@/app/db/schema';
-import { count, desc, eq } from 'drizzle-orm';
 
 import { formatApplicationsPerYear } from '@/lib/utils';
 import {
@@ -12,6 +12,413 @@ import {
   CACHE_REVALIDATE_SECONDS,
 } from './_utils/cache-tags';
 import { getCurrentUserIdOrThrow } from './_utils/user-context';
+
+export async function getKpiSummary() {
+  const userId = await getCurrentUserIdOrThrow();
+
+  return unstable_cache(
+    async () => {
+      const allApplications = await db
+        .select({
+          status: jobApplications.status,
+        })
+        .from(jobApplications)
+        .where(eq(jobApplications.userId, userId));
+
+      const totalApplications = allApplications.length;
+      const applicationsWithInterview = allApplications.filter((app) =>
+        app.status.toLowerCase().includes('interview')
+      ).length;
+      const applicationsWithOffer = allApplications.filter((app) =>
+        app.status.toLowerCase().includes('offer')
+      ).length;
+      const activeApplications = allApplications.filter(
+        (app) =>
+          app.status.toLowerCase() === 'applied' ||
+          app.status.toLowerCase().includes('interview')
+      ).length;
+
+      const interviewRate =
+        totalApplications > 0
+          ? (applicationsWithInterview / totalApplications) * 100
+          : 0;
+      const offerRate =
+        applicationsWithInterview > 0
+          ? (applicationsWithOffer / applicationsWithInterview) * 100
+          : 0;
+
+      return {
+        totalApplications,
+        interviewRate,
+        offerRate,
+        activePipeline: activeApplications,
+      };
+    },
+    ['analytics', 'kpi-summary', userId],
+    {
+      revalidate: CACHE_REVALIDATE_SECONDS,
+      tags: [applicationsTag(userId)],
+    }
+  )();
+}
+
+export async function getApplicationsFunnel() {
+  const userId = await getCurrentUserIdOrThrow();
+
+  return unstable_cache(
+    async () => {
+      const allApplications = await db
+        .select({
+          status: jobApplications.status,
+        })
+        .from(jobApplications)
+        .where(eq(jobApplications.userId, userId));
+
+      const applied = allApplications.length;
+      const interviewing = allApplications.filter((app) =>
+        app.status.toLowerCase().includes('interview')
+      ).length;
+      const offer = allApplications.filter((app) =>
+        app.status.toLowerCase().includes('offer')
+      ).length;
+
+      return [
+        { name: 'Applied', value: applied },
+        { name: 'Interviewing', value: interviewing },
+        { name: 'Offer', value: offer },
+      ];
+    },
+    ['analytics', 'applications-funnel', userId],
+    {
+      revalidate: CACHE_REVALIDATE_SECONDS,
+      tags: [applicationsTag(userId)],
+    }
+  )();
+}
+
+export async function getConsistencyHeatmapData() {
+  const userId = await getCurrentUserIdOrThrow();
+
+  return unstable_cache(
+    async () => {
+      const today = new Date();
+      const oneYearAgo = subDays(today, 365);
+
+      const data = await db
+        .select({
+          date: jobApplications.date_applied,
+          count: count(jobApplications.id),
+        })
+        .from(jobApplications)
+        .where(
+          and(
+            eq(jobApplications.userId, userId),
+            gte(jobApplications.date_applied, format(oneYearAgo, 'yyyy-MM-dd'))
+          )
+        )
+        .groupBy(jobApplications.date_applied);
+
+      const heatmapData = new Array(365).fill(0).map((_, i) => {
+        const date = format(addDays(oneYearAgo, i), 'yyyy-MM-dd');
+        const entry = data.find((d) => d.date === date);
+        return {
+          date,
+          count: entry ? entry.count : 0,
+        };
+      });
+
+      return heatmapData;
+    },
+    ['analytics', 'consistency-heatmap', userId],
+    {
+      revalidate: CACHE_REVALIDATE_SECONDS,
+      tags: [applicationsTag(userId)],
+    }
+  )();
+}
+
+export async function getDomainLeaderboard() {
+  const userId = await getCurrentUserIdOrThrow();
+
+  return unstable_cache(
+    async () => {
+      const applications = await db
+        .select({
+          link: jobApplications.link,
+          status: jobApplications.status,
+        })
+        .from(jobApplications)
+        .where(eq(jobApplications.userId, userId));
+
+      const domainStats: {
+        [domain: string]: { total: number; interviews: number };
+      } = {};
+
+      applications.forEach(({ link, status }) => {
+        try {
+          const url = new URL(link);
+          let domain = url.hostname;
+          // Basic cleaning for common subdomains
+          if (domain.startsWith('www.')) {
+            domain = domain.substring(4);
+          }
+          if (domain.includes('greenhouse.io') || domain.includes('lever.co') || domain.includes('workday.com')) {
+             const parts = domain.split('.');
+             if (parts.length > 2) {
+                domain = parts.slice(-2).join('.');
+             }
+          }
+
+
+          if (!domainStats[domain]) {
+            domainStats[domain] = { total: 0, interviews: 0 };
+          }
+          domainStats[domain].total++;
+          if (status.toLowerCase().includes('interview')) {
+            domainStats[domain].interviews++;
+          }
+        } catch {
+          // Invalid URL, skip
+        }
+      });
+
+      return Object.entries(domainStats)
+        .map(([domain, stats]) => ({
+          domain,
+          ...stats,
+          successRate: stats.total > 0 ? (stats.interviews / stats.total) * 100 : 0,
+        }))
+        .sort((a, b) => b.successRate - a.successRate)
+        .slice(0, 5);
+    },
+    ['analytics', 'domain-leaderboard', userId],
+    {
+      revalidate: CACHE_REVALIDATE_SECONDS,
+      tags: [applicationsTag(userId)],
+    }
+  )();
+}
+
+export async function getKeywordPerformance() {
+  const userId = await getCurrentUserIdOrThrow();
+
+  return unstable_cache(
+    async () => {
+      const applications = await db
+        .select({
+          role_name: jobApplications.role_name,
+          status: jobApplications.status,
+        })
+        .from(jobApplications)
+        .where(eq(jobApplications.userId, userId));
+
+      const keywordStats: {
+        [keyword: string]: { total: number; interviews: number };
+      } = {};
+
+      const commonWords = new Set(['a', 'an', 'the', 'in', 'on', 'at', 'for', 'to', 'of', 'with', 'and', 'or', 'but']);
+
+      applications.forEach(({ role_name, status }) => {
+        const keywords = role_name
+          .toLowerCase()
+          .split(/[\s,/-]+/)
+          .filter((kw) => kw.length > 2 && !commonWords.has(kw));
+
+        keywords.forEach((keyword) => {
+          if (!keywordStats[keyword]) {
+            keywordStats[keyword] = { total: 0, interviews: 0 };
+          }
+          keywordStats[keyword].total++;
+          if (status.toLowerCase().includes('interview')) {
+            keywordStats[keyword].interviews++;
+          }
+        });
+      });
+
+      return Object.entries(keywordStats)
+        .map(([keyword, stats]) => ({
+          keyword,
+          ...stats,
+          interviewRate: stats.total > 0 ? (stats.interviews / stats.total) * 100 : 0,
+        }))
+        .sort((a, b) => b.interviews - a.interviews)
+        .slice(0, 5);
+    },
+    ['analytics', 'keyword-performance', userId],
+    {
+      revalidate: CACHE_REVALIDATE_SECONDS,
+      tags: [applicationsTag(userId)],
+    }
+  )();
+}
+
+export async function getSalaryRealityCheck() {
+  const userId = await getCurrentUserIdOrThrow();
+
+  return unstable_cache(
+    async () => {
+      const applications = await db
+        .select({
+          salary: jobApplications.salary,
+          status: jobApplications.status,
+        })
+        .from(jobApplications)
+        .where(eq(jobApplications.userId, userId));
+
+      const parseSalary = (salary: string | null): number | null => {
+        if (!salary) return null;
+        const numbers = salary.match(/\d+/g);
+        if (!numbers) return null;
+        return parseInt(numbers[0].replace(/,/g, ''), 10);
+      };
+
+      let totalSalary = 0;
+      let appliedCount = 0;
+      let interviewSalary = 0;
+      let interviewCount = 0;
+
+      applications.forEach(({ salary, status }) => {
+        const parsedSalary = parseSalary(salary);
+        if (parsedSalary) {
+          totalSalary += parsedSalary;
+          appliedCount++;
+          if (status.toLowerCase().includes('interview')) {
+            interviewSalary += parsedSalary;
+            interviewCount++;
+          }
+        }
+      });
+
+      const avgAppliedSalary = appliedCount > 0 ? totalSalary / appliedCount : 0;
+      const avgInterviewSalary = interviewCount > 0 ? interviewSalary / interviewCount : 0;
+
+      return [
+        { name: 'Average Applied Salary', value: avgAppliedSalary },
+        { name: 'Average Interview Salary', value: avgInterviewSalary },
+      ];
+    },
+    ['analytics', 'salary-reality-check', userId],
+    {
+      revalidate: CACHE_REVALIDATE_SECONDS,
+      tags: [applicationsTag(userId)],
+    }
+  )();
+}
+
+export async function getGhostedApplications() {
+  const userId = await getCurrentUserIdOrThrow();
+
+  return unstable_cache(
+    async () => {
+      const thirtyDaysAgo = subDays(new Date(), 30);
+      const ghosted = await db
+        .select({
+          id: jobApplications.id,
+        })
+        .from(jobApplications)
+        .where(
+          and(
+            eq(jobApplications.userId, userId),
+            eq(jobApplications.status, 'Applied'),
+            lt(jobApplications.date_applied, format(thirtyDaysAgo, 'yyyy-MM-dd'))
+          )
+        );
+      return ghosted.length;
+    },
+    ['analytics', 'ghosted-applications', userId],
+    {
+      revalidate: CACHE_REVALIDATE_SECONDS,
+      tags: [applicationsTag(userId)],
+    }
+  )();
+}
+
+export async function getDayOfWeekPerformance() {
+  const userId = await getCurrentUserIdOrThrow();
+
+  return unstable_cache(
+    async () => {
+      const applications = await db
+        .select({
+          date_applied: jobApplications.date_applied,
+          status: jobApplications.status,
+        })
+        .from(jobApplications)
+        .where(eq(jobApplications.userId, userId));
+
+      const dayOfWeekStats: {
+        [day: string]: { total: number; interviews: number };
+      } = {
+        Sunday: { total: 0, interviews: 0 },
+        Monday: { total: 0, interviews: 0 },
+        Tuesday: { total: 0, interviews: 0 },
+        Wednesday: { total: 0, interviews: 0 },
+        Thursday: { total: 0, interviews: 0 },
+        Friday: { total: 0, interviews: 0 },
+        Saturday: { total: 0, interviews: 0 },
+      };
+
+      applications.forEach(({ date_applied, status }) => {
+        const day = format(new Date(date_applied), 'EEEE');
+        dayOfWeekStats[day].total++;
+        if (status.toLowerCase().includes('interview')) {
+          dayOfWeekStats[day].interviews++;
+        }
+      });
+
+      return Object.entries(dayOfWeekStats)
+        .map(([day, stats]) => ({
+          day,
+          ...stats,
+          successRate: stats.total > 0 ? (stats.interviews / stats.total) * 100 : 0,
+        }))
+        .sort((a, b) => b.successRate - a.successRate)
+        .slice(0, 5);
+    },
+    ['analytics', 'day-of-week-performance', userId],
+    {
+      revalidate: CACHE_REVALIDATE_SECONDS,
+      tags: [applicationsTag(userId)],
+    }
+  )();
+}
+
+export async function getActionableNudges() {
+  const userId = await getCurrentUserIdOrThrow();
+
+  return unstable_cache(
+    async () => {
+      const lastApplication = await db
+        .select({
+          date_applied: jobApplications.date_applied,
+        })
+        .from(jobApplications)
+        .where(eq(jobApplications.userId, userId))
+        .orderBy(desc(jobApplications.date_applied))
+        .limit(1);
+
+      if (lastApplication.length === 0) {
+        return "You haven't applied to any jobs yet. Let's get started!";
+      }
+
+      const lastApplicationDate = new Date(lastApplication[0].date_applied);
+      const daysSinceLastApplication = Math.round(
+        (new Date().getTime() - lastApplicationDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      if (daysSinceLastApplication > 3) {
+        return `You haven't applied in ${daysSinceLastApplication} days, keep the momentum up!`;
+      }
+
+      return 'You are on a roll! Keep up the great work.';
+    },
+    ['analytics', 'actionable-nudges', userId],
+    {
+      revalidate: CACHE_REVALIDATE_SECONDS,
+      tags: [applicationsTag(userId)],
+    }
+  )();
+}
 
 export async function getTop5Companies() {
   const userId = await getCurrentUserIdOrThrow();
@@ -257,6 +664,51 @@ export async function getStatusPerPlatform() {
         }));
     },
     ['analytics', 'status-per-platform', userId],
+    {
+      revalidate: CACHE_REVALIDATE_SECONDS,
+      tags: [applicationsTag(userId)],
+    }
+  )();
+}
+
+export async function getPlatformPerformance() {
+  const userId = await getCurrentUserIdOrThrow();
+
+  return unstable_cache(
+    async () => {
+      const data = await db
+        .select({
+          platform: jobApplications.platform,
+          status: jobApplications.status,
+          count: count(jobApplications.id),
+        })
+        .from(jobApplications)
+        .where(eq(jobApplications.userId, userId))
+        .groupBy(jobApplications.platform, jobApplications.status);
+
+      const platformStats: {
+        [platform: string]: { total: number; interviews: number };
+      } = {};
+
+      data.forEach(({ platform, status, count }) => {
+        if (!platformStats[platform]) {
+          platformStats[platform] = { total: 0, interviews: 0 };
+        }
+        platformStats[platform].total += count;
+        if (status.toLowerCase().includes('interview')) {
+          platformStats[platform].interviews += count;
+        }
+      });
+
+      return Object.entries(platformStats)
+        .map(([platform, stats]) => ({
+          platform,
+          ...stats,
+        }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5);
+    },
+    ['analytics', 'platform-performance', userId],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
