@@ -2,10 +2,9 @@
 
 A simple and efficient job application tracking website built with modern web technologies. This project helps users keep track of their job applications, including details like role, company, application status, and more.
 
-![Applications](https://i.imgur.com/OYboJSX.png)
-![Overview](https://i.imgur.com/0EL2I1M.png)
-![Status Per Platform](https://i.imgur.com/RVQKgYR.png)
-![Documents](https://i.imgur.com/GUSqnik.png)
+![Applications](https://imgur.com/pViy1Tr.png)
+![Analytics](https://imgur.com/bwxzpVh.png)
+![Documents](https://imgur.com/VCqF3r5.png)
 
 ## 🚀 Tech Stack
 
