@@ -36,16 +36,20 @@ type Data = {
 type Props = {
   years: string[];
   rawData: Data[];
+  globalYear?: string;
 };
 
-type ChartData = {
-  month: string;
-  [status: string]: number | string; // Dynamic keys for different statuses
-};
-
-export function StatusesPerYearBarChart({ years, rawData }: Props) {
-  const [selectedYear, setSelectedYear] = useState(years[0]);
+export function StatusesPerYearBarChart({ years, rawData, globalYear }: Props) {
+  const [selectedYear, setSelectedYear] = useState(globalYear || years[0]);
   const [chartData, setChartData] = useState<ChartData[]>([]);
+
+  useEffect(() => {
+    if (globalYear) {
+      setSelectedYear(globalYear);
+    } else {
+        setSelectedYear(years[0]);
+    }
+  }, [globalYear, years]);
 
   useEffect(() => {
     setChartData(transformApplicationsData(rawData, selectedYear));
@@ -55,22 +59,24 @@ export function StatusesPerYearBarChart({ years, rawData }: Props) {
     <Card>
       <CardHeader className='w-full flex-row justify-between items-center'>
         <CardTitle>Statuses per year</CardTitle>
-        <Select value={selectedYear} onValueChange={setSelectedYear}>
-          <SelectTrigger className='w-40 h-10'>
-            <SelectValue placeholder='Select a year' />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {years?.map((year) => {
-                return (
-                  <SelectItem key={year} value={year}>
-                    {year}
-                  </SelectItem>
-                );
-              })}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+        {!globalYear && (
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className='w-40 h-10'>
+              <SelectValue placeholder='Select a year' />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {years?.map((year) => {
+                  return (
+                    <SelectItem key={year} value={year}>
+                      {year}
+                    </SelectItem>
+                  );
+                })}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        )}
       </CardHeader>
       <CardContent className='w-full'>
         <ChartContainer
