@@ -420,8 +420,12 @@ export async function getActionableNudges() {
   )();
 }
 
-export async function getTop5Companies() {
+export async function getTop5Companies(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  const whereClause = [eq(jobApplications.userId, userId)];
+  if (month && month !== 'all') whereClause.push(eq(jobApplications.month, month));
+  if (year && year !== 'all') whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
     async () =>
@@ -431,11 +435,11 @@ export async function getTop5Companies() {
           freq: count(jobApplications.company_name),
         })
         .from(jobApplications)
-        .where(eq(jobApplications.userId, userId))
+        .where(and(...whereClause))
         .groupBy(jobApplications.company_name)
         .orderBy(desc(count(jobApplications.company_name)))
         .limit(5),
-    ['analytics', 'top-5-companies', userId],
+    ['analytics', 'top-5-companies', userId, month || 'all', year || 'all'],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
@@ -443,8 +447,12 @@ export async function getTop5Companies() {
   )();
 }
 
-export async function getTop5Platforms() {
+export async function getTop5Platforms(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  const whereClause = [eq(jobApplications.userId, userId)];
+  if (month && month !== 'all') whereClause.push(eq(jobApplications.month, month));
+  if (year && year !== 'all') whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
     async () =>
@@ -454,11 +462,11 @@ export async function getTop5Platforms() {
           freq: count(jobApplications.platform),
         })
         .from(jobApplications)
-        .where(eq(jobApplications.userId, userId))
+        .where(and(...whereClause))
         .groupBy(jobApplications.platform)
         .orderBy(desc(count(jobApplications.platform)))
         .limit(5),
-    ['analytics', 'top-5-platforms', userId],
+    ['analytics', 'top-5-platforms', userId, month || 'all', year || 'all'],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
@@ -466,8 +474,12 @@ export async function getTop5Platforms() {
   )();
 }
 
-export async function getTop5Statuses() {
+export async function getTop5Statuses(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  const whereClause = [eq(jobApplications.userId, userId)];
+  if (month && month !== 'all') whereClause.push(eq(jobApplications.month, month));
+  if (year && year !== 'all') whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
     async () =>
@@ -477,11 +489,11 @@ export async function getTop5Statuses() {
           freq: count(jobApplications.status),
         })
         .from(jobApplications)
-        .where(eq(jobApplications.userId, userId))
+        .where(and(...whereClause))
         .groupBy(jobApplications.status)
         .orderBy(desc(count(jobApplications.status)))
         .limit(5),
-    ['analytics', 'top-5-statuses', userId],
+    ['analytics', 'top-5-statuses', userId, month || 'all', year || 'all'],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
@@ -489,8 +501,12 @@ export async function getTop5Statuses() {
   )();
 }
 
-export async function getTop5Locations() {
+export async function getTop5Locations(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  const whereClause = [eq(jobApplications.userId, userId)];
+  if (month && month !== 'all') whereClause.push(eq(jobApplications.month, month));
+  if (year && year !== 'all') whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
     async () =>
@@ -500,11 +516,11 @@ export async function getTop5Locations() {
           freq: count(jobApplications.location),
         })
         .from(jobApplications)
-        .where(eq(jobApplications.userId, userId))
+        .where(and(...whereClause))
         .groupBy(jobApplications.location)
         .orderBy(desc(count(jobApplications.location)))
         .limit(5),
-    ['analytics', 'top-5-locations', userId],
+    ['analytics', 'top-5-locations', userId, month || 'all', year || 'all'],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
@@ -512,8 +528,12 @@ export async function getTop5Locations() {
   )();
 }
 
-export async function getTop5RoleNames() {
+export async function getTop5RoleNames(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  const whereClause = [eq(jobApplications.userId, userId)];
+  if (month && month !== 'all') whereClause.push(eq(jobApplications.month, month));
+  if (year && year !== 'all') whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
     async () =>
@@ -523,11 +543,11 @@ export async function getTop5RoleNames() {
           freq: count(jobApplications.role_name),
         })
         .from(jobApplications)
-        .where(eq(jobApplications.userId, userId))
+        .where(and(...whereClause))
         .groupBy(jobApplications.role_name)
         .orderBy(desc(count(jobApplications.role_name)))
         .limit(5),
-    ['analytics', 'top-5-role-names', userId],
+    ['analytics', 'top-5-role-names', userId, month || 'all', year || 'all'],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
@@ -536,8 +556,12 @@ export async function getTop5RoleNames() {
 }
 
 // Total applications per year
-export async function getApplicationsPerYear() {
+export async function getApplicationsPerYear(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  const whereClause = [eq(jobApplications.userId, userId)];
+  if (month && month !== 'all') whereClause.push(eq(jobApplications.month, month));
+  if (year && year !== 'all') whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
     async () => {
@@ -548,12 +572,12 @@ export async function getApplicationsPerYear() {
           numOfApplications: count(jobApplications.id),
         })
         .from(jobApplications)
-        .where(eq(jobApplications.userId, userId))
+        .where(and(...whereClause))
         .groupBy(jobApplications.month, jobApplications.year);
 
       return formatApplicationsPerYear(data);
     },
-    ['analytics', 'applications-per-year', userId],
+    ['analytics', 'applications-per-year', userId, month || 'all', year || 'all'],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
@@ -562,8 +586,12 @@ export async function getApplicationsPerYear() {
 }
 
 // Statuses per year
-export async function getStasusesPerYear() {
+export async function getStasusesPerYear(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  const whereClause = [eq(jobApplications.userId, userId)];
+  if (month && month !== 'all') whereClause.push(eq(jobApplications.month, month));
+  if (year && year !== 'all') whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
     async () =>
@@ -575,13 +603,13 @@ export async function getStasusesPerYear() {
           statusCount: count(jobApplications.status),
         })
         .from(jobApplications)
-        .where(eq(jobApplications.userId, userId))
+        .where(and(...whereClause))
         .groupBy(
           jobApplications.month,
           jobApplications.year,
           jobApplications.status
         ),
-    ['analytics', 'statuses-per-year', userId],
+    ['analytics', 'statuses-per-year', userId, month || 'all', year || 'all'],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
@@ -617,8 +645,12 @@ export async function getYears() {
   )();
 }
 
-export async function getStatusPerPlatform() {
+export async function getStatusPerPlatform(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  const whereClause = [eq(jobApplications.userId, userId)];
+  if (month && month !== 'all') whereClause.push(eq(jobApplications.month, month));
+  if (year && year !== 'all') whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
     async () => {
@@ -629,7 +661,7 @@ export async function getStatusPerPlatform() {
           numOfApplications: count(jobApplications.platform),
         })
         .from(jobApplications)
-        .where(eq(jobApplications.userId, userId))
+        .where(and(...whereClause))
         .groupBy(jobApplications.platform, jobApplications.status)
         .orderBy(desc(jobApplications.status));
 
@@ -663,7 +695,7 @@ export async function getStatusPerPlatform() {
           statuses,
         }));
     },
-    ['analytics', 'status-per-platform', userId],
+    ['analytics', 'status-per-platform', userId, month || 'all', year || 'all'],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
