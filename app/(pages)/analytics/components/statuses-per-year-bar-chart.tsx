@@ -19,19 +19,13 @@ import {
 } from '@/components/ui/select';
 import { useEffect, useState } from 'react';
 import { getColor, transformApplicationsData } from '@/lib/utils';
+import { ChartData, RawData as Data } from '@/lib/types';
 
 const chartConfig = {
   numOfApplications: {
     label: 'Applications',
   },
 } satisfies ChartConfig;
-
-type Data = {
-  year: string;
-  month: string;
-  status: string;
-  statusCount: number;
-};
 
 type Props = {
   years: string[];
