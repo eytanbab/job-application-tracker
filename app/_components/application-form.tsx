@@ -237,7 +237,7 @@ export const ApplicationForm = ({
             control={form.control}
             name='role_name'
             render={({ field }) => (
-              <FormItem className='space-y-0 col-span-2'>
+              <FormItem className='space-y-0 col-span-full md:col-span-1'>
                 <FormLabel>Role Title</FormLabel>
                 <FormControl>
                   <Input
@@ -254,7 +254,7 @@ export const ApplicationForm = ({
             control={form.control}
             name='company_name'
             render={({ field }) => (
-              <FormItem className='space-y-0 col-span-2'>
+              <FormItem className='space-y-0 col-span-full md:col-span-1'>
                 <FormLabel>Company Name</FormLabel>
                 <FormControl>
                   <Input
@@ -271,7 +271,7 @@ export const ApplicationForm = ({
             control={form.control}
             name='salary'
             render={({ field }) => (
-              <FormItem className='space-y-0 col-span-1'>
+              <FormItem className='space-y-0 col-span-full md:col-span-1'>
                 <FormLabel>Salary</FormLabel>
                 <FormControl>
                   <Input
@@ -288,7 +288,7 @@ export const ApplicationForm = ({
             control={form.control}
             name='location'
             render={({ field }) => (
-              <FormItem className='space-y-0 col-span-1'>
+              <FormItem className='space-y-0 col-span-full md:col-span-1'>
                 <FormLabel>Location</FormLabel>
                 <FormControl>
                   <Input
@@ -305,7 +305,7 @@ export const ApplicationForm = ({
             control={form.control}
             name='status'
             render={({ field }) => (
-              <FormItem className='space-y-0 col-span-1'>
+              <FormItem className='space-y-0 col-span-full md:col-span-1'>
                 <FormLabel>Status</FormLabel>
                 <FormControl>
                   <Input
@@ -322,7 +322,7 @@ export const ApplicationForm = ({
             control={form.control}
             name='platform'
             render={({ field }) => (
-              <FormItem className='space-y-0 col-span-1'>
+              <FormItem className='space-y-0 col-span-full md:col-span-1'>
                 <FormLabel>Platform</FormLabel>
                 <FormControl>
                   <Input
@@ -339,7 +339,7 @@ export const ApplicationForm = ({
             control={form.control}
             name='date_applied'
             render={({ field }) => (
-              <FormItem className='space-y-0 col-span-2'>
+              <FormItem className='space-y-0 col-span-full'>
                 <FormLabel>Date applied</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -380,7 +380,7 @@ export const ApplicationForm = ({
             control={form.control}
             name='link'
             render={({ field }) => (
-              <FormItem className='space-y-0 col-span-2'>
+              <FormItem className='space-y-0 col-span-full'>
                 <FormLabel>Link</FormLabel>
                 <FormControl>
                   <Input
@@ -397,7 +397,7 @@ export const ApplicationForm = ({
             control={form.control}
             name='description'
             render={({ field }) => (
-              <FormItem className='space-y-0 col-span-2'>
+              <FormItem className='space-y-0 col-span-full'>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
                   <Textarea
@@ -411,7 +411,7 @@ export const ApplicationForm = ({
             )}
           />
 
-          <div className='mt-4 flex flex-col gap-2 w-full col-span-2'>
+          <div className='mt-4 flex flex-col gap-2 w-full col-span-full'>
             <Button type='submit' disabled={isPending}>
               {isPending ? (
                 <Loader2 className='size-8 animate-spin' />
