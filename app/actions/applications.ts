@@ -8,10 +8,6 @@ import { z } from 'zod';
 import { and, desc, eq } from 'drizzle-orm';
 
 import { format } from 'date-fns';
-// import { AiFormValues, AiData } from '@/lib/types';
-import { scraper } from '@/lib/scraper';
-// import { AiData } from '@/lib/types';
-import { geminiClient } from '@/lib/gemini';
 import {
   applicationsTag,
   CACHE_REVALIDATE_SECONDS,
@@ -118,59 +114,4 @@ export async function updateApplication(values: FormValues) {
       )
     );
   revalidateTag(applicationsTag(userId));
-}
-
-/* ----------------- OPEN AI ------------------ */
-
-export async function extractAiApplication(url: string) {
-  try {
-    const webpage = await scraper(url);
-    const prompt = `You are an AI that extracts job application details from raw text.
-if the data is not of an application, return {
-status: 'fail',
-message: 'Failed to extract data from the URL.'
-}
-
-Your task is to return a valid JSON object with these fields:
-{
-  status: 'success',
-  application: {
-    role_name: The job title.
-    company_name: The company offering the job.
-    link: The provided URL ${url}.
-    platform: The job listing platform in title case, inferred from the URL (${url}).
-    status: Always set this to "Applied".
-    description: Extract the full job description from the text.
-    location: The job location's city (if available).
-  }
-}
-
-    If any field is missing, return null for that field.
-Your response must be a strict JSON object with no extra text.
-
-Extract job details from the following text:\n\n${webpage}`;
-
-    const response = await geminiClient.models.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      model: 'gemini-2.5-flash',
-      config: {
-        responseMimeType: 'application/json',
-      },
-    });
-    const res = response.text;
-
-    if (!res) {
-      return {
-        status: 'fail' as const,
-        message: 'Failed to extract data from the URL.',
-      };
-    }
-    return JSON.parse(res);
-  } catch (error) {
-    console.error('Error calling Gemini API:', error);
-    return {
-      status: 'fail',
-      message: 'Failed to extract information due to an API error.',
-    };
-  }
 }

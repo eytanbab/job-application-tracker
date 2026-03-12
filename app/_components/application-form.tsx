@@ -30,7 +30,6 @@ import { cn } from '@/lib/utils';
 import { redirect } from 'next/navigation';
 import { Textarea } from '@/components/ui/textarea';
 import { useState, useTransition } from 'react';
-import { extractAiApplication } from '../actions/applications';
 import { AiData } from '@/lib/types';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -120,7 +119,15 @@ export const ApplicationForm = ({
   const handleAiSubmit = async (values: z.infer<typeof aiFormSchema>) => {
     setIsLoading(true);
     try {
-      const aiAutoFill: AiData = await extractAiApplication(values.url);
+      const response = await fetch('/api/extract', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: values.url }),
+      });
+
+      const aiAutoFill: AiData = await response.json();
       console.log('aiAutoFill', aiAutoFill);
 
       if (aiAutoFill.status === 'fail') {
@@ -220,6 +227,9 @@ export const ApplicationForm = ({
               'Auto-Extract Details'
             )}
           </Button>
+          <p className='text-xs text-muted-foreground'>
+            Extraction may take up to 1 minute.
+          </p>
         </form>
       </Form>
       {/* Divider */}
