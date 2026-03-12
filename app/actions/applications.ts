@@ -152,7 +152,7 @@ Extract job details from the following text:\n\n${webpage}`;
 
     const response = await geminiClient.models.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash',
       config: {
         responseMimeType: 'application/json',
       },
