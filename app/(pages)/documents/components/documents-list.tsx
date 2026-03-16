@@ -8,7 +8,7 @@ export const DocumentsList = async () => {
       {!docs || docs.length === 0 ? (
         <p>No files uploaded.</p>
       ) : (
-        <div className='flex flex-col gap-2'>
+        <div className='flex gap-2 flex-wrap justify-start'>
           {docs.map((file) => (
             <Document key={file.id} file={file} />
           ))}
