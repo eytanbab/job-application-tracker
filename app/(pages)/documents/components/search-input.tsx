@@ -12,11 +12,6 @@ export function SearchInput({ defaultValue }: { defaultValue?: string }) {
   const [isPending, startTransition] = useTransition();
   const [value, setValue] = useState(defaultValue || "");
 
-  // Sync internal state with prop (useful when search is cleared externally)
-  useEffect(() => {
-    setValue(defaultValue || "");
-  }, [defaultValue]);
-
   useEffect(() => {
     const timer = setTimeout(() => {
       const currentQuery = searchParams.get("q") || "";
