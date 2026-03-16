@@ -34,7 +34,9 @@ export default async function Documents({ searchParams }: Props) {
 
       <div className="flex flex-col gap-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <SearchInput defaultValue={query} />
+          <Suspense fallback={<Skeleton className="h-10 w-full max-w-sm" />}>
+            <SearchInput key={query} defaultValue={query} />
+          </Suspense>
           <div className="hidden sm:block text-sm text-muted-foreground font-medium">
             Keep your professional assets up to date.
           </div>
