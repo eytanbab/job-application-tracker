@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default function PagesLayout({
   children,
@@ -6,6 +6,8 @@ export default function PagesLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <main className='flex items-center justify-center w-full'>{children}</main>
+    <main className="flex items-start justify-center w-full h-full">
+      {children}
+    </main>
   );
 }
