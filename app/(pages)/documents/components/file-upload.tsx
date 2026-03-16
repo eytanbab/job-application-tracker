@@ -119,6 +119,13 @@ export function FileUpload() {
     }
   };
 
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      fileInputRef.current?.click();
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -179,8 +186,12 @@ export function FileUpload() {
                       onDragLeave={() => setIsDragging(false)}
                       onDrop={handleDrop}
                       onClick={() => fileInputRef.current?.click()}
+                      onKeyDown={onKeyDown}
+                      role="button"
+                      tabIndex={0}
+                      aria-label="File dropzone"
                       className={cn(
-                        "group relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 sm:p-10 transition-all cursor-pointer hover:bg-muted/50",
+                        "group relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 sm:p-10 transition-all cursor-pointer hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                         isDragging
                           ? "border-primary bg-primary/5"
                           : "border-muted-foreground/20",
