@@ -9,7 +9,7 @@ export async function generateMetadata() {
 
 export default async function Documents() {
   return (
-    <div className='flex flex-col gap-4'>
+    <div className='flex flex-col gap-4 items-center w-full'>
       <FileUpload />
       <DocumentsList />
     </div>
