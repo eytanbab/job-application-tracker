@@ -11,6 +11,7 @@ import { Toaster } from '@/components/ui/toaster';
 
 import { ClerkProvider } from '@clerk/nextjs';
 import { GuestDataMigrator } from './_components/guest-data-migrator';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 const roboto = Work_Sans({
   weight: ['300', '400', '500', '700', '900'],
@@ -41,13 +42,15 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <Toaster />
-            <Nav />
-            <div className='flex'>
-              <SideNav />
-              <GuestDataMigrator />
-              {children}
-            </div>
+            <NuqsAdapter>
+              <Toaster />
+              <Nav />
+              <div className='flex'>
+                <SideNav />
+                <GuestDataMigrator />
+                {children}
+              </div>
+            </NuqsAdapter>
           </ThemeProvider>
         </body>
       </html>

@@ -25,7 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +37,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  useQueryState,
+  parseAsString,
+  parseAsInteger,
+  useQueryStates,
+} from "nuqs";
+import { OnChangeFn } from "@tanstack/react-table";
 
 interface DataTableProps<TData extends { status: string }, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -52,92 +58,97 @@ export function DataTable<TData extends { status: string }, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const initialSort = searchParams.get("sort");
-  const initialDir = searchParams.get("dir");
-  const initialPage = Number(searchParams.get("page") ?? "1");
-  const initialStatus = searchParams.get("status");
-  const sizeParam = searchParams.get("size");
-  const hasSizeParam = sizeParam !== null;
-  const initialSize = Number(sizeParam ?? `${MOBILE_DEFAULT_PAGE_SIZE}`);
-
-  const [sorting, setSorting] = useState<SortingState>(
-    initialSort ? [{ id: initialSort, desc: initialDir === "desc" }] : []
+  // URL-bound state with nuqs
+  const [globalFilter, setGlobalFilter] = useQueryState(
+    "q",
+    parseAsString.withDefault("").withOptions({ shallow: false, throttleMs: 300 })
   );
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
-    initialStatus ? [{ id: "status", value: initialStatus }] : []
+
+  const [statusFilter, setStatusFilter] = useQueryState(
+    "status",
+    parseAsString.withDefault("").withOptions({ shallow: false })
   );
-  const [globalFilter, setGlobalFilter] = useState(searchParams.get("q") ?? "");
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex:
-      Number.isFinite(initialPage) && initialPage > 0 ? initialPage - 1 : 0,
-    pageSize: TABLE_ROWS.includes(initialSize)
-      ? initialSize
-      : MOBILE_DEFAULT_PAGE_SIZE,
-  });
+
+  const [sortingState, setSortingState] = useQueryStates(
+    {
+      sort: parseAsString,
+      dir: parseAsString,
+    },
+    { shallow: false }
+  );
+
+  const [page, setPage] = useQueryState(
+    "page",
+    parseAsInteger.withDefault(1).withOptions({ shallow: false })
+  );
+
+  const [pageSizeParam, setPageSizeParam] = useQueryState(
+    "size",
+    parseAsInteger.withOptions({
+      shallow: false,
+    })
+  );
+
+  // Client-side device detection for default page size
+  const [devicePageSize, setDevicePageSize] = useState<number>(MOBILE_DEFAULT_PAGE_SIZE);
 
   useEffect(() => {
-    if (hasSizeParam) return;
-    if (typeof window === "undefined") return;
-
     const isDesktop = window.matchMedia("(min-width: 768px)").matches;
-    const defaultPageSize = isDesktop
-      ? DESKTOP_DEFAULT_PAGE_SIZE
-      : MOBILE_DEFAULT_PAGE_SIZE;
+    setDevicePageSize(isDesktop ? DESKTOP_DEFAULT_PAGE_SIZE : MOBILE_DEFAULT_PAGE_SIZE);
+  }, []);
 
-    setPagination((prev) =>
-      prev.pageSize === defaultPageSize
-        ? prev
-        : {
-            ...prev,
-            pageSize: defaultPageSize,
-          }
-    );
-  }, [hasSizeParam]);
+  const pageSize = pageSizeParam ?? devicePageSize;
 
-  useEffect(() => {
-    const params = new URLSearchParams();
-    const currentSort = sorting[0];
+  const sorting = useMemo<SortingState>(
+    () =>
+      sortingState.sort
+        ? [{ id: sortingState.sort, desc: sortingState.dir === "desc" }]
+        : [],
+    [sortingState]
+  );
 
-    if (globalFilter) params.set("q", globalFilter);
-    if (currentSort) {
-      params.set("sort", currentSort.id);
-      params.set("dir", currentSort.desc ? "desc" : "asc");
+  const columnFilters = useMemo<ColumnFiltersState>(
+    () => (statusFilter ? [{ id: "status", value: statusFilter }] : []),
+    [statusFilter]
+  );
+
+  const pagination = useMemo<PaginationState>(
+    () => ({
+      pageIndex: page - 1,
+      pageSize: pageSize,
+    }),
+    [page, pageSize]
+  );
+
+  const setSorting: OnChangeFn<SortingState> = (updater) => {
+    const next = typeof updater === "function" ? updater(sorting) : updater;
+    const sort = next[0];
+    if (sort) {
+      setSortingState({ sort: sort.id, dir: sort.desc ? "desc" : "asc" });
+    } else {
+      setSortingState({ sort: null, dir: null });
     }
-    if (pagination.pageIndex > 0) {
-      params.set("page", `${pagination.pageIndex + 1}`);
-    }
-    if (pagination.pageSize !== MOBILE_DEFAULT_PAGE_SIZE) {
-      params.set("size", `${pagination.pageSize}`);
-    }
+  };
 
-    const statusFilter = columnFilters.find((f) => f.id === "status");
-    if (statusFilter) {
-      params.set("status", statusFilter.value as string);
+  const setPagination: OnChangeFn<PaginationState> = (updater) => {
+    const next =
+      typeof updater === "function" ? updater(pagination) : updater;
+    
+    if (next.pageIndex !== pagination.pageIndex) {
+      setPage(next.pageIndex + 1);
     }
+    
+    if (next.pageSize !== pagination.pageSize) {
+      setPageSizeParam(next.pageSize);
+    }
+  };
 
-    const nextUrl = params.toString()
-      ? `${pathname}?${params.toString()}`
-      : pathname;
-    router.replace(nextUrl, { scroll: false });
-  }, [
-    columnFilters,
-    globalFilter,
-    pagination.pageIndex,
-    pagination.pageSize,
-    pathname,
-    router,
-    sorting,
-  ]);
-
-  useEffect(() => {
-    setPagination((prev) =>
-      prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 }
-    );
-  }, [globalFilter, sorting, columnFilters]);
+  const setColumnFilters: OnChangeFn<ColumnFiltersState> = (updater) => {
+    const next =
+      typeof updater === "function" ? updater(columnFilters) : updater;
+    const status = next.find((f) => f.id === "status")?.value;
+    setStatusFilter((status as string) || null);
+  };
 
   const table = useReactTable({
     data,
@@ -147,7 +158,7 @@ export function DataTable<TData extends { status: string }, TValue>({
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    globalFilterFn: "includesString", // built-in filter function
+    globalFilterFn: "includesString",
     onGlobalFilterChange: setGlobalFilter,
     onColumnFiltersChange: setColumnFilters,
     onPaginationChange: setPagination,
