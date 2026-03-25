@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
 import {
   ColumnDef,
+  ColumnFiltersState,
   PaginationState,
   SortingState,
   flexRender,
@@ -10,7 +11,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from '@tanstack/react-table';
+} from "@tanstack/react-table";
 
 import {
   Table,
@@ -19,24 +20,24 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
-import { Plus, X } from 'lucide-react';
+import { useEffect, useState, useMemo } from "react";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Plus, X } from "lucide-react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+} from "@/components/ui/select";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 interface DataTableProps<TData extends { status: string }, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -55,17 +56,21 @@ export function DataTable<TData extends { status: string }, TValue>({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const initialSort = searchParams.get('sort');
-  const initialDir = searchParams.get('dir');
-  const initialPage = Number(searchParams.get('page') ?? '1');
-  const sizeParam = searchParams.get('size');
+  const initialSort = searchParams.get("sort");
+  const initialDir = searchParams.get("dir");
+  const initialPage = Number(searchParams.get("page") ?? "1");
+  const initialStatus = searchParams.get("status");
+  const sizeParam = searchParams.get("size");
   const hasSizeParam = sizeParam !== null;
   const initialSize = Number(sizeParam ?? `${MOBILE_DEFAULT_PAGE_SIZE}`);
 
   const [sorting, setSorting] = useState<SortingState>(
-    initialSort ? [{ id: initialSort, desc: initialDir === 'desc' }] : []
+    initialSort ? [{ id: initialSort, desc: initialDir === "desc" }] : []
   );
-  const [globalFilter, setGlobalFilter] = useState(searchParams.get('q') ?? '');
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
+    initialStatus ? [{ id: "status", value: initialStatus }] : []
+  );
+  const [globalFilter, setGlobalFilter] = useState(searchParams.get("q") ?? "");
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex:
       Number.isFinite(initialPage) && initialPage > 0 ? initialPage - 1 : 0,
@@ -76,9 +81,9 @@ export function DataTable<TData extends { status: string }, TValue>({
 
   useEffect(() => {
     if (hasSizeParam) return;
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
-    const isDesktop = window.matchMedia('(min-width: 768px)').matches;
+    const isDesktop = window.matchMedia("(min-width: 768px)").matches;
     const defaultPageSize = isDesktop
       ? DESKTOP_DEFAULT_PAGE_SIZE
       : MOBILE_DEFAULT_PAGE_SIZE;
@@ -97,16 +102,21 @@ export function DataTable<TData extends { status: string }, TValue>({
     const params = new URLSearchParams();
     const currentSort = sorting[0];
 
-    if (globalFilter) params.set('q', globalFilter);
+    if (globalFilter) params.set("q", globalFilter);
     if (currentSort) {
-      params.set('sort', currentSort.id);
-      params.set('dir', currentSort.desc ? 'desc' : 'asc');
+      params.set("sort", currentSort.id);
+      params.set("dir", currentSort.desc ? "desc" : "asc");
     }
     if (pagination.pageIndex > 0) {
-      params.set('page', `${pagination.pageIndex + 1}`);
+      params.set("page", `${pagination.pageIndex + 1}`);
     }
     if (pagination.pageSize !== MOBILE_DEFAULT_PAGE_SIZE) {
-      params.set('size', `${pagination.pageSize}`);
+      params.set("size", `${pagination.pageSize}`);
+    }
+
+    const statusFilter = columnFilters.find((f) => f.id === "status");
+    if (statusFilter) {
+      params.set("status", statusFilter.value as string);
     }
 
     const nextUrl = params.toString()
@@ -114,6 +124,7 @@ export function DataTable<TData extends { status: string }, TValue>({
       : pathname;
     router.replace(nextUrl, { scroll: false });
   }, [
+    columnFilters,
     globalFilter,
     pagination.pageIndex,
     pagination.pageSize,
@@ -123,8 +134,10 @@ export function DataTable<TData extends { status: string }, TValue>({
   ]);
 
   useEffect(() => {
-    setPagination((prev) => (prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 }));
-  }, [globalFilter, sorting]);
+    setPagination((prev) =>
+      prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 }
+    );
+  }, [globalFilter, sorting, columnFilters]);
 
   const table = useReactTable({
     data,
@@ -134,8 +147,9 @@ export function DataTable<TData extends { status: string }, TValue>({
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    globalFilterFn: 'includesString', // built-in filter function
+    globalFilterFn: "includesString", // built-in filter function
     onGlobalFilterChange: setGlobalFilter,
+    onColumnFiltersChange: setColumnFilters,
     onPaginationChange: setPagination,
     autoResetPageIndex: false,
 
@@ -143,40 +157,70 @@ export function DataTable<TData extends { status: string }, TValue>({
       sorting,
       globalFilter,
       pagination,
+      columnFilters,
     },
   });
 
+  const statuses = useMemo(() => {
+    const uniqueStatuses = new Set(data.map((item) => item.status));
+    return Array.from(uniqueStatuses).sort();
+  }, [data]);
+
   return (
-    <div className='w-full'>
-      <div className='flex items-center py-4 justify-between'>
-        <div className='relative w-96 max-w-xl'>
-          <Input
-            placeholder='Search...'
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(String(e.target.value))}
-            className='max-w-sm'
-          />
-          {globalFilter.length > 0 && (
-            <X
-              className='absolute right-2 top-1/2 size-6 -translate-y-1/2 cursor-pointer rounded-full p-1 transition-colors hover:bg-accent'
-              onClick={() => table.setGlobalFilter('')}
+    <div className="w-full">
+      <div className="flex items-center py-4 justify-between gap-2">
+        <div className="flex items-center gap-2 flex-1">
+          <div className="relative w-full max-w-sm">
+            <Input
+              placeholder="Search..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(String(e.target.value))}
+              className="w-full"
             />
-          )}
+            {globalFilter.length > 0 && (
+              <X
+                className="absolute right-2 top-1/2 size-6 -translate-y-1/2 cursor-pointer rounded-full p-1 transition-colors hover:bg-accent"
+                onClick={() => table.setGlobalFilter("")}
+              />
+            )}
+          </div>
+          <Select
+            value={
+              (table.getColumn("status")?.getFilterValue() as string) ?? "all"
+            }
+            onValueChange={(value) => {
+              table
+                .getColumn("status")
+                ?.setFilterValue(value === "all" ? "" : value);
+            }}
+          >
+            <SelectTrigger className="w-[180px] capitalize">
+              <SelectValue placeholder="Filter by Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              {statuses.map((status) => (
+                <SelectItem key={status} value={status} className="capitalize">
+                  {status}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <Link href='/applications/new' className='hidden md:inline-block'>
-          <Button variant='outline'>New application</Button>
+        <Link href="/applications/new" className="hidden md:inline-block">
+          <Button variant="outline">New application</Button>
         </Link>
       </div>
 
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className='border-b border-border'>
+            <TableRow key={headerGroup.id} className="border-b border-border">
               {headerGroup.headers.map((header) => {
                 return (
                   <TableHead
                     key={header.id}
-                    className='p-0 font-bold text-foreground'
+                    className="p-0 font-bold text-foreground"
                   >
                     {header.isPlaceholder
                       ? null
@@ -195,41 +239,41 @@ export function DataTable<TData extends { status: string }, TValue>({
             table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}
-                data-state={row.getIsSelected() && 'selected'}
-                className='capitalize border-b border-border text-foreground hover:bg-accent hover:text-accent-foreground'
+                data-state={row.getIsSelected() && "selected"}
+                className="capitalize border-b border-border text-foreground hover:bg-accent hover:text-accent-foreground"
               >
                 {row.getVisibleCells().map((cell) =>
-                  cell.column.id === 'status' ? (
+                  cell.column.id === "status" ? (
                     <TableCell
                       key={cell.id}
-                      className={cn('truncate max-w-60 ')}
+                      className={cn("truncate max-w-60 ")}
                     >
                       <Badge
                         className={cn(
                           (cell.getValue() as string)
                             .toLowerCase()
-                            .includes('applied') &&
-                            'bg-primary/15 text-primary',
+                            .includes("applied") &&
+                            "bg-primary/15 text-primary",
                           (cell.getValue() as string)
                             .toLowerCase()
-                            .includes('accept') &&
-                            'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-300',
+                            .includes("accept") &&
+                            "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-300",
                           (cell.getValue() as string)
                             .toLowerCase()
-                            .includes('ghost') &&
-                            'bg-muted text-muted-foreground',
+                            .includes("ghost") &&
+                            "bg-muted text-muted-foreground",
                           (cell.getValue() as string)
                             .toLowerCase()
-                            .includes('review') &&
-                            'bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300',
+                            .includes("review") &&
+                            "bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300",
                           (cell.getValue() as string)
                             .toLowerCase()
-                            .includes('interview') &&
-                            'bg-cyan-100 text-cyan-900 dark:bg-cyan-900/30 dark:text-cyan-300',
+                            .includes("interview") &&
+                            "bg-cyan-100 text-cyan-900 dark:bg-cyan-900/30 dark:text-cyan-300",
                           (cell.getValue() as string)
                             .toLowerCase()
-                            .includes('reject') &&
-                            'bg-destructive/15 text-destructive'
+                            .includes("reject") &&
+                            "bg-destructive/15 text-destructive"
                         )}
                       >
                         {flexRender(
@@ -242,8 +286,8 @@ export function DataTable<TData extends { status: string }, TValue>({
                     <TableCell
                       key={cell.id}
                       className={cn(
-                        'truncate max-w-60 ',
-                        cell.column.id === 'link' && 'lowercase'
+                        "truncate max-w-60 ",
+                        cell.column.id === "link" && "lowercase"
                       )}
                     >
                       {flexRender(
@@ -257,7 +301,7 @@ export function DataTable<TData extends { status: string }, TValue>({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length} className='h-24 text-center'>
+              <TableCell colSpan={columns.length} className="h-24 text-center">
                 No results.
               </TableCell>
             </TableRow>
@@ -266,23 +310,23 @@ export function DataTable<TData extends { status: string }, TValue>({
       </Table>
 
       {/* Pagination buttons */}
-      <div className='flex items-center justify-between py-4'>
+      <div className="flex items-center justify-between py-4">
         <p>
-          Showing {table.getRowModel().rows.length} of{' '}
+          Showing {table.getRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s).
         </p>
-        <div className='flex gap-2 justify-end'>
+        <div className="flex gap-2 justify-end">
           <Button
-            variant='outline'
-            size='sm'
+            variant="outline"
+            size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
             Previous
           </Button>
           <Button
-            variant='outline'
-            size='sm'
+            variant="outline"
+            size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
@@ -290,18 +334,18 @@ export function DataTable<TData extends { status: string }, TValue>({
           </Button>
         </div>
       </div>
-      <div className='flex items-center space-x-2'>
-        <p className='text-sm font-medium'>Rows per page</p>
+      <div className="flex items-center space-x-2">
+        <p className="text-sm font-medium">Rows per page</p>
         <Select
           value={`${table.getState().pagination.pageSize}`}
           onValueChange={(value) => {
             table.setPageSize(Number(value));
           }}
         >
-          <SelectTrigger className='h-8 w-[70px]'>
+          <SelectTrigger className="h-8 w-[70px]">
             <SelectValue placeholder={table.getState().pagination.pageSize} />
           </SelectTrigger>
-          <SelectContent side='top'>
+          <SelectContent side="top">
             {TABLE_ROWS.map((pageSize) => (
               <SelectItem key={pageSize} value={`${pageSize}`}>
                 {pageSize}
@@ -311,10 +355,10 @@ export function DataTable<TData extends { status: string }, TValue>({
         </Select>
       </div>
       <Link
-        href='/applications/new'
-        className='md:hidden fixed bottom-4 right-4'
+        href="/applications/new"
+        className="md:hidden fixed bottom-4 right-4"
       >
-        <Button className='size-10'>
+        <Button className="size-10">
           <Plus />
         </Button>
       </Link>
