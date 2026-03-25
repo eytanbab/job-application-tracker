@@ -1,6 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { v4 as uuidv4 } from 'uuid';
 
 const isProtectedRoute = createRouteMatcher([
   // '/applications(.*)',
@@ -17,7 +16,7 @@ export default clerkMiddleware(async (auth, req) => {
     const guestId = req.cookies.get('guest_id')?.value;
 
     if (!guestId) {
-      const newGuestId = uuidv4();
+      const newGuestId = crypto.randomUUID();
       res.cookies.set('guest_id', newGuestId, {
         path: '/',
         httpOnly: false,
