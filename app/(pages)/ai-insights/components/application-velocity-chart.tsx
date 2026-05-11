@@ -17,6 +17,14 @@ interface ApplicationVelocityChartProps {
   years: string[];
 }
 
+const chartColors = [
+  'hsl(var(--chart-1))',
+  'hsl(var(--chart-2))',
+  'hsl(var(--chart-3))',
+  'hsl(var(--chart-4))',
+  'hsl(var(--chart-5))',
+];
+
 export function ApplicationVelocityChart({
   data,
   years,
@@ -28,7 +36,7 @@ export function ApplicationVelocityChart({
   const chartConfig = years.reduce((acc, year) => {
     acc[year] = {
       label: year,
-      color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+      color: chartColors[Object.keys(acc).length % chartColors.length],
     };
     return acc;
   }, {} as ChartConfig);
