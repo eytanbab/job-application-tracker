@@ -24,13 +24,12 @@ export default function NewApplication() {
         description: 'Application submitted successfully!',
         variant: 'default',
       });
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       toast({
         description: 'Failed to submit application.',
         variant: 'destructive',
       });
+      throw err;
     }
   };
 
