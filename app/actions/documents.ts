@@ -93,6 +93,10 @@ export async function deleteFile(id: string) {
       .where(and(eq(documents.userId, userId), eq(documents.id, id)))
       .returning({ file_key: documents.file_key });
 
+    if (deletedDocument.length === 0) {
+      throw new Error("Document not found");
+    }
+
     const deleteParams = {
       Bucket: process.env.NEXT_AWS_S3_BUCKET_NAME || "", // Get the bucket name from env variable
       Key: deletedDocument[0].file_key,
@@ -100,10 +104,11 @@ export async function deleteFile(id: string) {
 
     await s3Client.send(new DeleteObjectCommand(deleteParams));
   } catch (err) {
-    console.log("Error", err);
+    console.error("Delete document error:", err);
+    throw err;
+  } finally {
+    revalidateTag(documentsTag(userId));
   }
-
-  revalidateTag(documentsTag(userId));
 }
 
 export async function getDownloadUrl(id: string) {
