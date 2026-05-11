@@ -27,10 +27,11 @@ import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 import { cn } from '@/lib/utils';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Textarea } from '@/components/ui/textarea';
 import { useState, useTransition } from 'react';
 import { AiData } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const createApplicationSchema = insertApplicationSchema.omit({
@@ -69,6 +70,8 @@ export const ApplicationForm = ({
   onSubmit,
   onClose,
 }: Props) => {
+  const router = useRouter();
+  const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [aiValues, setAiValues] = useState<AiValues | null>(defaultValues);
   const [isLoading, setIsLoading] = useState(false);
@@ -113,7 +116,7 @@ export const ApplicationForm = ({
 
   const onCancel = () => {
     onClose();
-    redirect('/applications');
+    router.push('/applications');
   };
 
   const handleAiSubmit = async (values: z.infer<typeof aiFormSchema>) => {
@@ -128,7 +131,6 @@ export const ApplicationForm = ({
       });
 
       const aiAutoFill: AiData = await response.json();
-      console.log('aiAutoFill', aiAutoFill);
 
       if (aiAutoFill.status === 'fail') {
         setAiValues(null);
@@ -182,9 +184,16 @@ export const ApplicationForm = ({
     };
 
     startTransition(async () => {
-      onSubmit(values);
-      onClose();
-      redirect('/applications');
+      try {
+        await onSubmit(values);
+        onClose();
+        router.push('/applications');
+      } catch {
+        toast({
+          description: 'Failed to save application.',
+          variant: 'destructive',
+        });
+      }
     });
   };
 
