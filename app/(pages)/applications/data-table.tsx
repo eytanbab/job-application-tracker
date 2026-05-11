@@ -27,7 +27,7 @@ import { Input } from "@/components/ui/input";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { cn, getStatusKind, type StatusKind } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Plus, X } from "lucide-react";
 import {
@@ -54,6 +54,17 @@ const TABLE_ROWS = [5, 10, 15, 20, 25];
 const MOBILE_DEFAULT_PAGE_SIZE = 5;
 const DESKTOP_DEFAULT_PAGE_SIZE = 10;
 
+const statusBadgeClasses: Record<StatusKind, string> = {
+  applied: "bg-primary/15 text-primary",
+  accepted:
+    "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-300",
+  ghosted: "bg-muted text-muted-foreground",
+  review: "bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300",
+  interview: "bg-cyan-100 text-cyan-900 dark:bg-cyan-900/30 dark:text-cyan-300",
+  rejected: "bg-destructive/15 text-destructive",
+  other: "bg-secondary text-secondary-foreground",
+};
+
 export function DataTable<TData extends { status: string }, TValue>({
   columns,
   data,
@@ -61,7 +72,9 @@ export function DataTable<TData extends { status: string }, TValue>({
   // URL-bound state with nuqs
   const [globalFilter, setGlobalFilter] = useQueryState(
     "q",
-    parseAsString.withDefault("").withOptions({ shallow: false, throttleMs: 300 })
+    parseAsString
+      .withDefault("")
+      .withOptions({ shallow: false, throttleMs: 300 })
   );
 
   const [statusFilter, setStatusFilter] = useQueryState(
@@ -90,11 +103,15 @@ export function DataTable<TData extends { status: string }, TValue>({
   );
 
   // Client-side device detection for default page size
-  const [devicePageSize, setDevicePageSize] = useState<number>(MOBILE_DEFAULT_PAGE_SIZE);
+  const [devicePageSize, setDevicePageSize] = useState<number>(
+    MOBILE_DEFAULT_PAGE_SIZE
+  );
 
   useEffect(() => {
     const isDesktop = window.matchMedia("(min-width: 768px)").matches;
-    setDevicePageSize(isDesktop ? DESKTOP_DEFAULT_PAGE_SIZE : MOBILE_DEFAULT_PAGE_SIZE);
+    setDevicePageSize(
+      isDesktop ? DESKTOP_DEFAULT_PAGE_SIZE : MOBILE_DEFAULT_PAGE_SIZE
+    );
   }, []);
 
   const pageSize = pageSizeParam ?? devicePageSize;
@@ -131,13 +148,12 @@ export function DataTable<TData extends { status: string }, TValue>({
   };
 
   const setPagination: OnChangeFn<PaginationState> = (updater) => {
-    const next =
-      typeof updater === "function" ? updater(pagination) : updater;
-    
+    const next = typeof updater === "function" ? updater(pagination) : updater;
+
     if (next.pageIndex !== pagination.pageIndex) {
       setPage(next.pageIndex + 1);
     }
-    
+
     if (next.pageSize !== pagination.pageSize) {
       setPageSizeParam(next.pageSize);
     }
@@ -261,30 +277,9 @@ export function DataTable<TData extends { status: string }, TValue>({
                     >
                       <Badge
                         className={cn(
-                          (cell.getValue() as string)
-                            .toLowerCase()
-                            .includes("applied") &&
-                            "bg-primary/15 text-primary",
-                          (cell.getValue() as string)
-                            .toLowerCase()
-                            .includes("accept") &&
-                            "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-300",
-                          (cell.getValue() as string)
-                            .toLowerCase()
-                            .includes("ghost") &&
-                            "bg-muted text-muted-foreground",
-                          (cell.getValue() as string)
-                            .toLowerCase()
-                            .includes("review") &&
-                            "bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300",
-                          (cell.getValue() as string)
-                            .toLowerCase()
-                            .includes("interview") &&
-                            "bg-cyan-100 text-cyan-900 dark:bg-cyan-900/30 dark:text-cyan-300",
-                          (cell.getValue() as string)
-                            .toLowerCase()
-                            .includes("reject") &&
-                            "bg-destructive/15 text-destructive"
+                          statusBadgeClasses[
+                            getStatusKind(cell.getValue() as string)
+                          ]
                         )}
                       >
                         {flexRender(

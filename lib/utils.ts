@@ -1,6 +1,6 @@
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-import { ChartData, Data, RawData } from './types';
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { ChartData, Data, RawData } from "./types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -8,16 +8,16 @@ export function cn(...inputs: ClassValue[]) {
 
 export const navItems = [
   {
-    url: '/applications',
-    name: 'applications',
+    url: "/applications",
+    name: "applications",
   },
   {
-    url: '/analytics/overview',
-    name: 'analytics',
+    url: "/analytics/overview",
+    name: "analytics",
   },
   {
-    url: '/documents',
-    name: 'documents',
+    url: "/documents",
+    name: "documents",
   },
   // {
   //   url: '/ai-insights',
@@ -26,18 +26,18 @@ export const navItems = [
 ];
 
 const MONTH_NAMES = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ] as const;
 
 type MonthName = (typeof MONTH_NAMES)[number];
@@ -119,29 +119,47 @@ export function transformApplicationsData(
 }
 
 const predefinedColors: Record<string, string> = {
-  ghosted: 'hsl(var(--status-ghosted))',
-  rejected: 'hsl(var(--status-rejected))',
-  applied: 'hsl(var(--status-applied))',
-  accepted: 'hsl(var(--status-accepted))',
-  review: 'hsl(var(--status-review))',
-  interview: 'hsl(var(--status-interview))',
-  other: 'hsl(var(--status-other))',
+  ghosted: "hsl(var(--status-ghosted))",
+  rejected: "hsl(var(--status-rejected))",
+  applied: "hsl(var(--status-applied))",
+  accepted: "hsl(var(--status-accepted))",
+  review: "hsl(var(--status-review))",
+  interview: "hsl(var(--status-interview))",
+  other: "hsl(var(--status-other))",
+};
+
+export type StatusKind =
+  | "ghosted"
+  | "rejected"
+  | "accepted"
+  | "interview"
+  | "review"
+  | "applied"
+  | "other";
+
+export const getStatusKind = (status: string): StatusKind => {
+  const normalizedStatus = status.toLowerCase();
+
+  if (normalizedStatus.includes("ghost")) {
+    return "ghosted";
+  } else if (normalizedStatus.includes("reject")) {
+    return "rejected";
+  } else if (
+    normalizedStatus.includes("accept") ||
+    normalizedStatus.includes("offer")
+  ) {
+    return "accepted";
+  } else if (normalizedStatus.includes("interview")) {
+    return "interview";
+  } else if (normalizedStatus.includes("review")) {
+    return "review";
+  } else if (normalizedStatus.includes("applied")) {
+    return "applied";
+  } else {
+    return "other";
+  }
 };
 
 export const getColor = (status: string) => {
-  if (status.includes('applied')) {
-    return predefinedColors['applied'];
-  } else if (status.includes('reject')) {
-    return predefinedColors['rejected'];
-  } else if (status.includes('ghost')) {
-    return predefinedColors['ghosted'];
-  } else if (status.includes('accept')) {
-    return predefinedColors['accepted'];
-  } else if (status.includes('review')) {
-    return predefinedColors['review'];
-  } else if (status.includes('interview')) {
-    return predefinedColors['interview'];
-  } else {
-    return predefinedColors['other'];
-  }
+  return predefinedColors[getStatusKind(status)];
 };
