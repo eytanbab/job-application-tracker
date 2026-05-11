@@ -4,7 +4,7 @@ import { auth } from '@clerk/nextjs/server';
 import { cookies } from 'next/headers';
 import { revalidateTag } from 'next/cache';
 import { db } from '@/app/db';
-import { jobApplications } from '@/app/db/schema';
+import { documents, jobApplications } from '@/app/db/schema';
 import { eq } from 'drizzle-orm';
 import { applicationsTag, documentsTag } from './_utils/cache-tags';
 import { getCurrentUserIdOrThrow } from './_utils/user-context';
@@ -23,6 +23,11 @@ export async function migrateGuestData() {
     .update(jobApplications)
     .set({ userId: resolvedUserId })
     .where(eq(jobApplications.userId, guestId));
+
+  await db
+    .update(documents)
+    .set({ userId: resolvedUserId })
+    .where(eq(documents.userId, guestId));
 
   revalidateTag(applicationsTag(guestId));
   revalidateTag(applicationsTag(resolvedUserId));
