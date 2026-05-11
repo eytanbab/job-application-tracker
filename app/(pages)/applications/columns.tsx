@@ -5,7 +5,6 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Trash2, ArrowUpDown } from 'lucide-react';
 
 import Link from 'next/link';
-import { parseUrl } from 'next/dist/shared/lib/router/utils/parse-url';
 
 import { EditApplicationSheet } from '@/app/_components/edit-application-sheet';
 
@@ -13,7 +12,7 @@ import {
   deleteApplication,
   updateApplication,
 } from '@/app/actions/applications';
-import { formatDate } from 'date-fns';
+import { formatDate, parseISO } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 
 import { Button } from '@/components/ui/button';
@@ -92,7 +91,7 @@ export const columns: ColumnDef<FormValues>[] = [
     },
     cell: ({ row }) => {
       const formattedDate = formatDate(
-        new Date(row.getValue('date_applied')),
+        parseISO(row.getValue('date_applied')),
         'dd/MM/yyyy'
       );
       return <div>{formattedDate}</div>;
@@ -104,13 +103,13 @@ export const columns: ColumnDef<FormValues>[] = [
       return <p className='font-semibold px-4 py-2'>Link</p>;
     },
     cell: ({ row }) => {
-      let url;
-      if (row.getValue('link')) {
-        url = parseUrl(row.getValue('link'));
-      } else {
-        url = '';
+      const url = row.getValue<string>('link');
+
+      if (!url) {
+        return null;
       }
-      return <Link href={url}>{row.getValue('link')}</Link>;
+
+      return <Link href={url}>{url}</Link>;
     },
   },
   {
@@ -202,13 +201,12 @@ export const columns: ColumnDef<FormValues>[] = [
             description: 'Application updated successfully!',
             variant: 'default',
           });
-
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err) {
           toast({
             description: 'Failed to update application.',
             variant: 'destructive',
           });
+          throw err;
         }
       };
       return (
