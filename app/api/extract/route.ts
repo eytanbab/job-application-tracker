@@ -3,6 +3,7 @@ import { scraper } from '@/lib/scraper';
 import { openAiclient } from '@/lib/open-ai';
 
 export const maxDuration = 60; // Allow 60 seconds for scraping + AI extraction
+const isDevelopment = process.env.NODE_ENV === 'development';
 
 export async function POST(req: Request) {
   try {
@@ -15,7 +16,9 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log(`[API] Extracting from: ${url}`);
+    if (isDevelopment) {
+      console.log(`[API] Extracting from: ${url}`);
+    }
     const webpage = await scraper(url);
 
     if (!webpage) {
@@ -25,7 +28,9 @@ export async function POST(req: Request) {
         message: 'Failed to extract raw content from the URL.',
       });
     }
-    console.log(`[API] Scraper successful. Raw content length: ${webpage.length}`);
+    if (isDevelopment) {
+      console.log(`[API] Scraper successful. Raw content length: ${webpage.length}`);
+    }
 
     const prompt = `You are an expert at extracting verbatim content from job listings.
 The provided text is a webpage converted to markdown. It may contain a lot of noise (menus, footers, other jobs).
@@ -52,7 +57,9 @@ Return a JSON object:
 Content to parse:
 \n\n${webpage}`;
 
-    console.log('[API] Sending prompt to OpenAI...');
+    if (isDevelopment) {
+      console.log('[API] Sending prompt to OpenAI...');
+    }
     const response = await openAiclient.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
@@ -60,8 +67,9 @@ Content to parse:
     });
     
     const res = response.choices[0].message.content;
-    console.log(`[API] OpenAI responded successfully. Result length: ${res?.length}`);
-    console.log(`[API] Raw OpenAI Response: ${res}`);
+    if (isDevelopment) {
+      console.log(`[API] OpenAI responded successfully. Result length: ${res?.length}`);
+    }
 
     if (!res) {
       console.error('[API] OpenAI returned empty response content.');
