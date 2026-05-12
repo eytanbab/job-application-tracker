@@ -386,7 +386,7 @@ export const ApplicationForm = ({
             control={form.control}
             name="platform"
             render={({ field }) => (
-              <FormItem className="space-y-0 col-span-full md:col-span-1">
+              <FormItem className="space-y-0 col-span-full">
                 <FormLabel>Platform</FormLabel>
                 <FormControl>
                   <Input
