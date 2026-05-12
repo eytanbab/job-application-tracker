@@ -29,6 +29,8 @@ const createSkeletonData = (count: number) => {
     date_applied: '',
     platform: '',
     status: 'applied',
+    statusCategory: 'applied',
+    statusLabel: '',
     month: '',
     year: '',
     location: '',

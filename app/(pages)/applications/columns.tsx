@@ -16,6 +16,7 @@ import { formatDate, parseISO } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 
 import { Button } from '@/components/ui/button';
+import { getStatusDisplay, getStatusKind } from '@/lib/utils';
 import {
   Dialog,
   DialogClose,
@@ -173,7 +174,8 @@ export const columns: ColumnDef<FormValues>[] = [
     },
   },
   {
-    accessorKey: 'status',
+    id: 'status',
+    accessorFn: (row) => getStatusKind(row.status, row.statusCategory),
     header: ({ column }) => {
       return (
         <Button
@@ -186,6 +188,12 @@ export const columns: ColumnDef<FormValues>[] = [
         </Button>
       );
     },
+    cell: ({ row }) =>
+      getStatusDisplay(
+        row.original.status,
+        row.original.statusCategory,
+        row.original.statusLabel
+      ),
   },
   {
     id: 'actions',

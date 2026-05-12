@@ -27,7 +27,13 @@ import { Input } from "@/components/ui/input";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { cn, getStatusKind, type StatusKind } from "@/lib/utils";
+import {
+  cn,
+  getStatusKind,
+  statusLabels,
+  statusOptions,
+  type StatusKind,
+} from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Plus, X } from "lucide-react";
 import {
@@ -45,7 +51,14 @@ import {
 } from "nuqs";
 import { OnChangeFn } from "@tanstack/react-table";
 
-interface DataTableProps<TData extends { status: string }, TValue> {
+interface DataTableProps<
+  TData extends {
+    status: string;
+    statusCategory?: string | null;
+    statusLabel?: string | null;
+  },
+  TValue
+> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
@@ -65,7 +78,14 @@ const statusBadgeClasses: Record<StatusKind, string> = {
   other: "bg-secondary text-secondary-foreground",
 };
 
-export function DataTable<TData extends { status: string }, TValue>({
+export function DataTable<
+  TData extends {
+    status: string;
+    statusCategory?: string | null;
+    statusLabel?: string | null;
+  },
+  TValue
+>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
@@ -189,8 +209,10 @@ export function DataTable<TData extends { status: string }, TValue>({
   });
 
   const statuses = useMemo(() => {
-    const uniqueStatuses = new Set(data.map((item) => item.status));
-    return Array.from(uniqueStatuses).sort();
+    const uniqueStatuses = new Set(
+      data.map((item) => getStatusKind(item.status, item.statusCategory))
+    );
+    return statusOptions.filter((status) => uniqueStatuses.has(status.value));
   }, [data]);
 
   return (
@@ -227,8 +249,12 @@ export function DataTable<TData extends { status: string }, TValue>({
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
               {statuses.map((status) => (
-                <SelectItem key={status} value={status} className="capitalize">
-                  {status}
+                <SelectItem
+                  key={status.value}
+                  value={status.value}
+                  className="capitalize"
+                >
+                  {status.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -282,6 +308,10 @@ export function DataTable<TData extends { status: string }, TValue>({
                           ]
                         )}
                       >
+                        <span className="sr-only">
+                          {statusLabels[getStatusKind(cell.getValue() as string)]}
+                          :
+                        </span>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
