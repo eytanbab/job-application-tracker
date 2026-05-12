@@ -13,11 +13,27 @@ import {
   CACHE_REVALIDATE_SECONDS,
 } from './_utils/cache-tags';
 import { getCurrentUserIdOrThrow } from './_utils/user-context';
+import { getStatusDisplay, getStatusKind } from '@/lib/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
 
 type FormValues = z.input<typeof formSchema>;
+
+function normalizeApplicationStatus(values: FormValues): FormValues {
+  const statusCategory = getStatusKind(values.status, values.statusCategory);
+  const statusLabel = values.statusLabel?.trim() || null;
+  const status = getStatusDisplay(values.status, statusCategory, statusLabel)
+    .toLowerCase()
+    .trim();
+
+  return {
+    ...values,
+    status,
+    statusCategory,
+    statusLabel,
+  };
+}
 
 // Get all applications of current user
 export async function getApplications() {
@@ -65,11 +81,12 @@ export async function getApplication(id: string) {
 export async function createApplication(values: FormValues) {
   const userId = await getCurrentUserIdOrThrow();
 
+  const normalizedValues = normalizeApplicationStatus(values);
   const application: z.input<typeof insertApplicationSchema> = {
-    ...values,
+    ...normalizedValues,
     userId,
-    month: format(new Date(values.date_applied), 'M'),
-    year: format(new Date(values.date_applied), 'yyyy'),
+    month: format(new Date(normalizedValues.date_applied), 'M'),
+    year: format(new Date(normalizedValues.date_applied), 'yyyy'),
   };
 
   const result = await db
@@ -98,10 +115,11 @@ export async function updateApplication(values: FormValues) {
   }
   const userId = await getCurrentUserIdOrThrow();
 
+  const normalizedValues = normalizeApplicationStatus(values);
   const application = {
-    ...values,
-    month: format(new Date(values.date_applied), 'M'),
-    year: format(new Date(values.date_applied), 'yyyy'),
+    ...normalizedValues,
+    month: format(new Date(normalizedValues.date_applied), 'M'),
+    year: format(new Date(normalizedValues.date_applied), 'yyyy'),
   };
 
   await db

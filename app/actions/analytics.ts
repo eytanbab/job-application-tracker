@@ -6,7 +6,11 @@ import { unstable_cache } from "next/cache";
 import { db } from "@/app/db";
 import { jobApplications } from "@/app/db/schema";
 
-import { formatApplicationsPerYear, getStatusKind } from "@/lib/utils";
+import {
+  formatApplicationsPerYear,
+  getStatusKind,
+  statusLabels,
+} from "@/lib/utils";
 import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 
@@ -18,19 +22,20 @@ export async function getKpiSummary() {
       const allApplications = await db
         .select({
           status: jobApplications.status,
+          statusCategory: jobApplications.statusCategory,
         })
         .from(jobApplications)
         .where(eq(jobApplications.userId, userId));
 
       const totalApplications = allApplications.length;
       const applicationsWithInterview = allApplications.filter(
-        (app) => getStatusKind(app.status) === "interview"
+        (app) => getStatusKind(app.status, app.statusCategory) === "interview"
       ).length;
       const applicationsWithOffer = allApplications.filter(
-        (app) => getStatusKind(app.status) === "accepted"
+        (app) => getStatusKind(app.status, app.statusCategory) === "accepted"
       ).length;
       const activeApplications = allApplications.filter((app) => {
-        const statusKind = getStatusKind(app.status);
+        const statusKind = getStatusKind(app.status, app.statusCategory);
         return (
           statusKind === "applied" ||
           statusKind === "interview" ||
@@ -70,16 +75,17 @@ export async function getApplicationsFunnel() {
       const allApplications = await db
         .select({
           status: jobApplications.status,
+          statusCategory: jobApplications.statusCategory,
         })
         .from(jobApplications)
         .where(eq(jobApplications.userId, userId));
 
       const applied = allApplications.length;
       const interviewing = allApplications.filter(
-        (app) => getStatusKind(app.status) === "interview"
+        (app) => getStatusKind(app.status, app.statusCategory) === "interview"
       ).length;
       const offer = allApplications.filter(
-        (app) => getStatusKind(app.status) === "accepted"
+        (app) => getStatusKind(app.status, app.statusCategory) === "accepted"
       ).length;
 
       return [
@@ -146,6 +152,7 @@ export async function getDomainLeaderboard() {
         .select({
           link: jobApplications.link,
           status: jobApplications.status,
+          statusCategory: jobApplications.statusCategory,
         })
         .from(jobApplications)
         .where(eq(jobApplications.userId, userId));
@@ -154,7 +161,7 @@ export async function getDomainLeaderboard() {
         [domain: string]: { total: number; interviews: number };
       } = {};
 
-      applications.forEach(({ link, status }) => {
+      applications.forEach(({ link, status, statusCategory }) => {
         try {
           const url = new URL(link);
           let domain = url.hostname;
@@ -177,7 +184,7 @@ export async function getDomainLeaderboard() {
             domainStats[domain] = { total: 0, interviews: 0 };
           }
           domainStats[domain].total++;
-          if (getStatusKind(status) === "interview") {
+          if (getStatusKind(status, statusCategory) === "interview") {
             domainStats[domain].interviews++;
           }
         } catch {
@@ -212,6 +219,7 @@ export async function getKeywordPerformance() {
         .select({
           role_name: jobApplications.role_name,
           status: jobApplications.status,
+          statusCategory: jobApplications.statusCategory,
         })
         .from(jobApplications)
         .where(eq(jobApplications.userId, userId));
@@ -236,7 +244,7 @@ export async function getKeywordPerformance() {
         "but",
       ]);
 
-      applications.forEach(({ role_name, status }) => {
+      applications.forEach(({ role_name, status, statusCategory }) => {
         const keywords = role_name
           .toLowerCase()
           .split(/[\s,/-]+/)
@@ -247,7 +255,7 @@ export async function getKeywordPerformance() {
             keywordStats[keyword] = { total: 0, interviews: 0 };
           }
           keywordStats[keyword].total++;
-          if (getStatusKind(status) === "interview") {
+          if (getStatusKind(status, statusCategory) === "interview") {
             keywordStats[keyword].interviews++;
           }
         });
@@ -280,6 +288,7 @@ export async function getSalaryRealityCheck() {
         .select({
           salary: jobApplications.salary,
           status: jobApplications.status,
+          statusCategory: jobApplications.statusCategory,
         })
         .from(jobApplications)
         .where(eq(jobApplications.userId, userId));
@@ -309,12 +318,12 @@ export async function getSalaryRealityCheck() {
       let interviewSalary = 0;
       let interviewCount = 0;
 
-      applications.forEach(({ salary, status }) => {
+      applications.forEach(({ salary, status, statusCategory }) => {
         const parsedSalary = parseSalary(salary);
         if (parsedSalary) {
           totalSalary += parsedSalary;
           appliedCount++;
-          if (getStatusKind(status) === "interview") {
+          if (getStatusKind(status, statusCategory) === "interview") {
             interviewSalary += parsedSalary;
             interviewCount++;
           }
@@ -350,6 +359,7 @@ export async function getGhostedApplications() {
           id: jobApplications.id,
           date_applied: jobApplications.date_applied,
           status: jobApplications.status,
+          statusCategory: jobApplications.statusCategory,
         })
         .from(jobApplications)
         .where(
@@ -362,7 +372,7 @@ export async function getGhostedApplications() {
           )
         );
       const ghosted = applications.filter(
-        (app) => getStatusKind(app.status) === "applied"
+        (app) => getStatusKind(app.status, app.statusCategory) === "applied"
       );
       return ghosted.length;
     },
@@ -383,6 +393,7 @@ export async function getDayOfWeekPerformance() {
         .select({
           date_applied: jobApplications.date_applied,
           status: jobApplications.status,
+          statusCategory: jobApplications.statusCategory,
         })
         .from(jobApplications)
         .where(eq(jobApplications.userId, userId));
@@ -399,10 +410,10 @@ export async function getDayOfWeekPerformance() {
         Saturday: { total: 0, interviews: 0 },
       };
 
-      applications.forEach(({ date_applied, status }) => {
+      applications.forEach(({ date_applied, status, statusCategory }) => {
         const day = format(new Date(date_applied), "EEEE");
         dayOfWeekStats[day].total++;
-        if (getStatusKind(status) === "interview") {
+        if (getStatusKind(status, statusCategory) === "interview") {
           dayOfWeekStats[day].interviews++;
         }
       });
@@ -528,17 +539,23 @@ export async function getTop5Statuses(month?: string, year?: string) {
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
-    async () =>
-      db
+    async () => {
+      const data = await db
         .select({
-          name: jobApplications.status,
-          freq: count(jobApplications.status),
+          name: jobApplications.statusCategory,
+          freq: count(jobApplications.id),
         })
         .from(jobApplications)
         .where(and(...whereClause))
-        .groupBy(jobApplications.status)
-        .orderBy(desc(count(jobApplications.status)))
-        .limit(5),
+        .groupBy(jobApplications.statusCategory)
+        .orderBy(desc(count(jobApplications.id)))
+        .limit(5);
+
+      return data.map((item) => ({
+        ...item,
+        name: statusLabels[getStatusKind(null, item.name)],
+      }));
+    },
     ["analytics", "top-5-statuses", userId, month || "all", year || "all"],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
@@ -650,21 +667,27 @@ export async function getStasusesPerYear(month?: string, year?: string) {
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
-    async () =>
-      db
+    async () => {
+      const data = await db
         .select({
           year: jobApplications.year,
           month: jobApplications.month,
-          status: jobApplications.status,
-          statusCount: count(jobApplications.status),
+          status: jobApplications.statusCategory,
+          statusCount: count(jobApplications.id),
         })
         .from(jobApplications)
         .where(and(...whereClause))
         .groupBy(
           jobApplications.month,
           jobApplications.year,
-          jobApplications.status
-        ),
+          jobApplications.statusCategory
+        );
+
+      return data.map((item) => ({
+        ...item,
+        status: statusLabels[getStatusKind(null, item.status)],
+      }));
+    },
     ["analytics", "statuses-per-year", userId, month || "all", year || "all"],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
@@ -731,7 +754,10 @@ export async function getStatusPerPlatform(month?: string, year?: string) {
           grouped.set(platformName, []);
           platformTotals.set(platformName, 0);
         }
-        grouped.get(platformName).push({ status, value: numOfApplications });
+        grouped.get(platformName).push({
+          status,
+          value: numOfApplications,
+        });
         platformTotals.set(
           platformName,
           platformTotals.get(platformName) + numOfApplications
@@ -768,12 +794,12 @@ export async function getPlatformPerformance() {
       const data = await db
         .select({
           platform: jobApplications.platform,
-          status: jobApplications.status,
+          status: jobApplications.statusCategory,
           count: count(jobApplications.id),
         })
         .from(jobApplications)
         .where(eq(jobApplications.userId, userId))
-        .groupBy(jobApplications.platform, jobApplications.status);
+        .groupBy(jobApplications.platform, jobApplications.statusCategory);
 
       const platformStats: {
         [platform: string]: { total: number; interviews: number };
@@ -784,7 +810,7 @@ export async function getPlatformPerformance() {
           platformStats[platform] = { total: 0, interviews: 0 };
         }
         platformStats[platform].total += count;
-        if (getStatusKind(status) === "interview") {
+        if (getStatusKind(null, status) === "interview") {
           platformStats[platform].interviews += count;
         }
       });

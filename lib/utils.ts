@@ -137,8 +137,36 @@ export type StatusKind =
   | "applied"
   | "other";
 
-export const getStatusKind = (status: string): StatusKind => {
-  const normalizedStatus = status.toLowerCase();
+export const statusOptions: { value: StatusKind; label: string }[] = [
+  { value: "applied", label: "Applied" },
+  { value: "review", label: "In Review" },
+  { value: "interview", label: "Interview" },
+  { value: "accepted", label: "Accepted / Offer" },
+  { value: "rejected", label: "Rejected" },
+  { value: "ghosted", label: "Ghosted" },
+  { value: "other", label: "Other" },
+];
+
+export const statusLabels = statusOptions.reduce(
+  (labels, option) => {
+    labels[option.value] = option.label;
+    return labels;
+  },
+  {} as Record<StatusKind, string>
+);
+
+export const isStatusKind = (status: string): status is StatusKind =>
+  statusOptions.some((option) => option.value === status);
+
+export const getStatusKind = (
+  status: string | null | undefined,
+  statusCategory?: string | null
+): StatusKind => {
+  if (statusCategory && isStatusKind(statusCategory)) {
+    return statusCategory;
+  }
+
+  const normalizedStatus = (status ?? "").toLowerCase();
 
   if (normalizedStatus.includes("ghost")) {
     return "ghosted";
@@ -160,6 +188,20 @@ export const getStatusKind = (status: string): StatusKind => {
   }
 };
 
-export const getColor = (status: string) => {
-  return predefinedColors[getStatusKind(status)];
+export const getStatusDisplay = (
+  status: string | null | undefined,
+  statusCategory?: string | null,
+  statusLabel?: string | null
+) => {
+  const trimmedLabel = statusLabel?.trim();
+
+  if (trimmedLabel) {
+    return trimmedLabel;
+  }
+
+  return statusLabels[getStatusKind(status, statusCategory)];
+};
+
+export const getColor = (status: string, statusCategory?: string | null) => {
+  return predefinedColors[getStatusKind(status, statusCategory)];
 };
