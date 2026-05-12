@@ -78,6 +78,13 @@
       "when": 1743695829271,
       "tag": "0010_breezy_marrow",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1778587200000,
+      "tag": "0011_canonical_status_categories",
+      "breakpoints": true
     }
   ]
 }

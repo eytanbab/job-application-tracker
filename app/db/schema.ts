@@ -18,6 +18,10 @@ export const jobApplications = pgTable('job_applications', {
   link: text('link').notNull(),
   platform: varchar('platform', { length: 255 }).notNull(),
   status: varchar('status', { length: 255 }).notNull(),
+  statusCategory: varchar('status_category', { length: 32 })
+    .default('applied')
+    .notNull(),
+  statusLabel: varchar('status_label', { length: 255 }),
   month: varchar('month').notNull(),
   year: varchar('year').notNull(),
   description: text('description'),
