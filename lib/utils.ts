@@ -202,6 +202,19 @@ export const getStatusDisplay = (
   return statusLabels[getStatusKind(status, statusCategory)];
 };
 
+export const didReachInterviewStage = (
+  status: string | null | undefined,
+  statusCategory?: string | null
+): boolean => {
+  const kind = getStatusKind(status, statusCategory);
+  if (kind === "interview" || kind === "accepted") {
+    return true;
+  }
+  
+  const normalizedStatus = (status ?? "").toLowerCase();
+  return normalizedStatus.includes("interview");
+};
+
 export const getColor = (status: string, statusCategory?: string | null) => {
   return predefinedColors[getStatusKind(status, statusCategory)];
 };

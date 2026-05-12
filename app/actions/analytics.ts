@@ -10,6 +10,7 @@ import {
   formatApplicationsPerYear,
   getStatusKind,
   statusLabels,
+  didReachInterviewStage,
 } from "@/lib/utils";
 import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
@@ -29,7 +30,7 @@ export async function getKpiSummary() {
 
       const totalApplications = allApplications.length;
       const applicationsWithInterview = allApplications.filter(
-        (app) => getStatusKind(app.status, app.statusCategory) === "interview"
+        (app) => didReachInterviewStage(app.status, app.statusCategory)
       ).length;
       const applicationsWithOffer = allApplications.filter(
         (app) => getStatusKind(app.status, app.statusCategory) === "accepted"
@@ -82,7 +83,7 @@ export async function getApplicationsFunnel() {
 
       const applied = allApplications.length;
       const interviewing = allApplications.filter(
-        (app) => getStatusKind(app.status, app.statusCategory) === "interview"
+        (app) => didReachInterviewStage(app.status, app.statusCategory)
       ).length;
       const offer = allApplications.filter(
         (app) => getStatusKind(app.status, app.statusCategory) === "accepted"
@@ -184,7 +185,7 @@ export async function getDomainLeaderboard() {
             domainStats[domain] = { total: 0, interviews: 0 };
           }
           domainStats[domain].total++;
-          if (getStatusKind(status, statusCategory) === "interview") {
+          if (didReachInterviewStage(status, statusCategory)) {
             domainStats[domain].interviews++;
           }
         } catch {
@@ -255,7 +256,7 @@ export async function getKeywordPerformance() {
             keywordStats[keyword] = { total: 0, interviews: 0 };
           }
           keywordStats[keyword].total++;
-          if (getStatusKind(status, statusCategory) === "interview") {
+          if (didReachInterviewStage(status, statusCategory)) {
             keywordStats[keyword].interviews++;
           }
         });
@@ -323,7 +324,7 @@ export async function getSalaryRealityCheck() {
         if (parsedSalary) {
           totalSalary += parsedSalary;
           appliedCount++;
-          if (getStatusKind(status, statusCategory) === "interview") {
+          if (didReachInterviewStage(status, statusCategory)) {
             interviewSalary += parsedSalary;
             interviewCount++;
           }
@@ -413,7 +414,7 @@ export async function getDayOfWeekPerformance() {
       applications.forEach(({ date_applied, status, statusCategory }) => {
         const day = format(new Date(date_applied), "EEEE");
         dayOfWeekStats[day].total++;
-        if (getStatusKind(status, statusCategory) === "interview") {
+        if (didReachInterviewStage(status, statusCategory)) {
           dayOfWeekStats[day].interviews++;
         }
       });
@@ -791,27 +792,26 @@ export async function getPlatformPerformance() {
 
   return unstable_cache(
     async () => {
-      const data = await db
+      const applications = await db
         .select({
           platform: jobApplications.platform,
-          status: jobApplications.statusCategory,
-          count: count(jobApplications.id),
+          status: jobApplications.status,
+          statusCategory: jobApplications.statusCategory,
         })
         .from(jobApplications)
-        .where(eq(jobApplications.userId, userId))
-        .groupBy(jobApplications.platform, jobApplications.statusCategory);
+        .where(eq(jobApplications.userId, userId));
 
       const platformStats: {
         [platform: string]: { total: number; interviews: number };
       } = {};
 
-      data.forEach(({ platform, status, count }) => {
+      applications.forEach(({ platform, status, statusCategory }) => {
         if (!platformStats[platform]) {
           platformStats[platform] = { total: 0, interviews: 0 };
         }
-        platformStats[platform].total += count;
-        if (getStatusKind(null, status) === "interview") {
-          platformStats[platform].interviews += count;
+        platformStats[platform].total++;
+        if (didReachInterviewStage(status, statusCategory)) {
+          platformStats[platform].interviews++;
         }
       });
 
