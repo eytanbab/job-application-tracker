@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
-import { scraper } from '@/lib/scraper';
-import { openAiclient } from '@/lib/open-ai';
+import { NextResponse } from "next/server";
+import { scraper } from "@/lib/scraper";
+import { geminiClient } from "@/lib/gemini";
 
 export const maxDuration = 60; // Allow 60 seconds for scraping + AI extraction
-const isDevelopment = process.env.NODE_ENV === 'development';
+const isDevelopment = process.env.NODE_ENV === "development";
 
 export async function POST(req: Request) {
   try {
@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
     if (!url) {
       return NextResponse.json(
-        { status: 'fail', message: 'URL is required' },
+        { status: "fail", message: "URL is required" },
         { status: 400 }
       );
     }
@@ -22,14 +22,16 @@ export async function POST(req: Request) {
     const webpage = await scraper(url);
 
     if (!webpage) {
-      console.error('[API] Scraper returned empty content.');
+      console.error("[API] Scraper returned empty content.");
       return NextResponse.json({
-        status: 'fail',
-        message: 'Failed to extract raw content from the URL.',
+        status: "fail",
+        message: "Failed to extract raw content from the URL.",
       });
     }
     if (isDevelopment) {
-      console.log(`[API] Scraper successful. Raw content length: ${webpage.length}`);
+      console.log(
+        `[API] Scraper successful. Raw content length: ${webpage.length}`
+      );
     }
 
     const prompt = `You are an expert at extracting verbatim content from job listings.
@@ -58,34 +60,50 @@ Content to parse:
 \n\n${webpage}`;
 
     if (isDevelopment) {
-      console.log('[API] Sending prompt to OpenAI...');
+      console.log("[API] Sending prompt to Gemini...");
     }
-    const response = await openAiclient.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
+
+    const response = await geminiClient.models.generateContent({
+      model: "gemini-flash-latest",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        responseMimeType: "application/json",
+      },
     });
-    
-    const res = response.choices[0].message.content;
+
+    if (!response || !response.candidates || response.candidates.length === 0) {
+      console.error(
+        "[API] Gemini returned no candidates (possibly safety block)."
+      );
+      return NextResponse.json({
+        status: "fail",
+        message: "AI failed to extract data (content blocked or empty).",
+      });
+    }
+
+    const res = response.text || "";
+
     if (isDevelopment) {
-      console.log(`[API] OpenAI responded successfully. Result length: ${res?.length}`);
+      console.log(
+        `[API] Gemini responded successfully. Result length: ${res?.length}`
+      );
     }
 
     if (!res) {
-      console.error('[API] OpenAI returned empty response content.');
+      console.error("[API] Gemini returned empty response content.");
       return NextResponse.json({
-        status: 'fail',
-        message: 'Failed to extract data from the URL.',
+        status: "fail",
+        message: "Failed to extract data from the URL.",
       });
     }
 
     return NextResponse.json(JSON.parse(res));
   } catch (error) {
-    console.error('[API] Error in extraction API:', error);
+    console.error("[API] Error in extraction API:", error);
     return NextResponse.json(
       {
-        status: 'fail',
-        message: 'Failed to extract information due to an error.',
+        status: "fail",
+        message: "Failed to extract information due to an error.",
       },
       { status: 500 }
     );
