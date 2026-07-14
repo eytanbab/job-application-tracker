@@ -64,7 +64,7 @@ Content to parse:
     }
 
     const response = await geminiClient.models.generateContent({
-      model: "gemini-flash-latest",
+      model: "gemini-3.1-flash-lite",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
         responseMimeType: "application/json",
