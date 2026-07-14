@@ -4,12 +4,20 @@ import { FileText, SearchX } from "lucide-react";
 import { getFiles } from "@/app/actions/documents";
 import { Button } from "@/components/ui/button";
 import { Document } from "./document";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type Props = {
   query?: string;
+  view?: "table" | "grid";
 };
 
-export const DocumentsList = async ({ query }: Props) => {
+export const DocumentsList = async ({ query, view = "table" }: Props) => {
   let docs = await getFiles();
 
   if (query) {
@@ -60,11 +68,33 @@ export const DocumentsList = async ({ query }: Props) => {
     );
   }
 
+  if (view === "grid") {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {docs.map((file) => (
+          <Document key={file.id} file={file} view="grid" />
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {docs.map((file) => (
-        <Document key={file.id} file={file} />
-      ))}
+    <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="w-[45%] font-semibold">Title</TableHead>
+            <TableHead className="w-[30%] font-semibold">File Name</TableHead>
+            <TableHead className="w-[15%] font-semibold">Date Uploaded</TableHead>
+            <TableHead className="w-[10%] text-right font-semibold">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {docs.map((file) => (
+            <Document key={file.id} file={file} view="table" />
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };
