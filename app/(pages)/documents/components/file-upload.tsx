@@ -129,8 +129,8 @@ export function FileUpload() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="h-11 sm:h-10 px-5 sm:px-4 gap-2 shadow-sm text-base sm:text-sm font-bold">
-          <Upload className="h-5 w-5 sm:h-4 sm:w-4" />
+        <Button className="h-10 px-4 gap-2 text-sm">
+          <Upload className="h-4 w-4" />
           <span>Upload Document</span>
         </Button>
       </DialogTrigger>
@@ -271,7 +271,7 @@ export function FileUpload() {
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 sm:h-10 text-base sm:text-sm font-semibold w-full sm:w-auto"
+                className="h-10 text-sm w-full sm:w-auto"
                 onClick={() => setIsOpen(false)}
                 disabled={isPending}
               >
@@ -280,7 +280,7 @@ export function FileUpload() {
               <Button
                 disabled={isPending || !selectedFile}
                 type="submit"
-                className="h-11 sm:h-10 text-base sm:text-sm font-bold w-full sm:w-auto min-w-[140px]"
+                className="h-10 text-sm w-full sm:w-auto min-w-[120px]"
               >
                 {isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

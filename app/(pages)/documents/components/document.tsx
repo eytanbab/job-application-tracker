@@ -8,7 +8,6 @@ import {
   Download,
   FileText,
   Loader2,
-  MoreVertical,
   Calendar,
   Eye,
 } from "lucide-react";
@@ -26,13 +25,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 
 type Props = {
@@ -43,9 +36,10 @@ type Props = {
     created_at: Date;
     file_name: string;
   };
+  view?: "table" | "grid";
 };
 
-export const Document = ({ file }: Props) => {
+export const Document = ({ file, view = "table" }: Props) => {
   const { toast } = useToast();
   const [isDeleting, startDeleteTransition] = useTransition();
   const [isDownloading, setIsDownloading] = useState(false);
@@ -93,133 +87,154 @@ export const Document = ({ file }: Props) => {
     }
   };
 
-  return (
-    <Card className="group relative flex h-full w-full flex-col overflow-hidden border bg-card shadow-sm transition-all hover:shadow-md hover:ring-1 hover:ring-primary/20">
-      <div className="flex flex-1 flex-col p-2 w-full">
-        <div className="flex items-start justify-between w-full mb-6">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-            <FileText className="h-6 w-6" />
+  // Helper for rendering Quick Actions
+  const renderActions = (iconSizeClass = "h-4 w-4") => (
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        asChild
+        className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-md transition-colors"
+        title="View Online"
+      >
+        <Link href={file.doc_url} target="_blank">
+          <Eye className={iconSizeClass} />
+          <span className="sr-only">View Online</span>
+        </Link>
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        disabled={isDownloading}
+        onClick={handleDownload}
+        className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-md transition-colors"
+        title="Download File"
+      >
+        {isDownloading ? (
+          <Loader2 className={`${iconSizeClass} animate-spin`} />
+        ) : (
+          <Download className={iconSizeClass} />
+        )}
+        <span className="sr-only">Download</span>
+      </Button>
+
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-destructive rounded-md transition-colors"
+            title="Remove Document"
+          >
+            <Trash2 className={iconSizeClass} />
+            <span className="sr-only">Remove</span>
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold">
+              Delete Document
+            </DialogTitle>
+            <DialogDescription className="pt-2 leading-relaxed text-sm text-muted-foreground">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-foreground underline underline-offset-4">
+                &quot;{file.title}&quot;
+              </span>
+              ? This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-6 gap-3">
+            <DialogClose asChild>
+              <Button
+                variant="destructive"
+                disabled={isDeleting}
+                onClick={handleDelete}
+              >
+                Delete
+              </Button>
+            </DialogClose>
+            <DialogClose asChild>
+              <Button
+                variant="outline"
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+
+  // GRID CARD VIEW RENDERER
+  if (view === "grid") {
+    return (
+      <Card className="group relative flex flex-col items-stretch text-left rounded-xl border border-border/50 bg-card/45 backdrop-blur-sm p-4 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5">
+        <div className="space-y-3 w-full">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <FileText className="h-4.5 w-4.5" />
+            </div>
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
+              {renderActions("h-3.5 w-3.5")}
+            </div>
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 text-muted-foreground hover:text-foreground rounded-full transition-colors active:bg-muted"
-              >
-                <MoreVertical className="h-5 w-5" />
-                <span className="sr-only">Actions</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 p-2">
-              <DropdownMenuItem asChild className="cursor-pointer">
-                <Link
-                  href={file.doc_url}
-                  target="_blank"
-                  className="flex items-center gap-3 py-3 text-base sm:text-sm"
-                >
-                  <Eye className="h-5 w-5 sm:h-4 sm:w-4 text-muted-foreground" />
-                  <span>View Online</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-
-              <Dialog>
-                <DialogTrigger asChild>
-                  <button className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-3 text-base sm:text-sm font-semibold outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-destructive">
-                    <div className="flex items-center gap-3">
-                      <Trash2 className="h-5 w-5 sm:h-4 sm:w-4" />
-                      <span>Remove Document</span>
-                    </div>
-                  </button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle className="text-xl sm:text-2xl font-bold">
-                      Delete Document
-                    </DialogTitle>
-                    <DialogDescription className="text-base sm:text-lg pt-4 leading-relaxed">
-                      Are you sure you want to delete{" "}
-                      <span className="font-bold text-foreground decoration-primary/30 underline underline-offset-4">
-                        &quot;{file.title}&quot;
-                      </span>
-                      ? This cannot be undone.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter className="mt-8 gap-4 sm:gap-3">
-                    <DialogClose asChild>
-                      <Button
-                        variant="destructive"
-                        className="h-12 sm:h-11 text-base sm:text-sm font-bold w-full sm:w-auto min-w-[140px]"
-                        disabled={isDeleting}
-                        onClick={handleDelete}
-                      >
-                        Delete
-                      </Button>
-                    </DialogClose>
-                    <DialogClose asChild>
-                      <Button
-                        variant="outline"
-                        className="h-12 sm:h-11 text-base sm:text-sm font-semibold w-full sm:w-auto"
-                        disabled={isDeleting}
-                      >
-                        Cancel
-                      </Button>
-                    </DialogClose>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        <div className="flex-1 flex flex-col w-full mb-8">
-          <div className="h-[4.5rem] w-full">
+          <div className="space-y-0.5 w-full text-left">
             <h3
-              className="line-clamp-2 font-semibold text-foreground group-hover:text-primary transition-colors break-words"
+              className="font-semibold text-sm text-foreground tracking-tight line-clamp-1 group-hover:text-primary transition-colors duration-200"
               title={file.title}
             >
               {file.title}
             </h3>
+            <p
+              className="text-xs text-muted-foreground/75 truncate"
+              title={file.file_name}
+            >
+              {file.file_name}
+            </p>
           </div>
-          <p
-            className="line-clamp-1 text-sm text-muted-foreground/80 font-medium break-all"
-            title={file.file_name}
-          >
-            {file.file_name}
-          </p>
         </div>
 
-        <div className="mt-auto pt-6 border-t border-muted/50 w-full flex flex-row items-center justify-between gap-4">
-          <div className="flex flex-col gap-1 min-w-0">
-            <span className="text-xs uppercase tracking-widest text-muted-foreground font-bold leading-none">
-              Uploaded
-            </span>
-            <div className="flex items-center gap-2 text-sm text-foreground/90 font-bold whitespace-nowrap overflow-hidden">
-              <Calendar className="h-4 w-4 text-primary/60 shrink-0" />
-              <span className="truncate">
-                {format(file.created_at, "MMM d, yyyy")}
-              </span>
-            </div>
-          </div>
-
-          <Button
-            variant="secondary"
-            size="lg"
-            className="h-11 sm:h-10 px-5 sm:px-6 text-sm font-bold gap-2 shadow-sm active:scale-95 transition-all"
-            onClick={handleDownload}
-            disabled={isDownloading}
-          >
-            {isDownloading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="h-4 w-4" />
-            )}
-            <span className="hidden xs:inline">Download</span>
-          </Button>
+        <div className="mt-4 pt-3 border-t border-border/40 flex justify-between items-center w-full text-[11px] text-muted-foreground/80">
+          <span className="flex items-center gap-1 font-medium">
+            <Calendar className="h-3.5 w-3.5 text-muted-foreground/60" />
+            {format(file.created_at, "dd/MM/yyyy")}
+          </span>
+          <span className="bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded font-bold text-[9px] tracking-wider uppercase">
+            PDF
+          </span>
         </div>
-      </div>
-    </Card>
+      </Card>
+    );
+  }
+
+  // TABLE ROW VIEW RENDERER
+  return (
+    <TableRow className="group/row transition-colors">
+      <TableCell className="font-medium py-3">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <FileText className="h-4 w-4" />
+          </div>
+          <span className="truncate max-w-[280px] sm:max-w-sm font-semibold text-foreground" title={file.title}>
+            {file.title}
+          </span>
+        </div>
+      </TableCell>
+      <TableCell className="text-muted-foreground py-3 truncate max-w-[200px] sm:max-w-xs" title={file.file_name}>
+        {file.file_name}
+      </TableCell>
+      <TableCell className="py-3 text-muted-foreground whitespace-nowrap">
+        {format(file.created_at, "dd/MM/yyyy")}
+      </TableCell>
+      <TableCell className="py-3 text-right">
+        <div className="flex items-center justify-end gap-1.5">
+          {renderActions("h-4 w-4")}
+        </div>
+      </TableCell>
+    </TableRow>
   );
 };
