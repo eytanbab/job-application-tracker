@@ -5,7 +5,7 @@ A simple and efficient job application tracking website built with modern web te
 ![Applications](https://imgur.com/bQtY3bl.png)
 ![Analytics - Overview](https://imgur.com/7ryGN8X.png)
 ![Analytics - Status Per Platform](https://imgur.com/ok4am5E.png)
-![Documents](https://imgur.com/tOrQTkJ.png)
+![Documents](https://imgur.com/a/nYCHwqy.png)
 
 ## 🚀 Tech Stack
 
