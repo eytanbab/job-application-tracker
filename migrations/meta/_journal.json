@@ -85,6 +85,13 @@
       "when": 1778587200000,
       "tag": "0011_canonical_status_categories",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1784571042223,
+      "tag": "0012_easy_wildside",
+      "breakpoints": true
     }
   ]
 }

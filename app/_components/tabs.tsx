@@ -14,6 +14,7 @@ export default function Tabs() {
   const tabs = [
     { url: '/analytics/overview', name: 'Overview' },
     { url: '/analytics/status-per-platform', name: 'Status per Platform' },
+    { url: '/analytics/insights', name: 'Journey Insights' },
   ];
 
   return (

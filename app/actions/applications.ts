@@ -3,7 +3,7 @@
 import { revalidateTag, unstable_cache } from 'next/cache';
 
 import { db } from '@/app/db';
-import { insertApplicationSchema, jobApplications } from '@/app/db/schema';
+import { insertApplicationSchema, jobApplications, applicationStatusHistory } from '@/app/db/schema';
 import { z } from 'zod';
 import { and, desc, eq } from 'drizzle-orm';
 
@@ -93,6 +93,15 @@ export async function createApplication(values: FormValues) {
     .insert(jobApplications)
     .values(application)
     .returning({ insertedId: jobApplications.id });
+
+  if (result[0]?.insertedId) {
+    await db.insert(applicationStatusHistory).values({
+      applicationId: result[0].insertedId,
+      status: normalizedValues.status,
+      statusCategory: normalizedValues.statusCategory ?? 'applied',
+    });
+  }
+
   revalidateTag(applicationsTag(userId));
   return result;
 }
@@ -114,6 +123,7 @@ export async function updateApplication(values: FormValues) {
     return;
   }
   const userId = await getCurrentUserIdOrThrow();
+  const applicationId = values.id;
 
   const normalizedValues = normalizeApplicationStatus(values);
   const application = {
@@ -122,14 +132,43 @@ export async function updateApplication(values: FormValues) {
     year: format(new Date(normalizedValues.date_applied), 'yyyy'),
   };
 
+  // Fetch current application to see if status has changed
+  const currentApp = await db
+    .select({
+      status: jobApplications.status,
+      statusCategory: jobApplications.statusCategory,
+    })
+    .from(jobApplications)
+    .where(
+      and(
+        eq(jobApplications.userId, userId),
+        eq(jobApplications.id, applicationId)
+      )
+    )
+    .limit(1);
+
+  const statusChanged =
+    !currentApp[0] ||
+    currentApp[0].status !== normalizedValues.status ||
+    currentApp[0].statusCategory !== normalizedValues.statusCategory;
+
   await db
     .update(jobApplications)
     .set(application)
     .where(
       and(
         eq(jobApplications.userId, userId),
-        eq(jobApplications.id, application.id!)
+        eq(jobApplications.id, applicationId)
       )
     );
+
+  if (statusChanged) {
+    await db.insert(applicationStatusHistory).values({
+      applicationId,
+      status: normalizedValues.status,
+      statusCategory: normalizedValues.statusCategory ?? 'applied',
+    });
+  }
+
   revalidateTag(applicationsTag(userId));
 }

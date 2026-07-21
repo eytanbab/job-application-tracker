@@ -1,10 +1,10 @@
 "use server";
 import { addDays, format, subDays } from "date-fns";
-import { and, count, desc, eq, gte, lt } from "drizzle-orm";
+import { and, count, desc, eq, gte, lt, inArray } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 
 import { db } from "@/app/db";
-import { jobApplications } from "@/app/db/schema";
+import { jobApplications, applicationStatusHistory } from "@/app/db/schema";
 
 import {
   formatApplicationsPerYear,
@@ -824,6 +824,163 @@ export async function getPlatformPerformance() {
         .slice(0, 5);
     },
     ["analytics", "platform-performance", userId],
+    {
+      revalidate: CACHE_REVALIDATE_SECONDS,
+      tags: [applicationsTag(userId)],
+    }
+  )();
+}
+
+export async function getDetailedApplicationBreakdown(month?: string, year?: string) {
+  const userId = await getCurrentUserIdOrThrow();
+
+  const whereClause = [eq(jobApplications.userId, userId)];
+  if (month && month !== "all")
+    whereClause.push(eq(jobApplications.month, month));
+  if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
+
+  return unstable_cache(
+    async () => {
+      // 1. Fetch all applications matching the filter
+      const apps = await db
+        .select({
+          id: jobApplications.id,
+          status: jobApplications.status,
+          statusCategory: jobApplications.statusCategory,
+          createdAt: jobApplications.createdAt,
+          dateApplied: jobApplications.date_applied,
+        })
+        .from(jobApplications)
+        .where(and(...whereClause));
+
+      if (apps.length === 0) {
+        return {
+          total: 0,
+          stages: {
+            applied: 0,
+            interview: 0,
+            accepted: 0,
+          },
+          breakdown: {
+            active: 0,
+            offered: 0,
+            rejectedResume: 0,
+            rejectedInterview: 0,
+            ghostedResume: 0,
+            ghostedInterview: 0,
+          },
+          resumeConversion: 0,
+          interviewConversion: 0,
+        };
+      }
+
+      // 2. Fetch history for these applications
+      const appIds = apps.map((app) => app.id);
+      const history = await db
+        .select({
+          applicationId: applicationStatusHistory.applicationId,
+          statusCategory: applicationStatusHistory.statusCategory,
+          status: applicationStatusHistory.status,
+        })
+        .from(applicationStatusHistory)
+        .where(inArray(applicationStatusHistory.applicationId, appIds));
+
+      // Group history by applicationId
+      const historyMap = new Map<string, typeof history>();
+      history.forEach((h) => {
+        if (!historyMap.has(h.applicationId)) {
+          historyMap.set(h.applicationId, []);
+        }
+        historyMap.get(h.applicationId)!.push(h);
+      });
+
+      let activeCount = 0;
+      let offeredCount = 0;
+      let rejectedResumeCount = 0;
+      let rejectedInterviewCount = 0;
+      let ghostedResumeCount = 0;
+      let ghostedInterviewCount = 0;
+
+      const thirtyDaysAgo = subDays(new Date(), 30);
+
+      apps.forEach((app) => {
+        const appHistory = historyMap.get(app.id) || [];
+        
+        // Did it ever reach the interview stage?
+        const reachedInterview =
+          didReachInterviewStage(app.status, app.statusCategory) ||
+          appHistory.some((h) => didReachInterviewStage(h.status, h.statusCategory));
+
+        const currentKind = getStatusKind(app.status, app.statusCategory);
+
+        if (currentKind === "accepted") {
+          offeredCount++;
+        } else if (currentKind === "applied" || currentKind === "review" || currentKind === "interview") {
+          // Check if it should be classified as ghosted (applied > 30 days ago with no response)
+          const dateApplied = new Date(app.dateApplied);
+          const isOlderThan30Days = dateApplied < thirtyDaysAgo;
+
+          if (isOlderThan30Days && currentKind === "applied") {
+            if (reachedInterview) {
+              ghostedInterviewCount++;
+            } else {
+              ghostedResumeCount++;
+            }
+          } else {
+            activeCount++;
+          }
+        } else if (currentKind === "ghosted") {
+          if (reachedInterview) {
+            ghostedInterviewCount++;
+          } else {
+            ghostedResumeCount++;
+          }
+        } else if (currentKind === "rejected") {
+          if (reachedInterview) {
+            rejectedInterviewCount++;
+          } else {
+            rejectedResumeCount++;
+          }
+        } else {
+          activeCount++;
+        }
+      });
+
+      const total = apps.length;
+      
+      // Calculate funnel counts (unique applications that reached each stage)
+      const uniqueApplied = total;
+      const uniqueInterview = apps.filter(app => {
+        const appHistory = historyMap.get(app.id) || [];
+        return didReachInterviewStage(app.status, app.statusCategory) ||
+          appHistory.some(h => didReachInterviewStage(h.status, h.statusCategory));
+      }).length;
+      const uniqueOffer = offeredCount;
+
+      // Conversions
+      const resumeConversion = uniqueApplied ? (uniqueInterview / uniqueApplied) * 100 : 0;
+      const interviewConversion = uniqueInterview ? (uniqueOffer / uniqueInterview) * 100 : 0;
+
+      return {
+        total,
+        stages: {
+          applied: uniqueApplied,
+          interview: uniqueInterview,
+          accepted: uniqueOffer,
+        },
+        breakdown: {
+          active: activeCount,
+          offered: offeredCount,
+          rejectedResume: rejectedResumeCount,
+          rejectedInterview: rejectedInterviewCount,
+          ghostedResume: ghostedResumeCount,
+          ghostedInterview: ghostedInterviewCount,
+        },
+        resumeConversion,
+        interviewConversion,
+      };
+    },
+    ["analytics", "detailed-breakdown", userId, month || "all", year || "all"],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],

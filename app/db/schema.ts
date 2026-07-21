@@ -41,3 +41,16 @@ export const documents = pgTable('documents', {
   file_name: varchar('file_name').notNull(),
   file_key: varchar('file_key').notNull(),
 });
+
+export const applicationStatusHistory = pgTable('application_status_history', {
+  id: uuid().defaultRandom().primaryKey(),
+  applicationId: uuid('application_id')
+    .notNull()
+    .references(() => jobApplications.id, { onDelete: 'cascade' }),
+  status: varchar('status', { length: 255 }).notNull(),
+  statusCategory: varchar('status_category', { length: 32 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const insertStatusHistorySchema = createInsertSchema(applicationStatusHistory);
+
