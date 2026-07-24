@@ -1,21 +1,11 @@
-import {
-  getApplicationsPerYear,
-  getStasusesPerYear,
-  getTop5Companies,
-  getTop5Locations,
-  getTop5Platforms,
-  getTop5RoleNames,
-  getTop5Statuses,
-  getYears,
-} from "@/app/actions/analytics";
-
-import { PieChartComponent } from "../components/pie-chart";
 import { Section } from "../components/Section";
-import { StatusesPerYearBarChart } from "../components/statuses-per-year-bar-chart";
-import { TotalApplicationsPerYearBarChart } from "../components/total-applications-per-year-bar-chart";
-import { KpiSummary } from "../components/kpi-summary";
 import { AnalyticsFilter } from "../components/analytics-filter";
-import { getStatusKind } from "@/lib/utils";
+import { getOverviewMetrics, getApplicationVelocity } from "./actions";
+import { getYears } from "@/app/actions/analytics";
+import { DiagnosticBanner } from "./components/diagnostic-banner";
+import { KpiStrip } from "./components/kpi-strip";
+import { BrutalFunnel } from "./components/brutal-funnel";
+import { VelocityChart } from "./components/velocity-chart";
 
 export async function generateMetadata() {
   return {
@@ -27,114 +17,65 @@ export default async function Overview(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const searchParams = await props.searchParams;
-  const month =
-    typeof searchParams.month === "string" ? searchParams.month : undefined;
-  const year =
-    typeof searchParams.year === "string" ? searchParams.year : undefined;
+  const month = typeof searchParams.month === "string" ? searchParams.month : undefined;
+  const year = typeof searchParams.year === "string" ? searchParams.year : undefined;
 
-  const [
-    top5Companies,
-    top5Statuses,
-    top5Platforms,
-    top5Locations,
-    top5RoleNames,
-    applicationsPerYear,
-    years,
-    statusesPerYear,
-  ] = await Promise.all([
-    getTop5Companies(month, year),
-    getTop5Statuses(month, year),
-    getTop5Platforms(month, year),
-    getTop5Locations(month, year),
-    getTop5RoleNames(month, year),
-    getApplicationsPerYear(month, year),
+  const [metrics, velocity, years] = await Promise.all([
+    getOverviewMetrics(month, year),
+    getApplicationVelocity(month, year),
     getYears(),
-    getStasusesPerYear(month, year),
   ]);
 
-  if (top5Companies.length === 0 && !month && !year)
+  if (metrics.totalApplications === 0 && !month && !year) {
     return (
-      <p>No applications found. Add an application to see the analytics.</p>
+      <Section>
+        <div className="col-span-full">
+          <AnalyticsFilter years={years} />
+        </div>
+        <div className="col-span-full flex h-60 items-center justify-center rounded-lg border border-dashed">
+          <p className="text-muted-foreground">
+            No applications found. Add an application to see the analytics.
+          </p>
+        </div>
+      </Section>
     );
-
-  const totalApplications = applicationsPerYear.reduce(
-    (sum, entry) => sum + Number(entry.numOfApplications),
-    0
-  );
-  const interviewCount = statusesPerYear.reduce(
-    (sum, entry) =>
-      getStatusKind(entry.status) === "interview"
-        ? sum + Number(entry.statusCount)
-        : sum,
-    0
-  );
-  const rejectionCount = statusesPerYear.reduce(
-    (sum, entry) =>
-      getStatusKind(entry.status) === "rejected"
-        ? sum + Number(entry.statusCount)
-        : sum,
-    0
-  );
-  const responseCount = statusesPerYear.reduce((sum, entry) => {
-    const statusKind = getStatusKind(entry.status);
-    return statusKind !== "applied" && statusKind !== "ghosted"
-      ? sum + Number(entry.statusCount)
-      : sum;
-  }, 0);
-
-  const interviewRate = totalApplications
-    ? interviewCount / totalApplications
-    : 0;
-  const rejectionRate = totalApplications
-    ? rejectionCount / totalApplications
-    : 0;
-  const responseRate = totalApplications
-    ? responseCount / totalApplications
-    : 0;
+  }
 
   return (
     <Section>
-      <div className="col-span-full">
-        <AnalyticsFilter years={years} />
-      </div>
-      {top5Companies.length === 0 ? (
-        <div className="col-span-full flex h-60 items-center justify-center rounded-lg border border-dashed">
-          <p className="text-muted-foreground">
-            No data found for the selected period.
-          </p>
+      <div className="col-span-full mb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Pipeline Overview</h1>
+            <p className="text-sm text-muted-foreground mt-1">Macro-level performance & health diagnostics.</p>
+          </div>
+          <AnalyticsFilter years={years} />
         </div>
-      ) : (
-        <>
-          <KpiSummary
-            totalApplications={totalApplications}
-            interviewRate={interviewRate}
-            rejectionRate={rejectionRate}
-            responseRate={responseRate}
+      </div>
+
+      <div className="col-span-full grid grid-cols-1 xl:grid-cols-12 gap-6 w-full">
+        <DiagnosticBanner 
+          totalApplications={metrics.totalApplications} 
+          interviewYield={metrics.interviewYield} 
+          ghostRate={metrics.ghostRate}
+        />
+        
+        <KpiStrip 
+          totalApplications={metrics.totalApplications}
+          activePipeline={metrics.activePipeline}
+          interviewYield={metrics.interviewYield}
+          ghostRate={metrics.ghostRate}
+        />
+
+        <div className="col-span-full grid grid-cols-1 xl:grid-cols-12 gap-6">
+          <BrutalFunnel 
+            applied={metrics.totalApplications} 
+            interview={metrics.interview} 
+            offer={metrics.accepted} 
           />
-          <PieChartComponent title="Top 5 companies" data={top5Companies} />
-          <PieChartComponent title="Top 5 platforms" data={top5Platforms} />
-          <PieChartComponent
-            title="Top 5 Applications status"
-            data={top5Statuses}
-          />
-          <PieChartComponent title="Top 5 Locations" data={top5Locations} />
-          <PieChartComponent title="Top 5 Roles" data={top5RoleNames} />
-          {(!month || month === "all") && (
-            <div className="col-span-full grid w-full grid-cols-1 gap-4 3xl:grid-cols-2">
-              <StatusesPerYearBarChart
-                years={years}
-                rawData={statusesPerYear}
-                globalYear={year}
-              />
-              <TotalApplicationsPerYearBarChart
-                years={years}
-                data={applicationsPerYear}
-                globalYear={year}
-              />
-            </div>
-          )}
-        </>
-      )}
+          <VelocityChart data={velocity} />
+        </div>
+      </div>
     </Section>
   );
 }
