@@ -33,6 +33,7 @@ import {
   statusLabels,
   statusOptions,
   type StatusKind,
+  didReachInterviewStage,
 } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Plus, X } from "lucide-react";
@@ -100,6 +101,11 @@ export function DataTable<
   const [statusFilter, setStatusFilter] = useQueryState(
     "status",
     parseAsString.withDefault("").withOptions({ shallow: false })
+  );
+
+  const [reachedInterviewFilter] = useQueryState(
+    "reachedInterview",
+    parseAsString.withOptions({ shallow: false })
   );
 
   const [sortingState, setSortingState] = useQueryStates(
@@ -186,8 +192,15 @@ export function DataTable<
     setStatusFilter((status as string) || null);
   };
 
+  const filteredData = useMemo(() => {
+    if (reachedInterviewFilter === "true") {
+      return data.filter(item => didReachInterviewStage(item.status, item.statusCategory));
+    }
+    return data;
+  }, [data, reachedInterviewFilter]);
+
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -260,9 +273,19 @@ export function DataTable<
             </SelectContent>
           </Select>
         </div>
-        <Link href="/applications/new" className="hidden md:inline-block">
-          <Button variant="outline">New application</Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          {reachedInterviewFilter === "true" && (
+            <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20 px-3 py-1">
+              Reached Interview Stage
+              <Link href="/applications" className="ml-2 hover:text-foreground">
+                <X className="h-3 w-3" />
+              </Link>
+            </Badge>
+          )}
+          <Link href="/applications/new" className="hidden md:inline-block">
+            <Button variant="outline">New application</Button>
+          </Link>
+        </div>
       </div>
 
       <Table>
