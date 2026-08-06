@@ -1,26 +1,62 @@
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
+'use client';
+
+import { Show, SignInButton, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import { ModeToggle } from './mode-toggle';
 import { MobileSideNav } from './side-nav-mobile';
+import { Sparkles } from 'lucide-react';
+
+const pageTitles: Record<string, string> = {
+  applications: 'Job Applications',
+  analytics: 'Analytics & Performance',
+  documents: 'Career Documents',
+};
 
 const Nav = () => {
+  const pathname = usePathname();
+  const rootSection = pathname.split('/')[1] || 'applications';
+  const currentTitle = pageTitles[rootSection] || 'Job Tracker';
+
   return (
-    <div className='sticky top-0 z-50 flex h-14 w-full items-center justify-between border-b border-border/60 bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/80'>
-      <Link href='/' className='text-2xl font-black tracking-tight text-foreground'>
-        JAT
-      </Link>
-      <div className='flex gap-4 items-center'>
-        <ModeToggle />
-        <SignedOut>
-          <SignInButton />
-        </SignedOut>
-        <SignedIn>
-          <UserButton />
-        </SignedIn>
-        <MobileSideNav />
+    <header className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-border/30 bg-background/80 px-4 sm:px-6 backdrop-blur-md">
+      {/* Mobile Logo & Desktop Page Title */}
+      <div className="flex items-center gap-3">
+        {/* Mobile-only Logo */}
+        <Link href="/" className="flex md:hidden items-center gap-2 group cursor-pointer">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs">
+            <Sparkles className="h-4 w-4" />
+          </div>
+          <span className="text-base font-bold tracking-tight text-foreground">
+            JobTracker
+          </span>
+        </Link>
+
+        {/* Desktop Breadcrumb/Page Title */}
+        <div className="hidden md:flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground font-medium">Dashboard</span>
+          <span className="text-muted-foreground/60">/</span>
+          <span className="font-semibold text-foreground">{currentTitle}</span>
+        </div>
       </div>
-    </div>
+
+      {/* Right Controls */}
+      <div className="flex items-center gap-3">
+        <ModeToggle />
+        <Show when="signed-out">
+          <SignInButton />
+        </Show>
+        <Show when="signed-in">
+          <UserButton />
+        </Show>
+
+        {/* Mobile Hamburger Drawer Trigger (< md only) */}
+        <div className="md:hidden">
+          <MobileSideNav />
+        </div>
+      </div>
+    </header>
   );
 };
 

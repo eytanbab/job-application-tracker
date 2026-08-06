@@ -1,19 +1,20 @@
-'use server';
+"use server";
 
-import { revalidateTag, unstable_cache } from 'next/cache';
+import { revalidateTag, unstable_cache } from "next/cache";
 
-import { db } from '@/app/db';
-import { insertApplicationSchema, jobApplications, applicationStatusHistory } from '@/app/db/schema';
-import { z } from 'zod';
-import { and, desc, eq } from 'drizzle-orm';
-
-import { format } from 'date-fns';
+import { db } from "@/app/db";
 import {
-  applicationsTag,
-  CACHE_REVALIDATE_SECONDS,
-} from './_utils/cache-tags';
-import { getCurrentUserIdOrThrow } from './_utils/user-context';
-import { getStatusDisplay, getStatusKind } from '@/lib/utils';
+  insertApplicationSchema,
+  jobApplications,
+  applicationStatusHistory,
+} from "@/app/db/schema";
+import { z } from "zod";
+import { and, desc, eq } from "drizzle-orm";
+
+import { format } from "date-fns";
+import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
+import { getCurrentUserIdOrThrow } from "./_utils/user-context";
+import { getStatusDisplay, getStatusKind } from "@/lib/utils";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
@@ -47,13 +48,13 @@ export async function getApplications() {
         .where(eq(jobApplications.userId, userId))
         .orderBy(
           desc(jobApplications.date_applied),
-          desc(jobApplications.createdAt)
+          desc(jobApplications.createdAt),
         ),
-    ['applications', 'list', userId],
+    ["applications", "list", userId],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
-    }
+    },
   )();
 }
 
@@ -67,13 +68,13 @@ export async function getApplication(id: string) {
         .select()
         .from(jobApplications)
         .where(
-          and(eq(jobApplications.userId, userId), eq(jobApplications.id, id))
+          and(eq(jobApplications.userId, userId), eq(jobApplications.id, id)),
         ),
-    ['applications', 'detail', userId, id],
+    ["applications", "detail", userId, id],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
-    }
+    },
   )();
 }
 
@@ -85,8 +86,8 @@ export async function createApplication(values: FormValues) {
   const application: z.input<typeof insertApplicationSchema> = {
     ...normalizedValues,
     userId,
-    month: format(new Date(normalizedValues.date_applied), 'M'),
-    year: format(new Date(normalizedValues.date_applied), 'yyyy'),
+    month: format(new Date(normalizedValues.date_applied), "M"),
+    year: format(new Date(normalizedValues.date_applied), "yyyy"),
   };
 
   const result = await db
@@ -98,11 +99,11 @@ export async function createApplication(values: FormValues) {
     await db.insert(applicationStatusHistory).values({
       applicationId: result[0].insertedId,
       status: normalizedValues.status,
-      statusCategory: normalizedValues.statusCategory ?? 'applied',
+      statusCategory: normalizedValues.statusCategory ?? "applied",
     });
   }
 
-  revalidateTag(applicationsTag(userId));
+  revalidateTag(applicationsTag(userId), "max");
   return result;
 }
 
@@ -114,7 +115,7 @@ export async function deleteApplication(id: string) {
     .delete(jobApplications)
     .where(and(eq(jobApplications.userId, userId), eq(jobApplications.id, id)));
 
-  revalidateTag(applicationsTag(userId));
+  revalidateTag(applicationsTag(userId), "max");
 }
 
 // Update an application of current user
@@ -128,8 +129,8 @@ export async function updateApplication(values: FormValues) {
   const normalizedValues = normalizeApplicationStatus(values);
   const application = {
     ...normalizedValues,
-    month: format(new Date(normalizedValues.date_applied), 'M'),
-    year: format(new Date(normalizedValues.date_applied), 'yyyy'),
+    month: format(new Date(normalizedValues.date_applied), "M"),
+    year: format(new Date(normalizedValues.date_applied), "yyyy"),
   };
 
   // Fetch current application to see if status has changed
@@ -142,8 +143,8 @@ export async function updateApplication(values: FormValues) {
     .where(
       and(
         eq(jobApplications.userId, userId),
-        eq(jobApplications.id, applicationId)
-      )
+        eq(jobApplications.id, applicationId),
+      ),
     )
     .limit(1);
 
@@ -158,17 +159,43 @@ export async function updateApplication(values: FormValues) {
     .where(
       and(
         eq(jobApplications.userId, userId),
-        eq(jobApplications.id, applicationId)
-      )
+        eq(jobApplications.id, applicationId),
+      ),
     );
 
   if (statusChanged) {
     await db.insert(applicationStatusHistory).values({
       applicationId,
       status: normalizedValues.status,
-      statusCategory: normalizedValues.statusCategory ?? 'applied',
+      statusCategory: normalizedValues.statusCategory ?? "applied",
     });
   }
 
-  revalidateTag(applicationsTag(userId));
+  revalidateTag(applicationsTag(userId), "max");
+}
+
+// Get status history for a single application
+export async function getApplicationHistory(applicationId: string) {
+  const userId = await getCurrentUserIdOrThrow();
+
+  const app = await db
+    .select({ id: jobApplications.id })
+    .from(jobApplications)
+    .where(
+      and(
+        eq(jobApplications.userId, userId),
+        eq(jobApplications.id, applicationId),
+      ),
+    )
+    .limit(1);
+
+  if (!app.length) {
+    return [];
+  }
+
+  return db
+    .select()
+    .from(applicationStatusHistory)
+    .where(eq(applicationStatusHistory.applicationId, applicationId))
+    .orderBy(desc(applicationStatusHistory.createdAt));
 }

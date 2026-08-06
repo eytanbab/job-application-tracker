@@ -68,7 +68,7 @@ export async function createFile(
     .insert(documents)
     .values({ title, doc_url, userId, file_name, file_key })
     .returning({ insertedId: documents.id });
-  revalidateTag(documentsTag(userId));
+  revalidateTag(documentsTag(userId), 'max');
 }
 
 export async function getFiles() {
@@ -107,7 +107,7 @@ export async function deleteFile(id: string) {
     console.error("Delete document error:", err);
     throw err;
   } finally {
-    revalidateTag(documentsTag(userId));
+    revalidateTag(documentsTag(userId), 'max');
   }
 }
 

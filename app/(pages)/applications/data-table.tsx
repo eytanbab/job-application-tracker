@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   ColumnDef,
@@ -11,7 +11,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table";
+} from '@tanstack/react-table';
 
 import {
   Table,
@@ -20,45 +20,76 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import {
-  cn,
+  getStatusDisplay,
   getStatusKind,
-  statusLabels,
   statusOptions,
   type StatusKind,
-} from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Plus, X } from "lucide-react";
+} from '@/lib/utils';
+import {
+  Plus,
+  X,
+  LayoutList,
+  LayoutGrid,
+  Search,
+  Building2,
+  Calendar,
+  ExternalLink,
+  MapPin,
+  RotateCcw,
+} from 'lucide-react';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   useQueryState,
   parseAsString,
   parseAsInteger,
   useQueryStates,
-} from "nuqs";
-import { OnChangeFn } from "@tanstack/react-table";
+} from 'nuqs';
+import { OnChangeFn } from '@tanstack/react-table';
 
-interface DataTableProps<
-  TData extends {
-    status: string;
-    statusCategory?: string | null;
-    statusLabel?: string | null;
-  },
-  TValue
-> {
+import { ApplicationsKpiSummary } from './components/applications-kpi-summary';
+import { ApplicationsKanban } from './components/applications-kanban';
+import { ApplicationDetailSheet } from './components/application-detail-sheet';
+import { EditApplicationSheet } from '@/app/_components/edit-application-sheet';
+import { type FormValues } from './columns';
+import { deleteApplication, updateApplication } from '@/app/actions/applications';
+import { toast } from '@/hooks/use-toast';
+import { formatDate, parseISO } from 'date-fns';
+
+interface ApplicationRow {
+  id?: string;
+  role_name: string;
+  company_name: string;
+  date_applied: string;
+  link: string;
+  platform: string;
+  status: string;
+  statusCategory?: string | null;
+  statusLabel?: string | null;
+  month: string;
+  year: string;
+  description?: string | null;
+  location: string;
+  salary?: string | null;
+  [key: string]: unknown;
+}
+
+interface DataTableProps<TData extends ApplicationRow, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
@@ -68,38 +99,45 @@ const MOBILE_DEFAULT_PAGE_SIZE = 5;
 const DESKTOP_DEFAULT_PAGE_SIZE = 10;
 
 const statusBadgeClasses: Record<StatusKind, string> = {
-  applied: "bg-primary/15 text-primary",
+  applied: 'bg-primary/15 text-primary border border-primary/25 rounded-md font-semibold',
   accepted:
-    "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-300",
-  ghosted: "bg-muted text-muted-foreground",
-  review: "bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300",
-  interview: "bg-cyan-100 text-cyan-900 dark:bg-cyan-900/30 dark:text-cyan-300",
-  rejected: "bg-destructive/15 text-destructive",
-  other: "bg-secondary text-secondary-foreground",
+    'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 rounded-md font-semibold',
+  ghosted: 'bg-muted/80 text-muted-foreground border border-border/50 rounded-md font-medium',
+  review: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/25 rounded-md font-semibold',
+  interview:
+    'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25 rounded-md font-semibold',
+  rejected: 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/25 rounded-md font-semibold',
+  other: 'bg-secondary text-secondary-foreground border border-border rounded-md font-medium',
 };
 
-export function DataTable<
-  TData extends {
-    status: string;
-    statusCategory?: string | null;
-    statusLabel?: string | null;
-  },
-  TValue
->({
+export function DataTable<TData extends ApplicationRow, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
-  // URL-bound state with nuqs
+  // View mode: 'table' or 'kanban'
+  const [viewMode, setViewMode] = useQueryState(
+    'view',
+    parseAsString.withDefault('table').withOptions({ shallow: false })
+  );
+
+  // Selected application for detail sheet
+  const [selectedApp, setSelectedApp] = useState<TData | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  // App to edit via EditApplicationSheet
+  const [editingApp, setEditingApp] = useState<TData | null>(null);
+
+  // URL-bound filter & page state
   const [globalFilter, setGlobalFilter] = useQueryState(
-    "q",
+    'q',
     parseAsString
-      .withDefault("")
+      .withDefault('')
       .withOptions({ shallow: false, throttleMs: 300 })
   );
 
   const [statusFilter, setStatusFilter] = useQueryState(
-    "status",
-    parseAsString.withDefault("").withOptions({ shallow: false })
+    'status',
+    parseAsString.withDefault('').withOptions({ shallow: false })
   );
 
   const [sortingState, setSortingState] = useQueryStates(
@@ -111,79 +149,72 @@ export function DataTable<
   );
 
   const [page, setPage] = useQueryState(
-    "page",
+    'page',
     parseAsInteger.withDefault(1).withOptions({ shallow: false })
   );
 
   const [pageSizeParam, setPageSizeParam] = useQueryState(
-    "size",
+    'size',
     parseAsInteger.withOptions({
       shallow: false,
     })
   );
 
-  // Client-side device detection for default page size
-  const [devicePageSize, setDevicePageSize] = useState<number>(
-    MOBILE_DEFAULT_PAGE_SIZE
-  );
+  // Derive initial sorting from URL parameters
+  const sorting: SortingState = useMemo(() => {
+    if (sortingState.sort) {
+      return [
+        {
+          id: sortingState.sort,
+          desc: sortingState.dir === 'desc',
+        },
+      ];
+    }
+    return [];
+  }, [sortingState.sort, sortingState.dir]);
 
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
+  // Sync status filter from query param to column filter
   useEffect(() => {
-    const isDesktop = window.matchMedia("(min-width: 768px)").matches;
-    setDevicePageSize(
-      isDesktop ? DESKTOP_DEFAULT_PAGE_SIZE : MOBILE_DEFAULT_PAGE_SIZE
-    );
-  }, []);
-
-  const pageSize = pageSizeParam ?? devicePageSize;
-
-  const sorting = useMemo<SortingState>(
-    () =>
-      sortingState.sort
-        ? [{ id: sortingState.sort, desc: sortingState.dir === "desc" }]
-        : [],
-    [sortingState]
-  );
-
-  const columnFilters = useMemo<ColumnFiltersState>(
-    () => (statusFilter ? [{ id: "status", value: statusFilter }] : []),
-    [statusFilter]
-  );
-
-  const pagination = useMemo<PaginationState>(
-    () => ({
-      pageIndex: page - 1,
-      pageSize: pageSize,
-    }),
-    [page, pageSize]
-  );
-
-  const setSorting: OnChangeFn<SortingState> = (updater) => {
-    const next = typeof updater === "function" ? updater(sorting) : updater;
-    const sort = next[0];
-    if (sort) {
-      setSortingState({ sort: sort.id, dir: sort.desc ? "desc" : "asc" });
+    if (statusFilter) {
+      setColumnFilters([{ id: 'status', value: statusFilter }]);
     } else {
-      setSortingState({ sort: null, dir: null });
+      setColumnFilters([]);
     }
+  }, [statusFilter]);
+
+  const [{ pageIndex, pageSize }, setPagination] = useState<PaginationState>({
+    pageIndex: page - 1,
+    pageSize: pageSizeParam ?? 10,
+  });
+
+  // Sync pagination state with query params
+  useEffect(() => {
+    setPagination({
+      pageIndex: page - 1,
+      pageSize: pageSizeParam ?? 10,
+    });
+  }, [page, pageSizeParam]);
+
+  const handleSelectRow = (app: TData) => {
+    setSelectedApp(app);
+    setIsDetailOpen(true);
   };
 
-  const setPagination: OnChangeFn<PaginationState> = (updater) => {
-    const next = typeof updater === "function" ? updater(pagination) : updater;
-
-    if (next.pageIndex !== pagination.pageIndex) {
-      setPage(next.pageIndex + 1);
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteApplication(id);
+      toast({ description: 'Application deleted successfully.' });
+      if (selectedApp?.id === id) {
+        setIsDetailOpen(false);
+      }
+    } catch {
+      toast({
+        description: 'Failed to delete application.',
+        variant: 'destructive',
+      });
     }
-
-    if (next.pageSize !== pagination.pageSize) {
-      setPageSizeParam(next.pageSize);
-    }
-  };
-
-  const setColumnFilters: OnChangeFn<ColumnFiltersState> = (updater) => {
-    const next =
-      typeof updater === "function" ? updater(columnFilters) : updater;
-    const status = next.find((f) => f.id === "status")?.value;
-    setStatusFilter((status as string) || null);
   };
 
   const table = useReactTable({
@@ -191,19 +222,42 @@ export function DataTable<
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
+    onSortingChange: (updaterOrValue) => {
+      const nextSorting =
+        typeof updaterOrValue === 'function'
+          ? updaterOrValue(sorting)
+          : updaterOrValue;
+      if (nextSorting.length > 0) {
+        setSortingState({
+          sort: nextSorting[0].id,
+          dir: nextSorting[0].desc ? 'desc' : 'asc',
+        });
+      } else {
+        setSortingState({ sort: null, dir: null });
+      }
+    },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    globalFilterFn: "includesString",
+    globalFilterFn: 'includesString',
     onGlobalFilterChange: setGlobalFilter,
     onColumnFiltersChange: setColumnFilters,
-    onPaginationChange: setPagination,
+    onPaginationChange: (updater) => {
+      const next = typeof updater === 'function' ? updater({ pageIndex, pageSize }) : updater;
+      if (next.pageIndex !== pageIndex) {
+        setPage(next.pageIndex + 1);
+      }
+      if (next.pageSize !== pageSize) {
+        setPageSizeParam(next.pageSize);
+      }
+    },
     autoResetPageIndex: false,
-
+    meta: {
+      onSelectApplication: handleSelectRow,
+    },
     state: {
       sorting,
       globalFilter,
-      pagination,
+      pagination: { pageIndex, pageSize },
       columnFilters,
     },
   });
@@ -215,36 +269,52 @@ export function DataTable<
     return statusOptions.filter((status) => uniqueStatuses.has(status.value));
   }, [data]);
 
+  const hasActiveFilters = Boolean(globalFilter || statusFilter);
+
+  const clearFilters = () => {
+    setGlobalFilter('');
+    setStatusFilter(null);
+  };
+
   return (
-    <div className="w-full">
-      <div className="flex items-center py-4 justify-between gap-2">
-        <div className="flex items-center gap-2 flex-1">
-          <div className="relative w-full max-w-sm">
+    <div className="w-full space-y-6">
+      {/* 1. KPI Top Summary Bar */}
+      <ApplicationsKpiSummary data={data} />
+
+      {/* 2. Controls Toolbar: Search, Filters, View Switcher & Primary Action */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        {/* Left: Search & Filter */}
+        <div className="flex flex-wrap items-center gap-2 flex-1">
+          <div className="relative flex-1 min-w-[200px] max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
-              placeholder="Search..."
+              placeholder="Search by role, company, location..."
               value={globalFilter}
               onChange={(e) => setGlobalFilter(String(e.target.value))}
-              className="w-full"
+              className="pl-9 pr-8 w-full bg-background"
             />
             {globalFilter.length > 0 && (
-              <X
-                className="absolute right-2 top-1/2 size-6 -translate-y-1/2 cursor-pointer rounded-full p-1 transition-colors hover:bg-accent"
-                onClick={() => table.setGlobalFilter("")}
-              />
+              <button
+                onClick={() => setGlobalFilter('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
             )}
           </div>
+
           <Select
             value={
-              (table.getColumn("status")?.getFilterValue() as string) ?? "all"
+              (table.getColumn('status')?.getFilterValue() as string) ?? 'all'
             }
             onValueChange={(value) => {
               table
-                .getColumn("status")
-                ?.setFilterValue(value === "all" ? "" : value);
+                .getColumn('status')
+                ?.setFilterValue(value === 'all' ? '' : value);
             }}
           >
-            <SelectTrigger className="w-[180px] capitalize">
-              <SelectValue placeholder="Filter by Status" />
+            <SelectTrigger className="w-[160px] sm:w-[180px] capitalize bg-background">
+              <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
@@ -259,145 +329,284 @@ export function DataTable<
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <Link href="/applications/new" className="hidden md:inline-block">
-          <Button variant="outline">New application</Button>
-        </Link>
-      </div>
 
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className="border-b border-border">
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead
-                    key={header.id}
-                    className="p-0 font-bold text-foreground"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-                className="capitalize border-b border-border text-foreground hover:bg-accent hover:text-accent-foreground"
-              >
-                {row.getVisibleCells().map((cell) =>
-                  cell.column.id === "status" ? (
-                    <TableCell
-                      key={cell.id}
-                      className={cn("truncate max-w-60 ")}
-                    >
-                      <Badge
-                        className={cn(
-                          statusBadgeClasses[
-                            getStatusKind(cell.getValue() as string)
-                          ]
-                        )}
-                      >
-                        <span className="sr-only">
-                          {statusLabels[getStatusKind(cell.getValue() as string)]}
-                          :
-                        </span>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </Badge>
-                    </TableCell>
-                  ) : (
-                    <TableCell
-                      key={cell.id}
-                      className={cn(
-                        "truncate max-w-60 ",
-                        cell.column.id === "link" && "lowercase"
-                      )}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  )
-                )}
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
-              </TableCell>
-            </TableRow>
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+              className="text-xs text-muted-foreground hover:text-foreground gap-1.5 h-9"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              Reset Filters
+            </Button>
           )}
-        </TableBody>
-      </Table>
+        </div>
 
-      {/* Pagination buttons */}
-      <div className="flex items-center justify-between py-4">
-        <p>
-          Showing {table.getRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s).
-        </p>
-        <div className="flex gap-2 justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
+        {/* Right: View Switcher & New Application CTA */}
+        <div className="flex items-center justify-between md:justify-end gap-2 border-t md:border-t-0 pt-2 md:pt-0">
+          {/* View Toggle Segmented Buttons */}
+          <div className="inline-flex items-center rounded-xl bg-muted/60 p-1 gap-1">
+            <button
+              type="button"
+              onClick={() => setViewMode('table')}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer',
+                viewMode === 'table'
+                  ? 'bg-background text-foreground shadow-2xs font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <LayoutList className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Table</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('kanban')}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer',
+                viewMode === 'kanban'
+                  ? 'bg-background text-foreground shadow-2xs font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Kanban</span>
+            </button>
+          </div>
+
+          <Link href="/applications/new">
+            <Button className="gap-2 min-h-[38px] font-medium shadow-2xs">
+              <Plus className="h-4 w-4" />
+              <span>Add Application</span>
+            </Button>
+          </Link>
         </div>
       </div>
-      <div className="flex items-center space-x-2">
-        <p className="text-sm font-medium">Rows per page</p>
-        <Select
-          value={`${table.getState().pagination.pageSize}`}
-          onValueChange={(value) => {
-            table.setPageSize(Number(value));
+
+      {/* 3. Main View Section: Table vs Kanban */}
+      {viewMode === 'kanban' ? (
+        <ApplicationsKanban
+          data={data}
+          searchFilter={globalFilter}
+          statusFilter={statusFilter}
+          onSelectApplication={(app) => handleSelectRow(app as TData)}
+          onEditApplication={(app) => setEditingApp(app as TData)}
+          onDeleteApplication={handleDelete}
+        />
+      ) : (
+        <div className="space-y-4">
+          {/* Desktop Table Layout (>= 768px) */}
+          <div className="hidden md:block rounded-xl border border-border/30 bg-card overflow-hidden shadow-2xs">
+            <Table>
+              <TableHeader className="bg-muted/30">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id} className="border-b border-border/30">
+                    {headerGroup.headers.map((header) => {
+                      return (
+                        <TableHead
+                          key={header.id}
+                          className="px-4 py-3 font-bold text-foreground text-xs uppercase tracking-wider"
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && 'selected'}
+                      onClick={() => handleSelectRow(row.original)}
+                      className="cursor-pointer border-b border-border/30 transition-colors hover:bg-accent/40"
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id} className="px-4 py-3 text-sm">
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-32 text-center text-muted-foreground"
+                    >
+                      No applications found. Try adjusting your filters.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile Card Layout (< 768px) */}
+          <div className="md:hidden space-y-3">
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => {
+                const item = row.original;
+                const kind = getStatusKind(item.status, item.statusCategory);
+                const displayLabel = getStatusDisplay(
+                  item.status,
+                  item.statusCategory,
+                  item.statusLabel
+                );
+                const formattedDate = item.date_applied
+                  ? formatDate(parseISO(item.date_applied), 'MMM d, yyyy')
+                  : '';
+
+                return (
+                  <Card
+                    key={row.id}
+                    onClick={() => handleSelectRow(item)}
+                    className="cursor-pointer border bg-card p-4 space-y-3 hover:border-primary/50 transition-all active:scale-[0.99]"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="space-y-1 overflow-hidden">
+                        <h3 className="font-bold text-base text-foreground truncate">
+                          {item.role_name}
+                        </h3>
+                        <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 truncate">
+                          <Building2 className="h-3.5 w-3.5 shrink-0" />
+                          {item.company_name}
+                        </p>
+                      </div>
+
+                      <Badge
+                        variant="outline"
+                        className={`capitalize shrink-0 ${statusBadgeClasses[kind]}`}
+                      >
+                        {displayLabel}
+                      </Badge>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between text-xs text-muted-foreground pt-1 border-t">
+                      <span className="flex items-center gap-1 pt-1">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {formattedDate}
+                      </span>
+
+                      <div className="flex items-center gap-2 pt-1">
+                        {item.location && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3.5 w-3.5" />
+                            {item.location}
+                          </span>
+                        )}
+                        {item.link && (
+                          <a
+                            href={item.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="p-1 text-muted-foreground hover:text-foreground"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })
+            ) : (
+              <div className="text-center p-8 border rounded-xl bg-card text-muted-foreground text-sm">
+                No applications found.
+              </div>
+            )}
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 py-2 px-1 text-xs text-muted-foreground">
+            <p>
+              Showing {table.getRowModel().rows.length} of{' '}
+              {table.getFilteredRowModel().rows.length} application(s)
+            </p>
+
+            <div className="flex items-center gap-4">
+              <div className="flex items-center space-x-2">
+                <span className="font-medium">Rows per page</span>
+                <Select
+                  value={`${table.getState().pagination.pageSize}`}
+                  onValueChange={(value) => {
+                    table.setPageSize(Number(value));
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-[65px] bg-background">
+                    <SelectValue placeholder={table.getState().pagination.pageSize} />
+                  </SelectTrigger>
+                  <SelectContent side="top">
+                    {TABLE_ROWS.map((pageSize) => (
+                      <SelectItem key={pageSize} value={`${pageSize}`}>
+                        {pageSize}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                  className="h-8 text-xs px-3"
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                  className="h-8 text-xs px-3"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Slide-over Detail Sheet */}
+      <ApplicationDetailSheet
+        application={selectedApp}
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        onEditClick={(app) => setEditingApp(app as TData)}
+        onDeleteClick={handleDelete}
+      />
+
+      {/* Hidden Edit Sheet for Kanban/Detail trigger */}
+      {editingApp && (
+        <EditApplicationSheet
+          row={{ original: editingApp as unknown as FormValues }}
+          onSubmit={async (values) => {
+            try {
+              await updateApplication(values);
+              toast({ description: 'Application updated successfully!' });
+              setEditingApp(null);
+            } catch {
+              toast({ description: 'Failed to update application', variant: 'destructive' });
+            }
           }}
-        >
-          <SelectTrigger className="h-8 w-[70px]">
-            <SelectValue placeholder={table.getState().pagination.pageSize} />
-          </SelectTrigger>
-          <SelectContent side="top">
-            {TABLE_ROWS.map((pageSize) => (
-              <SelectItem key={pageSize} value={`${pageSize}`}>
-                {pageSize}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <Link
-        href="/applications/new"
-        className="md:hidden fixed bottom-4 right-4"
-      >
-        <Button className="size-10">
-          <Plus />
-        </Button>
-      </Link>
+        />
+      )}
     </div>
   );
 }

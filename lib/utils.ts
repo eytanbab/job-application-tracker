@@ -19,10 +19,6 @@ export const navItems = [
     url: "/documents",
     name: "documents",
   },
-  // {
-  //   url: '/ai-insights',
-  //   name: 'ai-insights',
-  // },
 ];
 
 const MONTH_NAMES = [
@@ -212,7 +208,13 @@ export const didReachInterviewStage = (
   }
   
   const normalizedStatus = (status ?? "").toLowerCase();
-  return normalizedStatus.includes("interview");
+  return (
+    normalizedStatus.includes("interview") ||
+    normalizedStatus.includes("phone screen") ||
+    normalizedStatus.includes("technical") ||
+    normalizedStatus.includes("onsite") ||
+    normalizedStatus.includes("screening")
+  );
 };
 
 export const getColor = (status: string, statusCategory?: string | null) => {

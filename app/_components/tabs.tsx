@@ -12,29 +12,29 @@ export default function Tabs() {
   const year = searchParams.get('year');
 
   const tabs = [
-    { url: '/analytics/overview', name: 'Overview' },
-    { url: '/analytics/status-per-platform', name: 'Status per Platform' },
+    { url: '/analytics/overview', name: 'Overview & Channels' },
     { url: '/analytics/insights', name: 'Journey Insights' },
   ];
 
   return (
-    <div className='flex w-full flex-row gap-2 rounded-lg border border-border/50 bg-background/60 p-1 backdrop-blur'>
+    <div className="inline-flex w-fit max-w-full overflow-x-auto flex-nowrap items-center gap-1 rounded-xl bg-muted/60 p-1 scrollbar-none">
       {tabs.map((item) => {
         const params = new URLSearchParams();
         if (month) params.set('month', month);
         if (year) params.set('year', year);
         const queryString = params.toString();
         const href = queryString ? `${item.url}?${queryString}` : item.url;
+        const isActive = pathname === item.url;
 
         return (
           <Link
             key={item.url}
             href={href}
             className={cn(
-              'rounded-md px-4 py-2 capitalize text-muted-foreground transition-colors duration-300 hover:bg-accent/70 hover:text-foreground',
-              pathname === `${item.url}`
-                ? 'bg-primary/15 text-foreground'
-                : ''
+              'inline-flex items-center shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer capitalize',
+              isActive
+                ? 'bg-background text-foreground shadow-2xs font-semibold'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             {item.name}

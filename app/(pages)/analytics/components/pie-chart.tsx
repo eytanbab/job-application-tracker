@@ -1,6 +1,6 @@
 'use client';
 
-import { Pie, PieChart } from 'recharts';
+import { Pie, PieChart, Cell } from 'recharts';
 
 import {
   Card,
@@ -17,12 +17,22 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import { getColor } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 const chartConfig = {
   companies: {
-    label: 'comapanies',
+    label: 'companies',
   },
 } satisfies ChartConfig;
+
+const PIE_COLORS = [
+  '#6366f1', // Indigo
+  '#06b6d4', // Cyan
+  '#8b5cf6', // Purple
+  '#10b981', // Emerald
+  '#f59e0b', // Amber
+  '#ec4899', // Pink
+];
 
 type Data = {
   name: string;
@@ -36,42 +46,75 @@ type Props = {
 };
 
 export function PieChartComponent({ title, data }: Props) {
-  if (title === 'Top 5 Applications status') {
-    data.map((item) => {
-      item['fill'] = getColor(item.name);
-    });
-  } else {
-    data.map((item, i) => {
-      item['fill'] = `hsl(var(--chart-${i + 1}))`;
-    });
-  }
+  const chartData = data.map((item, i) => ({
+    ...item,
+    fill:
+      title === 'Top 5 Applications status' || title === 'Status Breakdown'
+        ? getColor(item.name)
+        : PIE_COLORS[i % PIE_COLORS.length],
+  }));
 
-  const totalFreq = data.reduce((sum, item) => sum + item.freq, 0);
+  const totalFreq = chartData.reduce((sum, item) => sum + item.freq, 0);
 
   return (
-    <Card>
-      <CardHeader className='items-center mt-2'>
-        <CardTitle>{title}</CardTitle>
+    <Card className="w-full bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow flex flex-col justify-between">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-bold text-foreground">{title}</CardTitle>
       </CardHeader>
-      <CardContent className='flex-1 w-full'>
-        <ChartContainer
-          config={chartConfig}
-          className='mx-auto aspect-square pb-0 [&_.recharts-pie-label-text]:fill-foreground max-h-[200px]'
-        >
-          <PieChart>
-            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-            <Pie data={data} dataKey='freq' label />
-          </PieChart>
-        </ChartContainer>
-        <CardFooter className='w-full'>
-          <ul className='flex flex-col text-sm w-full text-left'>
-            {data.map((item) => {
+
+      <CardContent className="flex-1 w-full flex flex-col items-center justify-center p-3">
+        <div className="relative w-full aspect-square max-h-[190px] flex items-center justify-center">
+          <ChartContainer
+            config={chartConfig}
+            className="w-full h-full aspect-square mx-auto"
+          >
+            <PieChart>
+              <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+              <Pie
+                data={chartData}
+                dataKey="freq"
+                nameKey="name"
+                innerRadius={52}
+                outerRadius={76}
+                paddingAngle={3}
+                strokeWidth={0}
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} className="hover:opacity-80 transition-opacity" />
+                ))}
+              </Pie>
+            </PieChart>
+          </ChartContainer>
+
+          {/* Centered Donut Total Indicator */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+            <span className="text-2xl font-extrabold text-foreground leading-none">{totalFreq}</span>
+            <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wider mt-0.5">Total</span>
+          </div>
+        </div>
+
+        <CardFooter className="w-full pt-3 px-1 pb-1">
+          <ul className="flex flex-col gap-2 text-xs w-full">
+            {chartData.map((item) => {
               const percentage =
-                Math.floor(((item.freq * 100) / totalFreq) * 100) / 100;
+                totalFreq > 0
+                  ? Math.round(((item.freq * 100) / totalFreq) * 10) / 10
+                  : 0;
               return (
-                <li key={item.name} className='capitalize'>
-                  {item.name}: {item.freq} ({percentage}
-                  %)
+                <li key={item.name} className="flex items-center justify-between capitalize text-muted-foreground">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <span
+                      className="h-2.5 w-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: item.fill }}
+                    />
+                    <span className="font-medium text-foreground truncate max-w-[150px]">{item.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="font-semibold text-foreground text-xs">{item.freq}</span>
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-semibold">
+                      {percentage}%
+                    </Badge>
+                  </div>
                 </li>
               );
             })}

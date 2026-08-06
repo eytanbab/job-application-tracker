@@ -1,0 +1,11 @@
+- both `/applications` and `analytics` pages have KPI cards about the applications.
+- the whole design looks AI generated. stuff like icons in the KPI cards for example.
+- The link in the applications table has a border.
+- Clicking on an application "view details" opens a sheet.
+- Clicking on an application "view details" and then "edit details" just closes the sheet.
+- updating an application resets the URL (for example, it deletes filters).
+- there is inconsistencies in the components. for example, different rounding, different sizes, etc.
+- there is no need for a page "ai-insights".
+- in analytics "Journey Funnel Breakdown" the cards have stages labels which are overflowing the cards themselves.
+- the "Drop-off Breakdown" is just 2 bars that are ugly and unhelpful.
+- "Top Companies Applied To" and "Top Role Titles" have different background color and hover effects than the rest of the containers in the page.

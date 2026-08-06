@@ -58,7 +58,7 @@ const aiFormSchema = z.object({
 });
 
 type Props = {
-  defaultValues: FormValues;
+  defaultValues: FormValues & { id?: string };
   onSubmit: (values: FormValues) => Promise<void>;
   onClose: () => void;
 };
@@ -112,13 +112,15 @@ export const ApplicationForm = ({
   });
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema as any),
     defaultValues: defaultValues,
   });
 
   const onCancel = () => {
     onClose();
-    router.push("/applications");
+    if (!defaultValues?.id) {
+      router.push("/applications");
+    }
   };
 
   const handleAiSubmit = async (values: z.infer<typeof aiFormSchema>) => {
@@ -199,7 +201,9 @@ export const ApplicationForm = ({
       try {
         await onSubmit(values);
         onClose();
-        router.push("/applications");
+        if (!defaultValues?.id) {
+          router.push("/applications");
+        }
       } catch {
         toast({
           description: "Failed to save application.",

@@ -79,7 +79,7 @@ export const DocumentsList = async ({ query, view = "table" }: Props) => {
   }
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+    <div className="rounded-xl border border-border/30 bg-card shadow-2xs overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
