@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,8 @@ import {
   Pencil,
   Trash2,
   Eye,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import {
   getStatusDisplay,
@@ -33,6 +35,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { updateApplication } from '@/app/actions/applications';
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface KanbanItem {
   id?: string;
@@ -103,18 +106,17 @@ export function ApplicationsKanban({
   onDeleteApplication,
 }: ApplicationsKanbanProps) {
   const [, startTransition] = useTransition();
+  const [dragOverCol, setDragOverCol] = useState<StatusKind | null>(null);
 
   // Filter data based on search and status filter
   const filteredData = useMemo(() => {
     const query = searchFilter.toLowerCase().trim();
     return data.filter((item) => {
-      // Status filter check
       if (statusFilter && statusFilter !== 'all') {
         const itemKind = getStatusKind(item.status, item.statusCategory);
         if (itemKind !== statusFilter) return false;
       }
 
-      // Search query check
       if (!query) return true;
       return (
         item.role_name.toLowerCase().includes(query) ||
@@ -172,32 +174,71 @@ export function ApplicationsKanban({
     });
   };
 
+  const handleDropOnColumn = (targetColId: StatusKind, itemJson: string) => {
+    try {
+      const item: KanbanItem = JSON.parse(itemJson);
+      const currentKind = getStatusKind(item.status, item.statusCategory);
+      if (currentKind !== targetColId) {
+        handleQuickStatusMove(item, targetColId);
+      }
+    } catch (err) {
+      console.error('Failed to parse drag item:', err);
+    }
+  };
+
   return (
     <div className="w-full overflow-x-auto pb-4 pt-1">
       <div className="flex gap-4 min-w-[1080px] w-full items-start">
-        {KANBAN_COLUMNS.map((col) => {
+        {KANBAN_COLUMNS.map((col, colIdx) => {
           const items = groupedData[col.id] || [];
+          const prevCol = colIdx > 0 ? KANBAN_COLUMNS[colIdx - 1] : null;
+          const nextCol = colIdx < KANBAN_COLUMNS.length - 1 ? KANBAN_COLUMNS[colIdx + 1] : null;
+
+          const isDropTarget = dragOverCol === col.id;
 
           return (
             <div
               key={col.id}
-              className="flex-1 flex flex-col min-w-[240px] max-w-[300px] rounded-xl border bg-card/40 backdrop-blur-xs p-3 shadow-2xs"
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOverCol(col.id);
+              }}
+              onDragLeave={() => setDragOverCol(null)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOverCol(null);
+                const dataStr = e.dataTransfer.getData('application/json');
+                if (dataStr) {
+                  handleDropOnColumn(col.id, dataStr);
+                }
+              }}
+              className={cn(
+                'flex-1 flex flex-col min-w-[240px] max-w-[300px] rounded-md border p-3 shadow-2xs transition-all duration-200',
+                isDropTarget
+                  ? 'border-2 border-primary bg-primary/10 ring-2 ring-primary/20 scale-[1.01]'
+                  : 'bg-card/40 border-border/40'
+              )}
             >
               {/* Column Header */}
               <div
-                className={`flex items-center justify-between px-3 py-2 rounded-lg border font-semibold text-xs mb-3 ${col.headerBg}`}
+                className={`flex items-center justify-between px-3 py-2 rounded-md border font-semibold text-xs mb-3 ${col.headerBg}`}
               >
                 <span className="truncate">{col.label}</span>
-                <Badge variant="secondary" className="h-5 rounded-full px-2 text-[11px] shrink-0">
+                <Badge variant="secondary" className="h-5 rounded-md px-2 text-[11px] shrink-0 font-bold">
                   {items.length}
                 </Badge>
               </div>
 
               {/* Cards List */}
-              <div className="flex flex-col gap-2.5 min-h-[240px] max-h-[68vh] overflow-y-auto pr-1 pb-4">
+              <div className="flex flex-col gap-2.5 min-h-[260px] max-h-[68vh] overflow-y-auto pr-1 pb-4">
                 {items.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center p-6 text-center rounded-lg border border-dashed text-xs text-muted-foreground">
-                    No applications
+                  <div
+                    className={cn(
+                      'flex flex-col items-center justify-center p-8 text-center rounded-md border border-dashed text-xs text-muted-foreground transition-colors',
+                      isDropTarget ? 'border-primary text-primary font-medium bg-primary/5' : 'border-border/40'
+                    )}
+                  >
+                    {isDropTarget ? 'Drop item here' : 'No applications'}
                   </div>
                 ) : (
                   items.map((item) => {
@@ -213,7 +254,11 @@ export function ApplicationsKanban({
                     return (
                       <Card
                         key={item.id}
-                        className="group relative cursor-pointer border bg-card hover:border-primary/50 transition-all hover:shadow-md"
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('application/json', JSON.stringify(item));
+                        }}
+                        className="group relative cursor-grab active:cursor-grabbing border bg-card hover:border-primary/50 transition-all hover:shadow-md rounded-md"
                         onClick={() => onSelectApplication(item)}
                       >
                         <CardHeader className="p-3 pb-1.5 flex flex-row items-start justify-between space-y-0 gap-2">
@@ -227,7 +272,31 @@ export function ApplicationsKanban({
                             </p>
                           </div>
 
-                          <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            {/* Quick Stage Shifting Buttons on Hover */}
+                            {prevCol && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 rounded-md text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                                title={`Move to ${prevCol.label}`}
+                                onClick={() => handleQuickStatusMove(item, prevCol.id)}
+                              >
+                                <ChevronLeft className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+                            {nextCol && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 rounded-md text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                                title={`Move to ${nextCol.label}`}
+                                onClick={() => handleQuickStatusMove(item, nextCol.id)}
+                              >
+                                <ChevronRight className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
@@ -276,7 +345,7 @@ export function ApplicationsKanban({
 
                         <CardContent className="p-3 pt-1 space-y-2 text-xs">
                           {item.statusLabel && (
-                            <Badge variant="outline" className="text-[10px] font-normal truncate max-w-full block">
+                            <Badge variant="outline" className="text-[10px] font-normal truncate max-w-full block rounded-sm">
                               {displayLabel}
                             </Badge>
                           )}

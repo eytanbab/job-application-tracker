@@ -4,6 +4,7 @@ import {
   ColumnDef,
   ColumnFiltersState,
   PaginationState,
+  RowSelectionState,
   SortingState,
   flexRender,
   getCoreRowModel,
@@ -27,12 +28,12 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import {
   getStatusDisplay,
   getStatusKind,
   statusOptions,
+  statusLabels,
   type StatusKind,
 } from '@/lib/utils';
 import {
@@ -46,6 +47,9 @@ import {
   ExternalLink,
   MapPin,
   RotateCcw,
+  Trash2,
+  CheckCircle2,
+  Filter,
 } from 'lucide-react';
 import {
   Select,
@@ -60,16 +64,22 @@ import {
   parseAsInteger,
   useQueryStates,
 } from 'nuqs';
-import { OnChangeFn } from '@tanstack/react-table';
 
 import { ApplicationsKpiSummary } from './components/applications-kpi-summary';
 import { ApplicationsKanban } from './components/applications-kanban';
 import { ApplicationDetailSheet } from './components/application-detail-sheet';
 import { EditApplicationSheet } from '@/app/_components/edit-application-sheet';
+import { ApplicationForm } from '@/app/_components/application-form';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { type FormValues } from './columns';
-import { deleteApplication, updateApplication } from '@/app/actions/applications';
+import { createApplication, deleteApplication, updateApplication } from '@/app/actions/applications';
 import { toast } from '@/hooks/use-toast';
-import { formatDate, parseISO } from 'date-fns';
+import { formatDate, parseISO, format } from 'date-fns';
 
 interface ApplicationRow {
   id?: string;
@@ -95,8 +105,6 @@ interface DataTableProps<TData extends ApplicationRow, TValue> {
 }
 
 const TABLE_ROWS = [5, 10, 15, 20, 25];
-const MOBILE_DEFAULT_PAGE_SIZE = 5;
-const DESKTOP_DEFAULT_PAGE_SIZE = 10;
 
 const statusBadgeClasses: Record<StatusKind, string> = {
   applied: 'bg-primary/15 text-primary border border-primary/25 rounded-md font-semibold',
@@ -124,8 +132,15 @@ export function DataTable<TData extends ApplicationRow, TValue>({
   const [selectedApp, setSelectedApp] = useState<TData | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
+  // Quick slide-over create sheet
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+
   // App to edit via EditApplicationSheet
   const [editingApp, setEditingApp] = useState<TData | null>(null);
+
+  // Row selection state
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [, startBulkTransition] = useTransition();
 
   // URL-bound filter & page state
   const [globalFilter, setGlobalFilter] = useQueryState(
@@ -137,6 +152,11 @@ export function DataTable<TData extends ApplicationRow, TValue>({
 
   const [statusFilter, setStatusFilter] = useQueryState(
     'status',
+    parseAsString.withDefault('').withOptions({ shallow: false })
+  );
+
+  const [platformFilter, setPlatformFilter] = useQueryState(
+    'platform',
     parseAsString.withDefault('').withOptions({ shallow: false })
   );
 
@@ -175,14 +195,17 @@ export function DataTable<TData extends ApplicationRow, TValue>({
 
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
-  // Sync status filter from query param to column filter
+  // Sync status and platform filters from query params to column filters
   useEffect(() => {
+    const nextFilters: ColumnFiltersState = [];
     if (statusFilter) {
-      setColumnFilters([{ id: 'status', value: statusFilter }]);
-    } else {
-      setColumnFilters([]);
+      nextFilters.push({ id: 'status', value: statusFilter });
     }
-  }, [statusFilter]);
+    if (platformFilter) {
+      nextFilters.push({ id: 'platform', value: platformFilter });
+    }
+    setColumnFilters(nextFilters);
+  }, [statusFilter, platformFilter]);
 
   const [{ pageIndex, pageSize }, setPagination] = useState<PaginationState>({
     pageIndex: page - 1,
@@ -241,6 +264,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
     globalFilterFn: 'includesString',
     onGlobalFilterChange: setGlobalFilter,
     onColumnFiltersChange: setColumnFilters,
+    onRowSelectionChange: setRowSelection,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater({ pageIndex, pageSize }) : updater;
       if (next.pageIndex !== pageIndex) {
@@ -259,21 +283,86 @@ export function DataTable<TData extends ApplicationRow, TValue>({
       globalFilter,
       pagination: { pageIndex, pageSize },
       columnFilters,
+      rowSelection,
     },
   });
 
-  const statuses = useMemo(() => {
-    const uniqueStatuses = new Set(
-      data.map((item) => getStatusKind(item.status, item.statusCategory))
-    );
-    return statusOptions.filter((status) => uniqueStatuses.has(status.value));
+  const uniquePlatforms = useMemo(() => {
+    const set = new Set(data.map((item) => item.platform?.toLowerCase().trim()).filter(Boolean));
+    return Array.from(set);
   }, [data]);
 
-  const hasActiveFilters = Boolean(globalFilter || statusFilter);
+  const selectedRows = table.getSelectedRowModel().rows;
+  const selectedCount = selectedRows.length;
+
+  const handleBulkDelete = () => {
+    if (selectedCount === 0) return;
+    startBulkTransition(async () => {
+      try {
+        await Promise.all(
+          selectedRows.map((row) => {
+            if (row.original.id) {
+              return deleteApplication(row.original.id);
+            }
+            return Promise.resolve();
+          })
+        );
+        toast({ description: `Successfully deleted ${selectedCount} application(s).` });
+        setRowSelection({});
+      } catch {
+        toast({ description: 'Failed to delete applications.', variant: 'destructive' });
+      }
+    });
+  };
+
+  const handleBulkStatusChange = (newCategory: string) => {
+    if (selectedCount === 0) return;
+    startBulkTransition(async () => {
+      try {
+        await Promise.all(
+          selectedRows.map((row) => {
+            if (row.original.id) {
+              const updatedStatusText = getStatusDisplay('', newCategory, row.original.statusLabel);
+              return updateApplication({
+                ...row.original,
+                id: row.original.id,
+                statusCategory: newCategory,
+                status: updatedStatusText.toLowerCase().trim(),
+              } as unknown as FormValues);
+            }
+            return Promise.resolve();
+          })
+        );
+        toast({ description: `Updated status for ${selectedCount} application(s) to ${statusLabels[newCategory as StatusKind] || newCategory}.` });
+        setRowSelection({});
+      } catch {
+        toast({ description: 'Failed to update application statuses.', variant: 'destructive' });
+      }
+    });
+  };
+
+  const hasActiveFilters = Boolean(globalFilter || statusFilter || platformFilter);
 
   const clearFilters = () => {
     setGlobalFilter('');
     setStatusFilter(null);
+    setPlatformFilter(null);
+  };
+
+  const defaultCreateValues = {
+    role_name: '',
+    company_name: '',
+    date_applied: format(Date.now(), 'yyyy-MM-dd'),
+    link: '',
+    description: '',
+    location: '',
+    status: 'Applied',
+    statusCategory: 'applied',
+    statusLabel: '',
+    platform: '',
+    month: '',
+    year: '',
+    salary: '',
   };
 
   return (
@@ -281,17 +370,17 @@ export function DataTable<TData extends ApplicationRow, TValue>({
       {/* 1. KPI Top Summary Bar */}
       <ApplicationsKpiSummary data={data} />
 
-      {/* 2. Controls Toolbar: Search, Filters, View Switcher & Primary Action */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-        {/* Left: Search & Filter */}
+      {/* 2. Controls Toolbar: Search, Multi-Filters, View Switcher & Quick Add CTA */}
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-card border border-border/30 rounded-xl p-3.5 shadow-2xs">
+        {/* Left: Search & Filters */}
         <div className="flex flex-wrap items-center gap-2 flex-1">
-          <div className="relative flex-1 min-w-[200px] max-w-md">
+          <div className="relative flex-1 min-w-[220px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
-              placeholder="Search by role, company, location..."
+              placeholder="Search role, company, location..."
               value={globalFilter}
               onChange={(e) => setGlobalFilter(String(e.target.value))}
-              className="pl-9 pr-8 w-full bg-background"
+              className="pl-9 pr-8 w-full h-9 text-xs bg-background"
             />
             {globalFilter.length > 0 && (
               <button
@@ -303,39 +392,50 @@ export function DataTable<TData extends ApplicationRow, TValue>({
             )}
           </div>
 
+          {/* Status Filter */}
           <Select
-            value={
-              (table.getColumn('status')?.getFilterValue() as string) ?? 'all'
-            }
-            onValueChange={(value) => {
-              table
-                .getColumn('status')
-                ?.setFilterValue(value === 'all' ? '' : value);
-            }}
+            value={statusFilter || 'all'}
+            onValueChange={(value) => setStatusFilter(value === 'all' ? null : value)}
           >
-            <SelectTrigger className="w-[160px] sm:w-[180px] capitalize bg-background">
+            <SelectTrigger className="w-[140px] h-9 text-xs capitalize bg-background">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              {statuses.map((status) => (
-                <SelectItem
-                  key={status.value}
-                  value={status.value}
-                  className="capitalize"
-                >
+              {statusOptions.map((status) => (
+                <SelectItem key={status.value} value={status.value} className="capitalize text-xs">
                   {status.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
+          {/* Platform Filter */}
+          {uniquePlatforms.length > 0 && (
+            <Select
+              value={platformFilter || 'all'}
+              onValueChange={(value) => setPlatformFilter(value === 'all' ? null : value)}
+            >
+              <SelectTrigger className="w-[140px] h-9 text-xs capitalize bg-background">
+                <SelectValue placeholder="All Platforms" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Platforms</SelectItem>
+                {uniquePlatforms.map((plat) => (
+                  <SelectItem key={plat} value={plat} className="capitalize text-xs">
+                    {plat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
           {hasActiveFilters && (
             <Button
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="text-xs text-muted-foreground hover:text-foreground gap-1.5 h-9"
+              className="text-xs text-muted-foreground hover:text-foreground gap-1.5 h-9 px-2.5"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               Reset Filters
@@ -343,15 +443,14 @@ export function DataTable<TData extends ApplicationRow, TValue>({
           )}
         </div>
 
-        {/* Right: View Switcher & New Application CTA */}
-        <div className="flex items-center justify-between md:justify-end gap-2 border-t md:border-t-0 pt-2 md:pt-0">
-          {/* View Toggle Segmented Buttons */}
-          <div className="inline-flex items-center rounded-xl bg-muted/60 p-1 gap-1">
+        {/* Right: View Switcher & Quick Create Action */}
+        <div className="flex items-center justify-between lg:justify-end gap-2.5 border-t lg:border-t-0 pt-2.5 lg:pt-0">
+          <div className="inline-flex items-center rounded-md bg-muted/60 p-1 gap-1 border border-border/20">
             <button
               type="button"
               onClick={() => setViewMode('table')}
               className={cn(
-                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer',
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer',
                 viewMode === 'table'
                   ? 'bg-background text-foreground shadow-2xs font-semibold'
                   : 'text-muted-foreground hover:text-foreground'
@@ -364,7 +463,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
               type="button"
               onClick={() => setViewMode('kanban')}
               className={cn(
-                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer',
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer',
                 viewMode === 'kanban'
                   ? 'bg-background text-foreground shadow-2xs font-semibold'
                   : 'text-muted-foreground hover:text-foreground'
@@ -375,12 +474,13 @@ export function DataTable<TData extends ApplicationRow, TValue>({
             </button>
           </div>
 
-          <Link href="/applications/new">
-            <Button className="gap-2 min-h-[38px] font-medium shadow-2xs">
-              <Plus className="h-4 w-4" />
-              <span>Add Application</span>
-            </Button>
-          </Link>
+          <Button
+            onClick={() => setIsCreateOpen(true)}
+            className="gap-2 h-9 text-xs font-semibold shadow-2xs px-3.5"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Application</span>
+          </Button>
         </div>
       </div>
 
@@ -396,8 +496,8 @@ export function DataTable<TData extends ApplicationRow, TValue>({
         />
       ) : (
         <div className="space-y-4">
-          {/* Desktop Table Layout (>= 768px) */}
-          <div className="hidden md:block rounded-xl border border-border/30 bg-card overflow-hidden shadow-2xs">
+          {/* Desktop Table Layout */}
+          <div className="hidden md:block rounded-md border border-border/40 bg-card overflow-hidden shadow-2xs">
             <Table>
               <TableHeader className="bg-muted/30">
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -443,9 +543,22 @@ export function DataTable<TData extends ApplicationRow, TValue>({
                   <TableRow>
                     <TableCell
                       colSpan={columns.length}
-                      className="h-32 text-center text-muted-foreground"
+                      className="h-44 text-center text-muted-foreground"
                     >
-                      No applications found. Try adjusting your filters.
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Filter className="h-8 w-8 text-muted-foreground/50" />
+                        <p className="font-semibold text-foreground">No applications found</p>
+                        <p className="text-xs text-muted-foreground max-w-xs">
+                          {hasActiveFilters
+                            ? 'No job applications match your current filters. Try resetting your search.'
+                            : 'You have not added any job applications yet. Click "Add Application" to get started.'}
+                        </p>
+                        {hasActiveFilters && (
+                          <Button variant="outline" size="sm" onClick={clearFilters} className="mt-2 text-xs h-8">
+                            Reset Filters
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}
@@ -472,7 +585,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
                   <Card
                     key={row.id}
                     onClick={() => handleSelectRow(item)}
-                    className="cursor-pointer border bg-card p-4 space-y-3 hover:border-primary/50 transition-all active:scale-[0.99]"
+                    className="cursor-pointer border bg-card p-4 space-y-3 hover:border-primary/50 transition-all"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="space-y-1 overflow-hidden">
@@ -523,8 +636,13 @@ export function DataTable<TData extends ApplicationRow, TValue>({
                 );
               })
             ) : (
-              <div className="text-center p-8 border rounded-xl bg-card text-muted-foreground text-sm">
-                No applications found.
+              <div className="text-center p-8 border rounded-md bg-card text-muted-foreground text-sm space-y-2">
+                <p className="font-semibold text-foreground">No applications found</p>
+                {hasActiveFilters && (
+                  <Button variant="outline" size="sm" onClick={clearFilters} className="text-xs">
+                    Reset Filters
+                  </Button>
+                )}
               </div>
             )}
           </div>
@@ -583,7 +701,73 @@ export function DataTable<TData extends ApplicationRow, TValue>({
         </div>
       )}
 
-      {/* 4. Slide-over Detail Sheet */}
+      {/* 4. Floating Bulk Actions Bar */}
+      {selectedCount > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-foreground text-background shadow-lg rounded-md px-4 py-2.5 flex items-center gap-3 border border-border animate-in slide-in-from-bottom duration-200">
+          <span className="text-xs font-bold flex items-center gap-1.5">
+            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+            {selectedCount} selected
+          </span>
+
+          <div className="h-4 w-px bg-background/30" />
+
+          <Select onValueChange={handleBulkStatusChange}>
+            <SelectTrigger className="h-8 text-xs bg-background text-foreground w-[150px] font-medium border-none">
+              <SelectValue placeholder="Mark Status..." />
+            </SelectTrigger>
+            <SelectContent>
+              {statusOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value} className="capitalize text-xs">
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleBulkDelete}
+            className="h-8 text-xs gap-1.5 font-semibold"
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Bulk Delete
+          </Button>
+
+          <button
+            onClick={() => setRowSelection({})}
+            className="p-1 text-background/70 hover:text-background rounded-sm"
+            title="Deselect all"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* 5. Slide-over Creation Sheet */}
+      <Sheet open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <SheetContent className="w-full sm:max-w-md md:max-w-lg overflow-y-auto p-6">
+          <SheetHeader className="pb-4 border-b">
+            <SheetTitle className="text-xl font-bold">New Job Application</SheetTitle>
+          </SheetHeader>
+          <div className="py-4">
+            <ApplicationForm
+              defaultValues={defaultCreateValues}
+              onClose={() => setIsCreateOpen(false)}
+              onSubmit={async (values) => {
+                try {
+                  await createApplication(values);
+                  toast({ description: 'Application created successfully!' });
+                  setIsCreateOpen(false);
+                } catch {
+                  toast({ description: 'Failed to create application', variant: 'destructive' });
+                }
+              }}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* 6. Slide-over Detail Sheet */}
       <ApplicationDetailSheet
         application={selectedApp}
         open={isDetailOpen}
@@ -592,7 +776,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
         onDeleteClick={handleDelete}
       />
 
-      {/* Hidden Edit Sheet for Kanban/Detail trigger */}
+      {/* Hidden Edit Sheet fallback */}
       {editingApp && (
         <EditApplicationSheet
           row={{ original: editingApp as unknown as FormValues }}

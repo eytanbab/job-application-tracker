@@ -60,6 +60,31 @@ const handleApplicationDelete = async (id: string) => {
 
 export const columns: ColumnDef<FormValues>[] = [
   {
+    id: 'select',
+    header: ({ table }) => (
+      <input
+        type="checkbox"
+        className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+        checked={table.getIsAllPageRowsSelected()}
+        onChange={(e) => table.toggleAllPageRowsSelected(!!e.target.checked)}
+        aria-label="Select all"
+        onClick={(e) => e.stopPropagation()}
+      />
+    ),
+    cell: ({ row }) => (
+      <input
+        type="checkbox"
+        className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+        checked={row.getIsSelected()}
+        onChange={(e) => row.toggleSelected(!!e.target.checked)}
+        aria-label="Select row"
+        onClick={(e) => e.stopPropagation()}
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
     accessorKey: 'role_name',
     header: ({ column }) => {
       return (
