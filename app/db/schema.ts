@@ -25,6 +25,8 @@ export const jobApplications = pgTable('job_applications', {
   month: varchar('month').notNull(),
   year: varchar('year').notNull(),
   description: text('description'),
+  notes: text('notes'),
+  statusNotes: text('status_notes'),
   location: text('location').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   salary: text('salary'),

@@ -1,11 +1,18 @@
-- both `/applications` and `analytics` pages have KPI cards about the applications.
-- the whole design looks AI generated. stuff like icons in the KPI cards for example.
-- The link in the applications table has a border.
-- Clicking on an application "view details" opens a sheet.
-- Clicking on an application "view details" and then "edit details" just closes the sheet.
-- updating an application resets the URL (for example, it deletes filters).
-- there is inconsistencies in the components. for example, different rounding, different sizes, etc.
-- there is no need for a page "ai-insights".
-- in analytics "Journey Funnel Breakdown" the cards have stages labels which are overflowing the cards themselves.
-- the "Drop-off Breakdown" is just 2 bars that are ugly and unhelpful.
-- "Top Companies Applied To" and "Top Role Titles" have different background color and hover effects than the rest of the containers in the page.
+- Applications need to be set as "ghosted" if it passed more than 30 days since applied or interviewed, with the proper status.
+- The edit icon in the applications table is not the same color as the rest of the icons.
+- The description and notes should be separated from each other.
+- Viewing an application in a side sheet is not comfortable.
+- This needs to be mobile first responsive platform.
+- Some cards and texts in kanban view overflow the card container and the category container.
+- Kanban view on mobile is hard to navigate.
+- The skeleton dont match the rendered content.
+- Needs an audit on server calls and performance optimization.
+- The total number of "Top Sourcing Platforms" and "Top Locations" don't make sense.
+- Does the "Yearly Application Trends" need 2 graphs to show the total amount of applications and statuses per month and year?
+- What else is missing or is not needed in the analytics?
+- Journey Insights needs a thorough audit of the information and insights its showing, and the way it shows it.
+- Cache needs fixing.
+- Audit the AI URL Extraction and its funcionality.
+- What happens if a user accidentally changed the status and then updated it correctly?
+- Quick Update Status doesnt let the user write his own status (For example, it only lets him select rejected from the dropdown list, without writing after what stage he got rejected or did he self reject it).
+- Are the targets in Journey Insights accurate to today's market in 2026?

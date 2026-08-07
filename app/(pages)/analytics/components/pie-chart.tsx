@@ -43,18 +43,31 @@ type Data = {
 type Props = {
   title: string;
   data: Data[];
+  total?: number;
 };
 
-export function PieChartComponent({ title, data }: Props) {
-  const chartData = data.map((item, i) => ({
+export function PieChartComponent({ title, data, total }: Props) {
+  const topSum = data.reduce((sum, item) => sum + item.freq, 0);
+  const grandTotal = total && total > topSum ? total : topSum;
+
+  const baseData = [...data];
+  if (total && total > topSum) {
+    const remainder = total - topSum;
+    baseData.push({
+      name: 'Other',
+      freq: remainder,
+    });
+  }
+
+  const chartData = baseData.map((item, i) => ({
     ...item,
     fill:
       title === 'Top 5 Applications status' || title === 'Status Breakdown'
         ? getColor(item.name)
+        : item.name === 'Other'
+        ? 'hsl(var(--muted-foreground) / 0.4)'
         : PIE_COLORS[i % PIE_COLORS.length],
   }));
-
-  const totalFreq = chartData.reduce((sum, item) => sum + item.freq, 0);
 
   return (
     <Card className="w-full bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow flex flex-col justify-between">
@@ -88,7 +101,7 @@ export function PieChartComponent({ title, data }: Props) {
 
           {/* Centered Donut Total Indicator */}
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-            <span className="text-2xl font-extrabold text-foreground leading-none">{totalFreq}</span>
+            <span className="text-2xl font-extrabold text-foreground leading-none">{grandTotal}</span>
             <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wider mt-0.5">Total</span>
           </div>
         </div>
@@ -97,8 +110,8 @@ export function PieChartComponent({ title, data }: Props) {
           <ul className="flex flex-col gap-2 text-xs w-full">
             {chartData.map((item) => {
               const percentage =
-                totalFreq > 0
-                  ? Math.round(((item.freq * 100) / totalFreq) * 10) / 10
+                grandTotal > 0
+                  ? Math.round(((item.freq * 100) / grandTotal) * 10) / 10
                   : 0;
               return (
                 <li key={item.name} className="flex items-center justify-between capitalize text-muted-foreground">

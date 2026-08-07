@@ -1,168 +1,55 @@
-'use client';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-
-import { cn } from '@/lib/utils';
-import {
-  flexRender,
-  useReactTable,
-  getCoreRowModel,
-} from '@tanstack/react-table';
-import { columns } from './columns';
-
-const rowCount = 10;
-
-// Create skeleton data that matches your column structure
-const createSkeletonData = (count: number) => {
-  return Array.from({ length: count }, (_, index) => ({
-    // Required properties
-    role_name: '',
-    link: '',
-    company_name: '',
-    date_applied: '',
-    platform: '',
-    status: 'applied',
-    statusCategory: 'applied',
-    statusLabel: '',
-    month: '',
-    year: '',
-    location: '',
-    salary: '',
-    // Optional properties
-    id: `skeleton-${index}`,
-    description: '',
-    createdAt: new Date(),
-  }));
-};
-
-export default function DataTableSkeleton() {
-  const skeletonData = createSkeletonData(rowCount);
-
-  const table = useReactTable({
-    data: skeletonData,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
+export default function ApplicationsLoading() {
   return (
-    <div className='w-full'>
-      {/* Search and New Application Button */}
-      <div className='flex items-center py-4 justify-between'>
-        <div className='relative w-96 max-w-xl'>
-          <div className='h-10 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse max-w-sm' />
-        </div>
+    <div className="w-full space-y-6 animate-in fade-in duration-300">
+      {/* 1. KPI Top Summary Bar Skeleton */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i} className="p-4 space-y-2 border border-border/30">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-8 w-16" />
+          </Card>
+        ))}
+      </div>
 
-        <div className='hidden md:block'>
-          <div className='h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse' />
+      {/* 2. Controls Toolbar Skeleton */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-3 bg-card border border-border/30 rounded-md p-3.5 shadow-2xs">
+        <div className="flex flex-wrap items-center gap-2 flex-1 w-full">
+          <Skeleton className="h-9 w-full max-w-sm rounded-md" />
+          <Skeleton className="h-9 w-32 rounded-md" />
+          <Skeleton className="h-9 w-32 rounded-md" />
+        </div>
+        <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+          <Skeleton className="h-9 w-24 rounded-md" />
+          <Skeleton className="h-9 w-36 rounded-md" />
         </div>
       </div>
 
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className='border-b border-border'>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead
-                    key={header.id}
-                    className='p-0 font-bold text-foreground'
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                );
-              })}
-            </TableRow>
+      {/* 3. Table View Skeleton */}
+      <div className="rounded-md border border-border/40 bg-card overflow-hidden shadow-2xs">
+        <div className="p-4 border-b bg-muted/20 flex items-center justify-between">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+        <div className="divide-y divide-border/30">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="p-4 flex items-center justify-between gap-4">
+              <div className="space-y-1.5 flex-1">
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+              <Skeleton className="h-6 w-20 rounded-md" />
+              <Skeleton className="h-4 w-24 hidden sm:block" />
+              <Skeleton className="h-4 w-20 hidden md:block" />
+              <div className="flex gap-1">
+                <Skeleton className="h-8 w-8 rounded-md" />
+                <Skeleton className="h-8 w-8 rounded-md" />
+              </div>
+            </div>
           ))}
-        </TableHeader>
-
-        {/* Table Body Skeleton */}
-        <TableBody>
-          {table.getRowModel().rows.map((row) => (
-            <TableRow
-              key={row.id}
-              className='capitalize border-b border-border text-foreground hover:bg-accent hover:text-accent-foreground'
-            >
-              {row.getVisibleCells().map((cell) => (
-                <TableCell
-                  key={cell.id}
-                  className={cn(
-                    'truncate max-w-60 p-3.5',
-                    cell.column.id === 'link' && 'lowercase'
-                  )}
-                >
-                  {cell.column.id === 'status' ? (
-                    <div className='inline-flex'>
-                      <div className='h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse' />
-                    </div>
-                  ) : (
-                    <div
-                      className={cn(
-                        'h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse',
-                        // Vary widths based on actual column IDs
-                        cell.column.id === 'role_name' && 'w-full max-w-48',
-                        cell.column.id === 'company_name' && 'w-full max-w-32',
-                        cell.column.id === 'location' && 'w-full max-w-24',
-                        cell.column.id === 'salary' && 'w-full max-w-24',
-                        cell.column.id === 'platform' && 'w-full max-w-20',
-                        cell.column.id === 'date_applied' && 'w-full max-w-24',
-                        cell.column.id === 'month' && 'w-full max-w-16',
-                        cell.column.id === 'year' && 'w-full max-w-12',
-                        cell.column.id === 'link' && 'w-full max-w-36',
-                        cell.column.id === 'description' && 'w-full max-w-40',
-                        // Default width for any other columns
-                        ![
-                          'role_name',
-                          'company_name',
-                          'location',
-                          'salary',
-                          'platform',
-                          'date_applied',
-                          'month',
-                          'year',
-                          'link',
-                          'description',
-                          'status',
-                        ].includes(cell.column.id) && 'w-full max-w-28'
-                      )}
-                    />
-                  )}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      {/* Pagination Skeleton */}
-      <div className='flex items-center justify-between py-4'>
-        <div className='h-4 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse' />
-        <div className='flex gap-2 justify-end'>
-          <div className='h-8 w-20 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse' />
-          <div className='h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse' />
         </div>
-      </div>
-
-      {/* Rows per page selector skeleton */}
-      <div className='flex items-center space-x-2'>
-        <p className='text-sm font-medium'>Rows per page</p>
-        <div className='h-8 w-[70px] bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse' />
-      </div>
-
-      {/* Mobile floating action button */}
-      <div className='md:hidden fixed bottom-4 right-4'>
-        <div className='size-10 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse' />
       </div>
     </div>
   );

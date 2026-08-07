@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidateTag, unstable_cache } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 import { db } from "@/app/db";
 import {
@@ -11,7 +11,7 @@ import {
 import { z } from "zod";
 import { and, desc, eq } from "drizzle-orm";
 
-import { format } from "date-fns";
+import { format, subDays, parseISO, isBefore } from "date-fns";
 import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 import { getStatusDisplay, getStatusKind } from "@/lib/utils";
@@ -36,20 +36,50 @@ function normalizeApplicationStatus(values: FormValues): FormValues {
   };
 }
 
-// Get all applications of current user
+function purgeCaches(userId: string) {
+  revalidateTag(applicationsTag(userId), 'max');
+  revalidatePath('/applications');
+  revalidatePath('/analytics/overview');
+  revalidatePath('/analytics/insights');
+}
+
+// Get all applications of current user (pure read function)
 export async function getApplications() {
   const userId = await getCurrentUserIdOrThrow();
 
   return unstable_cache(
-    async () =>
-      db
+    async () => {
+      const rows = await db
         .select()
         .from(jobApplications)
         .where(eq(jobApplications.userId, userId))
         .orderBy(
           desc(jobApplications.date_applied),
           desc(jobApplications.createdAt),
-        ),
+        );
+
+      const thirtyDaysAgo = subDays(new Date(), 30);
+
+      // Dynamically auto-categorize >30 day old applied/review status as ghosted
+      return rows.map((app) => {
+        const kind = getStatusKind(app.status, app.statusCategory);
+        if ((kind === "applied" || kind === "review") && app.date_applied) {
+          try {
+            const appliedDate = parseISO(app.date_applied);
+            if (isBefore(appliedDate, thirtyDaysAgo)) {
+              return {
+                ...app,
+                statusCategory: "ghosted",
+                statusLabel: app.statusLabel || "Auto-Ghosted (>30 Days)",
+              };
+            }
+          } catch {
+            // Ignore date parsing error
+          }
+        }
+        return app;
+      });
+    },
     ["applications", "list", userId],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
@@ -103,7 +133,7 @@ export async function createApplication(values: FormValues) {
     });
   }
 
-  revalidateTag(applicationsTag(userId), "max");
+  purgeCaches(userId);
   return result;
 }
 
@@ -115,7 +145,7 @@ export async function deleteApplication(id: string) {
     .delete(jobApplications)
     .where(and(eq(jobApplications.userId, userId), eq(jobApplications.id, id)));
 
-  revalidateTag(applicationsTag(userId), "max");
+  purgeCaches(userId);
 }
 
 // Update an application of current user
@@ -133,7 +163,6 @@ export async function updateApplication(values: FormValues) {
     year: format(new Date(normalizedValues.date_applied), "yyyy"),
   };
 
-  // Fetch current application to see if status has changed
   const currentApp = await db
     .select({
       status: jobApplications.status,
@@ -164,14 +193,48 @@ export async function updateApplication(values: FormValues) {
     );
 
   if (statusChanged) {
-    await db.insert(applicationStatusHistory).values({
-      applicationId,
-      status: normalizedValues.status,
-      statusCategory: normalizedValues.statusCategory ?? "applied",
-    });
+    // 5-minute auto-merge of accidental status flips
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const latestHistory = await db
+      .select({
+        id: applicationStatusHistory.id,
+        createdAt: applicationStatusHistory.createdAt,
+      })
+      .from(applicationStatusHistory)
+      .where(eq(applicationStatusHistory.applicationId, applicationId))
+      .orderBy(desc(applicationStatusHistory.createdAt))
+      .limit(1);
+
+    if (latestHistory.length > 0 && latestHistory[0].createdAt > fiveMinutesAgo) {
+      await db
+        .update(applicationStatusHistory)
+        .set({
+          status: normalizedValues.status,
+          statusCategory: normalizedValues.statusCategory ?? "applied",
+          createdAt: new Date(),
+        })
+        .where(eq(applicationStatusHistory.id, latestHistory[0].id));
+    } else {
+      await db.insert(applicationStatusHistory).values({
+        applicationId,
+        status: normalizedValues.status,
+        statusCategory: normalizedValues.statusCategory ?? "applied",
+      });
+    }
   }
 
-  revalidateTag(applicationsTag(userId), "max");
+  purgeCaches(userId);
+}
+
+// Delete individual status history entry (Timeline correction)
+export async function deleteStatusHistoryEntry(historyId: string) {
+  const userId = await getCurrentUserIdOrThrow();
+
+  await db
+    .delete(applicationStatusHistory)
+    .where(eq(applicationStatusHistory.id, historyId));
+
+  purgeCaches(userId);
 }
 
 // Get status history for a single application

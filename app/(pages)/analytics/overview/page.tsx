@@ -11,8 +11,7 @@ import {
 } from "@/app/actions/analytics";
 
 import { PieChartComponent } from "../components/pie-chart";
-import { StatusesPerYearBarChart } from "../components/statuses-per-year-bar-chart";
-import { TotalApplicationsPerYearBarChart } from "../components/total-applications-per-year-bar-chart";
+import { YearlyTrendsCard } from "../components/yearly-trends-card";
 import { KpiSummary } from "../components/kpi-summary";
 import { AnalyticsFilter } from "../components/analytics-filter";
 import { LeaderboardCard } from "../components/leaderboard-card";
@@ -108,7 +107,6 @@ export default async function Overview(props: {
 
   const totalApplications = breakdownData.total;
   
-  // Calculate true rates based on historical progression
   const interviewRate = breakdownData.total 
     ? breakdownData.stages.interview / breakdownData.total 
     : 0;
@@ -170,6 +168,7 @@ export default async function Overview(props: {
           <PieChartComponent
             title="Status Breakdown"
             data={displayStatuses}
+            total={displayTotal}
           />
         </div>
       </section>
@@ -183,12 +182,20 @@ export default async function Overview(props: {
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <PieChartComponent title="Top Sourcing Platforms" data={displayPlatforms} />
-          <PieChartComponent title="Top Locations" data={displayLocations} />
+          <PieChartComponent
+            title="Top Sourcing Platforms"
+            data={displayPlatforms}
+            total={displayTotal}
+          />
+          <PieChartComponent
+            title="Top Locations"
+            data={displayLocations}
+            total={displayTotal}
+          />
         </div>
       </section>
 
-      {/* 5. Yearly Application Trends */}
+      {/* 5. Yearly Application Trends (Consolidated Single Card) */}
       {(!month || month === "all") && (
         <section className="space-y-3 pt-1">
           <div className="flex items-center gap-2">
@@ -197,18 +204,12 @@ export default async function Overview(props: {
               Yearly Application Trends
             </h2>
           </div>
-          <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-2">
-            <StatusesPerYearBarChart
-              years={years.length > 0 ? years : ['2025']}
-              rawData={statusesPerYear}
-              globalYear={year}
-            />
-            <TotalApplicationsPerYearBarChart
-              years={years.length > 0 ? years : ['2025']}
-              data={applicationsPerYear}
-              globalYear={year}
-            />
-          </div>
+          <YearlyTrendsCard
+            years={years.length > 0 ? years : ['2025']}
+            statusesPerYear={statusesPerYear}
+            applicationsPerYear={applicationsPerYear}
+            globalYear={year}
+          />
         </section>
       )}
     </div>

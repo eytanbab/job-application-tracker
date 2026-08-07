@@ -64,14 +64,14 @@ export function InsightsDashboard({ data }: InsightsDashboardProps) {
   let bottleneckStatus: 'healthy' | 'resume' | 'interview' = 'healthy';
   let recommendation = 'Maintain your current cadence, prioritize direct networking, and continue preparing for upcoming interviews.';
   
-  if (resumeConversion < 15 && stages.applied >= 5) {
+  if (resumeConversion < 12 && stages.applied >= 5) {
     bottleneckTitle = 'Resume / Sourcing Bottleneck';
-    bottleneckDesc = `Your Resume Pass Rate is low (${resumeConversion.toFixed(1)}%). Most of your applications are ending before the interview stage.`;
+    bottleneckDesc = `Your Resume Pass Rate is below 2026 market benchmarks (${resumeConversion.toFixed(1)}%). Most of your applications are ending before the initial recruiter screen.`;
     bottleneckStatus = 'resume';
     recommendation = 'Focus on optimizing your resume for ATS systems. Align keywords in your resume with job descriptions, tailor cover letters, and ensure your portfolio/GitHub links are prominent. Consider applying through employee referrals or direct messaging hiring managers.';
-  } else if (interviewConversion < 25 && stages.interview >= 3) {
+  } else if (interviewConversion < 18 && stages.interview >= 3) {
     bottleneckTitle = 'Interview Process Bottleneck';
-    bottleneckDesc = `Your Interview Success Rate is low (${interviewConversion.toFixed(1)}%). You are securing interviews but finding it difficult to convert them into offers.`;
+    bottleneckDesc = `Your Interview Success Rate is below 2026 market benchmarks (${interviewConversion.toFixed(1)}%). You are securing interviews but finding it difficult to convert them into offers.`;
     bottleneckStatus = 'interview';
     recommendation = 'Focus on interview preparation. Dedicate time to mock interviews, practicing the STAR method for behavioral questions, refining your elevator pitch, and preparing deep questions about the company structure and challenges.';
   }

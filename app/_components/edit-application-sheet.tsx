@@ -8,6 +8,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Pencil } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { ApplicationForm } from './application-form';
 
 import { useState } from 'react';
@@ -32,9 +33,15 @@ export const EditApplicationSheet = ({ row, onSubmit }: Row) => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <button className='hover:text-primary' onClick={() => setOpen(true)}>
-          <Pencil className='size-4' />
-        </button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+          title="Edit application"
+          onClick={() => setOpen(true)}
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
       </SheetTrigger>
       <SheetContent className='w-full space-y-4 overflow-y-auto flex flex-col items-center sm:items-start'>
         <SheetHeader>

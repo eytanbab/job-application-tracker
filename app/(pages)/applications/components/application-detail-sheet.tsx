@@ -2,12 +2,11 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@/components/ui/sheet';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +24,8 @@ import {
   Check,
   X,
   Loader2,
+  FileText,
+  MessageSquare,
 } from 'lucide-react';
 import {
   getStatusDisplay,
@@ -34,7 +35,7 @@ import {
   StatusKind,
 } from '@/lib/utils';
 import { formatDate, parseISO } from 'date-fns';
-import { getApplicationHistory, updateApplication } from '@/app/actions/applications';
+import { getApplicationHistory, updateApplication, deleteStatusHistoryEntry } from '@/app/actions/applications';
 import { toast } from '@/hooks/use-toast';
 import {
   Select,
@@ -57,6 +58,7 @@ interface ApplicationDetail {
   month: string;
   year: string;
   description?: string | null;
+  notes?: string | null;
   location: string;
   salary?: string | null;
   createdAt?: Date;
@@ -107,6 +109,7 @@ export function ApplicationDetailSheet({
     link: string;
     date_applied: string;
     description: string;
+    notes: string;
     statusCategory: string;
     statusLabel: string;
   }>({
@@ -118,6 +121,7 @@ export function ApplicationDetailSheet({
     link: '',
     date_applied: '',
     description: '',
+    notes: '',
     statusCategory: 'applied',
     statusLabel: '',
   });
@@ -134,6 +138,7 @@ export function ApplicationDetailSheet({
         link: initialApp.link || '',
         date_applied: initialApp.date_applied || '',
         description: initialApp.description || '',
+        notes: initialApp.notes || '',
         statusCategory: getStatusKind(initialApp.status, initialApp.statusCategory),
         statusLabel: initialApp.statusLabel || '',
       });
@@ -166,11 +171,12 @@ export function ApplicationDetailSheet({
     currentApp.statusLabel
   );
 
-  const handleQuickStatusChange = (newCategory: string) => {
+  const handleQuickStatusChange = (newCategory: string, customLabel?: string) => {
     if (!currentApp.id) return;
     startSaveTransition(async () => {
       try {
-        const updatedStatus = getStatusDisplay(currentApp.status, newCategory, currentApp.statusLabel);
+        const labelToUse = customLabel !== undefined ? customLabel : (currentApp.statusLabel || '');
+        const updatedStatus = getStatusDisplay(currentApp.status, newCategory, labelToUse);
         const payload = {
           ...currentApp,
           id: currentApp.id,
@@ -183,6 +189,7 @@ export function ApplicationDetailSheet({
           month: currentApp.month,
           year: currentApp.year,
           statusCategory: newCategory,
+          statusLabel: labelToUse,
           status: updatedStatus,
         };
         await updateApplication(payload);
@@ -218,6 +225,7 @@ export function ApplicationDetailSheet({
           link: editForm.link.trim(),
           date_applied: editForm.date_applied,
           description: editForm.description,
+          notes: editForm.notes,
           statusCategory: updatedKind,
           statusLabel: editForm.statusLabel.trim(),
           status: updatedStatusText.toLowerCase().trim(),
@@ -244,13 +252,13 @@ export function ApplicationDetailSheet({
     : 'Unknown date';
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md md:max-w-lg overflow-y-auto p-6">
-        <SheetHeader className="space-y-3 pb-4 border-b">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-full max-w-2xl md:max-w-3xl overflow-y-auto max-h-[85vh] p-6 rounded-md shadow-lg border border-border/40">
+        <DialogHeader className="space-y-3 pb-4 border-b">
           <div className="flex items-start justify-between gap-3 pr-6">
             <div className="space-y-1 w-full">
               {isEditing ? (
-                <div className="space-y-2 pt-1 pr-2">
+                <div className="grid grid-cols-2 gap-3 pt-1">
                   <div>
                     <label className="text-[11px] font-semibold text-muted-foreground uppercase">Role Title</label>
                     <Input
@@ -264,19 +272,19 @@ export function ApplicationDetailSheet({
                     <Input
                       value={editForm.company_name}
                       onChange={(e) => setEditForm({ ...editForm, company_name: e.target.value })}
-                      className="text-sm h-8"
+                      className="text-sm h-9"
                     />
                   </div>
                 </div>
               ) : (
                 <>
-                  <SheetTitle className="text-xl font-bold tracking-tight text-foreground">
+                  <DialogTitle className="text-2xl font-bold tracking-tight text-foreground font-heading">
                     {currentApp.role_name}
-                  </SheetTitle>
-                  <SheetDescription className="flex items-center gap-1.5 text-base font-medium text-muted-foreground">
+                  </DialogTitle>
+                  <p className="flex items-center gap-1.5 text-base font-medium text-muted-foreground">
                     <Building2 className="h-4 w-4 shrink-0 text-muted-foreground/70" />
                     {currentApp.company_name}
-                  </SheetDescription>
+                  </p>
                 </>
               )}
             </div>
@@ -285,7 +293,7 @@ export function ApplicationDetailSheet({
               <Button
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 shrink-0 rounded-full"
+                className="h-9 w-9 shrink-0 rounded-md"
                 asChild
               >
                 <a
@@ -325,9 +333,9 @@ export function ApplicationDetailSheet({
               )}
             </div>
           )}
-        </SheetHeader>
+        </DialogHeader>
 
-        <div className="py-5 space-y-5">
+        <div className="py-4 space-y-5">
           {isEditing ? (
             /* Inline Edit View */
             <div className="space-y-4 text-sm animate-in fade-in duration-200">
@@ -351,9 +359,9 @@ export function ApplicationDetailSheet({
                   </Select>
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase">Custom Status Label</label>
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase">Stage Details / Custom Note</label>
                   <Input
-                    placeholder="Optional"
+                    placeholder="e.g. Self-withdrawn, Post-tech screen"
                     value={editForm.statusLabel}
                     onChange={(e) => setEditForm({ ...editForm, statusLabel: e.target.value })}
                     className="h-9"
@@ -413,15 +421,27 @@ export function ApplicationDetailSheet({
                 />
               </div>
 
-              <div>
-                <label className="text-[11px] font-semibold text-muted-foreground uppercase">Notes & Description</label>
-                <Textarea
-                  rows={4}
-                  placeholder="Role description, interview notes..."
-                  value={editForm.description}
-                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                  className="mt-1"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase">Job Description</label>
+                  <Textarea
+                    rows={4}
+                    placeholder="Job posting responsibilities..."
+                    value={editForm.description}
+                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase">Personal Candidate Notes</label>
+                  <Textarea
+                    rows={4}
+                    placeholder="Recruiter contact, interview feedback..."
+                    value={editForm.notes}
+                    onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
               </div>
 
               <div className="flex items-center gap-2 pt-2">
@@ -452,53 +472,99 @@ export function ApplicationDetailSheet({
             /* Read-only View */
             <>
               {/* Quick status update control */}
-              <div className="rounded-xl border border-border/30 bg-muted/30 p-3.5 space-y-2">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                  Quick Update Status
-                </label>
-                <Select
-                  disabled={isSaving}
-                  value={currentKind}
-                  onValueChange={handleQuickStatusChange}
-                >
-                  <SelectTrigger className="w-full bg-card border-border/40 rounded-lg">
-                    <SelectValue placeholder="Select new status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statusOptions.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value} className="capitalize">
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="rounded-md border border-border/30 bg-muted/30 p-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Quick Update Status
+                  </label>
+                  {currentApp.statusLabel && (
+                    <span className="text-xs text-muted-foreground italic">
+                      Current stage: &ldquo;{currentApp.statusLabel}&rdquo;
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Select
+                    disabled={isSaving}
+                    value={currentKind}
+                    onValueChange={(cat) => handleQuickStatusChange(cat)}
+                  >
+                    <SelectTrigger className="w-full bg-card border-border/40 rounded-md">
+                      <SelectValue placeholder="Select new status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value} className="capitalize text-xs">
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Input
+                    placeholder="Custom stage note (optional)"
+                    value={currentApp.statusLabel || ''}
+                    onChange={(e) => {
+                      const newLabel = e.target.value;
+                      setCurrentApp({ ...currentApp, statusLabel: newLabel });
+                    }}
+                    onBlur={(e) => handleQuickStatusChange(currentKind, e.target.value)}
+                    className="h-9 text-xs bg-card border-border/40"
+                  />
+                </div>
               </div>
 
               {/* Details grid */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm bg-card p-3.5 border border-border/30 rounded-md">
                 <div className="space-y-1">
                   <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
                     <Calendar className="h-3.5 w-3.5" /> Date Applied
                   </span>
-                  <p className="font-medium text-foreground">{formattedAppliedDate}</p>
+                  <p className="font-medium text-foreground text-xs sm:text-sm">{formattedAppliedDate}</p>
                 </div>
                 <div className="space-y-1">
                   <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
                     <Clock className="h-3.5 w-3.5" /> Platform
                   </span>
-                  <p className="font-medium capitalize text-foreground">{currentApp.platform || '-'}</p>
+                  <p className="font-medium capitalize text-foreground text-xs sm:text-sm">{currentApp.platform || '-'}</p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
+                    <MapPin className="h-3.5 w-3.5" /> Location
+                  </span>
+                  <p className="font-medium text-foreground text-xs sm:text-sm">{currentApp.location || '-'}</p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
+                    <DollarSign className="h-3.5 w-3.5" /> Salary
+                  </span>
+                  <p className="font-medium text-foreground text-xs sm:text-sm">{currentApp.salary || '-'}</p>
                 </div>
               </div>
 
-              {/* Job Description / Notes */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Notes & Description
-                </h4>
-                <div className="rounded-xl border border-border/30 bg-card p-3.5 text-sm text-foreground leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto">
-                  {currentApp.description?.trim()
-                    ? currentApp.description
-                    : 'No notes or description provided for this application.'}
+              {/* Separated Job Description & Personal Notes (Item 3) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <FileText className="h-3.5 w-3.5" /> Job Description
+                  </h4>
+                  <div className="rounded-md border border-border/30 bg-card p-3 text-xs text-foreground leading-relaxed whitespace-pre-wrap max-h-44 overflow-y-auto">
+                    {currentApp.description?.trim()
+                      ? currentApp.description
+                      : 'No job description provided.'}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <MessageSquare className="h-3.5 w-3.5 text-primary" /> Personal Candidate Notes
+                  </h4>
+                  <div className="rounded-md border border-border/30 bg-card p-3 text-xs text-foreground leading-relaxed whitespace-pre-wrap max-h-44 overflow-y-auto">
+                    {currentApp.notes?.trim()
+                      ? currentApp.notes
+                      : 'No personal notes added yet.'}
+                  </div>
                 </div>
               </div>
 
@@ -513,20 +579,40 @@ export function ApplicationDetailSheet({
                 ) : history.length === 0 ? (
                   <p className="text-xs text-muted-foreground italic">No status history recorded yet.</p>
                 ) : (
-                  <div className="relative pl-4 border-l border-border space-y-4 my-2">
+                  <div className="relative pl-4 border-l border-border space-y-3 my-2">
                     {history.map((item, idx) => {
                       const itemKind = getStatusKind(item.status, item.statusCategory);
                       const formattedTime = item.createdAt
                         ? formatDate(new Date(item.createdAt), 'MMM d, yyyy · h:mm a')
                         : '';
                       return (
-                        <div key={item.id || idx} className="relative space-y-1">
+                        <div key={item.id || idx} className="relative space-y-0.5 group">
                           <div className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background" />
                           <div className="flex items-center justify-between text-xs">
                             <span className="font-semibold capitalize text-foreground">
                               {statusLabels[itemKind] || item.status}
                             </span>
-                            <span className="text-muted-foreground text-[11px]">{formattedTime}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-muted-foreground text-[11px]">{formattedTime}</span>
+                              {item.id && (
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    try {
+                                      await deleteStatusHistoryEntry(item.id);
+                                      setHistory((prev) => prev.filter((h) => h.id !== item.id));
+                                      toast({ description: 'Timeline entry removed' });
+                                    } catch {
+                                      toast({ description: 'Failed to remove timeline entry', variant: 'destructive' });
+                                    }
+                                  }}
+                                  className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
+                                  title="Delete this timeline entry"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
@@ -544,7 +630,7 @@ export function ApplicationDetailSheet({
             <Button
               variant="outline"
               size="sm"
-              className="flex-1 gap-2 min-h-[40px] font-medium rounded-lg"
+              className="flex-1 gap-2 h-9 font-medium rounded-md"
               onClick={() => setIsEditing(true)}
             >
               <Pencil className="h-4 w-4" /> Edit Details
@@ -554,7 +640,7 @@ export function ApplicationDetailSheet({
               <Button
                 variant="destructive"
                 size="sm"
-                className="gap-2 min-h-[40px] font-medium rounded-lg"
+                className="gap-2 h-9 font-medium rounded-md"
                 onClick={() => {
                   if (currentApp.id) {
                     onDeleteClick(currentApp.id);
@@ -567,7 +653,7 @@ export function ApplicationDetailSheet({
             )}
           </div>
         )}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

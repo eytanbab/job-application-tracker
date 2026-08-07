@@ -85,9 +85,8 @@ export const ApplicationForm = ({
     }),
     date_applied: z.string().or(z.date()),
     link: z.string().url(),
-    description: z.string().min(2, {
-      message: "Description must be at least 2 characters.",
-    }),
+    description: z.string().optional().nullable(),
+    notes: z.string().optional().nullable(),
     location: z.string().min(2, {
       message: "Location must be at least 2 characters.",
     }),
@@ -466,10 +465,27 @@ export const ApplicationForm = ({
             name="description"
             render={({ field }) => (
               <FormItem className="space-y-0 col-span-full">
-                <FormLabel>Job description</FormLabel>
+                <FormLabel>Job Description</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Role description"
+                    placeholder="Role responsibilities, requirements, or posting text..."
+                    {...field}
+                    value={field.value || ""}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem className="space-y-0 col-span-full">
+                <FormLabel>Personal Candidate Notes</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Interview feedback, recruiter contact info, referral notes..."
                     {...field}
                     value={field.value || ""}
                   />

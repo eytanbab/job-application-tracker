@@ -198,10 +198,10 @@ export function DataTable<TData extends ApplicationRow, TValue>({
   // Sync status and platform filters from query params to column filters
   useEffect(() => {
     const nextFilters: ColumnFiltersState = [];
-    if (statusFilter) {
+    if (statusFilter && statusFilter !== 'all') {
       nextFilters.push({ id: 'status', value: statusFilter });
     }
-    if (platformFilter) {
+    if (platformFilter && platformFilter !== 'all') {
       nextFilters.push({ id: 'platform', value: platformFilter });
     }
     setColumnFilters(nextFilters);
@@ -341,7 +341,11 @@ export function DataTable<TData extends ApplicationRow, TValue>({
     });
   };
 
-  const hasActiveFilters = Boolean(globalFilter || statusFilter || platformFilter);
+  const hasActiveFilters = Boolean(
+    globalFilter ||
+    (statusFilter && statusFilter !== 'all') ||
+    (platformFilter && platformFilter !== 'all')
+  );
 
   const clearFilters = () => {
     setGlobalFilter('');
