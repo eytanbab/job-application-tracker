@@ -70,12 +70,10 @@ export function StatusPerPlatformPieChart({ data }: Props) {
         <CardFooter>
           <ul className='flex flex-col text-sm'>
             {data.statuses.map((item) => {
-              const percentage =
-                Math.floor(((item.value * 100) / totalFreq) * 100) / 100;
+              const percentage = totalFreq > 0 ? ((item.value * 100) / totalFreq).toFixed(1) : '0.0';
               return (
                 <li key={item.status} className='capitalize'>
-                  {item.status}: {item.value} ({percentage}
-                  %)
+                  {item.status}: {item.value} ({percentage}%)
                 </li>
               );
             })}

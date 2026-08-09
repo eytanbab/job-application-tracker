@@ -27,7 +27,8 @@ export function DomainLeaderboardCard({ domains }: Props) {
         ) : (
           <>
             {domains.map((item, index) => {
-              const percentage = Math.round(item.successRate);
+              const percentageVal = Number(item.successRate.toFixed(1));
+              const percentageText = item.successRate.toFixed(1);
               return (
                 <div key={item.domain} className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between text-xs font-medium">
@@ -36,13 +37,13 @@ export function DomainLeaderboardCard({ domains }: Props) {
                       {item.domain}
                     </span>
                     <span className="text-muted-foreground font-semibold text-[11px]">
-                      {item.total} {item.total === 1 ? 'app' : 'apps'} ({percentage}%)
+                      {item.total} {item.total === 1 ? 'app' : 'apps'} ({percentageText}%)
                     </span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-muted/60 overflow-hidden">
                     <div
                       className="h-full rounded-full bg-primary transition-all duration-500"
-                      style={{ width: `${Math.max(percentage, 5)}%` }}
+                      style={{ width: `${Math.max(percentageVal, 5)}%` }}
                     />
                   </div>
                 </div>
@@ -51,7 +52,7 @@ export function DomainLeaderboardCard({ domains }: Props) {
             
             {topDomain && topDomain.successRate > 0 && (
               <p className="text-xs text-muted-foreground mt-2 border-t border-border/40 pt-3">
-                Jobs from <span className="font-semibold text-foreground">{topDomain.domain}</span> convert {Math.round(topDomain.successRate)}% to interviews.
+                Jobs from <span className="font-semibold text-foreground">{topDomain.domain}</span> convert {topDomain.successRate.toFixed(1)}% to interviews.
               </p>
             )}
           </>

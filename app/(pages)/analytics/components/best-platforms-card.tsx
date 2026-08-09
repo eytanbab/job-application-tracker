@@ -26,7 +26,7 @@ export function BestPlatformsCard({ bestPlatform, secondBest, multiplier }: Prop
             <div className="flex items-end gap-2">
               <p className="text-2xl font-extrabold text-foreground">{bestPlatform.name}</p>
               <span className="mb-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                {Math.round(bestPlatform.interviewRate)}% rate
+                {bestPlatform.interviewRate.toFixed(1)}% rate
               </span>
             </div>
             {multiplier > 1 && secondBest ? (

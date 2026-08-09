@@ -111,8 +111,8 @@ export function PieChartComponent({ title, data, total }: Props) {
             {chartData.map((item) => {
               const percentage =
                 grandTotal > 0
-                  ? Math.round(((item.freq * 100) / grandTotal) * 10) / 10
-                  : 0;
+                  ? ((item.freq * 100) / grandTotal).toFixed(1)
+                  : '0.0';
               return (
                 <li key={item.name} className="flex items-center justify-between capitalize text-muted-foreground">
                   <div className="flex items-center gap-2 overflow-hidden">

@@ -9,7 +9,7 @@ type Props = {
   averageResponseDays: number | null;
 };
 
-const formatPercent = (value: number) => `${Math.round(value * 100)}%`;
+const formatPercent = (value: number) => `${(value * 100).toFixed(1)}%`;
 
 export function KpiSummary({
   interviewRate,

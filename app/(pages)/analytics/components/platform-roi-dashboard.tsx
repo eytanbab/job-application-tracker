@@ -194,13 +194,13 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
                       variant={platform.interviewRate > 0 ? 'default' : 'outline'}
                       className={platform.interviewRate > 0 ? 'bg-blue-500/15 text-blue-500 hover:bg-blue-500/20 border-blue-500/30' : ''}
                     >
-                      {platform.interviewRate.toFixed(0)}% interview
+                      {platform.interviewRate.toFixed(1)}% interview
                     </Badge>
                     <Badge
                       variant={platform.responseRate >= 20 ? 'default' : 'outline'}
                       className={platform.responseRate >= 20 ? 'bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/30' : ''}
                     >
-                      {platform.responseRate.toFixed(0)}% response
+                      {platform.responseRate.toFixed(1)}% response
                     </Badge>
                   </div>
                 </div>
