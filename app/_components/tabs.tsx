@@ -12,8 +12,8 @@ export default function Tabs() {
   const year = searchParams.get('year');
 
   const tabs = [
-    { url: '/analytics/overview', name: 'Overview & Channels' },
-    { url: '/analytics/insights', name: 'Journey Insights' },
+    { url: '/analytics/overview', name: 'Overview' },
+    { url: '/analytics/status-per-platform', name: 'Platform ROI' },
   ];
 
   return (
