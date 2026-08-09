@@ -218,3 +218,29 @@ export const didReachInterviewStage = (
 export const getColor = (status: string, statusCategory?: string | null) => {
   return predefinedColors[getStatusKind(status, statusCategory)];
 };
+
+/**
+ * Extracts the root domain (e.g. "myworkdayjobs.com", "workable.com", "greenhouse.io") from a hostname.
+ */
+export function extractRootDomain(hostname: string): string {
+  let domain = hostname.toLowerCase().trim();
+  if (domain.startsWith("www.")) {
+    domain = domain.substring(4);
+  }
+
+  const parts = domain.split(".");
+  if (parts.length <= 2) {
+    return domain;
+  }
+
+  const last = parts[parts.length - 1];
+  const secondLast = parts[parts.length - 2];
+  const common2ndLevel = new Set(["co", "com", "org", "net", "gov", "edu", "ac"]);
+
+  if (last.length === 2 && common2ndLevel.has(secondLast) && parts.length >= 3) {
+    return parts.slice(-3).join(".");
+  }
+
+  return parts.slice(-2).join(".");
+}
+

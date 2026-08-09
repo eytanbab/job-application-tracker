@@ -11,6 +11,7 @@ import {
   getStatusKind,
   statusLabels,
   didReachInterviewStage,
+  extractRootDomain,
 } from "@/lib/utils";
 import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
@@ -167,21 +168,7 @@ export async function getDomainLeaderboard() {
         try {
           const rawUrl = link.startsWith("http://") || link.startsWith("https://") ? link : `https://${link}`;
           const url = new URL(rawUrl);
-          let domain = url.hostname;
-          // Basic cleaning for common subdomains
-          if (domain.startsWith("www.")) {
-            domain = domain.substring(4);
-          }
-          if (
-            domain.includes("greenhouse.io") ||
-            domain.includes("lever.co") ||
-            domain.includes("workday.com")
-          ) {
-            const parts = domain.split(".");
-            if (parts.length > 2) {
-              domain = parts.slice(-2).join(".");
-            }
-          }
+          const domain = extractRootDomain(url.hostname);
 
           if (!domainStats[domain]) {
             domainStats[domain] = { total: 0, interviews: 0 };
