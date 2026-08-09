@@ -73,15 +73,7 @@ export async function createFile(
 
 export async function getFiles() {
   const userId = await getCurrentUserIdOrThrow();
-
-  return unstable_cache(
-    async () => db.select().from(documents).where(eq(documents.userId, userId)),
-    ["documents", "list", userId],
-    {
-      revalidate: CACHE_REVALIDATE_SECONDS,
-      tags: [documentsTag(userId)],
-    }
-  )();
+  return db.select().from(documents).where(eq(documents.userId, userId));
 }
 
 export async function deleteFile(id: string) {

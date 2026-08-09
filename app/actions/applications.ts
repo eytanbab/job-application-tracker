@@ -43,45 +43,36 @@ function purgeCaches(userId: string) {
 export async function getApplications() {
   const userId = await getCurrentUserIdOrThrow();
 
-  return unstable_cache(
-    async () => {
-      const rows = await db
-        .select()
-        .from(jobApplications)
-        .where(eq(jobApplications.userId, userId))
-        .orderBy(
-          desc(jobApplications.date_applied),
-          desc(jobApplications.createdAt),
-        );
+  const rows = await db
+    .select()
+    .from(jobApplications)
+    .where(eq(jobApplications.userId, userId))
+    .orderBy(
+      desc(jobApplications.date_applied),
+      desc(jobApplications.createdAt),
+    );
 
-      const thirtyDaysAgo = subDays(new Date(), 30);
+  const thirtyDaysAgo = subDays(new Date(), 30);
 
-      // Dynamically auto-categorize >30 day old applied/review status as ghosted
-      return rows.map((app) => {
-        const kind = getStatusKind(app.status, app.statusCategory);
-        if ((kind === "applied" || kind === "review") && app.date_applied) {
-          try {
-            const appliedDate = parseISO(app.date_applied);
-            if (isBefore(appliedDate, thirtyDaysAgo)) {
-              return {
-                ...app,
-                statusCategory: "ghosted",
-                status: app.status || "Auto-Ghosted (>30 Days)",
-              };
-            }
-          } catch {
-            // Ignore date parsing error
-          }
+  // Dynamically auto-categorize >30 day old applied/review status as ghosted
+  return rows.map((app) => {
+    const kind = getStatusKind(app.status, app.statusCategory);
+    if ((kind === "applied" || kind === "review") && app.date_applied) {
+      try {
+        const appliedDate = parseISO(app.date_applied);
+        if (isBefore(appliedDate, thirtyDaysAgo)) {
+          return {
+            ...app,
+            statusCategory: "ghosted",
+            status: app.status || "Auto-Ghosted (>30 Days)",
+          };
         }
-        return app;
-      });
-    },
-    ["applications", "list", userId],
-    {
-      revalidate: CACHE_REVALIDATE_SECONDS,
-      tags: [applicationsTag(userId)],
-    },
-  )();
+      } catch {
+        // Ignore date parsing error
+      }
+    }
+    return app;
+  });
 }
 
 // Get a single application with id for current user
