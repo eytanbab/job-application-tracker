@@ -61,14 +61,34 @@ export async function getApplications() {
       try {
         const appliedDate = parseISO(app.date_applied);
         if (isBefore(appliedDate, thirtyDaysAgo)) {
+          const rawLower = (app.status || "").trim().toLowerCase();
+          const isGenericStatus =
+            !rawLower ||
+            rawLower === "applied" ||
+            rawLower === "in review" ||
+            rawLower === "review";
+
           return {
             ...app,
             statusCategory: "ghosted",
-            status: app.status || "Auto-Ghosted (>30 Days)",
+            status: isGenericStatus ? "Ghosted" : app.status,
           };
         }
       } catch {
         // Ignore date parsing error
+      }
+    } else if (app.statusCategory === "ghosted") {
+      const rawLower = (app.status || "").trim().toLowerCase();
+      if (
+        !rawLower ||
+        rawLower === "applied" ||
+        rawLower === "in review" ||
+        rawLower === "review"
+      ) {
+        return {
+          ...app,
+          status: "Ghosted",
+        };
       }
     }
     return app;

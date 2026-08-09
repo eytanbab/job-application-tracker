@@ -128,8 +128,9 @@ export function ApplicationDetailSheet({
 
   useEffect(() => {
     setCurrentApp(initialApp);
-    setQuickStatusText(initialApp?.status || '');
     if (initialApp) {
+      const effectiveStatus = getStatusDisplay(initialApp.status, initialApp.statusCategory);
+      setQuickStatusText(effectiveStatus);
       setEditForm({
         role_name: initialApp.role_name || '',
         company_name: initialApp.company_name || '',
@@ -140,9 +141,11 @@ export function ApplicationDetailSheet({
         date_applied: initialApp.date_applied || '',
         description: initialApp.description || '',
         notes: initialApp.notes || '',
-        status: initialApp.status || '',
+        status: effectiveStatus,
         statusCategory: getStatusKind(initialApp.status, initialApp.statusCategory),
       });
+    } else {
+      setQuickStatusText('');
     }
     setIsEditing(false);
   }, [initialApp]);

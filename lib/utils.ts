@@ -188,12 +188,21 @@ export const getStatusDisplay = (
   status: string | null | undefined,
   statusCategory?: string | null
 ) => {
+  const kind = getStatusKind(status, statusCategory);
   const trimmed = status?.trim();
+
   if (trimmed) {
+    const lower = trimmed.toLowerCase();
+    if (
+      kind === "ghosted" &&
+      (lower === "applied" || lower === "in review" || lower === "review")
+    ) {
+      return "Ghosted";
+    }
     return trimmed;
   }
 
-  return statusLabels[getStatusKind(status, statusCategory)];
+  return statusLabels[kind];
 };
 
 export const didReachInterviewStage = (
