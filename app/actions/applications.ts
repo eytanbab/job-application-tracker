@@ -133,10 +133,19 @@ export async function createApplication(values: FormValues) {
     .returning({ insertedId: jobApplications.id });
 
   if (result[0]?.insertedId) {
+    let appliedDate: Date;
+    try {
+      appliedDate = parseISO(normalizedValues.date_applied);
+      if (isNaN(appliedDate.getTime())) appliedDate = new Date();
+    } catch {
+      appliedDate = new Date();
+    }
+
     await db.insert(applicationStatusHistory).values({
       applicationId: result[0].insertedId,
       status: normalizedValues.status,
       statusCategory: normalizedValues.statusCategory ?? "applied",
+      createdAt: appliedDate,
     });
   }
 
@@ -249,7 +258,10 @@ export async function getApplicationHistory(applicationId: string) {
   const userId = await getCurrentUserIdOrThrow();
 
   const app = await db
-    .select({ id: jobApplications.id })
+    .select({
+      id: jobApplications.id,
+      date_applied: jobApplications.date_applied,
+    })
     .from(jobApplications)
     .where(
       and(
@@ -263,9 +275,38 @@ export async function getApplicationHistory(applicationId: string) {
     return [];
   }
 
-  return db
+  const history = await db
     .select()
     .from(applicationStatusHistory)
     .where(eq(applicationStatusHistory.applicationId, applicationId))
     .orderBy(desc(applicationStatusHistory.createdAt));
+
+  const hasAppliedEntry = history.some(
+    (h) =>
+      h.statusCategory === "applied" ||
+      (h.status && h.status.toLowerCase().includes("applied"))
+  );
+
+  if (!hasAppliedEntry && app[0].date_applied) {
+    try {
+      const appliedDate = parseISO(app[0].date_applied);
+      if (!isNaN(appliedDate.getTime())) {
+        history.push({
+          id: "",
+          applicationId,
+          status: "Applied",
+          statusCategory: "applied",
+          createdAt: appliedDate,
+        });
+        history.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      }
+    } catch {
+      // Ignore parsing error
+    }
+  }
+
+  return history;
 }
