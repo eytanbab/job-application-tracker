@@ -1,4 +1,4 @@
-import { getDetailedApplicationBreakdown, getYears } from "@/app/actions/analytics";
+import { getDetailedApplicationBreakdown, getYears, getApplicationsPerYear, getTop5Platforms, getTop5RoleNames } from "@/app/actions/analytics";
 import { AnalyticsFilter } from "../components/analytics-filter";
 import { InsightsDashboard } from "./components/insights-dashboard";
 
@@ -19,32 +19,20 @@ export default async function InsightsPage(props: {
   const year =
     typeof searchParams.year === "string" ? searchParams.year : undefined;
 
-  const [breakdownData, years] = await Promise.all([
+  const [breakdownData, years, timelineData, topPlatforms, topRoles] = await Promise.all([
     getDetailedApplicationBreakdown(month, year),
     getYears(),
+    getApplicationsPerYear(month, year),
+    getTop5Platforms(month, year),
+    getTop5RoleNames(month, year),
   ]);
 
-  const displayData =
-    breakdownData.total > 0
-      ? breakdownData
-      : {
-          total: 21,
-          stages: {
-            applied: 7,
-            interview: 7,
-            accepted: 1,
-          },
-          breakdown: {
-            active: 13,
-            offered: 1,
-            rejectedResume: 6,
-            rejectedInterview: 1,
-            ghostedResume: 4,
-            ghostedInterview: 1,
-          },
-          resumeConversion: 33.3,
-          interviewConversion: 14.3,
-        };
+  const displayData = {
+    ...breakdownData,
+    timelineData: breakdownData.total > 0 ? timelineData : [],
+    topPlatforms: breakdownData.total > 0 ? topPlatforms : [],
+    topRoles: breakdownData.total > 0 ? topRoles : [],
+  };
 
   return (
     <div className="flex flex-col gap-4 w-full">

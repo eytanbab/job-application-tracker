@@ -19,8 +19,13 @@ import {
   ArrowRight,
   TrendingDown,
   XCircle,
-  Ghost
+  Ghost,
+  Activity,
+  Briefcase,
+  Monitor
 } from 'lucide-react';
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, Pie, PieChart } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 
 interface InsightsDashboardProps {
   data: {
@@ -40,477 +45,308 @@ interface InsightsDashboardProps {
     };
     resumeConversion: number;
     interviewConversion: number;
+    responseConversion: number;
+    timelineData?: { year: string; month: string; numOfApplications: number }[];
+    topPlatforms?: { name: string; freq: number }[];
+    topRoles?: { name: string; freq: number }[];
   };
 }
 
+const timelineConfig = {
+  applications: {
+    label: "Applications",
+    color: "hsl(var(--primary))",
+  }
+} satisfies ChartConfig;
+
+const platformConfig = {
+  frequency: {
+    label: "Applications",
+    color: "hsl(var(--chart-1))",
+  }
+} satisfies ChartConfig;
+
 export function InsightsDashboard({ data }: InsightsDashboardProps) {
-  const { resumeConversion, interviewConversion, breakdown, stages, total } = data;
+  const { resumeConversion, interviewConversion, breakdown, stages, total, timelineData = [], topPlatforms = [], topRoles = [] } = data;
 
   if (total === 0) {
     return (
-      <div className="flex h-[400px] flex-col items-center justify-center rounded-xl border border-dashed border-border/40 bg-card/40 p-8 text-center">
-        <HelpCircle className="h-12 w-12 text-muted-foreground/60 mb-4 animate-pulse" />
-        <h3 className="text-lg font-semibold">No Analytics Available</h3>
+      <div className="flex h-[400px] flex-col items-center justify-center rounded-xl border border-dashed border-border/40 bg-card/40 p-8 text-center backdrop-blur-md">
+        <div className="bg-primary/10 p-4 rounded-full mb-4">
+          <HelpCircle className="h-10 w-10 text-primary animate-pulse" />
+        </div>
+        <h3 className="text-xl font-bold tracking-tight">No Analytics Available</h3>
         <p className="text-muted-foreground max-w-sm mt-2">
-          Add some applications and record their interview or rejection status to unlock detailed journey insights.
+          Start adding job applications to unlock detailed journey insights, predictive analytics, and personalized recommendations.
         </p>
       </div>
     );
   }
 
   // 1. Identify primary bottleneck
-  let bottleneckTitle = 'Application Funnel Healthy';
-  let bottleneckDesc = 'Your conversion rates are stable across all stages. Keep up the great work!';
+  let bottleneckTitle = 'Pipeline Healthy & Active';
+  let bottleneckDesc = 'Your conversion rates are stable. Keep the momentum going!';
   let bottleneckStatus: 'healthy' | 'resume' | 'interview' = 'healthy';
   let recommendation = 'Maintain your current cadence, prioritize direct networking, and continue preparing for upcoming interviews.';
   
   if (resumeConversion < 12 && stages.applied >= 5) {
     bottleneckTitle = 'Resume / Sourcing Bottleneck';
-    bottleneckDesc = `Your Resume Pass Rate is below 2026 market benchmarks (${resumeConversion.toFixed(1)}%). Most of your applications are ending before the initial recruiter screen.`;
+    bottleneckDesc = `Your Resume Pass Rate is below market benchmarks (${resumeConversion.toFixed(1)}%). Most applications end before the initial screen.`;
     bottleneckStatus = 'resume';
-    recommendation = 'Focus on optimizing your resume for ATS systems. Align keywords in your resume with job descriptions, tailor cover letters, and ensure your portfolio/GitHub links are prominent. Consider applying through employee referrals or direct messaging hiring managers.';
+    recommendation = 'Focus on optimizing your resume for ATS systems. Align keywords in your resume with job descriptions, tailor cover letters, and ensure your portfolio/GitHub links are prominent.';
   } else if (interviewConversion < 18 && stages.interview >= 3) {
-    bottleneckTitle = 'Interview Process Bottleneck';
-    bottleneckDesc = `Your Interview Success Rate is below 2026 market benchmarks (${interviewConversion.toFixed(1)}%). You are securing interviews but finding it difficult to convert them into offers.`;
+    bottleneckTitle = 'Interview Conversion Bottleneck';
+    bottleneckDesc = `Your Interview Success Rate is below market benchmarks (${interviewConversion.toFixed(1)}%). You are securing interviews but struggling to convert.`;
     bottleneckStatus = 'interview';
-    recommendation = 'Focus on interview preparation. Dedicate time to mock interviews, practicing the STAR method for behavioral questions, refining your elevator pitch, and preparing deep questions about the company structure and challenges.';
+    recommendation = 'Dedicate time to mock interviews, practicing the STAR method for behavioral questions, and refining your elevator pitch.';
   }
 
-  // 2. Drop-off breakdown items
-  const totalDropOff = breakdown.rejectedResume + breakdown.ghostedResume + breakdown.rejectedInterview + breakdown.ghostedInterview;
-  
-  const dropOffItems = [
-    {
-      label: 'Pre-interview Rejections',
-      sublabel: 'Resume Screen',
-      count: breakdown.rejectedResume,
-      icon: XCircle,
-      badgeColor: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
-      barColor: 'bg-rose-500',
-    },
-    {
-      label: 'Pre-interview Ghosting',
-      sublabel: 'No reply after apply',
-      count: breakdown.ghostedResume,
-      icon: Ghost,
-      badgeColor: 'bg-slate-500/15 text-slate-600 dark:text-slate-400',
-      barColor: 'bg-slate-400',
-    },
-    {
-      label: 'Post-interview Rejections',
-      sublabel: 'After 1+ rounds',
-      count: breakdown.rejectedInterview,
-      icon: XCircle,
-      badgeColor: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
-      barColor: 'bg-amber-500',
-    },
-    {
-      label: 'Post-interview Ghosting',
-      sublabel: 'Silent after interviews',
-      count: breakdown.ghostedInterview,
-      icon: Ghost,
-      badgeColor: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400',
-      barColor: 'bg-indigo-400',
-    },
-  ];
-
-  const calcPct = (num: number) => (total > 0 ? ((num / total) * 100).toFixed(1) : '0.0');
+  // Colors for donut chart
+  const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
   return (
-    <div className="flex flex-col gap-6 w-full animate-in fade-in duration-500">
+    <div className="flex flex-col gap-6 w-full animate-in fade-in zoom-in-95 duration-500 ease-out">
       
-      {/* Dynamic Recommendation Panel */}
-      <Card className="relative overflow-hidden border border-border/30 bg-gradient-to-r from-primary/10 via-accent/5 to-card shadow-2xs rounded-2xl w-full">
-        <div className="absolute right-0 top-0 h-40 w-40 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-        <CardHeader className="pb-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-primary/15 text-primary shrink-0">
+      {/* Dynamic Recommendation Panel - Glassmorphism */}
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-xl shadow-xl w-full group">
+        <div className="absolute -right-20 -top-20 h-64 w-64 bg-primary/20 rounded-full blur-3xl pointer-events-none group-hover:bg-primary/30 transition-colors duration-700" />
+        <div className="absolute -left-20 -bottom-20 h-64 w-64 bg-accent/20 rounded-full blur-3xl pointer-events-none group-hover:bg-accent/30 transition-colors duration-700" />
+        
+        <div className="p-6 sm:p-8 relative z-10 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+          <div className="space-y-3 max-w-2xl">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-primary/15 text-primary shrink-0 shadow-inner">
                 <Sparkles className="h-5 w-5" />
               </div>
-              <CardTitle className="text-lg sm:text-xl font-bold">{bottleneckTitle}</CardTitle>
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">{bottleneckTitle}</h2>
+              <Badge 
+                variant="outline"
+                className={
+                  bottleneckStatus === 'healthy'
+                    ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-semibold px-3 py-1 text-xs backdrop-blur-md ml-2 hidden sm:flex'
+                    : 'bg-destructive/10 text-destructive border-destructive/20 font-semibold px-3 py-1 text-xs backdrop-blur-md ml-2 hidden sm:flex'
+                }
+              >
+                {bottleneckStatus === 'healthy' ? 'On Track' : 'Needs Attention'}
+              </Badge>
             </div>
-            <Badge 
-              variant="outline"
-              className={
-                bottleneckStatus === 'healthy'
-                  ? 'bg-emerald-500/15 text-emerald-600 border-none font-semibold px-3 py-1 text-xs w-fit'
-                  : 'bg-destructive/15 text-destructive border-none font-semibold px-3 py-1 text-xs w-fit'
-              }
-            >
-              {bottleneckStatus === 'healthy' ? 'Good Status' : 'Issue Detected'}
-            </Badge>
-          </div>
-          <CardDescription className="text-sm text-foreground/80 font-medium mt-2">
-            {bottleneckDesc}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-xl bg-background/80 p-4 shadow-2xs space-y-1.5 border-none">
-            <p className="text-xs font-bold text-foreground uppercase tracking-wider">
-              Actionable Recommendation:
+            <p className="text-muted-foreground font-medium leading-relaxed">
+              {bottleneckDesc}
             </p>
-            <p className="text-sm text-muted-foreground leading-relaxed">
+          </div>
+          <div className="rounded-2xl bg-foreground/5 dark:bg-foreground/10 border border-white/5 p-5 shadow-inner flex-1 w-full md:w-auto backdrop-blur-sm">
+            <p className="text-xs font-bold text-primary uppercase tracking-wider mb-2 flex items-center gap-2">
+              <Activity className="h-3.5 w-3.5" /> AI Recommendation
+            </p>
+            <p className="text-sm text-foreground/90 leading-relaxed font-medium">
               {recommendation}
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Conversion Metric Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 w-full">
-        <Card className="bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow">
+      {/* KPI Bento Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+        <Card className="bg-card/60 backdrop-blur-md shadow-lg border border-white/5 rounded-3xl hover:bg-card/80 transition-colors duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Resume Pass Rate</CardTitle>
-            <FileText className="h-4 w-4 text-primary" />
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pass Rate</CardTitle>
+            <div className="p-2 bg-primary/10 rounded-lg"><FileText className="h-4 w-4 text-primary" /></div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{resumeConversion.toFixed(1)}%</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Applied &rarr; Interview conversion
-            </p>
-            {resumeConversion < 15 && stages.applied >= 5 && (
-              <span className="inline-flex items-center text-[10px] font-medium text-destructive mt-1 gap-1">
-                <TrendingDown className="h-3 w-3" /> Below average (target &gt; 15%)
-              </span>
-            )}
-            {resumeConversion >= 15 && (
-              <span className="inline-flex items-center text-[10px] font-medium text-emerald-500 mt-1 gap-1">
-                <TrendingUp className="h-3 w-3" /> Solid conversion!
-              </span>
-            )}
+            <div className="text-3xl font-black text-foreground tracking-tight">{resumeConversion.toFixed(1)}<span className="text-xl text-muted-foreground">%</span></div>
+            <p className="text-xs text-muted-foreground mt-1 font-medium">Applied &rarr; Interview</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow">
+        <Card className="bg-card/60 backdrop-blur-md shadow-lg border border-white/5 rounded-3xl hover:bg-card/80 transition-colors duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Interview Success Rate</CardTitle>
-            <Users className="h-4 w-4 text-blue-500" />
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Win Rate</CardTitle>
+            <div className="p-2 bg-blue-500/10 rounded-lg"><Users className="h-4 w-4 text-blue-500" /></div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{interviewConversion.toFixed(1)}%</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Interview &rarr; Offer conversion
-            </p>
-            {interviewConversion < 25 && stages.interview >= 3 && (
-              <span className="inline-flex items-center text-[10px] font-medium text-destructive mt-1 gap-1">
-                <TrendingDown className="h-3 w-3" /> Below average (target &gt; 25%)
-              </span>
-            )}
-            {interviewConversion >= 25 && (
-              <span className="inline-flex items-center text-[10px] font-medium text-emerald-500 mt-1 gap-1">
-                <TrendingUp className="h-3 w-3" /> High interview pass!
-              </span>
-            )}
+            <div className="text-3xl font-black text-foreground tracking-tight">{interviewConversion.toFixed(1)}<span className="text-xl text-muted-foreground">%</span></div>
+            <p className="text-xs text-muted-foreground mt-1 font-medium">Interview &rarr; Offer</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow">
+        <Card className="bg-card/60 backdrop-blur-md shadow-lg border border-white/5 rounded-3xl hover:bg-card/80 transition-colors duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Active Pipeline</CardTitle>
-            <TrendingUp className="h-4 w-4 text-emerald-500" />
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Active</CardTitle>
+            <div className="p-2 bg-emerald-500/10 rounded-lg"><TrendingUp className="h-4 w-4 text-emerald-500" /></div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{breakdown.active}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Applications currently active
-            </p>
+            <div className="text-3xl font-black text-foreground tracking-tight">{breakdown.active}</div>
+            <p className="text-xs text-muted-foreground mt-1 font-medium">Applications in progress</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow">
+        <Card className="bg-card/60 backdrop-blur-md shadow-lg border border-white/5 rounded-3xl hover:bg-card/80 transition-colors duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Job Offers Secured</CardTitle>
-            <Award className="h-4 w-4 text-amber-500" />
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Offers</CardTitle>
+            <div className="p-2 bg-amber-500/10 rounded-lg"><Award className="h-4 w-4 text-amber-500" /></div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{breakdown.offered}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Total job offers received
-            </p>
+            <div className="text-3xl font-black text-foreground tracking-tight">{breakdown.offered}</div>
+            <p className="text-xs text-muted-foreground mt-1 font-medium">Total jobs secured</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
         
-        {/* Journey Funnel Visualizer */}
-        <Card className="lg:col-span-2 bg-card shadow-2xs border border-border/30 rounded-2xl w-full">
+        {/* Activity Timeline Chart */}
+        <Card className="lg:col-span-2 bg-card/60 backdrop-blur-md shadow-lg border border-white/5 rounded-3xl overflow-hidden">
           <CardHeader>
-            <CardTitle className="text-lg font-bold">Journey Funnel Breakdown</CardTitle>
-            <CardDescription>Visualizing unique applications progressing through key hiring milestones</CardDescription>
+            <CardTitle className="text-lg font-bold flex items-center gap-2"><Activity className="h-5 w-5 text-primary" /> Application Velocity</CardTitle>
+            <CardDescription>Your application volume over the selected period</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-6 pt-2">
-            
-            {/* Step-by-step funnel visualization (Fixed badge overflow) */}
-            <div className="flex flex-col md:flex-row items-stretch justify-between gap-4 md:gap-3 w-full">
-              
-              {/* Stage 1: Applied */}
-              <div className="flex-1 flex flex-col items-center justify-between p-4 rounded-xl border border-border/30 bg-muted/20 backdrop-blur group hover:border-primary/40 transition-all duration-300 gap-3">
-                <Badge variant="outline" className="bg-primary/15 text-primary border-none font-semibold text-[11px]">Stage 1</Badge>
-                <div className="text-center space-y-1">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Applied</span>
-                  <span className="text-3xl font-extrabold text-foreground">{stages.applied}</span>
-                </div>
-                <span className="text-[10px] text-muted-foreground">100% of pipeline</span>
-              </div>
-
-              {/* Arrow 1 */}
-              <div className="flex items-center justify-center md:px-1">
-                <ArrowRight className="h-5 w-5 text-muted-foreground/40 rotate-90 md:rotate-0" />
-              </div>
-
-              {/* Stage 2: Interviewed */}
-              <div className="flex-1 flex flex-col items-center justify-between p-4 rounded-xl border border-border/30 bg-muted/20 backdrop-blur group hover:border-blue-500/40 transition-all duration-300 gap-3">
-                <Badge variant="outline" className="bg-blue-500/15 text-blue-500 border-none font-semibold text-[11px]">Stage 2</Badge>
-                <div className="text-center space-y-1">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Interviewed</span>
-                  <span className="text-3xl font-extrabold text-blue-500">{stages.interview}</span>
-                </div>
-                <span className="text-[10px] text-muted-foreground">
-                  {resumeConversion.toFixed(1)}% conversion rate
-                </span>
-              </div>
-
-              {/* Arrow 2 */}
-              <div className="flex items-center justify-center md:px-1">
-                <ArrowRight className="h-5 w-5 text-muted-foreground/40 rotate-90 md:rotate-0" />
-              </div>
-
-              {/* Stage 3: Offers Received */}
-              <div className="flex-1 flex flex-col items-center justify-between p-4 rounded-xl border border-border/30 bg-muted/20 backdrop-blur group hover:border-amber-500/40 transition-all duration-300 gap-3">
-                <Badge variant="outline" className="bg-amber-500/15 text-amber-500 border-none font-semibold text-[11px]">Stage 3</Badge>
-                <div className="text-center space-y-1">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Offers Received</span>
-                  <span className="text-3xl font-extrabold text-amber-500">{stages.accepted}</span>
-                </div>
-                <span className="text-[10px] text-muted-foreground">
-                  {interviewConversion.toFixed(1)}% interview to offer
-                </span>
-              </div>
-
-            </div>
-
-            {/* Explanatory callout text */}
-            <div className="text-xs text-muted-foreground bg-muted/30 rounded-xl p-3.5 leading-relaxed border border-border/20 flex items-start gap-2.5">
-              <AlertTriangle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-              <span>
-                The journey timeline helps isolate where drop-off is occurring. If you refine your resume formatting and tailoring, your applied-to-interview conversion can be boosted. Good interview practice optimizes Stage 3.
-              </span>
-            </div>
-
+          <CardContent className="pt-4 h-[300px]">
+            {timelineData.length > 0 ? (
+              <ChartContainer config={timelineConfig} className="h-full w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={timelineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorApps" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Area type="monotone" dataKey="numOfApplications" stroke="hsl(var(--primary))" strokeWidth={3} fillOpacity={1} fill="url(#colorApps)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-muted-foreground">No timeline data available</div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Multi-Stage Drop-off Breakdown (Redesigned List) */}
-        <Card className="bg-card shadow-2xs border border-border/30 rounded-2xl w-full flex flex-col justify-between">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-bold">Drop-off Breakdown</CardTitle>
-            <CardDescription>Categorizing where opportunities were lost ({totalDropOff} total)</CardDescription>
+        {/* Funnel Widget */}
+        <Card className="bg-card/60 backdrop-blur-md shadow-lg border border-white/5 rounded-3xl flex flex-col justify-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-bold">Conversion Funnel</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 pt-1">
-            {dropOffItems.map((item) => {
-              const IconComp = item.icon;
-              const pct = total > 0 ? (item.count / total) * 100 : 0;
-              return (
-                <div key={item.label} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className={`p-1 rounded-md ${item.badgeColor}`}>
-                        <IconComp className="h-3.5 w-3.5" />
-                      </span>
-                      <div>
-                        <span className="font-semibold text-foreground block">{item.label}</span>
-                        <span className="text-[10px] text-muted-foreground">{item.sublabel}</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-bold text-foreground">{item.count}</span>
-                      <span className="text-[11px] text-muted-foreground ml-1">({pct.toFixed(1)}%)</span>
-                    </div>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-muted/60 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${item.barColor} transition-all duration-500`}
-                      style={{ width: `${Math.max(pct, item.count > 0 ? 4 : 0)}%` }}
-                    />
-                  </div>
+          <CardContent className="flex-1 flex flex-col justify-center gap-4 relative z-10">
+            
+            <div className="space-y-4 w-full">
+              {/* Applied */}
+              <div className="relative group">
+                <div className="flex justify-between items-end mb-1">
+                  <span className="text-sm font-bold text-foreground">Applied</span>
+                  <span className="text-sm font-bold text-foreground">{stages.applied}</span>
                 </div>
-              );
-            })}
+                <div className="h-3 w-full bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-primary rounded-full transition-all duration-1000 ease-out" style={{ width: '100%' }} />
+                </div>
+              </div>
+
+              {/* Interview */}
+              <div className="relative group">
+                <div className="flex justify-between items-end mb-1">
+                  <span className="text-sm font-bold text-foreground">Interviewed</span>
+                  <span className="text-sm font-bold text-foreground">{stages.interview}</span>
+                </div>
+                <div className="h-3 w-full bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 rounded-full transition-all duration-1000 ease-out delay-150" 
+                    style={{ width: `${Math.max(stages.applied > 0 ? (stages.interview / stages.applied) * 100 : 0, stages.interview > 0 ? 5 : 0)}%` }} />
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1 text-right">{resumeConversion.toFixed(1)}% conversion</p>
+              </div>
+
+              {/* Offer */}
+              <div className="relative group">
+                <div className="flex justify-between items-end mb-1">
+                  <span className="text-sm font-bold text-foreground">Offers</span>
+                  <span className="text-sm font-bold text-foreground">{stages.accepted}</span>
+                </div>
+                <div className="h-3 w-full bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000 ease-out delay-300" 
+                    style={{ width: `${Math.max(stages.applied > 0 ? (stages.accepted / stages.applied) * 100 : 0, stages.accepted > 0 ? 5 : 0)}%` }} />
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1 text-right">{interviewConversion.toFixed(1)}% conversion</p>
+              </div>
+            </div>
+
           </CardContent>
         </Card>
 
       </div>
 
-      {/* 100% Full-Width Granular Breakdown Table Matrix */}
-      <Card className="bg-card shadow-2xs border border-border/30 rounded-2xl w-full">
-        <CardHeader>
-          <CardTitle className="text-lg font-bold">Detailed Breakdown Categories</CardTitle>
-          <CardDescription>A granular review of all completed and ongoing applications in your pipeline</CardDescription>
-        </CardHeader>
-        <CardContent className="w-full p-4 sm:p-6 sm:pt-0">
-          <div className="w-full overflow-x-auto rounded-xl border border-border/30 bg-card shadow-2xs">
-            <table className="w-full text-sm text-left border-collapse min-w-[600px]">
-              <thead>
-                <tr className="border-b border-border/30 bg-muted/30 text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-                  <th className="py-3 px-4 w-[160px]">Stage Phase</th>
-                  <th className="py-3 px-4 min-w-[200px]">Outcome Sub-Category</th>
-                  <th className="py-3 px-4 min-w-[220px]">Visual Distribution</th>
-                  <th className="py-3 px-4 text-right w-[90px]">Count</th>
-                  <th className="py-3 px-4 text-right w-[130px]">Pipeline Share</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/20">
-                {/* 1. Rejected before interview */}
-                <tr className="hover:bg-muted/20 transition-colors">
-                  <td className="py-3.5 px-4">
-                    <Badge variant="outline" className="bg-primary/15 text-primary border-none font-semibold text-xs">
-                      Pre-Interview
-                    </Badge>
-                  </td>
-                  <td className="py-3.5 px-4 font-medium text-foreground">Rejected before interview</td>
-                  <td className="py-3.5 px-4">
-                    <div className="w-full bg-muted/50 h-2.5 rounded-full overflow-hidden">
-                      <div
-                        className="bg-destructive h-full rounded-full transition-all duration-500"
-                        style={{ width: `${calcPct(breakdown.rejectedResume)}%` }}
-                      />
-                    </div>
-                  </td>
-                  <td className="py-3.5 px-4 text-right font-bold text-foreground">{breakdown.rejectedResume}</td>
-                  <td className="py-3.5 px-4 text-right">
-                    <Badge variant="secondary" className="font-semibold text-xs">
-                      {calcPct(breakdown.rejectedResume)}%
-                    </Badge>
-                  </td>
-                </tr>
+      {/* Deep Insights Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+        
+        {/* Top Platforms */}
+        <Card className="bg-card/60 backdrop-blur-md shadow-lg border border-white/5 rounded-3xl overflow-hidden">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold flex items-center gap-2"><Monitor className="h-5 w-5 text-chart-1" /> Top Platforms</CardTitle>
+            <CardDescription>Where you source most of your opportunities</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[250px] flex items-center justify-center">
+            {topPlatforms.length > 0 ? (
+              <ChartContainer config={platformConfig} className="h-full w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Pie
+                      data={topPlatforms}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      paddingAngle={5}
+                      dataKey="freq"
+                      nameKey="name"
+                      stroke="none"
+                    >
+                      {topPlatforms.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            ) : (
+              <div className="text-muted-foreground">No platform data available</div>
+            )}
+          </CardContent>
+        </Card>
 
-                {/* 2. Ghosted before interview */}
-                <tr className="hover:bg-muted/20 transition-colors">
-                  <td className="py-3.5 px-4">
-                    <Badge variant="outline" className="bg-primary/15 text-primary border-none font-semibold text-xs">
-                      Pre-Interview
-                    </Badge>
-                  </td>
-                  <td className="py-3.5 px-4 font-medium text-foreground">Ghosted before interview</td>
-                  <td className="py-3.5 px-4">
-                    <div className="w-full bg-muted/50 h-2.5 rounded-full overflow-hidden">
-                      <div
-                        className="bg-slate-400 h-full rounded-full transition-all duration-500"
-                        style={{ width: `${calcPct(breakdown.ghostedResume)}%` }}
-                      />
+        {/* Top Roles */}
+        <Card className="bg-card/60 backdrop-blur-md shadow-lg border border-white/5 rounded-3xl overflow-hidden">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold flex items-center gap-2"><Briefcase className="h-5 w-5 text-chart-2" /> Role Distribution</CardTitle>
+            <CardDescription>The most common roles you've applied for</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-2">
+            <div className="space-y-4 mt-2">
+              {topRoles.length > 0 ? topRoles.map((role, idx) => {
+                const max = topRoles[0].freq;
+                const pct = (role.freq / max) * 100;
+                return (
+                  <div key={idx} className="group">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="font-medium text-foreground truncate pr-4">{role.name}</span>
+                      <span className="font-bold text-muted-foreground">{role.freq}</span>
                     </div>
-                  </td>
-                  <td className="py-3.5 px-4 text-right font-bold text-foreground">{breakdown.ghostedResume}</td>
-                  <td className="py-3.5 px-4 text-right">
-                    <Badge variant="secondary" className="font-semibold text-xs">
-                      {calcPct(breakdown.ghostedResume)}%
-                    </Badge>
-                  </td>
-                </tr>
-
-                {/* 3. Rejected after interview */}
-                <tr className="hover:bg-muted/20 transition-colors">
-                  <td className="py-3.5 px-4">
-                    <Badge variant="outline" className="bg-blue-500/15 text-blue-500 border-none font-semibold text-xs">
-                      Post-Interview
-                    </Badge>
-                  </td>
-                  <td className="py-3.5 px-4 font-medium text-foreground">Rejected after interview(s)</td>
-                  <td className="py-3.5 px-4">
-                    <div className="w-full bg-muted/50 h-2.5 rounded-full overflow-hidden">
-                      <div
-                        className="bg-destructive h-full rounded-full transition-all duration-500"
-                        style={{ width: `${calcPct(breakdown.rejectedInterview)}%` }}
-                      />
+                    <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all duration-700 ease-out" 
+                        style={{ width: `${pct}%`, backgroundColor: COLORS[idx % COLORS.length] }} />
                     </div>
-                  </td>
-                  <td className="py-3.5 px-4 text-right font-bold text-foreground">{breakdown.rejectedInterview}</td>
-                  <td className="py-3.5 px-4 text-right">
-                    <Badge variant="secondary" className="font-semibold text-xs">
-                      {calcPct(breakdown.rejectedInterview)}%
-                    </Badge>
-                  </td>
-                </tr>
+                  </div>
+                )
+              }) : (
+                <div className="text-muted-foreground h-[200px] flex items-center justify-center">No role data available</div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-                {/* 4. Ghosted after interview */}
-                <tr className="hover:bg-muted/20 transition-colors">
-                  <td className="py-3.5 px-4">
-                    <Badge variant="outline" className="bg-blue-500/15 text-blue-500 border-none font-semibold text-xs">
-                      Post-Interview
-                    </Badge>
-                  </td>
-                  <td className="py-3.5 px-4 font-medium text-foreground">Ghosted after interview(s)</td>
-                  <td className="py-3.5 px-4">
-                    <div className="w-full bg-muted/50 h-2.5 rounded-full overflow-hidden">
-                      <div
-                        className="bg-slate-400 h-full rounded-full transition-all duration-500"
-                        style={{ width: `${calcPct(breakdown.ghostedInterview)}%` }}
-                      />
-                    </div>
-                  </td>
-                  <td className="py-3.5 px-4 text-right font-bold text-foreground">{breakdown.ghostedInterview}</td>
-                  <td className="py-3.5 px-4 text-right">
-                    <Badge variant="secondary" className="font-semibold text-xs">
-                      {calcPct(breakdown.ghostedInterview)}%
-                    </Badge>
-                  </td>
-                </tr>
-
-                {/* 5. Accepted offer */}
-                <tr className="bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors">
-                  <td className="py-3.5 px-4">
-                    <Badge variant="outline" className="bg-emerald-500/15 text-emerald-600 border-none font-semibold text-xs">
-                      Offer Stage
-                    </Badge>
-                  </td>
-                  <td className="py-3.5 px-4 font-semibold text-emerald-600">Accepted offer / Hired</td>
-                  <td className="py-3.5 px-4">
-                    <div className="w-full bg-muted/50 h-2.5 rounded-full overflow-hidden">
-                      <div
-                        className="bg-emerald-500 h-full rounded-full transition-all duration-500"
-                        style={{ width: `${calcPct(breakdown.offered)}%` }}
-                      />
-                    </div>
-                  </td>
-                  <td className="py-3.5 px-4 text-right font-bold text-emerald-600">{breakdown.offered}</td>
-                  <td className="py-3.5 px-4 text-right">
-                    <Badge variant="outline" className="bg-emerald-500/15 text-emerald-600 border-none font-semibold text-xs">
-                      {calcPct(breakdown.offered)}%
-                    </Badge>
-                  </td>
-                </tr>
-
-                {/* 6. Active Applications */}
-                <tr className="bg-primary/5 hover:bg-primary/10 transition-colors">
-                  <td className="py-3.5 px-4">
-                    <Badge variant="outline" className="bg-primary/15 text-primary border-none font-semibold text-xs">
-                      Active Pipeline
-                    </Badge>
-                  </td>
-                  <td className="py-3.5 px-4 font-semibold text-primary">Active Applications</td>
-                  <td className="py-3.5 px-4">
-                    <div className="w-full bg-muted/50 h-2.5 rounded-full overflow-hidden">
-                      <div
-                        className="bg-primary h-full rounded-full transition-all duration-500"
-                        style={{ width: `${calcPct(breakdown.active)}%` }}
-                      />
-                    </div>
-                  </td>
-                  <td className="py-3.5 px-4 text-right font-bold text-primary">{breakdown.active}</td>
-                  <td className="py-3.5 px-4 text-right">
-                    <Badge variant="outline" className="bg-primary/15 text-primary border-none font-semibold text-xs">
-                      {calcPct(breakdown.active)}%
-                    </Badge>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-
+      </div>
     </div>
   );
 }
