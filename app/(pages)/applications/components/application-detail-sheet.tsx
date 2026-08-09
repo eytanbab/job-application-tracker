@@ -91,6 +91,7 @@ export function ApplicationDetailSheet({
   onDeleteClick,
 }: ApplicationDetailSheetProps) {
   const [currentApp, setCurrentApp] = useState<ApplicationDetail | null>(initialApp);
+  const [quickStatusText, setQuickStatusText] = useState<string>(initialApp?.status || '');
   const [isEditing, setIsEditing] = useState(false);
   const [history, setHistory] = useState<
     { id: string; status: string; statusCategory: string; createdAt: Date }[]
@@ -127,6 +128,7 @@ export function ApplicationDetailSheet({
 
   useEffect(() => {
     setCurrentApp(initialApp);
+    setQuickStatusText(initialApp?.status || '');
     if (initialApp) {
       setEditForm({
         role_name: initialApp.role_name || '',
@@ -159,7 +161,7 @@ export function ApplicationDetailSheet({
           setIsLoadingHistory(false);
         });
     }
-  }, [open, currentApp?.id, currentApp?.statusCategory, currentApp?.status]);
+  }, [open, currentApp?.id]);
 
   if (!currentApp) return null;
 
@@ -494,12 +496,15 @@ export function ApplicationDetailSheet({
 
                   <Input
                     placeholder="Custom stage detail (optional)"
-                    value={currentApp.status || ''}
-                    onChange={(e) => {
-                      const newStatus = e.target.value;
-                      setCurrentApp({ ...currentApp, status: newStatus });
-                    }}
+                    value={quickStatusText}
+                    onChange={(e) => setQuickStatusText(e.target.value)}
                     onBlur={(e) => handleQuickStatusChange(currentKind, e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.currentTarget.blur();
+                        handleQuickStatusChange(currentKind, quickStatusText);
+                      }
+                    }}
                     className="h-9 text-xs bg-card border-border/40"
                   />
                 </div>
