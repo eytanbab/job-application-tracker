@@ -1,5 +1,5 @@
 "use server";
-import { addDays, differenceInDays, format, subDays } from "date-fns";
+import { addDays, differenceInDays, format, subDays, parseISO } from "date-fns";
 import { and, count, desc, eq, gte, lt, inArray } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 
@@ -189,7 +189,7 @@ export async function getDomainLeaderboard() {
           successRate:
             stats.total > 0 ? (stats.interviews / stats.total) * 100 : 0,
         }))
-        .sort((a, b) => b.successRate - a.successRate)
+        .sort((a, b) => b.successRate - a.successRate || b.total - a.total)
         .slice(0, 5);
     },
     ["analytics", "domain-leaderboard", userId],
@@ -1052,6 +1052,7 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
           resumeConversion: 0,
           interviewConversion: 0,
           responseConversion: 0,
+          averageResponseDays: null as number | null,
         };
       }
 
@@ -1062,6 +1063,7 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
           applicationId: applicationStatusHistory.applicationId,
           statusCategory: applicationStatusHistory.statusCategory,
           status: applicationStatusHistory.status,
+          createdAt: applicationStatusHistory.createdAt,
         })
         .from(applicationStatusHistory)
         .where(inArray(applicationStatusHistory.applicationId, appIds));
@@ -1082,6 +1084,9 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
       let ghostedResumeCount = 0;
       let ghostedInterviewCount = 0;
 
+      let totalResponseDays = 0;
+      let totalResponseCount = 0;
+
       const thirtyDaysAgo = subDays(new Date(), 30);
 
       apps.forEach((app) => {
@@ -1097,10 +1102,8 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
         if (currentKind === "accepted") {
           offeredCount++;
         } else if (currentKind === "applied" || currentKind === "review" || currentKind === "interview") {
-          // Check if it should be classified as ghosted (applied > 30 days ago with no response)
-          const dateAppliedStr = app.dateApplied.includes("T") ? app.dateApplied : `${app.dateApplied}T12:00:00`;
-          const dateApplied = new Date(dateAppliedStr);
-          const isOlderThan30Days = dateApplied < thirtyDaysAgo;
+          const dateApplied = app.dateApplied ? parseISO(app.dateApplied) : null;
+          const isOlderThan30Days = dateApplied && !isNaN(dateApplied.getTime()) ? dateApplied < thirtyDaysAgo : false;
 
           if (isOlderThan30Days && currentKind === "applied") {
             if (reachedInterview) {
@@ -1126,6 +1129,21 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
         } else {
           activeCount++;
         }
+
+        // Response velocity calculation (time to first non-applied status)
+        const firstResponseHistory = appHistory
+          .filter((h) => getStatusKind(h.status, h.statusCategory) !== "applied")
+          .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+        if (firstResponseHistory.length > 0 && app.dateApplied) {
+          const appliedDate = parseISO(app.dateApplied);
+          if (!isNaN(appliedDate.getTime())) {
+            const firstResponseDate = new Date(firstResponseHistory[0].createdAt);
+            const diffDays = Math.max(0, differenceInDays(firstResponseDate, appliedDate));
+            totalResponseDays += diffDays;
+            totalResponseCount++;
+          }
+        }
       });
 
       const total = apps.length;
@@ -1147,6 +1165,10 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
       const interviewConversion = uniqueInterview ? (uniqueOffer / uniqueInterview) * 100 : 0;
       const responseConversion = uniqueApplied ? (respondedCount / uniqueApplied) * 100 : 0;
 
+      const averageResponseDays = totalResponseCount > 0
+        ? Math.round(totalResponseDays / totalResponseCount)
+        : null;
+
       return {
         total,
         stages: {
@@ -1165,6 +1187,7 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
         resumeConversion,
         interviewConversion,
         responseConversion,
+        averageResponseDays,
       };
     },
     ["analytics", "detailed-breakdown", userId, month || "all", year || "all"],

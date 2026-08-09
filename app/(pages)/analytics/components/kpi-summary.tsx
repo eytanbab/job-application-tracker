@@ -4,16 +4,18 @@ import { FileText, Users, Award, Clock } from 'lucide-react';
 type Props = {
   totalApplications: number;
   interviewRate: number;
+  interviewConversionRate: number;
   rejectionRate: number;
-  responseRate: number;
+  averageResponseDays: number | null;
 };
 
 const formatPercent = (value: number) => `${Math.round(value * 100)}%`;
 
 export function KpiSummary({
   interviewRate,
+  interviewConversionRate,
   rejectionRate,
-  responseRate,
+  averageResponseDays,
 }: Props) {
   return (
     <div className="col-span-full grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -38,7 +40,7 @@ export function KpiSummary({
           <Users className="h-4 w-4 text-muted-foreground/70" />
         </CardHeader>
         <CardContent>
-          <p className="text-3xl font-extrabold text-foreground">{formatPercent(responseRate)}</p>
+          <p className="text-3xl font-extrabold text-foreground">{formatPercent(interviewConversionRate)}</p>
           <p className="text-xs text-muted-foreground mt-1">Interviews converted to offer leads</p>
         </CardContent>
       </Card>
@@ -64,7 +66,9 @@ export function KpiSummary({
           <Clock className="h-4 w-4 text-muted-foreground/70" />
         </CardHeader>
         <CardContent>
-          <p className="text-3xl font-extrabold text-foreground">7 Days</p>
+          <p className="text-3xl font-extrabold text-foreground">
+            {averageResponseDays !== null ? `${averageResponseDays} ${averageResponseDays === 1 ? 'Day' : 'Days'}` : 'N/A'}
+          </p>
           <p className="text-xs text-muted-foreground mt-1">Average time to recruiter response</p>
         </CardContent>
       </Card>

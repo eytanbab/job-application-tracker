@@ -55,36 +55,20 @@ export default async function Overview(props: {
     getDomainLeaderboard(),
   ]);
 
-  const hasData = top5Statuses.length > 0;
-
-  const displayStatuses = hasData
-    ? top5Statuses
-    : [
-        { name: 'Applied', freq: 7 },
-        { name: 'Interview', freq: 7 },
-        { name: 'In Review', freq: 6 },
-        { name: 'Rejected', freq: 1 },
-      ];
-
   const totalApplications = breakdownData.total;
   
   const interviewRate = breakdownData.total 
     ? breakdownData.stages.interview / breakdownData.total 
     : 0;
   
+  const interviewConversionRate = breakdownData.stages.interview
+    ? breakdownData.stages.accepted / breakdownData.stages.interview
+    : 0;
+
   const totalRejections = breakdownData.breakdown.rejectedResume + breakdownData.breakdown.rejectedInterview;
   const rejectionRate = breakdownData.total 
     ? totalRejections / breakdownData.total 
     : 0;
-    
-  const responseRate = breakdownData.total 
-    ? breakdownData.responseConversion / 100 
-    : 0;
-
-  const displayTotal = totalApplications || 21;
-  const displayInterviewRate = interviewRate || 0.33;
-  const displayRejectionRate = rejectionRate || 0.05;
-  const displayResponseRate = responseRate || 0.33;
 
   return (
     <div className="flex flex-col gap-6 w-full animate-in fade-in duration-500">
@@ -100,10 +84,11 @@ export default async function Overview(props: {
           </h2>
         </div>
         <KpiSummary
-          totalApplications={displayTotal}
-          interviewRate={displayInterviewRate}
-          rejectionRate={displayRejectionRate}
-          responseRate={displayResponseRate}
+          totalApplications={totalApplications}
+          interviewRate={interviewRate}
+          interviewConversionRate={interviewConversionRate}
+          rejectionRate={rejectionRate}
+          averageResponseDays={breakdownData.averageResponseDays}
         />
       </section>
 
@@ -133,8 +118,8 @@ export default async function Overview(props: {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <PieChartComponent
             title="Status Breakdown"
-            data={displayStatuses}
-            total={displayTotal}
+            data={top5Statuses}
+            total={totalApplications}
           />
           <YearlyTrendsCard
             years={years.length > 0 ? years : ['2025']}
