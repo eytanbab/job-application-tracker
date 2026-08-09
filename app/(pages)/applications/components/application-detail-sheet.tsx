@@ -54,7 +54,6 @@ interface ApplicationDetail {
   platform: string;
   status: string;
   statusCategory?: string | null;
-  statusLabel?: string | null;
   month: string;
   year: string;
   description?: string | null;
@@ -110,8 +109,8 @@ export function ApplicationDetailSheet({
     date_applied: string;
     description: string;
     notes: string;
+    status: string;
     statusCategory: string;
-    statusLabel: string;
   }>({
     role_name: '',
     company_name: '',
@@ -122,8 +121,8 @@ export function ApplicationDetailSheet({
     date_applied: '',
     description: '',
     notes: '',
+    status: '',
     statusCategory: 'applied',
-    statusLabel: '',
   });
 
   useEffect(() => {
@@ -139,8 +138,8 @@ export function ApplicationDetailSheet({
         date_applied: initialApp.date_applied || '',
         description: initialApp.description || '',
         notes: initialApp.notes || '',
+        status: initialApp.status || '',
         statusCategory: getStatusKind(initialApp.status, initialApp.statusCategory),
-        statusLabel: initialApp.statusLabel || '',
       });
     }
     setIsEditing(false);
@@ -167,16 +166,14 @@ export function ApplicationDetailSheet({
   const currentKind = getStatusKind(currentApp.status, currentApp.statusCategory);
   const displayStatusText = getStatusDisplay(
     currentApp.status,
-    currentApp.statusCategory,
-    currentApp.statusLabel
+    currentApp.statusCategory
   );
 
-  const handleQuickStatusChange = (newCategory: string, customLabel?: string) => {
+  const handleQuickStatusChange = (newCategory: string, newStatusText?: string) => {
     if (!currentApp.id) return;
     startSaveTransition(async () => {
       try {
-        const labelToUse = customLabel !== undefined ? customLabel : (currentApp.statusLabel || '');
-        const updatedStatus = getStatusDisplay(currentApp.status, newCategory, labelToUse);
+        const updatedStatus = getStatusDisplay(newStatusText || currentApp.status, newCategory);
         const payload = {
           ...currentApp,
           id: currentApp.id,
@@ -189,7 +186,6 @@ export function ApplicationDetailSheet({
           month: currentApp.month,
           year: currentApp.year,
           statusCategory: newCategory,
-          statusLabel: labelToUse,
           status: updatedStatus,
         };
         await updateApplication(payload);
@@ -212,7 +208,7 @@ export function ApplicationDetailSheet({
     startSaveTransition(async () => {
       try {
         const updatedKind = editForm.statusCategory;
-        const updatedStatusText = getStatusDisplay('', updatedKind, editForm.statusLabel);
+        const updatedStatusText = getStatusDisplay(editForm.status, updatedKind);
         
         const payload = {
           ...currentApp,
@@ -227,8 +223,7 @@ export function ApplicationDetailSheet({
           description: editForm.description,
           notes: editForm.notes,
           statusCategory: updatedKind,
-          statusLabel: editForm.statusLabel.trim(),
-          status: updatedStatusText.toLowerCase().trim(),
+          status: updatedStatusText.trim(),
         };
 
         await updateApplication(payload);
@@ -359,11 +354,11 @@ export function ApplicationDetailSheet({
                   </Select>
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase">Stage Details / Custom Note</label>
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase">Stage Details / Custom Status</label>
                   <Input
                     placeholder="e.g. Self-withdrawn, Post-tech screen"
-                    value={editForm.statusLabel}
-                    onChange={(e) => setEditForm({ ...editForm, statusLabel: e.target.value })}
+                    value={editForm.status}
+                    onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
                     className="h-9"
                   />
                 </div>
@@ -477,11 +472,6 @@ export function ApplicationDetailSheet({
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Quick Update Status
                   </label>
-                  {currentApp.statusLabel && (
-                    <span className="text-xs text-muted-foreground italic">
-                      Current stage: &ldquo;{currentApp.statusLabel}&rdquo;
-                    </span>
-                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -503,11 +493,11 @@ export function ApplicationDetailSheet({
                   </Select>
 
                   <Input
-                    placeholder="Custom stage note (optional)"
-                    value={currentApp.statusLabel || ''}
+                    placeholder="Custom stage detail (optional)"
+                    value={currentApp.status || ''}
                     onChange={(e) => {
-                      const newLabel = e.target.value;
-                      setCurrentApp({ ...currentApp, statusLabel: newLabel });
+                      const newStatus = e.target.value;
+                      setCurrentApp({ ...currentApp, status: newStatus });
                     }}
                     onBlur={(e) => handleQuickStatusChange(currentKind, e.target.value)}
                     className="h-9 text-xs bg-card border-border/40"

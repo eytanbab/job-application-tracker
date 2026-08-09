@@ -21,12 +21,10 @@ export const jobApplications = pgTable('job_applications', {
   statusCategory: varchar('status_category', { length: 32 })
     .default('applied')
     .notNull(),
-  statusLabel: varchar('status_label', { length: 255 }),
   month: varchar('month').notNull(),
   year: varchar('year').notNull(),
   description: text('description'),
   notes: text('notes'),
-  statusNotes: text('status_notes'),
   location: text('location').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   salary: text('salary'),

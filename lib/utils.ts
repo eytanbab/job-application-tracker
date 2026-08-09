@@ -186,13 +186,11 @@ export const getStatusKind = (
 
 export const getStatusDisplay = (
   status: string | null | undefined,
-  statusCategory?: string | null,
-  statusLabel?: string | null
+  statusCategory?: string | null
 ) => {
-  const trimmedLabel = statusLabel?.trim();
-
-  if (trimmedLabel) {
-    return trimmedLabel;
+  const trimmed = status?.trim();
+  if (trimmed) {
+    return trimmed;
   }
 
   return statusLabels[getStatusKind(status, statusCategory)];

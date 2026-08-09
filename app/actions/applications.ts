@@ -23,16 +23,12 @@ type FormValues = z.input<typeof formSchema>;
 
 function normalizeApplicationStatus(values: FormValues): FormValues {
   const statusCategory = getStatusKind(values.status, values.statusCategory);
-  const statusLabel = values.statusLabel?.trim() || null;
-  const status = getStatusDisplay(values.status, statusCategory, statusLabel)
-    .toLowerCase()
-    .trim();
+  const status = getStatusDisplay(values.status, statusCategory).trim();
 
   return {
     ...values,
     status,
     statusCategory,
-    statusLabel,
   };
 }
 
@@ -70,7 +66,7 @@ export async function getApplications() {
               return {
                 ...app,
                 statusCategory: "ghosted",
-                statusLabel: app.statusLabel || "Auto-Ghosted (>30 Days)",
+                status: app.status || "Auto-Ghosted (>30 Days)",
               };
             }
           } catch {

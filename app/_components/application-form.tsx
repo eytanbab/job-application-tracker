@@ -99,7 +99,6 @@ export const ApplicationForm = ({
     statusCategory: z.string().min(2, {
       message: "Choose a status category.",
     }),
-    statusLabel: z.string().nullable().optional(),
     salary: z.string().nullable().optional(),
   });
 
@@ -148,7 +147,6 @@ export const ApplicationForm = ({
         platform: aiAutoFill.application.platform,
         status: "Applied",
         statusCategory: "applied",
-        statusLabel: "",
         description: aiAutoFill.application.description ?? "",
         location: aiAutoFill.application.location,
         month: "",
@@ -185,13 +183,10 @@ export const ApplicationForm = ({
       location: values.location.trim(),
       platform: values.platform.toLowerCase().trim(),
       statusCategory: getStatusKind(values.status, values.statusCategory),
-      statusLabel: values.statusLabel?.trim() || "",
       status: getStatusDisplay(
         values.status,
-        values.statusCategory,
-        values.statusLabel
+        values.statusCategory
       )
-        .toLowerCase()
         .trim(),
       salary: values.salary?.trim() || "",
     };
@@ -364,23 +359,6 @@ export const ApplicationForm = ({
                     ))}
                   </SelectContent>
                 </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="statusLabel"
-            render={({ field }) => (
-              <FormItem className="space-y-0 col-span-full md:col-span-1">
-                <FormLabel>Custom status label</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Optional, e.g. Interview scheduled"
-                    {...field}
-                    value={field.value || ""}
-                  />
-                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

@@ -90,7 +90,6 @@ interface ApplicationRow {
   platform: string;
   status: string;
   statusCategory?: string | null;
-  statusLabel?: string | null;
   month: string;
   year: string;
   description?: string | null;
@@ -322,12 +321,12 @@ export function DataTable<TData extends ApplicationRow, TValue>({
         await Promise.all(
           selectedRows.map((row) => {
             if (row.original.id) {
-              const updatedStatusText = getStatusDisplay('', newCategory, row.original.statusLabel);
+              const updatedStatusText = getStatusDisplay('', newCategory);
               return updateApplication({
                 ...row.original,
                 id: row.original.id,
                 statusCategory: newCategory,
-                status: updatedStatusText.toLowerCase().trim(),
+                status: updatedStatusText.trim(),
               } as unknown as FormValues);
             }
             return Promise.resolve();
@@ -362,7 +361,6 @@ export function DataTable<TData extends ApplicationRow, TValue>({
     location: '',
     status: 'Applied',
     statusCategory: 'applied',
-    statusLabel: '',
     platform: '',
     month: '',
     year: '',
@@ -578,8 +576,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
                 const kind = getStatusKind(item.status, item.statusCategory);
                 const displayLabel = getStatusDisplay(
                   item.status,
-                  item.statusCategory,
-                  item.statusLabel
+                  item.statusCategory
                 );
                 const formattedDate = item.date_applied
                   ? formatDate(parseISO(item.date_applied), 'MMM d, yyyy')

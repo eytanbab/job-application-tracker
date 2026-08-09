@@ -152,8 +152,7 @@ export const columns: ColumnDef<FormValues>[] = [
       const kind = getStatusKind(row.original.status, row.original.statusCategory);
       const displayText = getStatusDisplay(
         row.original.status,
-        row.original.statusCategory,
-        row.original.statusLabel
+        row.original.statusCategory
       );
       return (
         <Badge

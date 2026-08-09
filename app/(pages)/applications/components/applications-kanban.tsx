@@ -46,7 +46,6 @@ interface KanbanItem {
   platform: string;
   status: string;
   statusCategory?: string | null;
-  statusLabel?: string | null;
   month: string;
   year: string;
   description?: string | null;
@@ -163,7 +162,7 @@ export function ApplicationsKanban({
           ...item,
           id: item.id,
           statusCategory: newCategory,
-          status: getStatusDisplay(item.status, newCategory, item.statusLabel),
+          status: getStatusDisplay(item.status, newCategory),
         });
         toast({
           description: `Moved "${item.role_name}" to ${
@@ -247,9 +246,12 @@ export function ApplicationsKanban({
                 : '';
               const displayLabel = getStatusDisplay(
                 item.status,
-                item.statusCategory,
-                item.statusLabel
+                item.statusCategory
               );
+
+              const isCustomStage =
+                Boolean(item.status) &&
+                item.status.trim().toLowerCase() !== (statusLabels[getStatusKind(item.status, item.statusCategory)] || '').toLowerCase();
 
               return (
                 <Card
@@ -344,7 +346,7 @@ export function ApplicationsKanban({
                   </CardHeader>
 
                   <CardContent className="p-3 pt-1 space-y-2 text-xs">
-                    {item.statusLabel && (
+                    {isCustomStage && (
                       <Badge variant="outline" className="text-[10px] font-normal truncate max-w-full block rounded-sm">
                         {displayLabel}
                       </Badge>
