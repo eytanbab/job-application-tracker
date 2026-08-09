@@ -1130,18 +1130,29 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
           activeCount++;
         }
 
-        // Response velocity calculation (time to first non-applied status)
-        const firstResponseHistory = appHistory
-          .filter((h) => getStatusKind(h.status, h.statusCategory) !== "applied")
-          .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        // Response velocity calculation (time to first recruiter response, excluding ghosted apps)
+        const isGhostedApp =
+          currentKind === "ghosted" ||
+          (currentKind === "applied" &&
+            app.dateApplied &&
+            parseISO(app.dateApplied) < thirtyDaysAgo);
 
-        if (firstResponseHistory.length > 0 && app.dateApplied) {
-          const appliedDate = parseISO(app.dateApplied);
-          if (!isNaN(appliedDate.getTime())) {
-            const firstResponseDate = new Date(firstResponseHistory[0].createdAt);
-            const diffDays = Math.max(0, differenceInDays(firstResponseDate, appliedDate));
-            totalResponseDays += diffDays;
-            totalResponseCount++;
+        if (!isGhostedApp) {
+          const firstResponseHistory = appHistory
+            .filter((h) => {
+              const kind = getStatusKind(h.status, h.statusCategory);
+              return kind !== "applied" && kind !== "ghosted";
+            })
+            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+          if (firstResponseHistory.length > 0 && app.dateApplied) {
+            const appliedDate = parseISO(app.dateApplied);
+            if (!isNaN(appliedDate.getTime())) {
+              const firstResponseDate = new Date(firstResponseHistory[0].createdAt);
+              const diffDays = Math.max(0, differenceInDays(firstResponseDate, appliedDate));
+              totalResponseDays += diffDays;
+              totalResponseCount++;
+            }
           }
         }
       });
