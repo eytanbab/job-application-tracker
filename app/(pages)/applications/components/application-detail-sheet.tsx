@@ -580,6 +580,11 @@ export function ApplicationDetailSheet({
                   <div className="relative pl-4 border-l border-border space-y-3 my-2">
                     {history.map((item, idx) => {
                       const itemKind = getStatusKind(item.status, item.statusCategory);
+                      const displayTitle = getStatusDisplay(item.status, item.statusCategory);
+                      const categoryLabel = statusLabels[itemKind];
+                      const showCategoryTag =
+                        Boolean(categoryLabel) &&
+                        displayTitle.toLowerCase() !== categoryLabel.toLowerCase();
                       const formattedTime = item.createdAt
                         ? formatDate(new Date(item.createdAt), 'MMM d, yyyy · h:mm a')
                         : '';
@@ -587,9 +592,16 @@ export function ApplicationDetailSheet({
                         <div key={item.id || idx} className="relative space-y-0.5 group">
                           <div className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background" />
                           <div className="flex items-center justify-between text-xs">
-                            <span className="font-semibold capitalize text-foreground">
-                              {statusLabels[itemKind] || item.status}
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-semibold capitalize text-foreground">
+                                {displayTitle}
+                              </span>
+                              {showCategoryTag && (
+                                <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 font-normal text-muted-foreground">
+                                  {categoryLabel}
+                                </Badge>
+                              )}
+                            </div>
                             <div className="flex items-center gap-2">
                               <span className="text-muted-foreground text-[11px]">{formattedTime}</span>
                               {item.id && (
