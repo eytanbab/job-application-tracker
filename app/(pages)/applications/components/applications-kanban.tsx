@@ -275,27 +275,27 @@ export function ApplicationsKanban({
                     </div>
 
                     <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                      {/* Quick Stage Shifting Buttons on Hover */}
+                      {/* Quick Stage Shifting Buttons (Always visible on mobile, hover-revealed on desktop) */}
                       {prevCol && (
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 rounded-md text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                           title={`Move to ${prevCol.label}`}
                           onClick={() => handleQuickStatusMove(item, prevCol.id)}
                         >
-                          <ChevronLeft className="h-3.5 w-3.5" />
+                          <ChevronLeft className="h-4 w-4" />
                         </Button>
                       )}
                       {nextCol && (
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 rounded-md text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                           title={`Move to ${nextCol.label}`}
                           onClick={() => handleQuickStatusMove(item, nextCol.id)}
                         >
-                          <ChevronRight className="h-3.5 w-3.5" />
+                          <ChevronRight className="h-4 w-4" />
                         </Button>
                       )}
 

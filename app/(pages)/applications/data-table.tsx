@@ -137,6 +137,9 @@ export function DataTable<TData extends ApplicationRow, TValue>({
   // App to edit via EditApplicationSheet
   const [editingApp, setEditingApp] = useState<TData | null>(null);
 
+  // Mobile filter collapsible state
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+
   // Row selection state
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [, startBulkTransition] = useTransition();
@@ -373,79 +376,103 @@ export function DataTable<TData extends ApplicationRow, TValue>({
       <ApplicationsKpiSummary data={data} />
 
       {/* 2. Controls Toolbar: Search, Multi-Filters, View Switcher & Quick Add CTA */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-card border border-border/30 rounded-xl p-3.5 shadow-2xs">
-        {/* Left: Search & Filters */}
-        <div className="flex flex-wrap items-center gap-2 flex-1">
-          <div className="relative flex-1 min-w-[220px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <Input
-              placeholder="Search role, company, location..."
-              value={globalFilter}
-              onChange={(e) => setGlobalFilter(String(e.target.value))}
-              className="pl-9 pr-8 w-full h-9 text-xs bg-background"
-            />
-            {globalFilter.length > 0 && (
-              <button
-                onClick={() => setGlobalFilter('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-card border border-border/30 rounded-xl p-3 sm:p-3.5 shadow-2xs">
+        {/* Top/Left: Search & Filter Toggle */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 flex-1">
+          <div className="flex items-center gap-2 w-full md:w-auto flex-1">
+            <div className="relative flex-1 max-w-full md:max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder="Search role, company, location..."
+                value={globalFilter}
+                onChange={(e) => setGlobalFilter(String(e.target.value))}
+                className="pl-9 pr-8 w-full h-9 text-xs bg-background"
+              />
+              {globalFilter.length > 0 && (
+                <button
+                  onClick={() => setGlobalFilter('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Mobile Filter Toggle Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
+              className="h-9 px-3 text-xs gap-1.5 md:hidden shrink-0 bg-background"
+            >
+              <Filter className="h-3.5 w-3.5" />
+              <span>Filters</span>
+              {hasActiveFilters && (
+                <Badge variant="default" className="h-4 px-1.5 text-[10px] font-bold rounded-full">
+                  •
+                </Badge>
+              )}
+            </Button>
           </div>
 
-          {/* Status Filter */}
-          <Select
-            value={statusFilter || 'all'}
-            onValueChange={(value) => setStatusFilter(value === 'all' ? null : value)}
-          >
-            <SelectTrigger className="w-[140px] h-9 text-xs capitalize bg-background">
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              {statusOptions.map((status) => (
-                <SelectItem key={status.value} value={status.value} className="capitalize text-xs">
-                  {status.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* Platform Filter */}
-          {uniquePlatforms.length > 0 && (
+          {/* Status & Platform Filters (Always visible on desktop, toggleable on mobile) */}
+          <div className={cn(
+            "flex-col md:flex-row items-stretch md:items-center gap-2 flex-wrap transition-all",
+            isMobileFilterOpen ? "flex" : "hidden md:flex"
+          )}>
+            {/* Status Filter */}
             <Select
-              value={platformFilter || 'all'}
-              onValueChange={(value) => setPlatformFilter(value === 'all' ? null : value)}
+              value={statusFilter || 'all'}
+              onValueChange={(value) => setStatusFilter(value === 'all' ? null : value)}
             >
-              <SelectTrigger className="w-[140px] h-9 text-xs capitalize bg-background">
-                <SelectValue placeholder="All Platforms" />
+              <SelectTrigger className="w-full md:w-[140px] h-9 text-xs capitalize bg-background">
+                <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Platforms</SelectItem>
-                {uniquePlatforms.map((plat) => (
-                  <SelectItem key={plat} value={plat} className="capitalize text-xs">
-                    {plat}
+                <SelectItem value="all">All Statuses</SelectItem>
+                {statusOptions.map((status) => (
+                  <SelectItem key={status.value} value={status.value} className="capitalize text-xs">
+                    {status.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          )}
 
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="text-xs text-muted-foreground hover:text-foreground gap-1.5 h-9 px-2.5"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              Reset Filters
-            </Button>
-          )}
+            {/* Platform Filter */}
+            {uniquePlatforms.length > 0 && (
+              <Select
+                value={platformFilter || 'all'}
+                onValueChange={(value) => setPlatformFilter(value === 'all' ? null : value)}
+              >
+                <SelectTrigger className="w-full md:w-[140px] h-9 text-xs capitalize bg-background">
+                  <SelectValue placeholder="All Platforms" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Platforms</SelectItem>
+                  {uniquePlatforms.map((plat) => (
+                    <SelectItem key={plat} value={plat} className="capitalize text-xs">
+                      {plat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="text-xs text-muted-foreground hover:text-foreground gap-1.5 h-9 px-2.5 justify-center"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                Reset Filters
+              </Button>
+            )}
+          </div>
         </div>
 
-        {/* Right: View Switcher & Quick Create Action */}
+        {/* Right: View Switcher & Desktop Add Button */}
         <div className="flex items-center justify-between lg:justify-end gap-2.5 border-t lg:border-t-0 pt-2.5 lg:pt-0">
           <div className="inline-flex items-center rounded-md bg-muted/60 p-1 gap-1 border border-border/20">
             <button
@@ -459,7 +486,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
               )}
             >
               <LayoutList className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Table</span>
+              <span>Table</span>
             </button>
             <button
               type="button"
@@ -472,13 +499,13 @@ export function DataTable<TData extends ApplicationRow, TValue>({
               )}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Kanban</span>
+              <span>Kanban</span>
             </button>
           </div>
 
           <Button
             onClick={() => setIsCreateOpen(true)}
-            className="gap-2 h-9 text-xs font-semibold shadow-2xs px-3.5"
+            className="hidden md:inline-flex gap-2 h-9 text-xs font-semibold shadow-2xs px-3.5"
           >
             <Plus className="h-4 w-4" />
             <span>Add Application</span>
@@ -573,6 +600,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => {
                 const item = row.original;
+                const isSelected = row.getIsSelected();
                 const kind = getStatusKind(item.status, item.statusCategory);
                 const displayLabel = getStatusDisplay(
                   item.status,
@@ -586,38 +614,59 @@ export function DataTable<TData extends ApplicationRow, TValue>({
                   <Card
                     key={row.id}
                     onClick={() => handleSelectRow(item)}
-                    className="cursor-pointer border bg-card p-4 space-y-3 hover:border-primary/50 transition-all"
+                    className={cn(
+                      "cursor-pointer p-4 space-y-3 transition-all",
+                      isSelected
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/20 shadow-sm"
+                        : "border bg-card hover:border-primary/50"
+                    )}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="space-y-1 overflow-hidden">
-                        <h3 className="font-bold text-base text-foreground truncate">
-                          {item.role_name}
-                        </h3>
+                    <div className="flex items-start gap-3">
+                      {/* Selection Checkbox */}
+                      <input
+                        type="checkbox"
+                        className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary shrink-0"
+                        checked={isSelected}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          row.toggleSelected(!!e.target.checked);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label="Select application"
+                      />
+
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="font-bold text-sm sm:text-base text-foreground line-clamp-2 leading-tight">
+                            {item.role_name}
+                          </h3>
+
+                          <Badge
+                            variant="outline"
+                            className={`capitalize shrink-0 text-[11px] py-0.5 px-2 ${statusBadgeClasses[kind]}`}
+                          >
+                            {displayLabel}
+                          </Badge>
+                        </div>
+
                         <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 truncate">
-                          <Building2 className="h-3.5 w-3.5 shrink-0" />
-                          {item.company_name}
+                          <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
+                          <span className="truncate">{item.company_name}</span>
                         </p>
                       </div>
-
-                      <Badge
-                        variant="outline"
-                        className={`capitalize shrink-0 ${statusBadgeClasses[kind]}`}
-                      >
-                        {displayLabel}
-                      </Badge>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between text-xs text-muted-foreground pt-1 border-t">
-                      <span className="flex items-center gap-1 pt-1">
-                        <Calendar className="h-3.5 w-3.5" />
+                    <div className="flex flex-wrap items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border/40 gap-2">
+                      <span className="flex items-center gap-1.5 text-[11px]">
+                        <Calendar className="h-3.5 w-3.5 shrink-0" />
                         {formattedDate}
                       </span>
 
-                      <div className="flex items-center gap-2 pt-1">
+                      <div className="flex items-center gap-2 text-[11px]">
                         {item.location && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="h-3.5 w-3.5" />
-                            {item.location}
+                          <span className="flex items-center gap-1 max-w-[130px] truncate">
+                            <MapPin className="h-3.5 w-3.5 shrink-0" />
+                            <span className="truncate">{item.location}</span>
                           </span>
                         )}
                         {item.link && (
@@ -626,9 +675,10 @@ export function DataTable<TData extends ApplicationRow, TValue>({
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="p-1 text-muted-foreground hover:text-foreground"
+                            className="p-1 -mr-1 text-muted-foreground hover:text-foreground inline-flex items-center justify-center min-h-[32px] min-w-[32px]"
+                            title="Open Link"
                           >
-                            <ExternalLink className="h-4 w-4" />
+                            <ExternalLink className="h-3.5 w-3.5" />
                           </a>
                         )}
                       </div>
@@ -702,47 +752,67 @@ export function DataTable<TData extends ApplicationRow, TValue>({
         </div>
       )}
 
-      {/* 4. Floating Bulk Actions Bar */}
+      {/* 4. Floating Bulk Actions Bar (Responsive Desktop Pill vs Mobile Dock) */}
       {selectedCount > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-foreground text-background shadow-lg rounded-md px-4 py-2.5 flex items-center gap-3 border border-border animate-in slide-in-from-bottom duration-200">
-          <span className="text-xs font-bold flex items-center gap-1.5">
-            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-            {selectedCount} selected
-          </span>
+        <div className="fixed bottom-0 md:bottom-6 left-0 right-0 md:left-1/2 md:-translate-x-1/2 z-50 bg-foreground text-background shadow-2xl md:shadow-lg md:rounded-md rounded-t-xl px-4 py-3 md:py-2.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 border-t md:border border-border animate-in slide-in-from-bottom duration-200">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-bold flex items-center gap-1.5">
+              <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+              {selectedCount} selected
+            </span>
 
-          <div className="h-4 w-px bg-background/30" />
+            <button
+              onClick={() => setRowSelection({})}
+              className="p-1 text-background/70 hover:text-background rounded-sm flex items-center gap-1 text-xs"
+              title="Deselect all"
+            >
+              <span>Cancel</span>
+              <X className="h-4 w-4" />
+            </button>
+          </div>
 
-          <Select onValueChange={handleBulkStatusChange}>
-            <SelectTrigger className="h-8 text-xs bg-background text-foreground w-[150px] font-medium border-none">
-              <SelectValue placeholder="Mark Status..." />
-            </SelectTrigger>
-            <SelectContent>
-              {statusOptions.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value} className="capitalize text-xs">
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="hidden md:block h-4 w-px bg-background/30" />
 
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleBulkDelete}
-            className="h-8 text-xs gap-1.5 font-semibold"
-          >
-            <Trash2 className="h-3.5 w-3.5" /> Bulk Delete
-          </Button>
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <Select onValueChange={handleBulkStatusChange}>
+              <SelectTrigger className="h-9 md:h-8 text-xs bg-background text-foreground flex-1 md:w-[150px] font-medium border-none">
+                <SelectValue placeholder="Mark Status..." />
+              </SelectTrigger>
+              <SelectContent side="top">
+                {statusOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value} className="capitalize text-xs">
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          <button
-            onClick={() => setRowSelection({})}
-            className="p-1 text-background/70 hover:text-background rounded-sm"
-            title="Deselect all"
-          >
-            <X className="h-4 w-4" />
-          </button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDelete}
+              className="h-9 md:h-8 text-xs gap-1.5 font-semibold shrink-0"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              <span>Bulk Delete</span>
+            </Button>
+          </div>
         </div>
       )}
+
+      {/* Mobile Floating Action Button (FAB) */}
+      <button
+        type="button"
+        onClick={() => setIsCreateOpen(true)}
+        className={cn(
+          "fixed right-5 z-40 md:hidden h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer ring-4 ring-background/50",
+          selectedCount > 0 ? "bottom-24" : "bottom-6"
+        )}
+        aria-label="Add Application"
+        title="Add Application"
+      >
+        <Plus className="h-6 w-6" />
+      </button>
 
       {/* 5. Slide-over Creation Sheet */}
       <Sheet open={isCreateOpen} onOpenChange={setIsCreateOpen}>

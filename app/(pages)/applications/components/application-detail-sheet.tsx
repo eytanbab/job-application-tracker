@@ -253,7 +253,7 @@ export function ApplicationDetailSheet({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-2xl md:max-w-3xl overflow-y-auto max-h-[85vh] p-6 rounded-md shadow-lg border border-border/40">
+      <DialogContent className="w-full max-w-2xl md:max-w-3xl overflow-y-auto max-h-[92vh] sm:max-h-[85vh] p-4 sm:p-6 rounded-xl sm:rounded-md shadow-lg border border-border/40">
         <DialogHeader className="space-y-3 pb-4 border-b">
           <div className="flex items-start justify-between gap-3 pr-6">
             <div className="space-y-1 w-full">

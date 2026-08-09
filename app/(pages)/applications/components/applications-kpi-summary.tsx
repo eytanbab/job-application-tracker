@@ -81,25 +81,27 @@ export function ApplicationsKpiSummary({ data }: ApplicationsKpiSummaryProps) {
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-4 sm:mb-6">
       {cards.map((card) => {
         const IconComponent = card.icon;
         return (
           <Card
             key={card.title}
-            className="bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow"
+            className="bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow overflow-hidden"
           >
-            <CardContent className="p-4 sm:p-5">
-              <div className="flex items-center justify-between pb-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <CardContent className="p-3 sm:p-5">
+              <div className="flex items-center justify-between pb-1 sm:pb-2 gap-1">
+                <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground truncate">
                   {card.title}
                 </p>
-                <IconComponent className="h-4 w-4 text-muted-foreground/70" />
+                <IconComponent className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground/70 shrink-0" />
               </div>
-              <div className="text-3xl font-extrabold tracking-tight text-foreground">
+              <div className="text-xl sm:text-3xl font-extrabold tracking-tight text-foreground">
                 {card.value}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">{card.description}</p>
+              <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 line-clamp-1">
+                {card.description}
+              </p>
             </CardContent>
           </Card>
         );
