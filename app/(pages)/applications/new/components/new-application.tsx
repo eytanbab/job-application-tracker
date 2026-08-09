@@ -42,7 +42,6 @@ export default function NewApplication() {
     location: '',
     status: 'Applied',
     statusCategory: 'applied',
-    statusLabel: '',
     platform: '',
     month: '',
     year: '',

@@ -1,5 +1,5 @@
 "use server";
-import { addDays, format, subDays } from "date-fns";
+import { addDays, differenceInDays, format, subDays, parseISO } from "date-fns";
 import { and, count, desc, eq, gte, lt, inArray } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 
@@ -11,6 +11,7 @@ import {
   getStatusKind,
   statusLabels,
   didReachInterviewStage,
+  extractRootDomain,
 } from "@/lib/utils";
 import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
@@ -163,23 +164,11 @@ export async function getDomainLeaderboard() {
       } = {};
 
       applications.forEach(({ link, status, statusCategory }) => {
+        if (!link) return;
         try {
-          const url = new URL(link);
-          let domain = url.hostname;
-          // Basic cleaning for common subdomains
-          if (domain.startsWith("www.")) {
-            domain = domain.substring(4);
-          }
-          if (
-            domain.includes("greenhouse.io") ||
-            domain.includes("lever.co") ||
-            domain.includes("workday.com")
-          ) {
-            const parts = domain.split(".");
-            if (parts.length > 2) {
-              domain = parts.slice(-2).join(".");
-            }
-          }
+          const rawUrl = link.startsWith("http://") || link.startsWith("https://") ? link : `https://${link}`;
+          const url = new URL(rawUrl);
+          const domain = extractRootDomain(url.hostname);
 
           if (!domainStats[domain]) {
             domainStats[domain] = { total: 0, interviews: 0 };
@@ -200,7 +189,7 @@ export async function getDomainLeaderboard() {
           successRate:
             stats.total > 0 ? (stats.interviews / stats.total) * 100 : 0,
         }))
-        .sort((a, b) => b.successRate - a.successRate)
+        .sort((a, b) => b.successRate - a.successRate || b.total - a.total)
         .slice(0, 5);
     },
     ["analytics", "domain-leaderboard", userId],
@@ -296,18 +285,21 @@ export async function getSalaryRealityCheck() {
 
       const parseSalary = (salary: string | null): number | null => {
         if (!salary) return null;
-        const matches = salary
-          .toLowerCase()
-          .match(/\d+(?:,\d{3})*(?:\.\d+)?\s*k?/g);
+        const lowerSalary = salary.toLowerCase();
+        const hasK = lowerSalary.includes("k");
+
+        const matches = lowerSalary.match(/\d+(?:,\d{3})*(?:\.\d+)?\s*k?/g);
         if (!matches) return null;
 
         const values = matches
           .map((match) => {
-            const multiplier = match.includes("k") ? 1000 : 1;
-            const normalized = match.replace(/,/g, "").replace("k", "").trim();
-            return Number.parseFloat(normalized) * multiplier;
+            const rawNum = Number.parseFloat(match.replace(/,/g, "").replace("k", "").trim());
+            if (!Number.isFinite(rawNum)) return null;
+
+            const multiplier = (match.includes("k") || (hasK && rawNum < 1000) || rawNum < 500) ? 1000 : 1;
+            return rawNum * multiplier;
           })
-          .filter((value) => Number.isFinite(value));
+          .filter((value): value is number => value !== null && Number.isFinite(value));
 
         if (values.length === 0) return null;
 
@@ -349,8 +341,13 @@ export async function getSalaryRealityCheck() {
   )();
 }
 
-export async function getGhostedApplications() {
+export async function getGhostedApplications(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  const whereClause = [eq(jobApplications.userId, userId)];
+  if (month && month !== "all")
+    whereClause.push(eq(jobApplications.month, month));
+  if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
     async () => {
@@ -361,23 +358,50 @@ export async function getGhostedApplications() {
           date_applied: jobApplications.date_applied,
           status: jobApplications.status,
           statusCategory: jobApplications.statusCategory,
+          company_name: jobApplications.company_name,
         })
         .from(jobApplications)
         .where(
           and(
-            eq(jobApplications.userId, userId),
-            lt(
-              jobApplications.date_applied,
-              format(thirtyDaysAgo, "yyyy-MM-dd")
-            )
+            ...whereClause,
+            lt(jobApplications.date_applied, format(thirtyDaysAgo, "yyyy-MM-dd"))
           )
         );
-      const ghosted = applications.filter(
-        (app) => getStatusKind(app.status, app.statusCategory) === "applied"
-      );
-      return ghosted.length;
+
+      let oldestDays = 0;
+      const ghostedApps: typeof applications = [];
+      const companyCount = new Map<string, number>();
+
+      applications.forEach((app) => {
+        if (getStatusKind(app.status, app.statusCategory) === "applied") {
+          ghostedApps.push(app);
+          const name = (app.company_name || "").trim();
+          if (name) {
+             companyCount.set(name, (companyCount.get(name) || 0) + 1);
+          }
+          
+          if (app.date_applied) {
+            const dateStr = app.date_applied.includes("T") ? app.date_applied : `${app.date_applied}T12:00:00`;
+            const days = differenceInDays(new Date(), new Date(dateStr));
+            if (days > oldestDays) {
+              oldestDays = days;
+            }
+          }
+        }
+      });
+
+      const topCompanies = Array.from(companyCount.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(e => e[0]);
+
+      return {
+        count: ghostedApps.length,
+        companies: topCompanies,
+        oldestDays,
+      };
     },
-    ["analytics", "ghosted-applications", userId],
+    ["analytics", "ghosted-applications", userId, month || "all", year || "all"],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
@@ -412,10 +436,14 @@ export async function getDayOfWeekPerformance() {
       };
 
       applications.forEach(({ date_applied, status, statusCategory }) => {
-        const day = format(new Date(date_applied), "EEEE");
-        dayOfWeekStats[day].total++;
-        if (didReachInterviewStage(status, statusCategory)) {
-          dayOfWeekStats[day].interviews++;
+        if (!date_applied) return;
+        const dateStr = date_applied.includes("T") ? date_applied : `${date_applied}T12:00:00`;
+        const day = format(new Date(dateStr), "EEEE");
+        if (dayOfWeekStats[day]) {
+          dayOfWeekStats[day].total++;
+          if (didReachInterviewStage(status, statusCategory)) {
+            dayOfWeekStats[day].interviews++;
+          }
         }
       });
 
@@ -455,7 +483,11 @@ export async function getActionableNudges() {
         return "You haven't applied to any jobs yet. Let's get started!";
       }
 
-      const lastApplicationDate = new Date(lastApplication[0].date_applied);
+      const lastApplicationDate = new Date(
+        lastApplication[0].date_applied.includes("T")
+          ? lastApplication[0].date_applied
+          : `${lastApplication[0].date_applied}T12:00:00`
+      );
       const daysSinceLastApplication = Math.round(
         (new Date().getTime() - lastApplicationDate.getTime()) /
           (1000 * 60 * 60 * 24)
@@ -484,17 +516,32 @@ export async function getTop5Companies(month?: string, year?: string) {
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
-    async () =>
-      db
+    async () => {
+      const data = await db
         .select({
           name: jobApplications.company_name,
-          freq: count(jobApplications.company_name),
         })
         .from(jobApplications)
-        .where(and(...whereClause))
-        .groupBy(jobApplications.company_name)
-        .orderBy(desc(count(jobApplications.company_name)))
-        .limit(5),
+        .where(and(...whereClause));
+
+      const companyMap = new Map<string, { name: string; freq: number }>();
+
+      data.forEach(({ name }) => {
+        const trimmed = (name || "").trim();
+        if (!trimmed || trimmed.toLowerCase() === "n/a" || trimmed.toLowerCase() === "none") return;
+
+        const normalizedKey = trimmed.toLowerCase();
+        if (companyMap.has(normalizedKey)) {
+          companyMap.get(normalizedKey)!.freq++;
+        } else {
+          companyMap.set(normalizedKey, { name: trimmed, freq: 1 });
+        }
+      });
+
+      return Array.from(companyMap.values())
+        .sort((a, b) => b.freq - a.freq)
+        .slice(0, 5);
+    },
     ["analytics", "top-5-companies", userId, month || "all", year || "all"],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
@@ -512,17 +559,32 @@ export async function getTop5Platforms(month?: string, year?: string) {
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
-    async () =>
-      db
+    async () => {
+      const data = await db
         .select({
           name: jobApplications.platform,
-          freq: count(jobApplications.platform),
         })
         .from(jobApplications)
-        .where(and(...whereClause))
-        .groupBy(jobApplications.platform)
-        .orderBy(desc(count(jobApplications.platform)))
-        .limit(5),
+        .where(and(...whereClause));
+
+      const platformMap = new Map<string, { name: string; freq: number }>();
+
+      data.forEach(({ name }) => {
+        const trimmed = (name || "").trim();
+        if (!trimmed) return;
+
+        const normalizedKey = trimmed.toLowerCase();
+        if (platformMap.has(normalizedKey)) {
+          platformMap.get(normalizedKey)!.freq++;
+        } else {
+          platformMap.set(normalizedKey, { name: trimmed, freq: 1 });
+        }
+      });
+
+      return Array.from(platformMap.values())
+        .sort((a, b) => b.freq - a.freq)
+        .slice(0, 5);
+    },
     ["analytics", "top-5-platforms", userId, month || "all", year || "all"],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
@@ -543,19 +605,28 @@ export async function getTop5Statuses(month?: string, year?: string) {
     async () => {
       const data = await db
         .select({
-          name: jobApplications.statusCategory,
-          freq: count(jobApplications.id),
+          status: jobApplications.status,
+          statusCategory: jobApplications.statusCategory,
         })
         .from(jobApplications)
-        .where(and(...whereClause))
-        .groupBy(jobApplications.statusCategory)
-        .orderBy(desc(count(jobApplications.id)))
-        .limit(5);
+        .where(and(...whereClause));
 
-      return data.map((item) => ({
-        ...item,
-        name: statusLabels[getStatusKind(null, item.name)],
-      }));
+      const statusMap = new Map<string, { name: string; freq: number }>();
+
+      data.forEach(({ status, statusCategory }) => {
+        const kind = getStatusKind(status, statusCategory);
+        const label = statusLabels[kind] || kind;
+
+        if (statusMap.has(kind)) {
+          statusMap.get(kind)!.freq++;
+        } else {
+          statusMap.set(kind, { name: label, freq: 1 });
+        }
+      });
+
+      return Array.from(statusMap.values())
+        .sort((a, b) => b.freq - a.freq)
+        .slice(0, 5);
     },
     ["analytics", "top-5-statuses", userId, month || "all", year || "all"],
     {
@@ -574,17 +645,32 @@ export async function getTop5Locations(month?: string, year?: string) {
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
-    async () =>
-      db
+    async () => {
+      const data = await db
         .select({
           name: jobApplications.location,
-          freq: count(jobApplications.location),
         })
         .from(jobApplications)
-        .where(and(...whereClause))
-        .groupBy(jobApplications.location)
-        .orderBy(desc(count(jobApplications.location)))
-        .limit(5),
+        .where(and(...whereClause));
+
+      const locationMap = new Map<string, { name: string; freq: number }>();
+
+      data.forEach(({ name }) => {
+        const trimmed = (name || "").trim();
+        if (!trimmed) return;
+
+        const normalizedKey = trimmed.toLowerCase();
+        if (locationMap.has(normalizedKey)) {
+          locationMap.get(normalizedKey)!.freq++;
+        } else {
+          locationMap.set(normalizedKey, { name: trimmed, freq: 1 });
+        }
+      });
+
+      return Array.from(locationMap.values())
+        .sort((a, b) => b.freq - a.freq)
+        .slice(0, 5);
+    },
     ["analytics", "top-5-locations", userId, month || "all", year || "all"],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
@@ -602,17 +688,32 @@ export async function getTop5RoleNames(month?: string, year?: string) {
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
-    async () =>
-      db
+    async () => {
+      const data = await db
         .select({
           name: jobApplications.role_name,
-          freq: count(jobApplications.role_name),
         })
         .from(jobApplications)
-        .where(and(...whereClause))
-        .groupBy(jobApplications.role_name)
-        .orderBy(desc(count(jobApplications.role_name)))
-        .limit(5),
+        .where(and(...whereClause));
+
+      const roleMap = new Map<string, { name: string; freq: number }>();
+
+      data.forEach(({ name }) => {
+        const trimmed = (name || "").trim();
+        if (!trimmed || trimmed.toLowerCase() === "n/a" || trimmed.toLowerCase() === "none") return;
+
+        const normalizedKey = trimmed.toLowerCase();
+        if (roleMap.has(normalizedKey)) {
+          roleMap.get(normalizedKey)!.freq++;
+        } else {
+          roleMap.set(normalizedKey, { name: trimmed, freq: 1 });
+        }
+      });
+
+      return Array.from(roleMap.values())
+        .sort((a, b) => b.freq - a.freq)
+        .slice(0, 5);
+    },
     ["analytics", "top-5-role-names", userId, month || "all", year || "all"],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
@@ -737,47 +838,94 @@ export async function getStatusPerPlatform(month?: string, year?: string) {
     async () => {
       const data = await db
         .select({
+          id: jobApplications.id,
           platformName: jobApplications.platform,
           status: jobApplications.status,
-          numOfApplications: count(jobApplications.platform),
+          statusCategory: jobApplications.statusCategory,
         })
         .from(jobApplications)
-        .where(and(...whereClause))
-        .groupBy(jobApplications.platform, jobApplications.status)
-        .orderBy(desc(jobApplications.status));
+        .where(and(...whereClause));
 
-      const grouped = new Map();
-      const platformTotals = new Map();
+      const appIds = data.map((d) => d.id);
+      const history =
+        appIds.length > 0
+          ? await db
+              .select({
+                applicationId: applicationStatusHistory.applicationId,
+                statusCategory: applicationStatusHistory.statusCategory,
+                status: applicationStatusHistory.status,
+              })
+              .from(applicationStatusHistory)
+              .where(inArray(applicationStatusHistory.applicationId, appIds))
+          : [];
 
-      // First pass: group by platform and calculate totals
-      data.forEach(({ platformName, status, numOfApplications }) => {
-        if (!grouped.has(platformName)) {
-          grouped.set(platformName, []);
-          platformTotals.set(platformName, 0);
+      const historyMap = new Map<string, typeof history>();
+      history.forEach((h) => {
+        if (!historyMap.has(h.applicationId)) {
+          historyMap.set(h.applicationId, []);
         }
-        grouped.get(platformName).push({
-          status,
-          value: numOfApplications,
-        });
-        platformTotals.set(
-          platformName,
-          platformTotals.get(platformName) + numOfApplications
-        );
+        historyMap.get(h.applicationId)!.push(h);
       });
 
-      // Convert to array and sort by total applications
-      return Array.from(grouped.entries())
-        .map(([platformName, statuses]) => ({
-          platformName,
-          // Sort statuses by value (number of applications) in descending order
-          statuses: [...statuses].sort((a, b) => b.value - a.value),
-          total: platformTotals.get(platformName),
-        }))
+      const platformMap = new Map<
+        string,
+        {
+          platformName: string;
+          statusCounts: Map<string, number>;
+          total: number;
+          interviewCount: number;
+        }
+      >();
+
+      data.forEach(({ id, platformName, status, statusCategory }) => {
+        const trimmedPlatform = (platformName || "").trim();
+        if (!trimmedPlatform) return;
+
+        const normalizedPlatformKey = trimmedPlatform.toLowerCase();
+
+        if (!platformMap.has(normalizedPlatformKey)) {
+          platformMap.set(normalizedPlatformKey, {
+            platformName: trimmedPlatform,
+            statusCounts: new Map(),
+            total: 0,
+            interviewCount: 0,
+          });
+        }
+
+        const platformEntry = platformMap.get(normalizedPlatformKey)!;
+        platformEntry.total++;
+
+        const appHistory = historyMap.get(id) || [];
+        const reachedInterview =
+          didReachInterviewStage(status, statusCategory) ||
+          appHistory.some((h) => didReachInterviewStage(h.status, h.statusCategory));
+
+        if (reachedInterview) {
+          platformEntry.interviewCount++;
+        }
+
+        const kind = getStatusKind(status, statusCategory);
+        const currentCount = platformEntry.statusCounts.get(kind) || 0;
+        platformEntry.statusCounts.set(kind, currentCount + 1);
+      });
+
+      return Array.from(platformMap.values())
         .sort((a, b) => b.total - a.total)
-        .map(({ platformName, statuses }) => ({
-          platformName,
-          statuses,
-        }));
+        .map(({ platformName, statusCounts, total, interviewCount }) => {
+          const statuses = Array.from(statusCounts.entries())
+            .map(([kind, value]) => ({
+              status: kind,
+              value,
+            }))
+            .sort((a, b) => b.value - a.value);
+
+          return {
+            platformName,
+            statuses,
+            total,
+            interviewCount,
+          };
+        });
     },
     ["analytics", "status-per-platform", userId, month || "all", year || "all"],
     {
@@ -794,6 +942,7 @@ export async function getPlatformPerformance() {
     async () => {
       const applications = await db
         .select({
+          id: jobApplications.id,
           platform: jobApplications.platform,
           status: jobApplications.status,
           statusCategory: jobApplications.statusCategory,
@@ -801,23 +950,54 @@ export async function getPlatformPerformance() {
         .from(jobApplications)
         .where(eq(jobApplications.userId, userId));
 
+      const appIds = applications.map((a) => a.id);
+      const history =
+        appIds.length > 0
+          ? await db
+              .select({
+                applicationId: applicationStatusHistory.applicationId,
+                statusCategory: applicationStatusHistory.statusCategory,
+                status: applicationStatusHistory.status,
+              })
+              .from(applicationStatusHistory)
+              .where(inArray(applicationStatusHistory.applicationId, appIds))
+          : [];
+
+      const historyMap = new Map<string, typeof history>();
+      history.forEach((h) => {
+        if (!historyMap.has(h.applicationId)) {
+          historyMap.set(h.applicationId, []);
+        }
+        historyMap.get(h.applicationId)!.push(h);
+      });
+
       const platformStats: {
         [platform: string]: { total: number; interviews: number };
       } = {};
 
-      applications.forEach(({ platform, status, statusCategory }) => {
-        if (!platformStats[platform]) {
-          platformStats[platform] = { total: 0, interviews: 0 };
+      applications.forEach(({ id, platform, status, statusCategory }) => {
+        const trimmed = (platform || "").trim();
+        if (!trimmed) return;
+        const key = trimmed.toLowerCase();
+
+        if (!platformStats[key]) {
+          platformStats[key] = { total: 0, interviews: 0 };
         }
-        platformStats[platform].total++;
-        if (didReachInterviewStage(status, statusCategory)) {
-          platformStats[platform].interviews++;
+        platformStats[key].total++;
+
+        const appHistory = historyMap.get(id) || [];
+        const reachedInterview =
+          didReachInterviewStage(status, statusCategory) ||
+          appHistory.some((h) => didReachInterviewStage(h.status, h.statusCategory));
+
+        if (reachedInterview) {
+          platformStats[key].interviews++;
         }
       });
 
       return Object.entries(platformStats)
-        .map(([platform, stats]) => ({
-          platform,
+        .map(([platformKey, stats]) => ({
+          platform: platformKey,
           ...stats,
         }))
         .sort((a, b) => b.total - a.total)
@@ -871,6 +1051,8 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
           },
           resumeConversion: 0,
           interviewConversion: 0,
+          responseConversion: 0,
+          averageResponseDays: null as number | null,
         };
       }
 
@@ -881,6 +1063,7 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
           applicationId: applicationStatusHistory.applicationId,
           statusCategory: applicationStatusHistory.statusCategory,
           status: applicationStatusHistory.status,
+          createdAt: applicationStatusHistory.createdAt,
         })
         .from(applicationStatusHistory)
         .where(inArray(applicationStatusHistory.applicationId, appIds));
@@ -901,6 +1084,9 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
       let ghostedResumeCount = 0;
       let ghostedInterviewCount = 0;
 
+      let totalResponseDays = 0;
+      let totalResponseCount = 0;
+
       const thirtyDaysAgo = subDays(new Date(), 30);
 
       apps.forEach((app) => {
@@ -916,9 +1102,8 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
         if (currentKind === "accepted") {
           offeredCount++;
         } else if (currentKind === "applied" || currentKind === "review" || currentKind === "interview") {
-          // Check if it should be classified as ghosted (applied > 30 days ago with no response)
-          const dateApplied = new Date(app.dateApplied);
-          const isOlderThan30Days = dateApplied < thirtyDaysAgo;
+          const dateApplied = app.dateApplied ? parseISO(app.dateApplied) : null;
+          const isOlderThan30Days = dateApplied && !isNaN(dateApplied.getTime()) ? dateApplied < thirtyDaysAgo : false;
 
           if (isOlderThan30Days && currentKind === "applied") {
             if (reachedInterview) {
@@ -944,6 +1129,32 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
         } else {
           activeCount++;
         }
+
+        // Response velocity calculation (time to first recruiter response, excluding ghosted apps)
+        const isGhostedApp =
+          currentKind === "ghosted" ||
+          (currentKind === "applied" &&
+            app.dateApplied &&
+            parseISO(app.dateApplied) < thirtyDaysAgo);
+
+        if (!isGhostedApp) {
+          const firstResponseHistory = appHistory
+            .filter((h) => {
+              const kind = getStatusKind(h.status, h.statusCategory);
+              return kind !== "applied" && kind !== "ghosted";
+            })
+            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+          if (firstResponseHistory.length > 0 && app.dateApplied) {
+            const appliedDate = parseISO(app.dateApplied);
+            if (!isNaN(appliedDate.getTime())) {
+              const firstResponseDate = new Date(firstResponseHistory[0].createdAt);
+              const diffDays = Math.max(0, differenceInDays(firstResponseDate, appliedDate));
+              totalResponseDays += diffDays;
+              totalResponseCount++;
+            }
+          }
+        }
       });
 
       const total = apps.length;
@@ -957,9 +1168,17 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
       }).length;
       const uniqueOffer = offeredCount;
 
+      // Responded applications = Got interview OR offer OR rejected
+      const respondedCount = uniqueInterview + rejectedResumeCount;
+
       // Conversions
       const resumeConversion = uniqueApplied ? (uniqueInterview / uniqueApplied) * 100 : 0;
       const interviewConversion = uniqueInterview ? (uniqueOffer / uniqueInterview) * 100 : 0;
+      const responseConversion = uniqueApplied ? (respondedCount / uniqueApplied) * 100 : 0;
+
+      const averageResponseDays = totalResponseCount > 0
+        ? Math.round(totalResponseDays / totalResponseCount)
+        : null;
 
       return {
         total,
@@ -978,6 +1197,8 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
         },
         resumeConversion,
         interviewConversion,
+        responseConversion,
+        averageResponseDays,
       };
     },
     ["analytics", "detailed-breakdown", userId, month || "all", year || "all"],
@@ -987,3 +1208,91 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
     }
   )();
 }
+
+export async function getBestPlatformInsight(month?: string, year?: string) {
+  const userId = await getCurrentUserIdOrThrow();
+
+  const whereClause = [eq(jobApplications.userId, userId)];
+  if (month && month !== "all")
+    whereClause.push(eq(jobApplications.month, month));
+  if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
+
+  return unstable_cache(
+    async () => {
+      const data = await db
+        .select({
+          id: jobApplications.id,
+          platform: jobApplications.platform,
+          status: jobApplications.status,
+          statusCategory: jobApplications.statusCategory,
+        })
+        .from(jobApplications)
+        .where(and(...whereClause));
+
+      const appIds = data.map((d) => d.id);
+      const history =
+        appIds.length > 0
+          ? await db
+              .select({
+                applicationId: applicationStatusHistory.applicationId,
+                statusCategory: applicationStatusHistory.statusCategory,
+                status: applicationStatusHistory.status,
+              })
+              .from(applicationStatusHistory)
+              .where(inArray(applicationStatusHistory.applicationId, appIds))
+          : [];
+
+      const historyMap = new Map<string, typeof history>();
+      history.forEach((h) => {
+        if (!historyMap.has(h.applicationId)) {
+          historyMap.set(h.applicationId, []);
+        }
+        historyMap.get(h.applicationId)!.push(h);
+      });
+
+      const platformStats = new Map<string, { name: string; total: number; interviews: number }>();
+
+      data.forEach(({ id, platform, status, statusCategory }) => {
+        const trimmed = (platform || "").trim();
+        if (!trimmed) return;
+        const key = trimmed.toLowerCase();
+
+        if (!platformStats.has(key)) {
+          platformStats.set(key, { name: trimmed, total: 0, interviews: 0 });
+        }
+        const stats = platformStats.get(key)!;
+        stats.total++;
+
+        const appHistory = historyMap.get(id) || [];
+        const reachedInterview =
+          didReachInterviewStage(status, statusCategory) ||
+          appHistory.some((h) => didReachInterviewStage(h.status, h.statusCategory));
+
+        if (reachedInterview) {
+          stats.interviews++;
+        }
+      });
+
+      const platformsWithRates = Array.from(platformStats.values())
+        .map((p) => ({
+          ...p,
+          interviewRate: p.total > 0 ? (p.interviews / p.total) * 100 : 0,
+        }))
+        .sort((a, b) => b.interviewRate - a.interviewRate || b.total - a.total);
+
+      const bestPlatform = platformsWithRates.length > 0 ? platformsWithRates[0] : null;
+      const secondBest = platformsWithRates.length > 1 ? platformsWithRates[1] : null;
+      const multiplier = bestPlatform && secondBest && secondBest.interviewRate > 0
+        ? bestPlatform.interviewRate / secondBest.interviewRate
+        : 1;
+
+      return { bestPlatform, secondBest, multiplier };
+    },
+    ["analytics", "best-platform-insight", userId, month || "all", year || "all"],
+    {
+      revalidate: CACHE_REVALIDATE_SECONDS,
+      tags: [applicationsTag(userId)],
+    }
+  )();
+}
+

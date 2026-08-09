@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { Calendar, Filter, RotateCcw } from 'lucide-react';
 
 const months = [
   { value: '1', label: 'January' },
@@ -47,59 +47,73 @@ export function AnalyticsFilter({ years }: { years: string[] }) {
     router.push('?');
   };
 
+  const isFiltered = selectedMonth !== 'all' || selectedYear !== 'all';
+
   return (
-    <div className='flex flex-wrap items-center gap-4 mb-2'>
-      <div className='flex items-center gap-2'>
-        <span className='text-sm font-medium'>Month:</span>
-        <Select
-          value={selectedMonth}
-          onValueChange={(value) => updateFilter('month', value)}
-        >
-          <SelectTrigger className='w-[150px]'>
-            <SelectValue placeholder='All Months' />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value='all'>All Months</SelectItem>
-            {months.map((month) => (
-              <SelectItem key={month.value} value={month.value}>
-                {month.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+    <div className="w-full bg-card border border-border/30 rounded-xl p-3 sm:p-4 shadow-2xs flex flex-wrap items-center justify-between gap-3 mb-2">
+      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <Filter className="h-4 w-4 text-primary" />
+        <span>Filter Analytics</span>
       </div>
 
-      <div className='flex items-center gap-2'>
-        <span className='text-sm font-medium'>Year:</span>
-        <Select
-          value={selectedYear}
-          onValueChange={(value) => updateFilter('year', value)}
-        >
-          <SelectTrigger className='w-[120px]'>
-            <SelectValue placeholder='All Years' />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value='all'>All Years</SelectItem>
-            {years.map((year) => (
-              <SelectItem key={year} value={year}>
-                {year}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Month Selector */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground font-medium flex items-center gap-1">
+            <Calendar className="h-3.5 w-3.5" /> Month:
+          </span>
+          <Select
+            value={selectedMonth}
+            onValueChange={(value) => updateFilter('month', value)}
+          >
+            <SelectTrigger className="w-[140px] h-8 text-xs bg-background">
+              <SelectValue placeholder="All Months" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Months</SelectItem>
+              {months.map((month) => (
+                <SelectItem key={month.value} value={month.value}>
+                  {month.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-      {(selectedMonth !== 'all' || selectedYear !== 'all') && (
-        <Button
-          variant='ghost'
-          size='sm'
-          onClick={clearFilters}
-          className='h-8 px-2 lg:px-3'
-        >
-          Reset
-          <X className='ml-2 h-4 w-4' />
-        </Button>
-      )}
+        {/* Year Selector */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground font-medium">Year:</span>
+          <Select
+            value={selectedYear}
+            onValueChange={(value) => updateFilter('year', value)}
+          >
+            <SelectTrigger className="w-[110px] h-8 text-xs bg-background">
+              <SelectValue placeholder="All Years" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Years</SelectItem>
+              {years.map((year) => (
+                <SelectItem key={year} value={year}>
+                  {year}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Reset Action */}
+        {isFiltered && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearFilters}
+            className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1.5 px-2.5"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            Reset
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

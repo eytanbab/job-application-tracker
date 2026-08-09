@@ -11,8 +11,8 @@ import { getCurrentUserIdOrThrow } from './_utils/user-context';
 
 export async function migrateGuestData() {
   const { userId } = await auth();
-  const cookieStore = cookies();
-  const guestId = (await cookieStore).get('guest_id')?.value;
+  const cookieStore = await cookies();
+  const guestId = cookieStore.get('guest_id')?.value;
 
   if (!userId || !guestId || userId === guestId) return;
   const resolvedUserId = await getCurrentUserIdOrThrow();
@@ -29,11 +29,11 @@ export async function migrateGuestData() {
     .set({ userId: resolvedUserId })
     .where(eq(documents.userId, guestId));
 
-  revalidateTag(applicationsTag(guestId));
-  revalidateTag(applicationsTag(resolvedUserId));
-  revalidateTag(documentsTag(guestId));
-  revalidateTag(documentsTag(resolvedUserId));
+  revalidateTag(applicationsTag(guestId), 'max');
+  revalidateTag(applicationsTag(resolvedUserId), 'max');
+  revalidateTag(documentsTag(guestId), 'max');
+  revalidateTag(documentsTag(resolvedUserId), 'max');
 
   // clear the cookie
-  (await cookieStore).set('guest_id', '', { path: '/', maxAge: 0 });
+  cookieStore.set('guest_id', '', { path: '/', maxAge: 0 });
 }

@@ -58,7 +58,7 @@ const aiFormSchema = z.object({
 });
 
 type Props = {
-  defaultValues: FormValues;
+  defaultValues: FormValues & { id?: string };
   onSubmit: (values: FormValues) => Promise<void>;
   onClose: () => void;
 };
@@ -85,9 +85,8 @@ export const ApplicationForm = ({
     }),
     date_applied: z.string().or(z.date()),
     link: z.string().url(),
-    description: z.string().min(2, {
-      message: "Description must be at least 2 characters.",
-    }),
+    description: z.string().optional().nullable(),
+    notes: z.string().optional().nullable(),
     location: z.string().min(2, {
       message: "Location must be at least 2 characters.",
     }),
@@ -100,7 +99,6 @@ export const ApplicationForm = ({
     statusCategory: z.string().min(2, {
       message: "Choose a status category.",
     }),
-    statusLabel: z.string().nullable().optional(),
     salary: z.string().nullable().optional(),
   });
 
@@ -112,13 +110,15 @@ export const ApplicationForm = ({
   });
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema as any),
     defaultValues: defaultValues,
   });
 
   const onCancel = () => {
     onClose();
-    router.push("/applications");
+    if (!defaultValues?.id) {
+      router.push("/applications");
+    }
   };
 
   const handleAiSubmit = async (values: z.infer<typeof aiFormSchema>) => {
@@ -147,7 +147,6 @@ export const ApplicationForm = ({
         platform: aiAutoFill.application.platform,
         status: "Applied",
         statusCategory: "applied",
-        statusLabel: "",
         description: aiAutoFill.application.description ?? "",
         location: aiAutoFill.application.location,
         month: "",
@@ -184,13 +183,10 @@ export const ApplicationForm = ({
       location: values.location.trim(),
       platform: values.platform.toLowerCase().trim(),
       statusCategory: getStatusKind(values.status, values.statusCategory),
-      statusLabel: values.statusLabel?.trim() || "",
       status: getStatusDisplay(
         values.status,
-        values.statusCategory,
-        values.statusLabel
+        values.statusCategory
       )
-        .toLowerCase()
         .trim(),
       salary: values.salary?.trim() || "",
     };
@@ -199,7 +195,9 @@ export const ApplicationForm = ({
       try {
         await onSubmit(values);
         onClose();
-        router.push("/applications");
+        if (!defaultValues?.id) {
+          router.push("/applications");
+        }
       } catch {
         toast({
           description: "Failed to save application.",
@@ -367,23 +365,6 @@ export const ApplicationForm = ({
           />
           <FormField
             control={form.control}
-            name="statusLabel"
-            render={({ field }) => (
-              <FormItem className="space-y-0 col-span-full md:col-span-1">
-                <FormLabel>Custom status label</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Optional, e.g. Interview scheduled"
-                    {...field}
-                    value={field.value || ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
             name="platform"
             render={({ field }) => (
               <FormItem className="space-y-0 col-span-full">
@@ -462,10 +443,27 @@ export const ApplicationForm = ({
             name="description"
             render={({ field }) => (
               <FormItem className="space-y-0 col-span-full">
-                <FormLabel>Job description</FormLabel>
+                <FormLabel>Job Description</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Role description"
+                    placeholder="Role responsibilities, requirements, or posting text..."
+                    {...field}
+                    value={field.value || ""}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem className="space-y-0 col-span-full">
+                <FormLabel>Personal Candidate Notes</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Interview feedback, recruiter contact info, referral notes..."
                     {...field}
                     value={field.value || ""}
                   />

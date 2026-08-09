@@ -173,11 +173,10 @@ function Calendar({
       }}
       classNames={{
         months: _monthsClassName,
-        month_caption: _monthCaptionClassName,
+        month_caption: cn(_monthCaptionClassName, _captionClassName),
         weekdays: _weekdaysClassName,
         weekday: _weekdayClassName,
         month: _monthClassName,
-        caption: _captionClassName,
         caption_label: _captionLabelClassName,
         button_next: _buttonNextClassName,
         button_previous: _buttonPreviousClassName,

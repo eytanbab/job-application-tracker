@@ -68,20 +68,12 @@ export async function createFile(
     .insert(documents)
     .values({ title, doc_url, userId, file_name, file_key })
     .returning({ insertedId: documents.id });
-  revalidateTag(documentsTag(userId));
+  revalidateTag(documentsTag(userId), 'max');
 }
 
 export async function getFiles() {
   const userId = await getCurrentUserIdOrThrow();
-
-  return unstable_cache(
-    async () => db.select().from(documents).where(eq(documents.userId, userId)),
-    ["documents", "list", userId],
-    {
-      revalidate: CACHE_REVALIDATE_SECONDS,
-      tags: [documentsTag(userId)],
-    }
-  )();
+  return db.select().from(documents).where(eq(documents.userId, userId));
 }
 
 export async function deleteFile(id: string) {
@@ -107,7 +99,7 @@ export async function deleteFile(id: string) {
     console.error("Delete document error:", err);
     throw err;
   } finally {
-    revalidateTag(documentsTag(userId));
+    revalidateTag(documentsTag(userId), 'max');
   }
 }
 

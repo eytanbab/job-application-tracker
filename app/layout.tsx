@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Work_Sans } from 'next/font/google';
+import { Plus_Jakarta_Sans, Inter } from 'next/font/google';
 
 import './globals.css';
 
@@ -13,12 +13,18 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { GuestDataMigrator } from './_components/guest-data-migrator';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
-const roboto = Work_Sans({
-  weight: ['300', '400', '500', '700', '900'],
-  style: ['normal', 'italic'],
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
+  variable: '--font-heading',
   display: 'swap',
 });
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   title: 'Job Application Tracker',
   description: 'Stay organized and focused on landing your dream job.',
@@ -34,7 +40,7 @@ export default function RootLayout({
       <html lang='en' suppressHydrationWarning>
         <body
           suppressHydrationWarning
-          className={`${roboto.className} min-h-screen antialiased`}
+          className={`${plusJakartaSans.variable} ${inter.variable} ${inter.className} min-h-screen antialiased`}
         >
           <ThemeProvider
             attribute='class'
@@ -44,11 +50,13 @@ export default function RootLayout({
           >
             <NuqsAdapter>
               <Toaster />
-              <Nav />
-              <div className='flex'>
+              <div className="flex min-h-screen bg-background text-foreground">
                 <SideNav />
-                <GuestDataMigrator />
-                {children}
+                <div className="flex-1 flex flex-col min-w-0">
+                  <Nav />
+                  <GuestDataMigrator />
+                  <div className="flex-1">{children}</div>
+                </div>
               </div>
             </NuqsAdapter>
           </ThemeProvider>

@@ -1,11 +1,24 @@
-import { Section } from "../components/Section";
+import {
+  getApplicationsPerYear,
+  getStasusesPerYear,
+  getTop5Statuses,
+  getYears,
+  getDetailedApplicationBreakdown,
+  getBestPlatformInsight,
+  getGhostedApplications,
+  getDomainLeaderboard,
+} from "@/app/actions/analytics";
+
+import { PieChartComponent } from "../components/pie-chart";
+import { YearlyTrendsCard } from "../components/yearly-trends-card";
+import { KpiSummary } from "../components/kpi-summary";
 import { AnalyticsFilter } from "../components/analytics-filter";
-import { getOverviewMetrics, getApplicationVelocity } from "./actions";
-import { getYears } from "@/app/actions/analytics";
-import { DiagnosticBanner } from "./components/diagnostic-banner";
-import { KpiStrip } from "./components/kpi-strip";
-import { BrutalFunnel } from "./components/brutal-funnel";
-import { VelocityChart } from "./components/velocity-chart";
+import { BestPlatformsCard } from "../components/best-platforms-card";
+import { GhostingRiskCard } from "../components/ghosting-risk-card";
+import { DomainLeaderboardCard } from "../components/domain-leaderboard-card";
+import { BarChart3, Lightbulb, TrendingUp } from "lucide-react";
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   return {
@@ -17,65 +30,105 @@ export default async function Overview(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const searchParams = await props.searchParams;
-  const month = typeof searchParams.month === "string" ? searchParams.month : undefined;
-  const year = typeof searchParams.year === "string" ? searchParams.year : undefined;
+  const month =
+    typeof searchParams.month === "string" ? searchParams.month : undefined;
+  const year =
+    typeof searchParams.year === "string" ? searchParams.year : undefined;
 
-  const [metrics, velocity, years] = await Promise.all([
-    getOverviewMetrics(month, year),
-    getApplicationVelocity(month, year),
+  const [
+    top5Statuses,
+    applicationsPerYear,
+    years,
+    statusesPerYear,
+    breakdownData,
+    bestPlatformInsight,
+    ghostedApplications,
+    domainLeaderboard,
+  ] = await Promise.all([
+    getTop5Statuses(month, year),
+    getApplicationsPerYear(month, year),
     getYears(),
+    getStasusesPerYear(month, year),
+    getDetailedApplicationBreakdown(month, year),
+    getBestPlatformInsight(month, year),
+    getGhostedApplications(month, year),
+    getDomainLeaderboard(),
   ]);
 
-  if (metrics.totalApplications === 0 && !month && !year) {
-    return (
-      <Section>
-        <div className="col-span-full">
-          <AnalyticsFilter years={years} />
-        </div>
-        <div className="col-span-full flex h-60 items-center justify-center rounded-lg border border-dashed">
-          <p className="text-muted-foreground">
-            No applications found. Add an application to see the analytics.
-          </p>
-        </div>
-      </Section>
-    );
-  }
+  const totalApplications = breakdownData.total;
+  
+  const interviewRate = breakdownData.total 
+    ? breakdownData.stages.interview / breakdownData.total 
+    : 0;
+  
+  const interviewConversionRate = breakdownData.stages.interview
+    ? breakdownData.stages.accepted / breakdownData.stages.interview
+    : 0;
+
+  const totalRejections = breakdownData.breakdown.rejectedResume + breakdownData.breakdown.rejectedInterview;
+  const rejectionRate = breakdownData.total 
+    ? totalRejections / breakdownData.total 
+    : 0;
 
   return (
-    <Section>
-      <div className="col-span-full mb-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Pipeline Overview</h1>
-            <p className="text-sm text-muted-foreground mt-1">Macro-level performance & health diagnostics.</p>
-          </div>
-          <AnalyticsFilter years={years} />
+    <div className="flex flex-col gap-6 w-full animate-in fade-in duration-500">
+      {/* 1. Header Filter Toolbar */}
+      <AnalyticsFilter years={years.length > 0 ? years : ['2025']} />
+
+      {/* 2. Key Performance Rates */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+            Key Performance Rates
+          </h2>
         </div>
-      </div>
-
-      <div className="col-span-full grid grid-cols-1 xl:grid-cols-12 gap-6 w-full">
-        <DiagnosticBanner 
-          totalApplications={metrics.totalApplications} 
-          interviewYield={metrics.interviewYield} 
-          ghostRate={metrics.ghostRate}
+        <KpiSummary
+          totalApplications={totalApplications}
+          interviewRate={interviewRate}
+          interviewConversionRate={interviewConversionRate}
+          rejectionRate={rejectionRate}
+          averageResponseDays={breakdownData.averageResponseDays}
         />
-        
-        <KpiStrip 
-          totalApplications={metrics.totalApplications}
-          activePipeline={metrics.activePipeline}
-          interviewYield={metrics.interviewYield}
-          ghostRate={metrics.ghostRate}
-        />
+      </section>
 
-        <div className="col-span-full grid grid-cols-1 xl:grid-cols-12 gap-6">
-          <BrutalFunnel 
-            applied={metrics.totalApplications} 
-            interview={metrics.interview} 
-            offer={metrics.accepted} 
+      {/* 3. Strategy Coaching */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Lightbulb className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+            Strategy Coaching
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <BestPlatformsCard {...bestPlatformInsight} />
+          <GhostingRiskCard {...ghostedApplications} />
+          <DomainLeaderboardCard domains={domainLeaderboard} />
+        </div>
+      </section>
+
+      {/* 4. Charts */}
+      <section className="space-y-3 pt-1">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+            Trends & Status
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <PieChartComponent
+            title="Status Breakdown"
+            data={top5Statuses}
+            total={totalApplications}
           />
-          <VelocityChart data={velocity} />
+          <YearlyTrendsCard
+            years={years.length > 0 ? years : ['2025']}
+            statusesPerYear={statusesPerYear}
+            applicationsPerYear={applicationsPerYear}
+            globalYear={year}
+          />
         </div>
-      </div>
-    </Section>
+      </section>
+    </div>
   );
 }
