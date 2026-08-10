@@ -17,13 +17,13 @@ export async function generatePresignedUrl(
   contentType: string
 ) {
   try {
-    const userId = await getCurrentUserIdOrThrow();
-
     if (!fileName || !contentType) {
       throw new Error(
         "Missing required parameters: fileName and contentType and userId"
       );
     }
+
+    const userId = await getCurrentUserIdOrThrow();
 
     // Allowed file types (modify this based on your needs)
     const allowedFileTypes = ["application/pdf"];

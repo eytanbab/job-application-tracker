@@ -166,10 +166,10 @@ export async function deleteApplication(id: string) {
 
 // Update an application of current user
 export async function updateApplication(values: FormValues) {
-  const userId = await getCurrentUserIdOrThrow();
   if (!values.id) {
-    return;
+    throw new Error("Application ID is required");
   }
+  const userId = await getCurrentUserIdOrThrow();
   const applicationId = values.id;
 
   const normalizedValues = normalizeApplicationStatus(values);

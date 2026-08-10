@@ -69,8 +69,10 @@ export const scraper = async (url: string): Promise<string> => {
   if (process.env.SCRAPER_SERVICE_URL) {
     try {
       const response = await fetch(`${process.env.SCRAPER_SERVICE_URL}/scrape?url=${encodeURIComponent(url)}`);
-      const data = await response.json();
-      return data.text || '';
+      if (response.ok) {
+        const data = await response.json();
+        return data.text || '';
+      }
     } catch (err) {
       console.error('Custom Scraper Service failed:', err);
     }

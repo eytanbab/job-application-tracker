@@ -861,10 +861,12 @@ export async function getStatusPerPlatform(month?: string, year?: string) {
 
       const historyMap = new Map<string, typeof history>();
       history.forEach((h) => {
-        if (!historyMap.has(h.applicationId)) {
-          historyMap.set(h.applicationId, []);
+        const existing = historyMap.get(h.applicationId);
+        if (existing) {
+          existing.push(h);
+        } else {
+          historyMap.set(h.applicationId, [h]);
         }
-        historyMap.get(h.applicationId)!.push(h);
       });
 
       const platformMap = new Map<
@@ -965,10 +967,12 @@ export async function getPlatformPerformance() {
 
       const historyMap = new Map<string, typeof history>();
       history.forEach((h) => {
-        if (!historyMap.has(h.applicationId)) {
-          historyMap.set(h.applicationId, []);
+        const existing = historyMap.get(h.applicationId);
+        if (existing) {
+          existing.push(h);
+        } else {
+          historyMap.set(h.applicationId, [h]);
         }
-        historyMap.get(h.applicationId)!.push(h);
       });
 
       const platformStats: {
@@ -1071,10 +1075,12 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
       // Group history by applicationId
       const historyMap = new Map<string, typeof history>();
       history.forEach((h) => {
-        if (!historyMap.has(h.applicationId)) {
-          historyMap.set(h.applicationId, []);
+        const existing = historyMap.get(h.applicationId);
+        if (existing) {
+          existing.push(h);
+        } else {
+          historyMap.set(h.applicationId, [h]);
         }
-        historyMap.get(h.applicationId)!.push(h);
       });
 
       let activeCount = 0;
@@ -1244,10 +1250,12 @@ export async function getBestPlatformInsight(month?: string, year?: string) {
 
       const historyMap = new Map<string, typeof history>();
       history.forEach((h) => {
-        if (!historyMap.has(h.applicationId)) {
-          historyMap.set(h.applicationId, []);
+        const existing = historyMap.get(h.applicationId);
+        if (existing) {
+          existing.push(h);
+        } else {
+          historyMap.set(h.applicationId, [h]);
         }
-        historyMap.get(h.applicationId)!.push(h);
       });
 
       const platformStats = new Map<string, { name: string; total: number; interviews: number }>();
