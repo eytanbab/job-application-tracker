@@ -10,40 +10,25 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   ExternalLink,
   MapPin,
-  Calendar,
   DollarSign,
   Building2,
-  Clock,
-  History,
   Pencil,
   Trash2,
-  Check,
-  X,
-  Loader2,
-  FileText,
-  MessageSquare,
 } from 'lucide-react';
 import {
   getStatusDisplay,
   getStatusKind,
   statusLabels,
-  statusOptions,
   StatusKind,
 } from '@/lib/utils';
-import { formatDate, parseISO } from 'date-fns';
 import { getApplicationHistory, updateApplication, deleteStatusHistoryEntry } from '@/app/actions/applications';
 import { toast } from '@/hooks/use-toast';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { TimelineEntry } from './application-timeline';
+import { ApplicationDetailEditForm, DetailEditFormData } from './application-detail-edit-form';
+import { ApplicationDetailView } from './application-detail-view';
 
 interface ApplicationDetail {
   id?: string;
@@ -93,26 +78,11 @@ export function ApplicationDetailSheet({
   const [currentApp, setCurrentApp] = useState<ApplicationDetail | null>(initialApp);
   const [quickStatusText, setQuickStatusText] = useState<string>(initialApp?.status || '');
   const [isEditing, setIsEditing] = useState(false);
-  const [history, setHistory] = useState<
-    { id: string; status: string; statusCategory: string; createdAt: Date }[]
-  >([]);
+  const [history, setHistory] = useState<TimelineEntry[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isSaving, startSaveTransition] = useTransition();
 
-  // Form edit state
-  const [editForm, setEditForm] = useState<{
-    role_name: string;
-    company_name: string;
-    location: string;
-    salary: string;
-    platform: string;
-    link: string;
-    date_applied: string;
-    description: string;
-    notes: string;
-    status: string;
-    statusCategory: string;
-  }>({
+  const [editForm, setEditForm] = useState<DetailEditFormData>({
     role_name: '',
     company_name: '',
     location: '',
@@ -242,9 +212,15 @@ export function ApplicationDetailSheet({
     });
   };
 
-  const formattedAppliedDate = currentApp.date_applied
-    ? formatDate(parseISO(currentApp.date_applied), 'PPP')
-    : 'Unknown date';
+  const handleDeleteTimelineEntry = async (entryId: string) => {
+    try {
+      await deleteStatusHistoryEntry(entryId);
+      setHistory((prev) => prev.filter((h) => h.id !== entryId));
+      toast({ description: 'Timeline entry removed' });
+    } catch {
+      toast({ description: 'Failed to remove timeline entry', variant: 'destructive' });
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -334,308 +310,25 @@ export function ApplicationDetailSheet({
 
         <div className="py-4 space-y-5">
           {isEditing ? (
-            /* Inline Edit View */
-            <div className="space-y-4 text-sm opacity-100 transition-opacity duration-200">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="edit-status-category" className="text-[11px] font-semibold text-muted-foreground uppercase">Status Category</label>
-                  <Select
-                    value={editForm.statusCategory}
-                    onValueChange={(val) => setEditForm({ ...editForm, statusCategory: val })}
-                  >
-                    <SelectTrigger id="edit-status-category" className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value} className="capitalize">
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label htmlFor="edit-status-detail" className="text-[11px] font-semibold text-muted-foreground uppercase">Stage Details / Custom Status</label>
-                  <Input
-                    id="edit-status-detail"
-                    placeholder="e.g. Self-withdrawn, Post-tech screen"
-                    value={editForm.status}
-                    onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                    className="h-9"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="edit-platform" className="text-[11px] font-semibold text-muted-foreground uppercase">Platform</label>
-                  <Input
-                    id="edit-platform"
-                    placeholder="e.g. LinkedIn"
-                    value={editForm.platform}
-                    onChange={(e) => setEditForm({ ...editForm, platform: e.target.value })}
-                    className="h-9"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="edit-date-applied" className="text-[11px] font-semibold text-muted-foreground uppercase">Date Applied</label>
-                  <Input
-                    id="edit-date-applied"
-                    type="date"
-                    value={editForm.date_applied ? editForm.date_applied.split('T')[0] : ''}
-                    onChange={(e) => setEditForm({ ...editForm, date_applied: e.target.value })}
-                    className="h-9"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="edit-location" className="text-[11px] font-semibold text-muted-foreground uppercase">Location</label>
-                  <Input
-                    id="edit-location"
-                    placeholder="e.g. Tel Aviv / Remote"
-                    value={editForm.location}
-                    onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
-                    className="h-9"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="edit-salary" className="text-[11px] font-semibold text-muted-foreground uppercase">Salary Range</label>
-                  <Input
-                    id="edit-salary"
-                    placeholder="e.g. 30k - 40k"
-                    value={editForm.salary}
-                    onChange={(e) => setEditForm({ ...editForm, salary: e.target.value })}
-                    className="h-9"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="edit-link" className="text-[11px] font-semibold text-muted-foreground uppercase">Job URL</label>
-                <Input
-                  id="edit-link"
-                  placeholder="https://..."
-                  value={editForm.link}
-                  onChange={(e) => setEditForm({ ...editForm, link: e.target.value })}
-                  className="h-9"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="edit-description" className="text-[11px] font-semibold text-muted-foreground uppercase">Job Description</label>
-                  <Textarea
-                    id="edit-description"
-                    rows={4}
-                    placeholder="Job posting responsibilities..."
-                    value={editForm.description}
-                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="edit-notes" className="text-[11px] font-semibold text-muted-foreground uppercase">Personal Candidate Notes</label>
-                  <Textarea
-                    id="edit-notes"
-                    rows={4}
-                    placeholder="Recruiter contact, interview feedback..."
-                    value={editForm.notes}
-                    onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 pt-2">
-                <Button
-                  className="flex-1 gap-2 font-medium"
-                  disabled={isSaving}
-                  onClick={handleSaveInline}
-                >
-                  {isSaving ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Check className="h-4 w-4" />
-                  )}
-                  Save Changes
-                </Button>
-                <Button
-                  variant="outline"
-                  disabled={isSaving}
-                  onClick={() => setIsEditing(false)}
-                  className="gap-1.5"
-                >
-                  <X className="h-4 w-4" />
-                  Cancel
-                </Button>
-              </div>
-            </div>
+            <ApplicationDetailEditForm
+              editForm={editForm}
+              setEditForm={setEditForm}
+              isSaving={isSaving}
+              onSave={handleSaveInline}
+              onCancel={() => setIsEditing(false)}
+            />
           ) : (
-            /* Read-only View */
-            <>
-              {/* Quick status update control */}
-              <div className="rounded-md border border-border/30 bg-muted/30 p-3.5 space-y-2">
-                <div className="flex items-center justify-between">
-                  <label htmlFor="quick-status-select" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Quick Update Status
-                  </label>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <Select
-                    disabled={isSaving}
-                    value={currentKind}
-                    onValueChange={(cat) => handleQuickStatusChange(cat)}
-                  >
-                    <SelectTrigger id="quick-status-select" className="w-full bg-card border-border/40 rounded-md">
-                      <SelectValue placeholder="Select new status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value} className="capitalize text-xs">
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Input
-                    placeholder="Custom stage detail (optional)"
-                    value={quickStatusText}
-                    onChange={(e) => setQuickStatusText(e.target.value)}
-                    onBlur={(e) => handleQuickStatusChange(currentKind, e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.currentTarget.blur();
-                        handleQuickStatusChange(currentKind, quickStatusText);
-                      }
-                    }}
-                    className="h-9 text-xs bg-card border-border/40"
-                  />
-                </div>
-              </div>
-
-              {/* Details grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm bg-card p-3.5 border border-border/30 rounded-md">
-                <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
-                    <Calendar className="h-3.5 w-3.5" /> Date Applied
-                  </span>
-                  <p className="font-medium text-foreground text-xs sm:text-sm">{formattedAppliedDate}</p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
-                    <Clock className="h-3.5 w-3.5" /> Platform
-                  </span>
-                  <p className="font-medium capitalize text-foreground text-xs sm:text-sm">{currentApp.platform || '-'}</p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
-                    <MapPin className="h-3.5 w-3.5" /> Location
-                  </span>
-                  <p className="font-medium text-foreground text-xs sm:text-sm">{currentApp.location || '-'}</p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
-                    <DollarSign className="h-3.5 w-3.5" /> Salary
-                  </span>
-                  <p className="font-medium text-foreground text-xs sm:text-sm">{currentApp.salary || '-'}</p>
-                </div>
-              </div>
-
-              {/* Separated Job Description & Personal Notes (Item 3) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <FileText className="h-3.5 w-3.5" /> Job Description
-                  </h4>
-                  <div className="rounded-md border border-border/30 bg-card p-3 text-xs text-foreground leading-relaxed whitespace-pre-wrap max-h-44 overflow-y-auto">
-                    {currentApp.description?.trim()
-                      ? currentApp.description
-                      : 'No job description provided.'}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <MessageSquare className="h-3.5 w-3.5 text-primary" /> Personal Candidate Notes
-                  </h4>
-                  <div className="rounded-md border border-border/30 bg-card p-3 text-xs text-foreground leading-relaxed whitespace-pre-wrap max-h-44 overflow-y-auto">
-                    {currentApp.notes?.trim()
-                      ? currentApp.notes
-                      : 'No personal notes added yet.'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Status Timeline History */}
-              <div className="space-y-3 pt-2">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                  <History className="h-4 w-4" /> Application Timeline
-                </h4>
-
-                {isLoadingHistory ? (
-                  <p className="text-xs text-muted-foreground italic">Loading timeline...</p>
-                ) : history.length === 0 ? (
-                  <p className="text-xs text-muted-foreground italic">No status history recorded yet.</p>
-                ) : (
-                  <div className="relative pl-4 border-l border-border space-y-3 my-2">
-                    {history.map((item, idx) => {
-                      const itemKind = getStatusKind(item.status, item.statusCategory);
-                      const displayTitle = getStatusDisplay(item.status, item.statusCategory);
-                      const categoryLabel = statusLabels[itemKind];
-                      const showCategoryTag =
-                        Boolean(categoryLabel) &&
-                        displayTitle.toLowerCase() !== categoryLabel.toLowerCase();
-                      const formattedTime = item.createdAt
-                        ? formatDate(new Date(item.createdAt), 'MMM d, yyyy · h:mm a')
-                        : '';
-                      return (
-                        <div key={item.id || `${item.status}-${item.createdAt}`} className="relative space-y-0.5 group">
-                          <div className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background" />
-                          <div className="flex items-center justify-between text-xs">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-semibold capitalize text-foreground">
-                                {displayTitle}
-                              </span>
-                              {showCategoryTag && (
-                                <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 font-normal text-muted-foreground">
-                                  {categoryLabel}
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-muted-foreground text-[11px]">{formattedTime}</span>
-                              {item.id && (
-                                <button
-                                  type="button"
-                                  onClick={async () => {
-                                    try {
-                                      await deleteStatusHistoryEntry(item.id);
-                                      setHistory((prev) => prev.filter((h) => h.id !== item.id));
-                                      toast({ description: 'Timeline entry removed' });
-                                    } catch {
-                                      toast({ description: 'Failed to remove timeline entry', variant: 'destructive' });
-                                    }
-                                  }}
-                                  className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
-                                  title="Delete this timeline entry"
-                                >
-                                  <X className="h-3 w-3" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </>
+            <ApplicationDetailView
+              currentApp={currentApp}
+              currentKind={currentKind}
+              quickStatusText={quickStatusText}
+              setQuickStatusText={setQuickStatusText}
+              handleQuickStatusChange={handleQuickStatusChange}
+              isSaving={isSaving}
+              history={history}
+              isLoadingHistory={isLoadingHistory}
+              onDeleteTimelineEntry={handleDeleteTimelineEntry}
+            />
           )}
         </div>
 
