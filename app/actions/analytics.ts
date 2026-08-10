@@ -16,58 +16,7 @@ import {
 import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 
-export async function getKpiSummary() {
-  const userId = await getCurrentUserIdOrThrow();
 
-  return unstable_cache(
-    async () => {
-      const allApplications = await db
-        .select({
-          status: jobApplications.status,
-          statusCategory: jobApplications.statusCategory,
-        })
-        .from(jobApplications)
-        .where(eq(jobApplications.userId, userId));
-
-      const totalApplications = allApplications.length;
-      const applicationsWithInterview = allApplications.filter(
-        (app) => didReachInterviewStage(app.status, app.statusCategory)
-      ).length;
-      const applicationsWithOffer = allApplications.filter(
-        (app) => getStatusKind(app.status, app.statusCategory) === "accepted"
-      ).length;
-      const activeApplications = allApplications.filter((app) => {
-        const statusKind = getStatusKind(app.status, app.statusCategory);
-        return (
-          statusKind === "applied" ||
-          statusKind === "interview" ||
-          statusKind === "review"
-        );
-      }).length;
-
-      const interviewRate =
-        totalApplications > 0
-          ? (applicationsWithInterview / totalApplications) * 100
-          : 0;
-      const offerRate =
-        applicationsWithInterview > 0
-          ? (applicationsWithOffer / applicationsWithInterview) * 100
-          : 0;
-
-      return {
-        totalApplications,
-        interviewRate,
-        offerRate,
-        activePipeline: activeApplications,
-      };
-    },
-    ["analytics", "kpi-summary", userId],
-    {
-      revalidate: CACHE_REVALIDATE_SECONDS,
-      tags: [applicationsTag(userId)],
-    }
-  )();
-}
 
 export async function getApplicationsFunnel() {
   const userId = await getCurrentUserIdOrThrow();

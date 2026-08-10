@@ -158,10 +158,7 @@ export function ApplicationDetailSheet({
             setIsLoadingHistory(false);
           });
       }
-    } else {
-      setQuickStatusText('');
     }
-    setIsEditing(false);
   }, [initialApp, open]);
 
   if (!currentApp) return null;
@@ -597,7 +594,7 @@ export function ApplicationDetailSheet({
                         ? formatDate(new Date(item.createdAt), 'MMM d, yyyy · h:mm a')
                         : '';
                       return (
-                        <div key={item.id || `history-${item.createdAt}-${idx}`} className="relative space-y-0.5 group">
+                        <div key={item.id || `${item.status}-${item.createdAt}`} className="relative space-y-0.5 group">
                           <div className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background" />
                           <div className="flex items-center justify-between text-xs">
                             <div className="flex items-center gap-1.5 flex-wrap">
