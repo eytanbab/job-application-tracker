@@ -1,6 +1,10 @@
 'use client';
 
-import { Pie, PieChart, Cell } from 'recharts';
+import dynamic from 'next/dynamic';
+
+const PieChart = dynamic(() => import('recharts').then((m) => m.PieChart), { ssr: false });
+const Pie = dynamic(() => import('recharts').then((m) => m.Pie), { ssr: false });
+const Cell = dynamic(() => import('recharts').then((m) => m.Cell), { ssr: false });
 
 import {
   Card,
