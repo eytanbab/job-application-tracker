@@ -60,13 +60,15 @@ export async function createFile(
   title: string,
   doc_url: string,
   file_name: string,
-  file_key: string
+  file_key: string,
+  category: string = "resume",
+  file_size?: string
 ) {
   const userId = await getCurrentUserIdOrThrow();
 
   await db
     .insert(documents)
-    .values({ title, doc_url, userId, file_name, file_key })
+    .values({ title, doc_url, userId, file_name, file_key, category, file_size })
     .returning({ insertedId: documents.id });
   revalidateTag(documentsTag(userId), 'max');
 }
@@ -89,9 +91,14 @@ export async function deleteFile(id: string) {
       throw new Error("Document not found");
     }
 
+    const fileKey = deletedDocument[0].file_key;
+    if (!fileKey.startsWith(`${userId}/`)) {
+      throw new Error("Unauthorized S3 key access");
+    }
+
     const deleteParams = {
-      Bucket: process.env.NEXT_AWS_S3_BUCKET_NAME || "", // Get the bucket name from env variable
-      Key: deletedDocument[0].file_key,
+      Bucket: process.env.NEXT_AWS_S3_BUCKET_NAME || "",
+      Key: fileKey,
     };
 
     await s3Client.send(new DeleteObjectCommand(deleteParams));
@@ -100,6 +107,40 @@ export async function deleteFile(id: string) {
     throw err;
   } finally {
     revalidateTag(documentsTag(userId), 'max');
+  }
+}
+
+export async function getViewUrl(id: string) {
+  const userId = await getCurrentUserIdOrThrow();
+
+  try {
+    const document = await db
+      .select()
+      .from(documents)
+      .where(and(eq(documents.userId, userId), eq(documents.id, id)))
+      .limit(1);
+
+    if (!document || document.length === 0) {
+      throw new Error("Document not found");
+    }
+
+    const getCommand = new (
+      await import("@aws-sdk/client-s3")
+    ).GetObjectCommand({
+      Bucket: process.env.NEXT_AWS_S3_BUCKET_NAME || "",
+      Key: document[0].file_key,
+      ResponseContentType: "application/pdf",
+      ResponseContentDisposition: `inline; filename="${document[0].file_name}"`,
+    });
+
+    const signedUrl = await getSignedUrl(s3Client, getCommand, {
+      expiresIn: 3600, // 1 hour for inline viewing
+    });
+
+    return { url: signedUrl };
+  } catch (error) {
+    console.error("View URL error:", error);
+    return { error: (error as Error).message };
   }
 }
 
@@ -117,7 +158,6 @@ export async function getDownloadUrl(id: string) {
       throw new Error("Document not found");
     }
 
-    // Actually we want a GET command for download
     const getCommand = new (
       await import("@aws-sdk/client-s3")
     ).GetObjectCommand({
@@ -127,7 +167,7 @@ export async function getDownloadUrl(id: string) {
     });
 
     const signedUrl = await getSignedUrl(s3Client, getCommand, {
-      expiresIn: 60, // 1 minute is plenty for a download trigger
+      expiresIn: 60,
     });
 
     return { url: signedUrl };

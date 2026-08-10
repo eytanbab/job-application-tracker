@@ -12,7 +12,7 @@ import {
   Eye,
 } from "lucide-react";
 
-import { deleteFile, getDownloadUrl } from "@/app/actions/documents";
+import { deleteFile, getDownloadUrl, getViewUrl } from "@/app/actions/documents";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -35,6 +35,8 @@ type Props = {
     title: string;
     created_at: Date;
     file_name: string;
+    category?: string | null;
+    file_size?: string | null;
   };
   view?: "table" | "grid";
 };
@@ -43,6 +45,7 @@ export const Document = ({ file, view = "table" }: Props) => {
   const { toast } = useToast();
   const [isDeleting, startDeleteTransition] = useTransition();
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isViewing, setIsViewing] = useState(false);
 
   const handleDelete = async () => {
     startDeleteTransition(async () => {
@@ -57,6 +60,29 @@ export const Document = ({ file, view = "table" }: Props) => {
         });
       }
     });
+  };
+
+  const handleViewOnline = async () => {
+    setIsViewing(true);
+    try {
+      const { url, error } = await getViewUrl(file.id);
+      if (url) {
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else {
+        toast({
+          description: error || "Failed to generate view link.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast({
+        description: "Failed to view document.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsViewing(false);
+    }
   };
 
   const handleDownload = async () => {
@@ -93,14 +119,17 @@ export const Document = ({ file, view = "table" }: Props) => {
       <Button
         variant="ghost"
         size="icon"
-        asChild
+        disabled={isViewing}
+        onClick={handleViewOnline}
         className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-md transition-colors"
         title="View Online"
       >
-        <Link href={file.doc_url} target="_blank">
+        {isViewing ? (
+          <Loader2 className={`${iconSizeClass} animate-spin`} />
+        ) : (
           <Eye className={iconSizeClass} />
-          <span className="sr-only">View Online</span>
-        </Link>
+        )}
+        <span className="sr-only">View Online</span>
       </Button>
 
       <Button
@@ -203,9 +232,14 @@ export const Document = ({ file, view = "table" }: Props) => {
             <Calendar className="h-3.5 w-3.5 text-muted-foreground/60" />
             {format(file.created_at, "dd/MM/yyyy")}
           </span>
-          <span className="bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded font-bold text-[9px] tracking-wider uppercase">
-            PDF
-          </span>
+          <div className="flex items-center gap-1.5">
+            {file.file_size && (
+              <span className="text-[10px] text-muted-foreground">{file.file_size}</span>
+            )}
+            <span className="bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded font-bold text-[9px] tracking-wider uppercase">
+              {file.category || "PDF"}
+            </span>
+          </div>
         </div>
       </Card>
     );
@@ -219,13 +253,21 @@ export const Document = ({ file, view = "table" }: Props) => {
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <FileText className="h-4 w-4" />
           </div>
-          <span className="truncate max-w-[280px] sm:max-w-sm font-semibold text-foreground" title={file.title}>
-            {file.title}
-          </span>
+          <div className="flex flex-col min-w-0">
+            <span className="truncate max-w-[280px] sm:max-w-sm font-semibold text-foreground" title={file.title}>
+              {file.title}
+            </span>
+            {file.category && (
+              <span className="text-[10px] text-muted-foreground uppercase font-medium">
+                {file.category.replace('_', ' ')}
+              </span>
+            )}
+          </div>
         </div>
       </TableCell>
       <TableCell className="text-muted-foreground py-3 truncate max-w-[200px] sm:max-w-xs" title={file.file_name}>
-        {file.file_name}
+        <div>{file.file_name}</div>
+        {file.file_size && <div className="text-[10px] text-muted-foreground/70">{file.file_size}</div>}
       </TableCell>
       <TableCell className="py-3 text-muted-foreground whitespace-nowrap">
         {format(file.created_at, "dd/MM/yyyy")}

@@ -30,8 +30,17 @@ import { cn } from "@/lib/utils";
 
 const FILE_SIZE_LIMIT = 10 * 1024 * 1024;
 
+const documentCategories = [
+  { value: "resume", label: "Resume / CV" },
+  { value: "cover_letter", label: "Cover Letter" },
+  { value: "portfolio", label: "Portfolio / Work Sample" },
+  { value: "certificate", label: "Certificate / Credential" },
+  { value: "other", label: "Other Asset" },
+];
+
 const FormSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
+  category: z.string().min(1, { message: "Category is required." }),
   file: z
     .custom<File>((val) => val instanceof File, { message: "File is required" })
     .refine((file) => file.size <= FILE_SIZE_LIMIT, {
@@ -51,13 +60,15 @@ export function FileUpload() {
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
-    defaultValues: { title: "" },
+    defaultValues: { title: "", category: "resume" },
   });
 
   const selectedFile = form.watch("file");
 
   const onSubmit = async (data: z.infer<typeof FormSchema>) => {
-    const { title, file } = data;
+    const { title, category, file } = data;
+    const formattedSize = `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+
     startTransition(async () => {
       try {
         const { fileKey, signedUrl, error } = await generatePresignedUrl(
@@ -79,7 +90,7 @@ export function FileUpload() {
 
           if (res.ok) {
             const fileUrl = signedUrl.split("?")[0];
-            await createFile(title, fileUrl, file.name, fileKey);
+            await createFile(title, fileUrl, file.name, fileKey, category, formattedSize);
             toast({
               description: (
                 <div className="flex items-center gap-2">
@@ -88,7 +99,7 @@ export function FileUpload() {
                 </div>
               ),
             });
-            form.reset();
+            form.reset({ title: "", category: "resume" });
             setIsOpen(false);
           } else {
             toast({
@@ -164,6 +175,29 @@ export function FileUpload() {
                       {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Document Category
+                  </FormLabel>
+                  <select
+                    {...field}
+                    className="flex h-10 w-full rounded-xl border border-border/30 bg-muted/40 px-3 py-2 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                  >
+                    {documentCategories.map((cat) => (
+                      <option key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </option>
+                    ))}
+                  </select>
                   <FormMessage />
                 </FormItem>
               )}

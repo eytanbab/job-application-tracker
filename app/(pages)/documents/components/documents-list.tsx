@@ -25,7 +25,8 @@ export const DocumentsList = async ({ query, view = "table" }: Props) => {
     docs = docs.filter(
       (doc) =>
         doc.title.toLowerCase().includes(lowQuery) ||
-        doc.file_name.toLowerCase().includes(lowQuery)
+        doc.file_name.toLowerCase().includes(lowQuery) ||
+        (doc.category && doc.category.toLowerCase().includes(lowQuery))
     );
   }
 

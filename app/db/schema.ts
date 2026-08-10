@@ -36,6 +36,8 @@ export const documents = pgTable('documents', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: varchar('user_id', { length: 255 }).notNull(),
   title: varchar('title').notNull(),
+  category: varchar('category', { length: 32 }).default('resume').notNull(),
+  file_size: text('file_size'),
   doc_url: varchar('doc_url').notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
   file_name: varchar('file_name').notNull(),
