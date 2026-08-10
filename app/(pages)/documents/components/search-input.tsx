@@ -23,6 +23,8 @@ export function SearchInput({ defaultValue }: { defaultValue?: string }) {
       />
       {query.length > 0 && (
         <button
+          type="button"
+          aria-label="Clear search"
           onClick={() => setQuery("")}
           className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
         >
