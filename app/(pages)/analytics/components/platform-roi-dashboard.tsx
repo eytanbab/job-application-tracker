@@ -92,7 +92,7 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
     .sort((a, b) => b.responseRate - a.responseRate)[0];
 
   return (
-    <div className='flex flex-col gap-6 w-full animate-in fade-in duration-500'>
+    <div className='flex flex-col gap-6 w-full opacity-100 transition-opacity duration-500'>
       
       {/* Platform Highlight Banner */}
       {topInterviewPlatform ? (

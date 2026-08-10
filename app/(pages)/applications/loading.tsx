@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 
 export default function ApplicationsLoading() {
   return (
-    <div className="w-full space-y-6 animate-in fade-in duration-300">
+    <div className="w-full space-y-6 opacity-100 transition-opacity duration-300">
       {/* 1. KPI Top Summary Bar Skeleton */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (

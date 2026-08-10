@@ -83,7 +83,7 @@ export default async function Overview(props: {
     : 0;
 
   return (
-    <div className="flex flex-col gap-6 w-full animate-in fade-in duration-500">
+    <div className="flex flex-col gap-6 w-full opacity-100 transition-opacity duration-500">
       {/* 1. Header Filter Toolbar */}
       <Suspense fallback={<div className="h-14 w-full bg-card rounded-xl animate-pulse" />}>
         <AnalyticsFilter years={years.length > 0 ? years : ['2025']} />

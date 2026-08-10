@@ -338,7 +338,7 @@ export function ApplicationDetailSheet({
         <div className="py-4 space-y-5">
           {isEditing ? (
             /* Inline Edit View */
-            <div className="space-y-4 text-sm animate-in fade-in duration-200">
+            <div className="space-y-4 text-sm opacity-100 transition-opacity duration-200">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="edit-status-category" className="text-[11px] font-semibold text-muted-foreground uppercase">Status Category</label>
