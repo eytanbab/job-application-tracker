@@ -85,7 +85,8 @@ export const columns: ColumnDef<FormValues>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: 'role_name',
+    id: 'role_name',
+    accessorFn: (row) => `${row.role_name} ${row.company_name}`,
     header: ({ column }) => {
       return (
         <Button
@@ -99,7 +100,7 @@ export const columns: ColumnDef<FormValues>[] = [
       );
     },
     cell: ({ row }) => {
-      const role = row.getValue<string>('role_name');
+      const role = row.original.role_name;
       const company = row.original.company_name;
       return (
         <div className="space-y-0.5 max-w-[220px]">
