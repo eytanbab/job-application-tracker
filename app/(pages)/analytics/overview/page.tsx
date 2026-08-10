@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import {
   getApplicationsPerYear,
   getStasusesPerYear,
@@ -9,8 +10,19 @@ import {
   getDomainLeaderboard,
 } from "@/app/actions/analytics";
 
-import { PieChartComponent } from "../components/pie-chart";
-import { YearlyTrendsCard } from "../components/yearly-trends-card";
+import dynamicImport from "next/dynamic";
+
+const PieChartComponent = dynamicImport(
+  () => import("../components/pie-chart").then((m) => m.PieChartComponent),
+  { loading: () => <div className="h-64 bg-card rounded-xl border border-border/30 animate-pulse" /> }
+);
+const YearlyTrendsCard = dynamicImport(
+  () => import("../components/yearly-trends-card").then((m) => m.YearlyTrendsCard),
+  { loading: () => <div className="h-64 bg-card rounded-xl border border-border/30 animate-pulse" /> }
+);
+
+
+
 import { KpiSummary } from "../components/kpi-summary";
 import { AnalyticsFilter } from "../components/analytics-filter";
 import { BestPlatformsCard } from "../components/best-platforms-card";
@@ -73,7 +85,9 @@ export default async function Overview(props: {
   return (
     <div className="flex flex-col gap-6 w-full animate-in fade-in duration-500">
       {/* 1. Header Filter Toolbar */}
-      <AnalyticsFilter years={years.length > 0 ? years : ['2025']} />
+      <Suspense fallback={<div className="h-14 w-full bg-card rounded-xl animate-pulse" />}>
+        <AnalyticsFilter years={years.length > 0 ? years : ['2025']} />
+      </Suspense>
 
       {/* 2. Key Performance Rates */}
       <section className="space-y-3">

@@ -2,10 +2,20 @@
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { StatusesPerYearBarChart } from './statuses-per-year-bar-chart';
-import { TotalApplicationsPerYearBarChart } from './total-applications-per-year-bar-chart';
+import dynamicImport from 'next/dynamic';
 import { cn } from '@/lib/utils';
 import { BarChart3, Layers } from 'lucide-react';
+
+const StatusesPerYearBarChart = dynamicImport(
+  () => import('./statuses-per-year-bar-chart').then((m) => m.StatusesPerYearBarChart),
+  { loading: () => <div className="h-64 bg-card rounded-xl border border-border/30 animate-pulse" /> }
+);
+
+const TotalApplicationsPerYearBarChart = dynamicImport(
+  () => import('./total-applications-per-year-bar-chart').then((m) => m.TotalApplicationsPerYearBarChart),
+  { loading: () => <div className="h-64 bg-card rounded-xl border border-border/30 animate-pulse" /> }
+);
+
 
 interface YearlyTrendsCardProps {
   years: string[];

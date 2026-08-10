@@ -32,7 +32,9 @@ export default async function Documents({ searchParams }: Props) {
           <SearchInput key={query} defaultValue={query} />
         </Suspense>
         <div className="flex items-center gap-3">
-          <LayoutToggle currentView={view} />
+          <Suspense fallback={<div className="h-9 w-20 bg-muted/40 rounded-lg animate-pulse" />}>
+            <LayoutToggle currentView={view} />
+          </Suspense>
           <FileUpload />
         </div>
       </div>

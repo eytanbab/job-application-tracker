@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { getStatusPerPlatform, getYears } from '@/app/actions/analytics';
 import { PlatformRoiDashboard } from '../components/platform-roi-dashboard';
 import { AnalyticsFilter } from '../components/analytics-filter';
@@ -35,7 +36,9 @@ export default async function StatusPerPlatformPage(props: {
 
   return (
     <div className='flex flex-col gap-4 w-full'>
-      <AnalyticsFilter years={years} />
+      <Suspense fallback={<div className="h-14 w-full bg-card rounded-xl animate-pulse" />}>
+        <AnalyticsFilter years={years} />
+      </Suspense>
       <PlatformRoiDashboard data={statusPerPlatform} />
     </div>
   );
