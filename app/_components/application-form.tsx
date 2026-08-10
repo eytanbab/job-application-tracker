@@ -37,6 +37,7 @@ import {
   cn,
   getStatusDisplay,
   getStatusKind,
+  statusLabels,
   statusOptions,
 } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -340,10 +341,8 @@ export const ApplicationForm = ({
                   value={field.value || getStatusKind(form.getValues("status"))}
                   onValueChange={(value) => {
                     field.onChange(value);
-                    form.setValue(
-                      "status",
-                      getStatusDisplay(form.getValues("status"), value)
-                    );
+                    const defaultLabel = statusLabels[value as keyof typeof statusLabels] || value;
+                    form.setValue("status", defaultLabel);
                   }}
                 >
                   <FormControl>
@@ -359,6 +358,23 @@ export const ApplicationForm = ({
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem className="space-y-0 col-span-full md:col-span-1">
+                <FormLabel>Stage details / Custom status</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="e.g. Applied / Tech interview / Screening..."
+                    {...field}
+                    value={field.value || ""}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
