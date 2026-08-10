@@ -55,7 +55,7 @@ const createApplicationSchema = insertApplicationSchema.omit({
 export type FormValues = z.input<typeof createApplicationSchema>;
 
 const aiFormSchema = z.object({
-  url: z.string().url(),
+  url: z.url(),
 });
 
 type Props = {
@@ -85,7 +85,7 @@ export const ApplicationForm = ({
       message: "Company name must be at least 2 characters.",
     }),
     date_applied: z.string().or(z.date()),
-    link: z.string().url(),
+    link: z.url(),
     description: z.string().optional().nullable(),
     notes: z.string().optional().nullable(),
     location: z.string().min(2, {
@@ -132,6 +132,16 @@ export const ApplicationForm = ({
         },
         body: JSON.stringify({ url: values.url }),
       });
+
+      if (!response.ok) {
+        toast({
+          title: "Extraction failed",
+          description: `Server responded with status ${response.status}`,
+          variant: "destructive",
+        });
+        setAiValues(null);
+        return;
+      }
 
       const aiAutoFill: AiData = await response.json();
 

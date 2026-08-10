@@ -498,7 +498,7 @@ function YearGrid({
           const isDisabled = isBefore || isAfter;
           return (
             <Button
-              key={i}
+              key={displayYears.from + i}
               className={cn(
                 'h-7 w-full text-sm font-normal text-foreground',
                 displayYears.from + i === new Date().getFullYear() &&

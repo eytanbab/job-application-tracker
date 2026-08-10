@@ -260,7 +260,7 @@ export function ApplicationsKanban({
                   onDragStart={(e) => {
                     e.dataTransfer.setData('application/json', JSON.stringify(item));
                   }}
-                  className="group relative cursor-grab active:cursor-grabbing border bg-card hover:border-primary/50 transition-all hover:shadow-md rounded-md"
+                  className="group relative cursor-grab active:cursor-grabbing border bg-card hover:border-primary/50 transition-[border-color,box-shadow] hover:shadow-md rounded-md"
                   onClick={() => onSelectApplication(item)}
                 >
                   <CardHeader className="p-3 pb-1.5 flex flex-row items-start justify-between space-y-0 gap-2">
@@ -421,10 +421,11 @@ export function ApplicationsKanban({
 
       {/* Mobile View: Single Column */}
       <div className="md:hidden">
-        {KANBAN_COLUMNS.filter(c => c.id === activeMobileCol).map((col) => {
-          const colIdx = KANBAN_COLUMNS.findIndex(c => c.id === col.id);
-          return renderColumnContent(col, colIdx);
-        })}
+        {(() => {
+          const colIdx = KANBAN_COLUMNS.findIndex(c => c.id === activeMobileCol);
+          const col = KANBAN_COLUMNS[colIdx];
+          return col ? renderColumnContent(col, colIdx) : null;
+        })()}
       </div>
 
       {/* Desktop View: All 6 Columns Grid (>= 768px) */}

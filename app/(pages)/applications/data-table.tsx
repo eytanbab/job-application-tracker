@@ -290,7 +290,13 @@ export function DataTable<TData extends ApplicationRow, TValue>({
   });
 
   const uniquePlatforms = useMemo(() => {
-    const set = new Set(data.map((item) => item.platform?.toLowerCase().trim()).filter(Boolean));
+    const set = new Set<string>();
+    for (const item of data) {
+      if (item.platform) {
+        const p = item.platform.toLowerCase().trim();
+        if (p) set.add(p);
+      }
+    }
     return Array.from(set);
   }, [data]);
 
