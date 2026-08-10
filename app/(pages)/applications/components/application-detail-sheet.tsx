@@ -144,27 +144,25 @@ export function ApplicationDetailSheet({
         status: effectiveStatus,
         statusCategory: getStatusKind(initialApp.status, initialApp.statusCategory),
       });
+
+      if (open) {
+        setIsLoadingHistory(true);
+        getApplicationHistory(initialApp.id as string)
+          .then((res) => {
+            setHistory(res);
+          })
+          .catch((err) => {
+            console.error('Failed to load history:', err);
+          })
+          .finally(() => {
+            setIsLoadingHistory(false);
+          });
+      }
     } else {
       setQuickStatusText('');
     }
     setIsEditing(false);
-  }, [initialApp]);
-
-  useEffect(() => {
-    if (open && currentApp?.id) {
-      setIsLoadingHistory(true);
-      getApplicationHistory(currentApp.id)
-        .then((res) => {
-          setHistory(res);
-        })
-        .catch((err) => {
-          console.error('Failed to load history:', err);
-        })
-        .finally(() => {
-          setIsLoadingHistory(false);
-        });
-    }
-  }, [open, currentApp?.id]);
+  }, [initialApp, open]);
 
   if (!currentApp) return null;
 
@@ -260,16 +258,18 @@ export function ApplicationDetailSheet({
               {isEditing ? (
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <div>
-                    <label className="text-[11px] font-semibold text-muted-foreground uppercase">Role Title</label>
+                    <label htmlFor="edit-role-name" className="text-[11px] font-semibold text-muted-foreground uppercase">Role Title</label>
                     <Input
+                      id="edit-role-name"
                       value={editForm.role_name}
                       onChange={(e) => setEditForm({ ...editForm, role_name: e.target.value })}
                       className="font-semibold text-base h-9"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-muted-foreground uppercase">Company Name</label>
+                    <label htmlFor="edit-company-name" className="text-[11px] font-semibold text-muted-foreground uppercase">Company Name</label>
                     <Input
+                      id="edit-company-name"
                       value={editForm.company_name}
                       onChange={(e) => setEditForm({ ...editForm, company_name: e.target.value })}
                       className="text-sm h-9"
@@ -341,12 +341,12 @@ export function ApplicationDetailSheet({
             <div className="space-y-4 text-sm animate-in fade-in duration-200">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase">Status Category</label>
+                  <label htmlFor="edit-status-category" className="text-[11px] font-semibold text-muted-foreground uppercase">Status Category</label>
                   <Select
                     value={editForm.statusCategory}
                     onValueChange={(val) => setEditForm({ ...editForm, statusCategory: val })}
                   >
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger id="edit-status-category" className="h-9">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -359,8 +359,9 @@ export function ApplicationDetailSheet({
                   </Select>
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase">Stage Details / Custom Status</label>
+                  <label htmlFor="edit-status-detail" className="text-[11px] font-semibold text-muted-foreground uppercase">Stage Details / Custom Status</label>
                   <Input
+                    id="edit-status-detail"
                     placeholder="e.g. Self-withdrawn, Post-tech screen"
                     value={editForm.status}
                     onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
@@ -371,8 +372,9 @@ export function ApplicationDetailSheet({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase">Platform</label>
+                  <label htmlFor="edit-platform" className="text-[11px] font-semibold text-muted-foreground uppercase">Platform</label>
                   <Input
+                    id="edit-platform"
                     placeholder="e.g. LinkedIn"
                     value={editForm.platform}
                     onChange={(e) => setEditForm({ ...editForm, platform: e.target.value })}
@@ -380,8 +382,9 @@ export function ApplicationDetailSheet({
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase">Date Applied</label>
+                  <label htmlFor="edit-date-applied" className="text-[11px] font-semibold text-muted-foreground uppercase">Date Applied</label>
                   <Input
+                    id="edit-date-applied"
                     type="date"
                     value={editForm.date_applied ? editForm.date_applied.split('T')[0] : ''}
                     onChange={(e) => setEditForm({ ...editForm, date_applied: e.target.value })}
@@ -392,8 +395,9 @@ export function ApplicationDetailSheet({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase">Location</label>
+                  <label htmlFor="edit-location" className="text-[11px] font-semibold text-muted-foreground uppercase">Location</label>
                   <Input
+                    id="edit-location"
                     placeholder="e.g. Tel Aviv / Remote"
                     value={editForm.location}
                     onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
@@ -401,8 +405,9 @@ export function ApplicationDetailSheet({
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase">Salary Range</label>
+                  <label htmlFor="edit-salary" className="text-[11px] font-semibold text-muted-foreground uppercase">Salary Range</label>
                   <Input
+                    id="edit-salary"
                     placeholder="e.g. 30k - 40k"
                     value={editForm.salary}
                     onChange={(e) => setEditForm({ ...editForm, salary: e.target.value })}
@@ -412,8 +417,9 @@ export function ApplicationDetailSheet({
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold text-muted-foreground uppercase">Job URL</label>
+                <label htmlFor="edit-link" className="text-[11px] font-semibold text-muted-foreground uppercase">Job URL</label>
                 <Input
+                  id="edit-link"
                   placeholder="https://..."
                   value={editForm.link}
                   onChange={(e) => setEditForm({ ...editForm, link: e.target.value })}
@@ -423,8 +429,9 @@ export function ApplicationDetailSheet({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase">Job Description</label>
+                  <label htmlFor="edit-description" className="text-[11px] font-semibold text-muted-foreground uppercase">Job Description</label>
                   <Textarea
+                    id="edit-description"
                     rows={4}
                     placeholder="Job posting responsibilities..."
                     value={editForm.description}
@@ -433,8 +440,9 @@ export function ApplicationDetailSheet({
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase">Personal Candidate Notes</label>
+                  <label htmlFor="edit-notes" className="text-[11px] font-semibold text-muted-foreground uppercase">Personal Candidate Notes</label>
                   <Textarea
+                    id="edit-notes"
                     rows={4}
                     placeholder="Recruiter contact, interview feedback..."
                     value={editForm.notes}
@@ -474,7 +482,7 @@ export function ApplicationDetailSheet({
               {/* Quick status update control */}
               <div className="rounded-md border border-border/30 bg-muted/30 p-3.5 space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <label htmlFor="quick-status-select" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Quick Update Status
                   </label>
                 </div>
@@ -485,7 +493,7 @@ export function ApplicationDetailSheet({
                     value={currentKind}
                     onValueChange={(cat) => handleQuickStatusChange(cat)}
                   >
-                    <SelectTrigger className="w-full bg-card border-border/40 rounded-md">
+                    <SelectTrigger id="quick-status-select" className="w-full bg-card border-border/40 rounded-md">
                       <SelectValue placeholder="Select new status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -589,7 +597,7 @@ export function ApplicationDetailSheet({
                         ? formatDate(new Date(item.createdAt), 'MMM d, yyyy · h:mm a')
                         : '';
                       return (
-                        <div key={item.id || idx} className="relative space-y-0.5 group">
+                        <div key={item.id || `history-${item.createdAt}-${idx}`} className="relative space-y-0.5 group">
                           <div className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background" />
                           <div className="flex items-center justify-between text-xs">
                             <div className="flex items-center gap-1.5 flex-wrap">

@@ -92,8 +92,8 @@ export function PieChartComponent({ title, data, total }: Props) {
                 paddingAngle={3}
                 strokeWidth={0}
               >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} className="hover:opacity-80 transition-opacity" />
+                {chartData.map((entry) => (
+                  <Cell key={`cell-${entry.name}`} fill={entry.fill} className="hover:opacity-80 transition-opacity" />
                 ))}
               </Pie>
             </PieChart>

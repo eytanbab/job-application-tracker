@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 import {
@@ -17,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useEffect, useState } from 'react';
 import { getColor, transformApplicationsData } from '@/lib/utils';
 import { ChartData, RawData as Data } from '@/lib/types';
 
@@ -34,19 +34,12 @@ type Props = {
 };
 
 export function StatusesPerYearBarChart({ years, rawData, globalYear }: Props) {
-  const [selectedYear, setSelectedYear] = useState(globalYear || years[0]);
-  const [chartData, setChartData] = useState<ChartData[]>([]);
+  const [userSelectedYear, setUserSelectedYear] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (globalYear) {
-      setSelectedYear(globalYear);
-    } else {
-      setSelectedYear(years[0]);
-    }
-  }, [globalYear, years]);
+  const selectedYear = globalYear || userSelectedYear || years[0];
 
-  useEffect(() => {
-    setChartData(transformApplicationsData(rawData, selectedYear));
+  const chartData = useMemo(() => {
+    return transformApplicationsData(rawData, selectedYear);
   }, [rawData, selectedYear]);
 
   return (
@@ -54,7 +47,7 @@ export function StatusesPerYearBarChart({ years, rawData, globalYear }: Props) {
       <CardHeader className="w-full flex-row justify-between items-center pb-2">
         <CardTitle className="text-base font-bold text-foreground">Statuses Per Year</CardTitle>
         {!globalYear && (
-          <Select value={selectedYear} onValueChange={setSelectedYear}>
+          <Select value={selectedYear} onValueChange={setUserSelectedYear}>
             <SelectTrigger className="w-36 h-8 text-xs bg-background">
               <SelectValue placeholder="Select year" />
             </SelectTrigger>

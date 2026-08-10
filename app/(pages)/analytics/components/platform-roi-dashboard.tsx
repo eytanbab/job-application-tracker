@@ -18,6 +18,18 @@ interface PlatformRoiDashboardProps {
   data: PlatformData[];
 }
 
+const getStatusBgColor = (kind: StatusKind) => {
+  switch (kind) {
+    case 'accepted': return 'bg-emerald-500';
+    case 'interview': return 'bg-blue-500';
+    case 'review': return 'bg-amber-500';
+    case 'rejected': return 'bg-rose-500';
+    case 'ghosted': return 'bg-slate-400';
+    case 'applied': return 'bg-primary/50';
+    default: return 'bg-muted-foreground/30';
+  }
+};
+
 export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
   const [sortBy, setSortBy] = useState<'total' | 'interview' | 'response' | 'name'>('total');
 
@@ -78,18 +90,6 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
   const topResponsePlatform = [...enrichedPlatforms]
     .filter(p => p.respondedCount > 0 && p.total >= 2)
     .sort((a, b) => b.responseRate - a.responseRate)[0];
-
-  const getStatusBgColor = (kind: StatusKind) => {
-    switch (kind) {
-      case 'accepted': return 'bg-emerald-500';
-      case 'interview': return 'bg-blue-500';
-      case 'review': return 'bg-amber-500';
-      case 'rejected': return 'bg-rose-500';
-      case 'ghosted': return 'bg-slate-400';
-      case 'applied': return 'bg-primary/50';
-      default: return 'bg-muted-foreground/30';
-    }
-  };
 
   return (
     <div className='flex flex-col gap-6 w-full animate-in fade-in duration-500'>
@@ -172,7 +172,7 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
           return (
             <Card
               key={platform.platformName}
-              className='bg-background/40 backdrop-blur border border-border/50 hover:border-primary/30 transition-all duration-300 flex flex-col justify-between'
+              className='bg-background/40 backdrop-blur border border-border/50 hover:border-primary/30 transition-colors duration-300 flex flex-col justify-between'
             >
               <CardHeader className='pb-3'>
                 <div className='flex items-center justify-between'>

@@ -4,6 +4,11 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 
+const TABS = [
+  { url: '/analytics/overview', name: 'Overview' },
+  { url: '/analytics/status-per-platform', name: 'Platform ROI' },
+];
+
 export default function Tabs() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -11,14 +16,9 @@ export default function Tabs() {
   const month = searchParams.get('month');
   const year = searchParams.get('year');
 
-  const tabs = [
-    { url: '/analytics/overview', name: 'Overview' },
-    { url: '/analytics/status-per-platform', name: 'Platform ROI' },
-  ];
-
   return (
     <div className="inline-flex w-fit max-w-full overflow-x-auto flex-nowrap items-center gap-1 rounded-xl bg-muted/60 p-1 scrollbar-none">
-      {tabs.map((item) => {
+      {TABS.map((item) => {
         const params = new URLSearchParams();
         if (month) params.set('month', month);
         if (year) params.set('year', year);

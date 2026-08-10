@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 import {
@@ -17,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useEffect, useState } from 'react';
+
 
 const chartConfig = {
   numOfApplications: {
@@ -43,21 +44,12 @@ export function TotalApplicationsPerYearBarChart({
   data,
   globalYear,
 }: Props) {
-  const [selectedYear, setSelectedYear] = useState(globalYear || years[0]);
-  const [filteredData, setFilteredData] = useState(data);
+  const [userSelectedYear, setUserSelectedYear] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (globalYear) {
-      setSelectedYear(globalYear);
-    } else {
-      setSelectedYear(years[0]);
-    }
-  }, [globalYear, years]);
+  const selectedYear = globalYear || userSelectedYear || years[0];
 
-  useEffect(() => {
-    setFilteredData(
-      data.filter((application) => application.year === selectedYear)
-    );
+  const filteredData = useMemo(() => {
+    return data.filter((application) => application.year === selectedYear);
   }, [data, selectedYear]);
 
   return (
@@ -65,7 +57,7 @@ export function TotalApplicationsPerYearBarChart({
       <CardHeader className="w-full flex-row justify-between items-center pb-2">
         <CardTitle className="text-base font-bold text-foreground">Total Applications Per Year</CardTitle>
         {!globalYear && (
-          <Select value={selectedYear} onValueChange={setSelectedYear}>
+          <Select value={selectedYear} onValueChange={setUserSelectedYear}>
             <SelectTrigger className="w-36 h-8 text-xs bg-background">
               <SelectValue placeholder="Select year" />
             </SelectTrigger>
