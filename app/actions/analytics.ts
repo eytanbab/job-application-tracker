@@ -18,81 +18,7 @@ import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 
 
 
-export async function getApplicationsFunnel() {
-  const userId = await getCurrentUserIdOrThrow();
 
-  return unstable_cache(
-    async () => {
-      const allApplications = await db
-        .select({
-          status: jobApplications.status,
-          statusCategory: jobApplications.statusCategory,
-        })
-        .from(jobApplications)
-        .where(eq(jobApplications.userId, userId));
-
-      const applied = allApplications.length;
-      const interviewing = allApplications.filter(
-        (app) => didReachInterviewStage(app.status, app.statusCategory)
-      ).length;
-      const offer = allApplications.filter(
-        (app) => getStatusKind(app.status, app.statusCategory) === "accepted"
-      ).length;
-
-      return [
-        { name: "Applied", value: applied },
-        { name: "Interviewing", value: interviewing },
-        { name: "Offer", value: offer },
-      ];
-    },
-    ["analytics", "applications-funnel", userId],
-    {
-      revalidate: CACHE_REVALIDATE_SECONDS,
-      tags: [applicationsTag(userId)],
-    }
-  )();
-}
-
-export async function getConsistencyHeatmapData() {
-  const userId = await getCurrentUserIdOrThrow();
-
-  return unstable_cache(
-    async () => {
-      const today = new Date();
-      const oneYearAgo = subDays(today, 365);
-
-      const data = await db
-        .select({
-          date: jobApplications.date_applied,
-          count: count(jobApplications.id),
-        })
-        .from(jobApplications)
-        .where(
-          and(
-            eq(jobApplications.userId, userId),
-            gte(jobApplications.date_applied, format(oneYearAgo, "yyyy-MM-dd"))
-          )
-        )
-        .groupBy(jobApplications.date_applied);
-
-      const heatmapData = new Array(365).fill(0).map((_, i) => {
-        const date = format(addDays(oneYearAgo, i), "yyyy-MM-dd");
-        const entry = data.find((d) => d.date === date);
-        return {
-          date,
-          count: entry ? entry.count : 0,
-        };
-      });
-
-      return heatmapData;
-    },
-    ["analytics", "consistency-heatmap", userId],
-    {
-      revalidate: CACHE_REVALIDATE_SECONDS,
-      tags: [applicationsTag(userId)],
-    }
-  )();
-}
 
 export async function getDomainLeaderboard() {
   const userId = await getCurrentUserIdOrThrow();
@@ -149,140 +75,44 @@ export async function getDomainLeaderboard() {
   )();
 }
 
-export async function getKeywordPerformance() {
+
+
+export async function getTop5Statuses(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  const whereClause = [eq(jobApplications.userId, userId)];
+  if (month && month !== "all")
+    whereClause.push(eq(jobApplications.month, month));
+  if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
     async () => {
-      const applications = await db
+      const data = await db
         .select({
-          role_name: jobApplications.role_name,
           status: jobApplications.status,
           statusCategory: jobApplications.statusCategory,
         })
         .from(jobApplications)
-        .where(eq(jobApplications.userId, userId));
+        .where(and(...whereClause));
 
-      const keywordStats: {
-        [keyword: string]: { total: number; interviews: number };
-      } = {};
+      const statusMap = new Map<string, { name: string; freq: number }>();
 
-      const commonWords = new Set([
-        "a",
-        "an",
-        "the",
-        "in",
-        "on",
-        "at",
-        "for",
-        "to",
-        "of",
-        "with",
-        "and",
-        "or",
-        "but",
-      ]);
+      data.forEach(({ status, statusCategory }) => {
+        const kind = getStatusKind(status, statusCategory);
+        const label = statusLabels[kind] || kind;
 
-      applications.forEach(({ role_name, status, statusCategory }) => {
-        const keywords = role_name
-          .toLowerCase()
-          .split(/[\s,/-]+/)
-          .filter((kw) => kw.length > 2 && !commonWords.has(kw));
-
-        keywords.forEach((keyword) => {
-          if (!keywordStats[keyword]) {
-            keywordStats[keyword] = { total: 0, interviews: 0 };
-          }
-          keywordStats[keyword].total++;
-          if (didReachInterviewStage(status, statusCategory)) {
-            keywordStats[keyword].interviews++;
-          }
-        });
-      });
-
-      return Object.entries(keywordStats)
-        .map(([keyword, stats]) => ({
-          keyword,
-          ...stats,
-          interviewRate:
-            stats.total > 0 ? (stats.interviews / stats.total) * 100 : 0,
-        }))
-        .sort((a, b) => b.interviews - a.interviews)
-        .slice(0, 5);
-    },
-    ["analytics", "keyword-performance", userId],
-    {
-      revalidate: CACHE_REVALIDATE_SECONDS,
-      tags: [applicationsTag(userId)],
-    }
-  )();
-}
-
-export async function getSalaryRealityCheck() {
-  const userId = await getCurrentUserIdOrThrow();
-
-  return unstable_cache(
-    async () => {
-      const applications = await db
-        .select({
-          salary: jobApplications.salary,
-          status: jobApplications.status,
-          statusCategory: jobApplications.statusCategory,
-        })
-        .from(jobApplications)
-        .where(eq(jobApplications.userId, userId));
-
-      const parseSalary = (salary: string | null): number | null => {
-        if (!salary) return null;
-        const lowerSalary = salary.toLowerCase();
-        const hasK = lowerSalary.includes("k");
-
-        const matches = lowerSalary.match(/\d+(?:,\d{3})*(?:\.\d+)?\s*k?/g);
-        if (!matches) return null;
-
-        const values = matches
-          .map((match) => {
-            const rawNum = Number.parseFloat(match.replace(/,/g, "").replace("k", "").trim());
-            if (!Number.isFinite(rawNum)) return null;
-
-            const multiplier = (match.includes("k") || (hasK && rawNum < 1000) || rawNum < 500) ? 1000 : 1;
-            return rawNum * multiplier;
-          })
-          .filter((value): value is number => value !== null && Number.isFinite(value));
-
-        if (values.length === 0) return null;
-
-        return values.reduce((sum, value) => sum + value, 0) / values.length;
-      };
-
-      let totalSalary = 0;
-      let appliedCount = 0;
-      let interviewSalary = 0;
-      let interviewCount = 0;
-
-      applications.forEach(({ salary, status, statusCategory }) => {
-        const parsedSalary = parseSalary(salary);
-        if (parsedSalary) {
-          totalSalary += parsedSalary;
-          appliedCount++;
-          if (didReachInterviewStage(status, statusCategory)) {
-            interviewSalary += parsedSalary;
-            interviewCount++;
-          }
+        if (statusMap.has(kind)) {
+          statusMap.get(kind)!.freq++;
+        } else {
+          statusMap.set(kind, { name: label, freq: 1 });
         }
       });
 
-      const avgAppliedSalary =
-        appliedCount > 0 ? totalSalary / appliedCount : 0;
-      const avgInterviewSalary =
-        interviewCount > 0 ? interviewSalary / interviewCount : 0;
-
-      return [
-        { name: "Average Applied Salary", value: avgAppliedSalary },
-        { name: "Average Interview Salary", value: avgInterviewSalary },
-      ];
+      return Array.from(statusMap.values())
+        .sort((a, b) => b.freq - a.freq)
+        .slice(0, 5);
     },
-    ["analytics", "salary-reality-check", userId],
+    ["analytics", "top-5-statuses", userId, month || "all", year || "all"],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
@@ -358,318 +188,13 @@ export async function getGhostedApplications(month?: string, year?: string) {
   )();
 }
 
-export async function getDayOfWeekPerformance() {
-  const userId = await getCurrentUserIdOrThrow();
 
-  return unstable_cache(
-    async () => {
-      const applications = await db
-        .select({
-          date_applied: jobApplications.date_applied,
-          status: jobApplications.status,
-          statusCategory: jobApplications.statusCategory,
-        })
-        .from(jobApplications)
-        .where(eq(jobApplications.userId, userId));
 
-      const dayOfWeekStats: {
-        [day: string]: { total: number; interviews: number };
-      } = {
-        Sunday: { total: 0, interviews: 0 },
-        Monday: { total: 0, interviews: 0 },
-        Tuesday: { total: 0, interviews: 0 },
-        Wednesday: { total: 0, interviews: 0 },
-        Thursday: { total: 0, interviews: 0 },
-        Friday: { total: 0, interviews: 0 },
-        Saturday: { total: 0, interviews: 0 },
-      };
 
-      applications.forEach(({ date_applied, status, statusCategory }) => {
-        if (!date_applied) return;
-        const dateStr = date_applied.includes("T") ? date_applied : `${date_applied}T12:00:00`;
-        const day = format(new Date(dateStr), "EEEE");
-        if (dayOfWeekStats[day]) {
-          dayOfWeekStats[day].total++;
-          if (didReachInterviewStage(status, statusCategory)) {
-            dayOfWeekStats[day].interviews++;
-          }
-        }
-      });
 
-      return Object.entries(dayOfWeekStats)
-        .map(([day, stats]) => ({
-          day,
-          ...stats,
-          successRate:
-            stats.total > 0 ? (stats.interviews / stats.total) * 100 : 0,
-        }))
-        .sort((a, b) => b.successRate - a.successRate)
-        .slice(0, 5);
-    },
-    ["analytics", "day-of-week-performance", userId],
-    {
-      revalidate: CACHE_REVALIDATE_SECONDS,
-      tags: [applicationsTag(userId)],
-    }
-  )();
-}
 
-export async function getActionableNudges() {
-  const userId = await getCurrentUserIdOrThrow();
 
-  return unstable_cache(
-    async () => {
-      const lastApplication = await db
-        .select({
-          date_applied: jobApplications.date_applied,
-        })
-        .from(jobApplications)
-        .where(eq(jobApplications.userId, userId))
-        .orderBy(desc(jobApplications.date_applied))
-        .limit(1);
 
-      if (lastApplication.length === 0) {
-        return "You haven't applied to any jobs yet. Let's get started!";
-      }
-
-      const lastApplicationDate = new Date(
-        lastApplication[0].date_applied.includes("T")
-          ? lastApplication[0].date_applied
-          : `${lastApplication[0].date_applied}T12:00:00`
-      );
-      const daysSinceLastApplication = Math.round(
-        (new Date().getTime() - lastApplicationDate.getTime()) /
-          (1000 * 60 * 60 * 24)
-      );
-
-      if (daysSinceLastApplication > 3) {
-        return `You haven't applied in ${daysSinceLastApplication} days, keep the momentum up!`;
-      }
-
-      return "You are on a roll! Keep up the great work.";
-    },
-    ["analytics", "actionable-nudges", userId],
-    {
-      revalidate: CACHE_REVALIDATE_SECONDS,
-      tags: [applicationsTag(userId)],
-    }
-  )();
-}
-
-export async function getTop5Companies(month?: string, year?: string) {
-  const userId = await getCurrentUserIdOrThrow();
-
-  const whereClause = [eq(jobApplications.userId, userId)];
-  if (month && month !== "all")
-    whereClause.push(eq(jobApplications.month, month));
-  if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
-
-  return unstable_cache(
-    async () => {
-      const data = await db
-        .select({
-          name: jobApplications.company_name,
-        })
-        .from(jobApplications)
-        .where(and(...whereClause));
-
-      const companyMap = new Map<string, { name: string; freq: number }>();
-
-      data.forEach(({ name }) => {
-        const trimmed = (name || "").trim();
-        if (!trimmed || trimmed.toLowerCase() === "n/a" || trimmed.toLowerCase() === "none") return;
-
-        const normalizedKey = trimmed.toLowerCase();
-        if (companyMap.has(normalizedKey)) {
-          companyMap.get(normalizedKey)!.freq++;
-        } else {
-          companyMap.set(normalizedKey, { name: trimmed, freq: 1 });
-        }
-      });
-
-      return Array.from(companyMap.values())
-        .sort((a, b) => b.freq - a.freq)
-        .slice(0, 5);
-    },
-    ["analytics", "top-5-companies", userId, month || "all", year || "all"],
-    {
-      revalidate: CACHE_REVALIDATE_SECONDS,
-      tags: [applicationsTag(userId)],
-    }
-  )();
-}
-
-export async function getTop5Platforms(month?: string, year?: string) {
-  const userId = await getCurrentUserIdOrThrow();
-
-  const whereClause = [eq(jobApplications.userId, userId)];
-  if (month && month !== "all")
-    whereClause.push(eq(jobApplications.month, month));
-  if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
-
-  return unstable_cache(
-    async () => {
-      const data = await db
-        .select({
-          name: jobApplications.platform,
-        })
-        .from(jobApplications)
-        .where(and(...whereClause));
-
-      const platformMap = new Map<string, { name: string; freq: number }>();
-
-      data.forEach(({ name }) => {
-        const trimmed = (name || "").trim();
-        if (!trimmed) return;
-
-        const normalizedKey = trimmed.toLowerCase();
-        if (platformMap.has(normalizedKey)) {
-          platformMap.get(normalizedKey)!.freq++;
-        } else {
-          platformMap.set(normalizedKey, { name: trimmed, freq: 1 });
-        }
-      });
-
-      return Array.from(platformMap.values())
-        .sort((a, b) => b.freq - a.freq)
-        .slice(0, 5);
-    },
-    ["analytics", "top-5-platforms", userId, month || "all", year || "all"],
-    {
-      revalidate: CACHE_REVALIDATE_SECONDS,
-      tags: [applicationsTag(userId)],
-    }
-  )();
-}
-
-export async function getTop5Statuses(month?: string, year?: string) {
-  const userId = await getCurrentUserIdOrThrow();
-
-  const whereClause = [eq(jobApplications.userId, userId)];
-  if (month && month !== "all")
-    whereClause.push(eq(jobApplications.month, month));
-  if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
-
-  return unstable_cache(
-    async () => {
-      const data = await db
-        .select({
-          status: jobApplications.status,
-          statusCategory: jobApplications.statusCategory,
-        })
-        .from(jobApplications)
-        .where(and(...whereClause));
-
-      const statusMap = new Map<string, { name: string; freq: number }>();
-
-      data.forEach(({ status, statusCategory }) => {
-        const kind = getStatusKind(status, statusCategory);
-        const label = statusLabels[kind] || kind;
-
-        if (statusMap.has(kind)) {
-          statusMap.get(kind)!.freq++;
-        } else {
-          statusMap.set(kind, { name: label, freq: 1 });
-        }
-      });
-
-      return Array.from(statusMap.values())
-        .sort((a, b) => b.freq - a.freq)
-        .slice(0, 5);
-    },
-    ["analytics", "top-5-statuses", userId, month || "all", year || "all"],
-    {
-      revalidate: CACHE_REVALIDATE_SECONDS,
-      tags: [applicationsTag(userId)],
-    }
-  )();
-}
-
-export async function getTop5Locations(month?: string, year?: string) {
-  const userId = await getCurrentUserIdOrThrow();
-
-  const whereClause = [eq(jobApplications.userId, userId)];
-  if (month && month !== "all")
-    whereClause.push(eq(jobApplications.month, month));
-  if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
-
-  return unstable_cache(
-    async () => {
-      const data = await db
-        .select({
-          name: jobApplications.location,
-        })
-        .from(jobApplications)
-        .where(and(...whereClause));
-
-      const locationMap = new Map<string, { name: string; freq: number }>();
-
-      data.forEach(({ name }) => {
-        const trimmed = (name || "").trim();
-        if (!trimmed) return;
-
-        const normalizedKey = trimmed.toLowerCase();
-        if (locationMap.has(normalizedKey)) {
-          locationMap.get(normalizedKey)!.freq++;
-        } else {
-          locationMap.set(normalizedKey, { name: trimmed, freq: 1 });
-        }
-      });
-
-      return Array.from(locationMap.values())
-        .sort((a, b) => b.freq - a.freq)
-        .slice(0, 5);
-    },
-    ["analytics", "top-5-locations", userId, month || "all", year || "all"],
-    {
-      revalidate: CACHE_REVALIDATE_SECONDS,
-      tags: [applicationsTag(userId)],
-    }
-  )();
-}
-
-export async function getTop5RoleNames(month?: string, year?: string) {
-  const userId = await getCurrentUserIdOrThrow();
-
-  const whereClause = [eq(jobApplications.userId, userId)];
-  if (month && month !== "all")
-    whereClause.push(eq(jobApplications.month, month));
-  if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
-
-  return unstable_cache(
-    async () => {
-      const data = await db
-        .select({
-          name: jobApplications.role_name,
-        })
-        .from(jobApplications)
-        .where(and(...whereClause));
-
-      const roleMap = new Map<string, { name: string; freq: number }>();
-
-      data.forEach(({ name }) => {
-        const trimmed = (name || "").trim();
-        if (!trimmed || trimmed.toLowerCase() === "n/a" || trimmed.toLowerCase() === "none") return;
-
-        const normalizedKey = trimmed.toLowerCase();
-        if (roleMap.has(normalizedKey)) {
-          roleMap.get(normalizedKey)!.freq++;
-        } else {
-          roleMap.set(normalizedKey, { name: trimmed, freq: 1 });
-        }
-      });
-
-      return Array.from(roleMap.values())
-        .sort((a, b) => b.freq - a.freq)
-        .slice(0, 5);
-    },
-    ["analytics", "top-5-role-names", userId, month || "all", year || "all"],
-    {
-      revalidate: CACHE_REVALIDATE_SECONDS,
-      tags: [applicationsTag(userId)],
-    }
-  )();
-}
 
 // Total applications per year
 export async function getApplicationsPerYear(month?: string, year?: string) {
@@ -886,83 +411,7 @@ export async function getStatusPerPlatform(month?: string, year?: string) {
   )();
 }
 
-export async function getPlatformPerformance() {
-  const userId = await getCurrentUserIdOrThrow();
 
-  return unstable_cache(
-    async () => {
-      const applications = await db
-        .select({
-          id: jobApplications.id,
-          platform: jobApplications.platform,
-          status: jobApplications.status,
-          statusCategory: jobApplications.statusCategory,
-        })
-        .from(jobApplications)
-        .where(eq(jobApplications.userId, userId));
-
-      const appIds = applications.map((a) => a.id);
-      const history =
-        appIds.length > 0
-          ? await db
-              .select({
-                applicationId: applicationStatusHistory.applicationId,
-                statusCategory: applicationStatusHistory.statusCategory,
-                status: applicationStatusHistory.status,
-              })
-              .from(applicationStatusHistory)
-              .where(inArray(applicationStatusHistory.applicationId, appIds))
-          : [];
-
-      const historyMap = new Map<string, typeof history>();
-      history.forEach((h) => {
-        const existing = historyMap.get(h.applicationId);
-        if (existing) {
-          existing.push(h);
-        } else {
-          historyMap.set(h.applicationId, [h]);
-        }
-      });
-
-      const platformStats: {
-        [platform: string]: { total: number; interviews: number };
-      } = {};
-
-      applications.forEach(({ id, platform, status, statusCategory }) => {
-        const trimmed = (platform || "").trim();
-        if (!trimmed) return;
-        const key = trimmed.toLowerCase();
-
-        if (!platformStats[key]) {
-          platformStats[key] = { total: 0, interviews: 0 };
-        }
-        platformStats[key].total++;
-
-        const appHistory = historyMap.get(id) || [];
-        const reachedInterview =
-          didReachInterviewStage(status, statusCategory) ||
-          appHistory.some((h) => didReachInterviewStage(h.status, h.statusCategory));
-
-        if (reachedInterview) {
-          platformStats[key].interviews++;
-        }
-      });
-
-      return Object.entries(platformStats)
-        .map(([platformKey, stats]) => ({
-          platform: platformKey,
-          ...stats,
-        }))
-        .sort((a, b) => b.total - a.total)
-        .slice(0, 5);
-    },
-    ["analytics", "platform-performance", userId],
-    {
-      revalidate: CACHE_REVALIDATE_SECONDS,
-      tags: [applicationsTag(userId)],
-    }
-  )();
-}
 
 export async function getDetailedApplicationBreakdown(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();

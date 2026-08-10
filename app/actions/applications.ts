@@ -95,25 +95,7 @@ export async function getApplications() {
   });
 }
 
-// Get a single application with id for current user
-export async function getApplication(id: string) {
-  const userId = await getCurrentUserIdOrThrow();
 
-  return unstable_cache(
-    async () =>
-      db
-        .select()
-        .from(jobApplications)
-        .where(
-          and(eq(jobApplications.userId, userId), eq(jobApplications.id, id)),
-        ),
-    ["applications", "detail", userId, id],
-    {
-      revalidate: CACHE_REVALIDATE_SECONDS,
-      tags: [applicationsTag(userId)],
-    },
-  )();
-}
 
 // Create a new application for the current user
 export async function createApplication(values: FormValues) {

@@ -54,5 +54,5 @@ export const applicationStatusHistory = pgTable('application_status_history', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export const insertStatusHistorySchema = createInsertSchema(applicationStatusHistory);
+const insertStatusHistorySchema = createInsertSchema(applicationStatusHistory);
 
