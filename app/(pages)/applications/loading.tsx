@@ -29,7 +29,7 @@ export default function ApplicationsLoading() {
 
       {/* 3. Table View Skeleton */}
       <div className="rounded-md border border-border/40 bg-card overflow-hidden shadow-2xs">
-        <div className="p-4 border-b bg-muted/20 flex items-center justify-between">
+        <div className="p-4 border-b border-border/30 bg-muted/20 flex items-center justify-between">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-24" />
         </div>

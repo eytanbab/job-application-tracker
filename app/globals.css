@@ -70,8 +70,8 @@ h1, h2, h3, h4, h5, h6 {
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 14% 88%;
-    --input: 220 14% 88%;
+    --border: 220 13% 84%;
+    --input: 220 13% 84%;
     --ring: 255 80% 60%;
 
     --chart-1: 255 80% 60%;
@@ -117,8 +117,8 @@ h1, h2, h3, h4, h5, h6 {
     --destructive: 0 72% 54%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 224 14% 18%;
-    --input: 224 14% 18%;
+    --border: 224 16% 20%;
+    --input: 224 16% 20%;
     --ring: 255 85% 72%;
 
     --chart-1: 255 85% 72%;
