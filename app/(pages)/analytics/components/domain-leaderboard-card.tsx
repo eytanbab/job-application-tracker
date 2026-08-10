@@ -42,7 +42,7 @@ export function DomainLeaderboardCard({ domains }: Props) {
                   </div>
                   <div className="h-2 w-full rounded-full bg-muted/60 overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-primary transition-all duration-500"
+                      className="h-full rounded-full bg-primary transition-[width] duration-500"
                       style={{ width: `${Math.max(percentageVal, 5)}%` }}
                     />
                   </div>

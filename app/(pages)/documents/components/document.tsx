@@ -200,7 +200,7 @@ export const Document = ({ file, view = "table" }: Props) => {
   // GRID CARD VIEW RENDERER
   if (view === "grid") {
     return (
-      <Card className="group relative flex flex-col items-stretch text-left rounded-xl border border-border/50 bg-card/45 backdrop-blur-sm p-4 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5">
+      <Card className="group relative flex flex-col items-stretch text-left rounded-xl border border-border/50 bg-card/45 backdrop-blur-sm p-4 shadow-sm transition-[box-shadow,border-color,transform] duration-300 hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5">
         <div className="space-y-3 w-full">
           <div className="flex items-center justify-between w-full">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
