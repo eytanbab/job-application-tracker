@@ -142,7 +142,7 @@ export function DataTableToolbar({
         </div>
       </div>
 
-      <div className="flex items-center justify-between lg:justify-end gap-2.5 border-t lg:border-t-0 pt-2.5 lg:pt-0">
+      <div className="flex items-center justify-between lg:justify-end gap-2.5 border-t border-border/30 lg:border-t-0 pt-2.5 lg:pt-0">
         <div className="inline-flex items-center rounded-md bg-muted/60 p-1 gap-1 border border-border/20">
           <button
             type="button"

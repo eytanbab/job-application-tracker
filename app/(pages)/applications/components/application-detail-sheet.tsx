@@ -339,7 +339,7 @@ export function ApplicationDetailSheet({
 
         {/* Footer Actions */}
         {!isEditing && (
-          <div className="pt-4 border-t flex items-center justify-between gap-3">
+          <div className="pt-4 border-t border-border/40 flex items-center justify-between gap-3">
             <Button
               variant="outline"
               size="sm"
