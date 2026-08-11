@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { cn } from '@/lib/utils';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import React from 'react';
-import { Briefcase, BarChart3, FileText, Sparkles } from 'lucide-react';
-import { NewApplicationButton } from './new-application-button';
+import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import React from "react";
+import { Briefcase, BarChart3, FileText, Sparkles } from "lucide-react";
+import { NewApplicationButton } from "./new-application-button";
 
 const navLinks = [
-  { url: '/applications', name: 'Applications', icon: Briefcase },
-  { url: '/analytics/overview', name: 'Analytics', icon: BarChart3 },
-  { url: '/documents', name: 'Documents', icon: FileText },
+  { url: "/applications", name: "Applications", icon: Briefcase },
+  { url: "/analytics/overview", name: "Analytics", icon: BarChart3 },
+  { url: "/documents", name: "Documents", icon: FileText },
 ];
 
 const SideNav = () => {
@@ -20,7 +20,10 @@ const SideNav = () => {
     <aside className="sticky top-0 left-0 z-40 hidden h-screen w-64 flex-none flex-col justify-between border-r border-border/30 bg-card/60 backdrop-blur-md p-4 md:flex">
       <div className="space-y-6">
         {/* Logo Brand */}
-        <Link href="/" className="flex items-center gap-2.5 px-2 py-1 group cursor-pointer">
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 px-2 py-1 group cursor-pointer"
+        >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-transform group-hover:scale-105">
             <Sparkles className="h-5 w-5" />
           </div>
@@ -34,11 +37,6 @@ const SideNav = () => {
           </div>
         </Link>
 
-        {/* Quick Action Button */}
-        <div className="px-1">
-          <NewApplicationButton fullWidth label="New Application" />
-        </div>
-
         {/* Nav Links */}
         <div className="space-y-1">
           <p className="px-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
@@ -46,7 +44,7 @@ const SideNav = () => {
           </p>
           {navLinks.map((item) => {
             const Icon = item.icon;
-            const rootPath = item.url.split('/')[1];
+            const rootPath = item.url.split("/")[1];
             const isActive = pathname.startsWith(`/${rootPath}`);
 
             return (
@@ -54,13 +52,18 @@ const SideNav = () => {
                 key={item.url}
                 href={item.url}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer',
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer",
                   isActive
-                    ? 'bg-primary/10 text-primary font-semibold'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
                 )}
               >
-                <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-primary' : 'text-muted-foreground')} />
+                <Icon
+                  className={cn(
+                    "h-4 w-4 shrink-0",
+                    isActive ? "text-primary" : "text-muted-foreground",
+                  )}
+                />
                 <span>{item.name}</span>
               </Link>
             );
