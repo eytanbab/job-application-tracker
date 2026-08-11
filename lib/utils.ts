@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { ChartData, Data, RawData } from "./types";
+import { format as dateFnsFormat } from "date-fns";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -251,5 +252,39 @@ export function extractRootDomain(hostname: string): string {
   }
 
   return parts.slice(-2).join(".");
+}
+
+
+/**
+ * Safely formats dates (strings, Date objects, or numbers) without throwing RangeError: Invalid time value.
+ */
+export function safeFormatDate(
+  dateVal: Date | string | number | null | undefined,
+  formatStr: string = "yyyy-MM-dd"
+): string {
+  if (!dateVal) return dateFnsFormat(new Date(), formatStr);
+  if (dateVal instanceof Date) {
+    return isNaN(dateVal.getTime())
+      ? dateFnsFormat(new Date(), formatStr)
+      : dateFnsFormat(dateVal, formatStr);
+  }
+  if (typeof dateVal === "number") {
+    return isNaN(dateVal)
+      ? dateFnsFormat(new Date(), formatStr)
+      : dateFnsFormat(new Date(dateVal), formatStr);
+  }
+  if (typeof dateVal === "string") {
+    const trimmed = dateVal.trim();
+    if (!trimmed) return dateFnsFormat(new Date(), formatStr);
+    if (formatStr === "yyyy-MM-dd" && /^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
+    const isoDateStr = trimmed.includes("T") ? trimmed : `${trimmed}T12:00:00`;
+    const parsed = new Date(isoDateStr);
+    if (!isNaN(parsed.getTime())) {
+      return dateFnsFormat(parsed, formatStr);
+    }
+  }
+  return dateFnsFormat(new Date(), formatStr);
 }
 

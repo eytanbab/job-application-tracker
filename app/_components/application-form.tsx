@@ -9,6 +9,7 @@ import { Form } from "@/components/ui/form";
 import {
   getStatusDisplay,
   getStatusKind,
+  safeFormatDate,
 } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
@@ -90,9 +91,7 @@ export const ApplicationForm = ({
   };
 
   const handleSubmit = (values: FormValues) => {
-    const formattedDate = typeof values.date_applied === "string" 
-      ? values.date_applied 
-      : format(values.date_applied as unknown as Date, "yyyy-MM-dd");
+    const formattedDate = safeFormatDate(values.date_applied, "yyyy-MM-dd");
 
     values = {
       ...values,

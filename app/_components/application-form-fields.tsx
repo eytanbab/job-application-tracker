@@ -31,6 +31,7 @@ import {
   getStatusKind,
   statusLabels,
   statusOptions,
+  safeFormatDate,
 } from "@/lib/utils";
 import { FormValues } from "./application-form";
 
@@ -215,43 +216,58 @@ export function ApplicationFormFields({
       <FormField
         control={form.control}
         name="date_applied"
-        render={({ field }) => (
-          <FormItem className="space-y-0 col-span-full">
-            <FormLabel>Date applied</FormLabel>
-            <Popover>
-              <PopoverTrigger asChild>
-                <FormControl>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "group flex h-10 w-full rounded-md border border-input bg-background px-4 py-2 text-base font-normal text-foreground disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-                      !field.value && "text-muted-foreground"
-                    )}
-                  >
-                    {field.value ? (
-                      format(field.value, "PPP")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                    <CalendarIcon className="ml-auto h-4 w-4 text-muted-foreground group-hover:text-foreground" />
-                  </Button>
-                </FormControl>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  showYearSwitcher={false}
-                  selected={new Date(field.value!)}
-                  onSelect={field.onChange}
-                  disabled={(date: Date) =>
-                    date > new Date() || date < new Date("1900-01-01")
-                  }
-                />
-              </PopoverContent>
-            </Popover>
-            <FormMessage />
-          </FormItem>
-        )}
+        render={({ field }) => {
+          const selectedDate = (() => {
+            if (!field.value) return undefined;
+            if ((field.value as unknown) instanceof Date) {
+              const d = field.value as unknown as Date;
+              return isNaN(d.getTime()) ? undefined : d;
+            }
+            const str = String(field.value).trim();
+            if (!str) return undefined;
+            const isoStr = str.includes("T") ? str : `${str}T12:00:00`;
+            const d = new Date(isoStr);
+            return isNaN(d.getTime()) ? undefined : d;
+          })();
+
+          return (
+            <FormItem className="space-y-0 col-span-full">
+              <FormLabel>Date applied</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "group flex h-10 w-full rounded-md border border-input bg-background px-4 py-2 text-base font-normal text-foreground disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        safeFormatDate(field.value, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    showYearSwitcher={false}
+                    selected={selectedDate}
+                    onSelect={field.onChange}
+                    disabled={(date: Date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
       <FormField
         control={form.control}
