@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { format } from "date-fns";
 import { FormValues } from "./application-form";
@@ -40,6 +40,7 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
   const { toast } = useToast();
   const [extractError, setExtractError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isExtracted, setIsExtracted] = useState(false);
 
   const aiForm = useForm<z.infer<typeof aiFormSchema>>({
     resolver: zodResolver(aiFormSchema),
@@ -52,6 +53,7 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
   const handleAiSubmit = async (values: z.infer<typeof aiFormSchema>) => {
     setIsLoading(true);
     setExtractError(null);
+    setIsExtracted(false);
     try {
       const response = await fetch("/api/extract", {
         method: "POST",
@@ -102,6 +104,7 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
       };
 
       onAutoFill(autoFillValues);
+      setIsExtracted(true);
       toast({
         title: "Job details extracted! ✨",
         description: "Form populated below. Review and save your application.",
@@ -135,6 +138,7 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
                   onChange={(e) => {
                     field.onChange(e);
                     if (extractError) setExtractError(null);
+                    if (isExtracted) setIsExtracted(false);
                   }}
                   className="h-9 text-xs"
                 />
@@ -143,6 +147,12 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
                 <p className="text-xs font-medium text-destructive pt-0.5">
                   {extractError} You can enter details manually below.
                 </p>
+              )}
+              {isExtracted && (
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                  <span>Job details extracted! Form populated below.</span>
+                </div>
               )}
               <FormMessage />
             </FormItem>

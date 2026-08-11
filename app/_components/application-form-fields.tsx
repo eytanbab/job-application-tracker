@@ -155,59 +155,69 @@ export function ApplicationFormFields({
       <FormField
         control={form.control}
         name="statusCategory"
-        render={({ field }) => (
-          <FormItem className="space-y-0 col-span-full md:col-span-1">
-            <FormLabel>Status category</FormLabel>
-            <Select
-              value={field.value || getStatusKind(form.getValues("status"))}
-              onValueChange={(value) => {
-                field.onChange(value);
-                const currentStatus = form.getValues("status");
-                const isDefaultOrEmpty =
-                  !currentStatus ||
-                  Object.values(statusLabels).some(
-                    (lbl) => lbl.toLowerCase() === currentStatus.toLowerCase(),
-                  );
-                if (isDefaultOrEmpty) {
-                  const defaultLabel =
-                    statusLabels[value as keyof typeof statusLabels] || value;
-                  form.setValue("status", defaultLabel);
-                }
-              }}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose a status" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {statusOptions.map((status) => (
-                  <SelectItem key={status.value} value={status.value}>
-                    {status.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="status"
-        render={({ field }) => (
-          <FormItem className="space-y-0 col-span-full md:col-span-1">
-            <FormLabel>Stage details / Custom status</FormLabel>
-            <FormControl>
-              <Input
-                placeholder="e.g. Applied / Tech interview / Screening..."
-                {...field}
-                value={field.value || ""}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+        render={({ field }) => {
+          const currentStatus = form.watch("status") || "";
+          const isStandardLabel = Object.values(statusLabels).some(
+            (lbl) => lbl.toLowerCase() === currentStatus.toLowerCase(),
+          );
+          const showCustomInput =
+            field.value === "other" || (!isStandardLabel && Boolean(currentStatus));
+
+          return (
+            <div className="col-span-full space-y-2">
+              <FormItem className="space-y-0">
+                <FormLabel>Application Status</FormLabel>
+                <Select
+                  value={field.value || getStatusKind(currentStatus)}
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    if (value !== "other") {
+                      const defaultLabel =
+                        statusLabels[value as keyof typeof statusLabels] || value;
+                      form.setValue("status", defaultLabel);
+                    }
+                  }}
+                >
+                  <FormControl>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select status stage" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {statusOptions.map((status) => (
+                      <SelectItem key={status.value} value={status.value}>
+                        {status.value === "other" ? "Custom Stage..." : status.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+
+              {showCustomInput && (
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field: statusField }) => (
+                    <FormItem className="space-y-0 pt-1">
+                      <FormLabel className="text-xs font-semibold text-muted-foreground">
+                        Custom Stage Label
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g. Take-home assignment / Executive chat..."
+                          {...statusField}
+                          value={statusField.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
+          );
+        }}
       />
       <FormField
         control={form.control}
