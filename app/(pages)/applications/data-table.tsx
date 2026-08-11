@@ -67,7 +67,11 @@ export function DataTable<TData extends ApplicationRow, TValue>({
 
   return (
     <div className="w-full space-y-6">
-      <ApplicationsKpiSummary data={data} />
+      <ApplicationsKpiSummary
+        data={data}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+      />
 
       <DataTableToolbar
         globalFilter={globalFilter}

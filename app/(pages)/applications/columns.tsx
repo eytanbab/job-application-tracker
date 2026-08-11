@@ -1,9 +1,11 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, Column } from "@tanstack/react-table";
 import {
   Trash2,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   ExternalLink,
   Eye,
   Building2,
@@ -77,6 +79,28 @@ const handleApplicationDelete = async (id: string) => {
   }
 };
 
+function renderSortHeader<TData, TValue>(column: Column<TData, TValue>, label: string) {
+  const isSorted = column.getIsSorted();
+  return (
+    <Button
+      variant="ghost"
+      className={`font-semibold p-0 hover:bg-transparent transition-colors ${
+        isSorted ? "text-primary font-bold" : ""
+      }`}
+      onClick={() => column.toggleSorting(isSorted === "asc")}
+    >
+      <span>{label}</span>
+      {isSorted === "asc" ? (
+        <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
+      ) : isSorted === "desc" ? (
+        <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
+      ) : (
+        <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 text-muted-foreground/70" />
+      )}
+    </Button>
+  );
+}
+
 export const columns: ColumnDef<FormValues>[] = [
   {
     id: "select",
@@ -109,18 +133,7 @@ export const columns: ColumnDef<FormValues>[] = [
   {
     id: "role_name",
     accessorFn: (row) => `${row.role_name} ${row.company_name}`,
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          className="font-semibold p-0 hover:bg-transparent"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Role & Company
-          <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
-        </Button>
-      );
-    },
+    header: ({ column }) => renderSortHeader(column, "Role & Company"),
     cell: ({ row }) => {
       const role = row.original.role_name;
       const company = row.original.company_name;
@@ -137,18 +150,7 @@ export const columns: ColumnDef<FormValues>[] = [
   },
   {
     accessorKey: "date_applied",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          className="font-semibold p-0 hover:bg-transparent"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Date Applied
-          <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
-        </Button>
-      );
-    },
+    header: ({ column }) => renderSortHeader(column, "Date Applied"),
     cell: ({ row }) => {
       const rawDate = row.getValue<string>("date_applied");
       if (!rawDate) return <span className="text-muted-foreground">-</span>;
@@ -163,18 +165,7 @@ export const columns: ColumnDef<FormValues>[] = [
   {
     id: "status",
     accessorFn: (row) => getStatusKind(row.status, row.statusCategory),
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          className="font-semibold p-0 hover:bg-transparent"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Status
-          <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
-        </Button>
-      );
-    },
+    header: ({ column }) => renderSortHeader(column, "Status"),
     cell: ({ row }) => {
       const kind = getStatusKind(
         row.original.status,
@@ -197,18 +188,7 @@ export const columns: ColumnDef<FormValues>[] = [
   },
   {
     accessorKey: "location",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          className="font-semibold p-0 hover:bg-transparent"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Location
-          <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
-        </Button>
-      );
-    },
+    header: ({ column }) => renderSortHeader(column, "Location"),
     cell: ({ row }) => {
       const location = row.getValue<string>("location");
       return (
@@ -220,18 +200,7 @@ export const columns: ColumnDef<FormValues>[] = [
   },
   {
     accessorKey: "platform",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          className="font-semibold p-0 hover:bg-transparent"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Platform
-          <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
-        </Button>
-      );
-    },
+    header: ({ column }) => renderSortHeader(column, "Platform"),
     cell: ({ row }) => {
       const platform = row.getValue<string>("platform");
       return (
@@ -243,18 +212,7 @@ export const columns: ColumnDef<FormValues>[] = [
   },
   {
     accessorKey: "salary",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          className="font-semibold p-0 hover:bg-transparent"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Salary
-          <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
-        </Button>
-      );
-    },
+    header: ({ column }) => renderSortHeader(column, "Salary"),
     cell: ({ row }) => {
       const salary = row.getValue<string>("salary");
       return (
