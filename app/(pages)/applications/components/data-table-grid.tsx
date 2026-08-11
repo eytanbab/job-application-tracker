@@ -66,9 +66,17 @@ export function DataTableGrid<TData extends { id?: string; role_name: string; co
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
+                  tabIndex={0}
+                  role="button"
                   data-state={row.getIsSelected() && 'selected'}
                   onClick={() => onSelectRow(row.original)}
-                  className="cursor-pointer border-b border-border/30 transition-colors hover:bg-accent/40"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onSelectRow(row.original);
+                    }
+                  }}
+                  className="cursor-pointer border-b border-border/30 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="px-4 py-3 text-sm">

@@ -125,8 +125,16 @@ export function ApplicationFormFields({
               value={field.value || getStatusKind(form.getValues("status"))}
               onValueChange={(value) => {
                 field.onChange(value);
-                const defaultLabel = statusLabels[value as keyof typeof statusLabels] || value;
-                form.setValue("status", defaultLabel);
+                const currentStatus = form.getValues("status");
+                const isDefaultOrEmpty =
+                  !currentStatus ||
+                  Object.values(statusLabels).some(
+                    (lbl) => lbl.toLowerCase() === currentStatus.toLowerCase()
+                  );
+                if (isDefaultOrEmpty) {
+                  const defaultLabel = statusLabels[value as keyof typeof statusLabels] || value;
+                  form.setValue("status", defaultLabel);
+                }
               }}
             >
               <FormControl>

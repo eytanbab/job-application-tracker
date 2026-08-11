@@ -83,11 +83,20 @@ export function KanbanCard({
   return (
     <Card
       draggable
+      tabIndex={0}
+      role="article"
+      aria-label={`Application for ${item.role_name} at ${item.company_name}`}
       onDragStart={(e) => {
         e.dataTransfer.setData('application/json', JSON.stringify(item));
       }}
-      className="group relative cursor-grab active:cursor-grabbing border bg-card hover:border-primary/50 transition-[border-color,box-shadow] hover:shadow-md rounded-md"
+      className="group relative cursor-grab active:cursor-grabbing border bg-card hover:border-primary/50 transition-[border-color,box-shadow] hover:shadow-md rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       onClick={() => onSelectApplication(item)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelectApplication(item);
+        }
+      }}
     >
       <CardHeader className="p-3 pb-1.5 flex flex-row items-start justify-between space-y-0 gap-2">
         <div className="min-w-0 flex-1 space-y-1">

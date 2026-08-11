@@ -40,8 +40,11 @@ const formSchema = z.object({
   company_name: z.string().min(2, {
     message: "Company name must be at least 2 characters.",
   }),
-  date_applied: z.string().or(z.date()),
-  link: z.url(),
+  link: z
+    .string()
+    .trim()
+    .transform((val) => (val && !/^https?:\/\//i.test(val) ? `https://${val}` : val))
+    .pipe(z.string().url({ message: "Please enter a valid URL." })),
   description: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   location: z.string().min(2, {

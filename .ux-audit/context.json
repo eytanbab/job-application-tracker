@@ -1,0 +1,15 @@
+{
+  "product_name": "Job Application Tracker",
+  "description": "Web application for job seekers to log, organize, track, and analyze job applications, documents, interviews, and status progression.",
+  "target_audience": "Individual job seekers, career switchers, and bootcamp graduates managing multiple active job applications under high volume and time pressure.",
+  "platform": "Web (Responsive Desktop & Mobile)",
+  "known_pain_points": [
+    "Quick status updates during multi-stage interview pipelines",
+    "Mobile table viewing & responsive interactions",
+    "Form friction during fast job logging",
+    "Visibility of application history & timeline notes"
+  ],
+  "competitors": ["Huntr", "Teal", "Simplify"],
+  "last_flow": "applications",
+  "last_updated": "2026-08-11"
+}

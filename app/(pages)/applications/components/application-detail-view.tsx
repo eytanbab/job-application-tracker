@@ -88,19 +88,24 @@ export function ApplicationDetailView({
             </SelectContent>
           </Select>
 
-          <Input
-            placeholder="Custom stage detail (optional)"
-            value={quickStatusText}
-            onChange={(e) => setQuickStatusText(e.target.value)}
-            onBlur={(e) => handleQuickStatusChange(currentKind, e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.currentTarget.blur();
-                handleQuickStatusChange(currentKind, quickStatusText);
-              }
-            }}
-            className="h-9 text-xs bg-card border-border/40"
-          />
+          <div className="relative flex-1">
+            <Input
+              placeholder="Custom stage detail (optional)"
+              value={quickStatusText}
+              onChange={(e) => setQuickStatusText(e.target.value)}
+              onBlur={(e) => handleQuickStatusChange(currentKind, e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur();
+                  handleQuickStatusChange(currentKind, quickStatusText);
+                }
+              }}
+              className="h-9 text-xs bg-card border-border/40 pr-20"
+            />
+            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-medium pointer-events-none">
+              {isSaving ? 'Saving...' : 'Press Enter'}
+            </span>
+          </div>
         </div>
       </div>
 
