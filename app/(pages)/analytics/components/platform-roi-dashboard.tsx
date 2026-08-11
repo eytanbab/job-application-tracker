@@ -213,7 +213,7 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
                     <span>Pipeline breakdown</span>
                     <span>{platform.interviewCount} interviewed</span>
                   </div>
-                  <div className='h-3 w-full rounded-full bg-muted/60 flex overflow-hidden p-0.5 gap-0.5'>
+                  <div className='h-3 w-full rounded-full bg-muted/60 flex overflow-hidden p-0.5 gap-0.5' aria-label={`Pipeline breakdown for ${platform.platformName}`}>
                     {platform.statuses.map((s) => {
                       const kind = getStatusKind(s.status);
                       const widthPercent = platform.total > 0 ? (s.value / platform.total) * 100 : 0;
@@ -221,7 +221,7 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
                       return (
                         <div
                           key={s.status}
-                          title={`${s.status}: ${s.value} (${widthPercent.toFixed(1)}%)`}
+                          aria-label={`${s.status}: ${s.value} (${widthPercent.toFixed(1)}%)`}
                           className={`h-full rounded-sm ${getStatusBgColor(kind)} transition-all duration-500`}
                           style={{ width: `${widthPercent}%` }}
                         />
@@ -230,16 +230,21 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
                   </div>
                 </div>
 
-                {/* Status Badges List */}
+                {/* Status Badges List with matching color dots */}
                 <div className='flex flex-wrap gap-1.5 pt-1'>
                   {platform.statuses.map((s) => {
-                    const label = statusLabels[getStatusKind(s.status)] || s.status;
+                    const kind = getStatusKind(s.status);
+                    const label = statusLabels[kind] || s.status;
+                    const pct = platform.total > 0 ? ((s.value / platform.total) * 100).toFixed(0) : '0';
                     return (
                       <span
                         key={s.status}
-                        className='inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted/50 text-[11px] text-foreground/80 font-medium'
+                        className='inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/50 text-[11px] text-foreground/80 font-medium'
                       >
-                        <span className='font-semibold text-foreground'>{s.value}</span> {label}
+                        <span className={`h-2 w-2 rounded-full shrink-0 ${getStatusBgColor(kind)}`} />
+                        <span className='font-semibold text-foreground'>{s.value}</span>
+                        <span className='capitalize'>{label}</span>
+                        <span className='text-[10px] text-muted-foreground font-semibold'>({pct}%)</span>
                       </span>
                     );
                   })}

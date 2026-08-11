@@ -1,4 +1,6 @@
 import { Suspense } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import { getStatusPerPlatform, getYears } from '@/app/actions/analytics';
 import { PlatformRoiDashboard } from '../components/platform-roi-dashboard';
 import { AnalyticsFilter } from '../components/analytics-filter';
@@ -27,10 +29,13 @@ export default async function StatusPerPlatformPage(props: {
 
   if (statusPerPlatform.length === 0 && !month && !year)
     return (
-      <div className='flex h-60 items-center justify-center rounded-lg border border-dashed p-8 text-center'>
-        <p className='text-muted-foreground'>
-          No applications found. Add an application to see platform performance analytics.
+      <div className='flex flex-col gap-3 h-60 items-center justify-center rounded-xl border border-dashed border-border/50 p-8 text-center bg-card/30'>
+        <p className='text-muted-foreground text-sm max-w-sm'>
+          No applications found. Add your job applications to unlock platform ROI analytics.
         </p>
+        <Button asChild size="sm" className="gap-1.5 font-semibold">
+          <Link href="/applications">+ Add Application</Link>
+        </Button>
       </div>
     );
 

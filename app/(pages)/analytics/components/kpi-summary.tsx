@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Users, Award, Clock } from 'lucide-react';
+import { FileText, Users, XCircle, Clock } from 'lucide-react';
 
 type Props = {
   totalApplications: number;
@@ -50,7 +50,7 @@ export function KpiSummary({
           <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Total Rejection Rate
           </CardTitle>
-          <Award className="h-4 w-4 text-muted-foreground/70" />
+          <XCircle className="h-4 w-4 text-rose-500/70" />
         </CardHeader>
         <CardContent>
           <p className="text-3xl font-extrabold text-foreground">{formatPercent(rejectionRate)}</p>
@@ -69,7 +69,9 @@ export function KpiSummary({
           <p className="text-3xl font-extrabold text-foreground">
             {averageResponseDays !== null ? `${averageResponseDays} ${averageResponseDays === 1 ? 'Day' : 'Days'}` : 'N/A'}
           </p>
-          <p className="text-xs text-muted-foreground mt-1">Average time to recruiter response</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {averageResponseDays !== null ? 'Average time to recruiter response' : 'Requires history date updates to calculate'}
+          </p>
         </CardContent>
       </Card>
     </div>

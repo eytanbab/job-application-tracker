@@ -80,12 +80,14 @@ export function YearlyTrendsCard({
             years={years}
             rawData={statusesPerYear}
             globalYear={globalYear}
+            hideCardWrapper
           />
         ) : (
           <TotalApplicationsPerYearBarChart
             years={years}
             data={applicationsPerYear}
             globalYear={globalYear}
+            hideCardWrapper
           />
         )}
       </CardContent>
