@@ -1,5 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Users, XCircle, Clock } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { FileText, Users, XCircle, Clock, HelpCircle } from "lucide-react";
 
 type Props = {
   totalApplications: number;
@@ -19,11 +24,33 @@ export function KpiSummary({
 }: Props) {
   return (
     <div className="col-span-full grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* 1. Resume Pass Rate */}
       <Card className="bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Resume Pass Rate
-          </CardTitle>
+          <div className="flex items-center gap-1.5">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Resume Pass Rate
+            </CardTitle>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Resume pass rate calculation info"
+                  className="text-muted-foreground/60 hover:text-foreground transition-colors cursor-pointer"
+                >
+                  <HelpCircle className="h-3.5 w-3.5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 text-xs p-3 space-y-1.5 z-50">
+                <p className="font-semibold text-foreground">Formula</p>
+                <p className="text-muted-foreground">
+                  (Applications Reaching Interview Stage) ÷ (Total Applications)
+                </p>
+                <p className="font-semibold text-foreground pt-1">Target Benchmark</p>
+                <p className="text-emerald-500 font-medium">15.0% – 25.0% typical pass rate</p>
+              </PopoverContent>
+            </Popover>
+          </div>
           <FileText className="h-4 w-4 text-muted-foreground/70" />
         </CardHeader>
         <CardContent>
@@ -36,11 +63,33 @@ export function KpiSummary({
         </CardContent>
       </Card>
 
+      {/* 2. Interview Conversion */}
       <Card className="bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Interview Conversion
-          </CardTitle>
+          <div className="flex items-center gap-1.5">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Interview Conversion
+            </CardTitle>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Interview conversion calculation info"
+                  className="text-muted-foreground/60 hover:text-foreground transition-colors cursor-pointer"
+                >
+                  <HelpCircle className="h-3.5 w-3.5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 text-xs p-3 space-y-1.5 z-50">
+                <p className="font-semibold text-foreground">Formula</p>
+                <p className="text-muted-foreground">
+                  (Accepted Offers) ÷ (Total Interviewed Applications)
+                </p>
+                <p className="font-semibold text-foreground pt-1">Target Benchmark</p>
+                <p className="text-emerald-500 font-medium">20.0% – 35.0% conversion rate</p>
+              </PopoverContent>
+            </Popover>
+          </div>
           <Users className="h-4 w-4 text-muted-foreground/70" />
         </CardHeader>
         <CardContent>
@@ -53,11 +102,33 @@ export function KpiSummary({
         </CardContent>
       </Card>
 
+      {/* 3. Total Rejection Rate */}
       <Card className="bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Total Rejection Rate
-          </CardTitle>
+          <div className="flex items-center gap-1.5">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Total Rejection Rate
+            </CardTitle>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Total rejection rate calculation info"
+                  className="text-muted-foreground/60 hover:text-foreground transition-colors cursor-pointer"
+                >
+                  <HelpCircle className="h-3.5 w-3.5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 text-xs p-3 space-y-1.5 z-50">
+                <p className="font-semibold text-foreground">Formula</p>
+                <p className="text-muted-foreground">
+                  (Resume Rejections + Post-Interview Rejections) ÷ (Total Applications)
+                </p>
+                <p className="font-semibold text-foreground pt-1">Baseline Expectation</p>
+                <p className="text-amber-500 font-medium">50.0% – 70.0% baseline rejection rate</p>
+              </PopoverContent>
+            </Popover>
+          </div>
           <XCircle className="h-4 w-4 text-rose-500/70" />
         </CardHeader>
         <CardContent>
@@ -70,11 +141,33 @@ export function KpiSummary({
         </CardContent>
       </Card>
 
+      {/* 4. Response Velocity */}
       <Card className="bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Response Velocity
-          </CardTitle>
+          <div className="flex items-center gap-1.5">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Response Velocity
+            </CardTitle>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Response velocity calculation info"
+                  className="text-muted-foreground/60 hover:text-foreground transition-colors cursor-pointer"
+                >
+                  <HelpCircle className="h-3.5 w-3.5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 text-xs p-3 space-y-1.5 z-50">
+                <p className="font-semibold text-foreground">Formula</p>
+                <p className="text-muted-foreground">
+                  Average days elapsed between application submission & recruiter status update
+                </p>
+                <p className="font-semibold text-foreground pt-1">Target Response Time</p>
+                <p className="text-blue-500 font-medium">7 – 14 calendar days</p>
+              </PopoverContent>
+            </Popover>
+          </div>
           <Clock className="h-4 w-4 text-muted-foreground/70" />
         </CardHeader>
         <CardContent>
@@ -86,7 +179,7 @@ export function KpiSummary({
           <p className="text-xs text-muted-foreground mt-1">
             {averageResponseDays !== null
               ? "Average time to recruiter response"
-              : "Requires history date updates to calculate"}
+              : "Requires status updates to calculate"}
           </p>
         </CardContent>
       </Card>
