@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTransition } from "react";
 import {
   Select,
   SelectContent,
@@ -9,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Calendar, Filter, RotateCcw } from "lucide-react";
+import { Calendar, Filter, Loader2, RotateCcw } from "lucide-react";
 
 const months = [
   { value: "1", label: "January" },
@@ -29,6 +30,7 @@ const months = [
 export function AnalyticsFilter({ years }: { years: string[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
   const selectedMonth = searchParams.get("month") || "all";
   const selectedYear = searchParams.get("year") || "all";
@@ -40,11 +42,15 @@ export function AnalyticsFilter({ years }: { years: string[] }) {
     } else {
       params.set(key, value);
     }
-    router.push(`?${params.toString()}`);
+    startTransition(() => {
+      router.push(`?${params.toString()}`);
+    });
   };
 
   const clearFilters = () => {
-    router.push("?");
+    startTransition(() => {
+      router.push("?");
+    });
   };
 
   const isFiltered = selectedMonth !== "all" || selectedYear !== "all";
@@ -52,7 +58,11 @@ export function AnalyticsFilter({ years }: { years: string[] }) {
   return (
     <div className="w-full bg-card border border-border/30 rounded-xl p-3 sm:p-4 shadow-2xs flex flex-wrap items-center justify-between gap-3 mb-2">
       <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-        <Filter className="h-4 w-4 text-primary" />
+        {isPending ? (
+          <Loader2 className="h-4 w-4 text-primary animate-spin" />
+        ) : (
+          <Filter className="h-4 w-4 text-primary" />
+        )}
         <span>Filter Analytics</span>
       </div>
 
@@ -109,7 +119,7 @@ export function AnalyticsFilter({ years }: { years: string[] }) {
             variant="ghost"
             size="sm"
             onClick={clearFilters}
-            className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1.5 px-2.5"
+            className="min-h-[44px] sm:min-h-0 sm:h-8 text-xs text-muted-foreground hover:text-foreground gap-1.5 px-2.5 cursor-pointer"
           >
             <RotateCcw className="h-3.5 w-3.5" />
             Reset
