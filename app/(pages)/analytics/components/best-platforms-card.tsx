@@ -33,7 +33,7 @@ export function BestPlatformsCard({
       <CardContent>
         {!bestPlatform ? (
           <div className="pt-2">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground/90 font-medium">
               Apply to more jobs to see platform insights
             </p>
           </div>

@@ -25,7 +25,7 @@ export function DomainLeaderboardCard({ domains }: Props) {
       </CardHeader>
       <CardContent className="flex flex-col gap-3.5 pt-2">
         {domains.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">
+          <p className="text-sm text-muted-foreground/90 font-medium py-4 text-center">
             No domain data available
           </p>
         ) : (

@@ -16,7 +16,9 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Lightbulb, Layers, Zap } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Lightbulb, Layers, Zap, Rocket } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +44,12 @@ export default async function InsightsPage(props: {
     getRoleTargetingAnalysis(month, year),
   ]);
 
+  const isAllEmpty =
+    platformRoi.length === 0 &&
+    blackHoleData.ghosted === 0 &&
+    blackHoleData.rejected === 0 &&
+    roleTargeting.length === 0;
+
   return (
     <div className="flex flex-col gap-6 w-full opacity-100 transition-opacity duration-500">
       {/* 1. Header Filter Toolbar */}
@@ -53,11 +61,33 @@ export default async function InsightsPage(props: {
         <AnalyticsFilter years={years.length > 0 ? years : ["2025"]} />
       </Suspense>
 
+      {/* Onboarding Banner when all metrics are empty */}
+      {isAllEmpty && !month && !year && (
+        <Card className="relative overflow-hidden border border-primary/30 bg-gradient-to-r from-primary/10 via-accent/5 to-transparent backdrop-blur-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Rocket className="h-5 w-5 text-primary animate-pulse" />
+              <CardTitle className="text-base font-bold">
+                Unlock Strategic Insights
+              </CardTitle>
+            </div>
+            <CardDescription className="text-xs text-foreground/80 font-medium mt-1">
+              Strategic Insights automatically analyzes your role targeting focus, ghosting vs. rejection funnel loss, and platform yield leaderboards as you track applications.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <Button asChild size="sm" className="gap-1.5 font-semibold text-xs cursor-pointer">
+              <Link href="/applications">+ Add Your First Application</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* 2. Strategic Insights Overview */}
       <section className="space-y-3">
         <div className="flex items-center gap-2">
           <Lightbulb className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-primary">
             Strategic Targeting & Funnel Loss
           </h2>
         </div>
@@ -71,7 +101,7 @@ export default async function InsightsPage(props: {
       <section className="space-y-3">
         <div className="flex items-center gap-2">
           <Zap className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-primary">
             Top Yielding Application Channels
           </h2>
         </div>
@@ -87,9 +117,16 @@ export default async function InsightsPage(props: {
           </CardHeader>
           <CardContent className="pt-2">
             {platformRoi.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                No platform ROI data available
-              </p>
+              <div className="flex flex-col gap-2 py-6 items-center justify-center text-center">
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  {month || year
+                    ? "No platform interview yield recorded for the selected timeframe filter."
+                    : "No platform ROI data available yet. Track your job applications and interviews to calculate platform yield rates."}
+                </p>
+                <Button asChild variant="outline" size="sm" className="mt-1 gap-1.5 text-xs font-semibold cursor-pointer">
+                  <Link href="/applications">+ Track Applications</Link>
+                </Button>
+              </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {platformRoi.map((item, idx) => (

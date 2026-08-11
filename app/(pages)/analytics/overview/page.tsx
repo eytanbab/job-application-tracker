@@ -106,7 +106,7 @@ export default async function Overview(props: {
       <section className="space-y-3">
         <div className="flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-primary">
             Key Performance Rates
           </h2>
         </div>
@@ -123,11 +123,11 @@ export default async function Overview(props: {
       <section className="space-y-3">
         <div className="flex items-center gap-2">
           <Lightbulb className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-primary">
             Strategy Coaching
           </h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <BestPlatformsCard {...bestPlatformInsight} />
           <GhostingRiskCard {...ghostedApplications} />
           <DomainLeaderboardCard domains={domainLeaderboard} />
@@ -138,7 +138,7 @@ export default async function Overview(props: {
       <section className="space-y-3 pt-1">
         <div className="flex items-center gap-2">
           <BarChart3 className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-primary">
             Trends & Status
           </h2>
         </div>

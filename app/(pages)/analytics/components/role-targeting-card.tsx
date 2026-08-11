@@ -23,7 +23,7 @@ export function RoleTargetingCard({ roles }: Props) {
       </CardHeader>
       <CardContent className="flex flex-col gap-3.5 pt-2">
         {roles.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">
+          <p className="text-sm text-muted-foreground/90 font-medium py-4 text-center">
             No role targeting data available
           </p>
         ) : (

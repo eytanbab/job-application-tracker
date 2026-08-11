@@ -58,9 +58,12 @@ export function YearlyTrendsCard({
         </div>
 
         {/* Tab Switcher */}
-        <div className="inline-flex items-center rounded-md bg-muted/60 p-1 gap-1 border border-border/20">
+        <div role="tablist" aria-label="Yearly trends view options" className="inline-flex items-center rounded-md bg-muted/60 p-1 gap-1 border border-border/20">
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "status"}
+            aria-controls="yearly-trends-tabpanel"
             onClick={() => setActiveTab("status")}
             className={cn(
               "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer",
@@ -75,6 +78,9 @@ export function YearlyTrendsCard({
 
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "volume"}
+            aria-controls="yearly-trends-tabpanel"
             onClick={() => setActiveTab("volume")}
             className={cn(
               "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer",
@@ -89,7 +95,7 @@ export function YearlyTrendsCard({
         </div>
       </CardHeader>
 
-      <CardContent className="p-4 pt-6">
+      <CardContent id="yearly-trends-tabpanel" role="tabpanel" className="p-4 pt-6">
         {activeTab === "status" ? (
           <StatusesPerYearBarChart
             years={years}
