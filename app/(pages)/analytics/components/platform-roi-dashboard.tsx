@@ -223,30 +223,30 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
               className="bg-background/40 backdrop-blur border border-border/50 hover:border-primary/30 transition-colors duration-300 flex flex-col justify-between"
             >
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center font-bold text-primary capitalize text-sm">
+                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center font-bold text-primary capitalize text-sm shrink-0">
                       {platform.platformName.slice(0, 2)}
                     </div>
-                    <div>
-                      <CardTitle className="text-base font-semibold capitalize">
+                    <div className="min-w-0">
+                      <CardTitle className="text-base font-semibold capitalize truncate">
                         {platform.platformName}
                       </CardTitle>
-                      <CardDescription className="text-xs">
+                      <CardDescription className="text-xs truncate">
                         {platform.total} total{" "}
                         {platform.total === 1 ? "application" : "applications"}
                       </CardDescription>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex flex-wrap items-center gap-1.5">
                     <Badge
                       variant={
                         platform.interviewRate > 0 ? "default" : "outline"
                       }
                       className={
                         platform.interviewRate > 0
-                          ? "bg-blue-500/15 text-blue-500 hover:bg-blue-500/20 border-blue-500/30"
-                          : ""
+                          ? "bg-blue-500/15 text-blue-500 hover:bg-blue-500/20 border-blue-500/30 text-[11px]"
+                          : "text-[11px]"
                       }
                     >
                       {platform.interviewRate.toFixed(1)}% interview
@@ -257,8 +257,8 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
                       }
                       className={
                         platform.responseRate >= 20
-                          ? "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/30"
-                          : ""
+                          ? "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/30 text-[11px]"
+                          : "text-[11px]"
                       }
                     >
                       {platform.responseRate.toFixed(1)}% response

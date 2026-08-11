@@ -88,7 +88,11 @@ export function PieChartComponent({ title, data, total }: Props) {
       </CardHeader>
 
       <CardContent className="flex-1 w-full flex flex-col items-center justify-center p-3">
-        <div className="relative w-full aspect-square max-h-[190px] flex items-center justify-center">
+        <div
+          role="img"
+          aria-label={`${title} chart showing total of ${grandTotal} applications across ${chartData.length} stages`}
+          className="relative w-full aspect-square max-h-[190px] flex items-center justify-center"
+        >
           <ChartContainer
             config={chartConfig}
             className="w-full h-full aspect-square mx-auto"
@@ -108,7 +112,7 @@ export function PieChartComponent({ title, data, total }: Props) {
                   <Cell
                     key={`cell-${entry.name}`}
                     fill={entry.fill}
-                    className="hover:opacity-80 transition-opacity"
+                    className="hover:opacity-80 transition-opacity cursor-pointer"
                   />
                 ))}
               </Pie>
@@ -127,7 +131,10 @@ export function PieChartComponent({ title, data, total }: Props) {
         </div>
 
         <CardFooter className="w-full pt-3 px-1 pb-1">
-          <ul className="flex flex-col gap-2 text-xs w-full">
+          <ul
+            className="flex flex-col gap-1.5 text-xs w-full"
+            aria-label={`${title} legend`}
+          >
             {chartData.map((item) => {
               const percentage =
                 grandTotal > 0
@@ -136,12 +143,15 @@ export function PieChartComponent({ title, data, total }: Props) {
               return (
                 <li
                   key={item.name}
-                  className="flex items-center justify-between capitalize text-muted-foreground"
+                  tabIndex={0}
+                  aria-label={`${item.name}: ${item.freq} applications, ${percentage} percent of total`}
+                  className="flex items-center justify-between capitalize text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md p-1 -mx-1 transition-colors"
                 >
                   <div className="flex items-center gap-2 overflow-hidden">
                     <span
                       className="h-2.5 w-2.5 rounded-full shrink-0"
                       style={{ backgroundColor: item.fill }}
+                      aria-hidden="true"
                     />
                     <span className="font-medium text-foreground truncate max-w-[150px]">
                       {item.name}

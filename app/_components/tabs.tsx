@@ -22,9 +22,7 @@ export default function Tabs() {
     <div className="flex items-center gap-2">
       <div className="inline-flex w-fit max-w-full overflow-x-auto flex-nowrap items-center gap-1 rounded-xl bg-muted/60 p-1 scrollbar-none">
         {TABS.map((item) => {
-          const params = new URLSearchParams();
-          if (month) params.set("month", month);
-          if (year) params.set("year", year);
+          const params = new URLSearchParams(searchParams.toString());
           const queryString = params.toString();
           const href = queryString ? `${item.url}?${queryString}` : item.url;
           const isActive = pathname === item.url;

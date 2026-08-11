@@ -1,15 +1,11 @@
 {
-  "product_name": "Job Application Tracker",
-  "description": "Web application for job seekers to log, organize, track, and analyze job applications, documents, interviews, and status progression.",
-  "target_audience": "Individual job seekers, career switchers, and bootcamp graduates managing multiple active job applications under high volume and time pressure.",
-  "platform": "Web (Responsive Desktop & Mobile)",
-  "known_pain_points": [
-    "Quick status updates during multi-stage interview pipelines",
-    "Mobile table viewing & responsive interactions",
-    "Form friction during fast job logging",
-    "Visibility of application history & timeline notes"
-  ],
-  "competitors": ["Huntr", "Teal", "Simplify"],
-  "last_flow": "applications",
+  "product_description": "Job Application Tracker helping job seekers track applications, analyze application velocity, funnel conversions, response rates, and platform ROI.",
+  "audience": "Active job seekers (software engineers, professionals) tracking job applications, analyzing funnel performance across platforms, and identifying response/interview bottlenecks.",
+  "audience_is_generic_fallback": false,
+  "business_model": "B2C",
+  "platform": ["web"],
+  "known_pain_points": "Chart legend clarity, responsive layout on mobile, filtering options context, visual hierarchy, navigation between analytics subpages.",
+  "reference_product": "Huntr, Teal, LinkedIn Insights",
+  "last_flow": "analytics",
   "last_updated": "2026-08-12"
 }
