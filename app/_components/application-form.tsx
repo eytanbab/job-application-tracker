@@ -8,11 +8,12 @@ import { Form } from "@/components/ui/form";
 
 import { getStatusDisplay, getStatusKind, safeFormatDate } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useTransition, useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { AiExtractForm } from "./ai-extract-form";
 import { ApplicationFormFields } from "./application-form-fields";
+import { getDistinctLocationsAndPlatforms } from "@/app/actions/applications";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const createApplicationSchema = insertApplicationSchema.omit({
@@ -69,6 +70,21 @@ export const ApplicationForm = ({
   const router = useRouter();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const [userOptions, setUserOptions] = useState<{
+    userLocations: string[];
+    userPlatforms: string[];
+  }>({
+    userLocations: [],
+    userPlatforms: [],
+  });
+
+  useEffect(() => {
+    getDistinctLocationsAndPlatforms()
+      .then((res) => {
+        if (res) setUserOptions(res);
+      })
+      .catch(() => {});
+  }, []);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema as any),
@@ -149,6 +165,8 @@ export const ApplicationForm = ({
             form={form}
             isPending={isPending}
             onCancel={onCancel}
+            userLocations={userOptions.userLocations}
+            userPlatforms={userOptions.userPlatforms}
           />
         </form>
       </Form>

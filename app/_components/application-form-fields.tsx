@@ -33,19 +33,37 @@ import {
   statusOptions,
   safeFormatDate,
 } from "@/lib/utils";
+import { useMemo } from "react";
 import { FormValues } from "./application-form";
+import {
+  locationOptions,
+  platformOptions,
+  mergeWithDefaultOptions,
+} from "@/components/ui/combobox-input";
 
 interface ApplicationFormFieldsProps {
   form: UseFormReturn<FormValues>;
   isPending: boolean;
   onCancel: () => void;
+  userLocations?: string[];
+  userPlatforms?: string[];
 }
 
 export function ApplicationFormFields({
   form,
   isPending,
   onCancel,
+  userLocations = [],
+  userPlatforms = [],
 }: ApplicationFormFieldsProps) {
+  const mergedLocations = useMemo(
+    () => mergeWithDefaultOptions(userLocations, locationOptions),
+    [userLocations],
+  );
+  const mergedPlatforms = useMemo(
+    () => mergeWithDefaultOptions(userPlatforms, platformOptions),
+    [userPlatforms],
+  );
   return (
     <>
       <FormField
@@ -102,28 +120,37 @@ export function ApplicationFormFields({
       <FormField
         control={form.control}
         name="location"
-        render={({ field }) => (
-          <FormItem className="space-y-0 col-span-full md:col-span-1">
-            <FormLabel>Location</FormLabel>
-            <FormControl>
-              <Input
-                list="location-suggestions"
-                placeholder="e.g. Remote / Tel Aviv"
-                {...field}
-                value={field.value || ""}
-              />
-            </FormControl>
-            <datalist id="location-suggestions">
-              <option value="Remote" />
-              <option value="Hybrid" />
-              <option value="On-site" />
-              <option value="Tel Aviv" />
-              <option value="New York" />
-              <option value="London" />
-            </datalist>
-            <FormMessage />
-          </FormItem>
-        )}
+        render={({ field }) => {
+          const val = field.value || "";
+          const isCustom =
+            Boolean(val) &&
+            !mergedLocations.some((opt) => opt.toLowerCase() === val.toLowerCase());
+          const displayOptions = isCustom ? [val, ...mergedLocations] : mergedLocations;
+
+          return (
+            <FormItem className="space-y-0 col-span-full md:col-span-1">
+              <FormLabel>Location</FormLabel>
+              <Select
+                value={val}
+                onValueChange={(value) => field.onChange(value)}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="e.g. Remote / Tel Aviv" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {displayOptions.map((loc) => (
+                    <SelectItem key={loc} value={loc}>
+                      {loc}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
       <FormField
         control={form.control}
@@ -185,30 +212,37 @@ export function ApplicationFormFields({
       <FormField
         control={form.control}
         name="platform"
-        render={({ field }) => (
-          <FormItem className="space-y-0 col-span-full">
-            <FormLabel>Platform</FormLabel>
-            <FormControl>
-              <Input
-                list="platform-suggestions"
-                placeholder="e.g. LinkedIn / Indeed / Company Site"
-                {...field}
-                value={field.value || ""}
-              />
-            </FormControl>
-            <datalist id="platform-suggestions">
-              <option value="LinkedIn" />
-              <option value="Indeed" />
-              <option value="Glassdoor" />
-              <option value="Greenhouse" />
-              <option value="Lever" />
-              <option value="Workday" />
-              <option value="Company Website" />
-              <option value="Other" />
-            </datalist>
-            <FormMessage />
-          </FormItem>
-        )}
+        render={({ field }) => {
+          const val = field.value || "";
+          const isCustom =
+            Boolean(val) &&
+            !mergedPlatforms.some((opt) => opt.toLowerCase() === val.toLowerCase());
+          const displayOptions = isCustom ? [val, ...mergedPlatforms] : mergedPlatforms;
+
+          return (
+            <FormItem className="space-y-0 col-span-full">
+              <FormLabel>Platform</FormLabel>
+              <Select
+                value={val}
+                onValueChange={(value) => field.onChange(value)}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="e.g. LinkedIn / Indeed / Company Site" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {displayOptions.map((plat) => (
+                    <SelectItem key={plat} value={plat}>
+                      {plat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
       <FormField
         control={form.control}
