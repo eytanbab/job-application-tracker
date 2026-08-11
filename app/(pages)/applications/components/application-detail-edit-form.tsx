@@ -12,6 +12,13 @@ import {
 } from "@/components/ui/select";
 import { Check, Loader2, X } from "lucide-react";
 import { statusOptions } from "@/lib/utils";
+import {
+  locationOptions,
+  platformOptions,
+  mergeWithDefaultOptions,
+} from "@/components/ui/combobox-input";
+import { getDistinctLocationsAndPlatforms } from "@/app/actions/applications";
+import { useState, useEffect, useMemo } from "react";
 
 export interface DetailEditFormData {
   role_name: string;
@@ -27,7 +34,7 @@ export interface DetailEditFormData {
   statusCategory: string;
 }
 
-import { useMemo } from "react";
+
 
 interface ApplicationDetailEditFormProps {
   editForm: DetailEditFormData;
@@ -46,6 +53,31 @@ export function ApplicationDetailEditForm({
   onSave,
   onCancel,
 }: ApplicationDetailEditFormProps) {
+  const [userOptions, setUserOptions] = useState<{
+    userLocations: string[];
+    userPlatforms: string[];
+  }>({
+    userLocations: [],
+    userPlatforms: [],
+  });
+
+  useEffect(() => {
+    getDistinctLocationsAndPlatforms()
+      .then((res) => {
+        if (res) setUserOptions(res);
+      })
+      .catch(() => {});
+  }, []);
+
+  const mergedLocations = useMemo(
+    () => mergeWithDefaultOptions(userOptions.userLocations, locationOptions),
+    [userOptions.userLocations],
+  );
+
+  const mergedPlatforms = useMemo(
+    () => mergeWithDefaultOptions(userOptions.userPlatforms, platformOptions),
+    [userOptions.userPlatforms],
+  );
   const isDirty = useMemo(() => {
     if (!initialForm) return true;
     const normalizeDate = (d?: string) => (d ? d.split("T")[0] : "");
@@ -130,15 +162,33 @@ export function ApplicationDetailEditForm({
           >
             Platform
           </label>
-          <Input
-            id="edit-platform"
-            placeholder="e.g. LinkedIn"
-            value={editForm.platform}
-            onChange={(e) =>
-              setEditForm({ ...editForm, platform: e.target.value })
-            }
-            className="h-9"
-          />
+          {(() => {
+            const val = editForm.platform || "";
+            const isCustom =
+              Boolean(val) &&
+              !mergedPlatforms.some((opt) => opt.toLowerCase() === val.toLowerCase());
+            const displayOptions = isCustom ? [val, ...mergedPlatforms] : mergedPlatforms;
+
+            return (
+              <Select
+                value={val}
+                onValueChange={(value) =>
+                  setEditForm({ ...editForm, platform: value })
+                }
+              >
+                <SelectTrigger id="edit-platform" className="h-9">
+                  <SelectValue placeholder="e.g. LinkedIn" />
+                </SelectTrigger>
+                <SelectContent>
+                  {displayOptions.map((plat) => (
+                    <SelectItem key={plat} value={plat}>
+                      {plat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            );
+          })()}
         </div>
         <div>
           <label
@@ -169,15 +219,33 @@ export function ApplicationDetailEditForm({
           >
             Location
           </label>
-          <Input
-            id="edit-location"
-            placeholder="e.g. Tel Aviv / Remote"
-            value={editForm.location}
-            onChange={(e) =>
-              setEditForm({ ...editForm, location: e.target.value })
-            }
-            className="h-9"
-          />
+          {(() => {
+            const val = editForm.location || "";
+            const isCustom =
+              Boolean(val) &&
+              !mergedLocations.some((opt) => opt.toLowerCase() === val.toLowerCase());
+            const displayOptions = isCustom ? [val, ...mergedLocations] : mergedLocations;
+
+            return (
+              <Select
+                value={val}
+                onValueChange={(value) =>
+                  setEditForm({ ...editForm, location: value })
+                }
+              >
+                <SelectTrigger id="edit-location" className="h-9">
+                  <SelectValue placeholder="e.g. Tel Aviv / Remote" />
+                </SelectTrigger>
+                <SelectContent>
+                  {displayOptions.map((loc) => (
+                    <SelectItem key={loc} value={loc}>
+                      {loc}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            );
+          })()}
         </div>
         <div>
           <label
