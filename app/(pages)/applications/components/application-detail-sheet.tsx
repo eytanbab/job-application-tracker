@@ -82,6 +82,7 @@ export function ApplicationDetailSheet({
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isSaving, startSaveTransition] = useTransition();
 
+  const [initialEditForm, setInitialEditForm] = useState<DetailEditFormData | undefined>(undefined);
   const [editForm, setEditForm] = useState<DetailEditFormData>({
     role_name: '',
     company_name: '',
@@ -101,7 +102,7 @@ export function ApplicationDetailSheet({
     if (initialApp) {
       const effectiveStatus = getStatusDisplay(initialApp.status, initialApp.statusCategory);
       setQuickStatusText(effectiveStatus);
-      setEditForm({
+      const initialValues: DetailEditFormData = {
         role_name: initialApp.role_name || '',
         company_name: initialApp.company_name || '',
         location: initialApp.location || '',
@@ -113,7 +114,9 @@ export function ApplicationDetailSheet({
         notes: initialApp.notes || '',
         status: effectiveStatus,
         statusCategory: getStatusKind(initialApp.status, initialApp.statusCategory),
-      });
+      };
+      setEditForm(initialValues);
+      setInitialEditForm(initialValues);
 
       if (open) {
         setIsLoadingHistory(true);
@@ -198,6 +201,7 @@ export function ApplicationDetailSheet({
 
         await updateApplication(payload);
         setCurrentApp(payload);
+        setInitialEditForm({ ...editForm, status: updatedStatusText.trim() });
         setIsEditing(false);
         toast({ description: 'Application updated successfully!' });
 
@@ -313,6 +317,7 @@ export function ApplicationDetailSheet({
             <ApplicationDetailEditForm
               editForm={editForm}
               setEditForm={setEditForm}
+              initialForm={initialEditForm}
               isSaving={isSaving}
               onSave={handleSaveInline}
               onCancel={() => setIsEditing(false)}

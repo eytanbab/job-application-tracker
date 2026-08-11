@@ -27,9 +27,12 @@ export interface DetailEditFormData {
   statusCategory: string;
 }
 
+import { useMemo } from 'react';
+
 interface ApplicationDetailEditFormProps {
   editForm: DetailEditFormData;
   setEditForm: React.Dispatch<React.SetStateAction<DetailEditFormData>>;
+  initialForm?: DetailEditFormData;
   isSaving: boolean;
   onSave: () => void;
   onCancel: () => void;
@@ -38,10 +41,30 @@ interface ApplicationDetailEditFormProps {
 export function ApplicationDetailEditForm({
   editForm,
   setEditForm,
+  initialForm,
   isSaving,
   onSave,
   onCancel,
 }: ApplicationDetailEditFormProps) {
+  const isDirty = useMemo(() => {
+    if (!initialForm) return true;
+    const normalizeDate = (d?: string) => (d ? d.split('T')[0] : '');
+    const normalizeText = (t?: string | null) => (t || '').trim();
+
+    return (
+      normalizeText(editForm.role_name) !== normalizeText(initialForm.role_name) ||
+      normalizeText(editForm.company_name) !== normalizeText(initialForm.company_name) ||
+      normalizeText(editForm.location) !== normalizeText(initialForm.location) ||
+      normalizeText(editForm.salary) !== normalizeText(initialForm.salary) ||
+      normalizeText(editForm.platform) !== normalizeText(initialForm.platform) ||
+      normalizeText(editForm.link) !== normalizeText(initialForm.link) ||
+      normalizeDate(editForm.date_applied) !== normalizeDate(initialForm.date_applied) ||
+      normalizeText(editForm.description) !== normalizeText(initialForm.description) ||
+      normalizeText(editForm.notes) !== normalizeText(initialForm.notes) ||
+      normalizeText(editForm.status) !== normalizeText(initialForm.status) ||
+      editForm.statusCategory !== initialForm.statusCategory
+    );
+  }, [editForm, initialForm]);
   return (
     <div className="space-y-4 text-sm opacity-100 transition-opacity duration-200">
       <div className="grid grid-cols-2 gap-3">
@@ -160,15 +183,16 @@ export function ApplicationDetailEditForm({
       <div className="flex items-center gap-2 pt-2">
         <Button
           className="flex-1 gap-2 font-medium"
-          disabled={isSaving}
+          disabled={isSaving || !isDirty}
           onClick={onSave}
+          title={!isDirty ? "No changes have been made" : undefined}
         >
           {isSaving ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <Check className="h-4 w-4" />
           )}
-          Save Changes
+          {!isDirty ? "No Changes" : "Save Changes"}
         </Button>
         <Button
           variant="outline"

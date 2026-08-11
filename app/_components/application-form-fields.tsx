@@ -282,13 +282,29 @@ export function ApplicationFormFields({
       />
 
       <div className="mt-4 flex flex-col gap-2 w-full col-span-full">
-        <Button type="submit" disabled={isPending}>
-          {isPending ? (
-            <Loader2 className="size-8 animate-spin" />
-          ) : (
-            "Submit"
-          )}
-        </Button>
+        {(() => {
+          const { isDirty } = form.formState;
+          const isEditing = Boolean(form.getValues("id" as any));
+          const isSaveDisabled = isPending || (isEditing && !isDirty);
+
+          return (
+            <Button
+              type="submit"
+              disabled={isSaveDisabled}
+              title={isEditing && !isDirty ? "No changes have been made" : undefined}
+            >
+              {isPending ? (
+                <Loader2 className="size-8 animate-spin" />
+              ) : isEditing && !isDirty ? (
+                "No Changes"
+              ) : isEditing ? (
+                "Save Changes"
+              ) : (
+                "Submit"
+              )}
+            </Button>
+          );
+        })()}
         <Button
           type="button"
           variant="outline"
