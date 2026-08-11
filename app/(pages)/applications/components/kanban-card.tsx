@@ -91,7 +91,7 @@ export function KanbanCard({
       onDragStart={(e) => {
         e.dataTransfer.setData("application/json", JSON.stringify(item));
       }}
-      className="group relative cursor-grab active:cursor-grabbing border bg-card hover:border-primary/50 transition-[border-color,box-shadow] hover:shadow-md rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="group relative cursor-grab active:cursor-grabbing border bg-card hover:border-primary/50 transition-[border-color,box-shadow] hover:shadow-md rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary min-w-0 w-full"
       onClick={() => onSelectApplication(item)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -100,9 +100,9 @@ export function KanbanCard({
         }
       }}
     >
-      <CardHeader className="p-3 pb-1.5 flex flex-row items-start justify-between space-y-0 gap-2">
+      <CardHeader className="p-3 pb-1.5 flex flex-row items-start justify-between space-y-0 gap-2 min-w-0">
         <div className="min-w-0 flex-1 space-y-1">
-          <CardTitle className="text-sm font-bold tracking-tight text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors">
+          <CardTitle className="text-sm font-bold tracking-tight text-foreground line-clamp-2 break-words leading-tight group-hover:text-primary transition-colors">
             {item.role_name}
           </CardTitle>
           <p className="text-xs font-medium text-muted-foreground flex items-center gap-1 truncate">
@@ -119,7 +119,7 @@ export function KanbanCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+              className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity"
               title={`Move to ${prevCol.label}`}
               onClick={() => onQuickStatusMove(item, prevCol.id)}
             >
@@ -130,7 +130,7 @@ export function KanbanCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+              className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity"
               title={`Move to ${nextCol.label}`}
               onClick={() => onQuickStatusMove(item, nextCol.id)}
             >
@@ -183,14 +183,29 @@ export function KanbanCard({
       </CardHeader>
 
       <CardContent className="p-3 pt-1 space-y-2 text-xs">
-        {isCustomStage && (
-          <Badge
-            variant="outline"
-            className="text-[10px] font-normal truncate max-w-full block rounded-sm"
-          >
-            {displayLabel}
-          </Badge>
-        )}
+        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+          {isCustomStage && (
+            <Badge
+              variant="outline"
+              className="text-[10px] font-normal truncate max-w-full block rounded-sm"
+            >
+              {displayLabel}
+            </Badge>
+          )}
+          {item.platform && (
+            <Badge
+              variant="secondary"
+              className="text-[10px] font-medium capitalize px-1.5 py-0 rounded-sm bg-secondary/80 text-secondary-foreground"
+            >
+              {item.platform}
+            </Badge>
+          )}
+          {item.salary && (
+            <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-sm truncate max-w-[120px]">
+              {item.salary}
+            </span>
+          )}
+        </div>
 
         <div className="flex flex-wrap items-center justify-between gap-1 text-muted-foreground text-[11px] pt-1">
           <span className="flex items-center gap-1 shrink-0">

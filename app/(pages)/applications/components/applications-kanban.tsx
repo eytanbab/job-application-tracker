@@ -10,6 +10,7 @@ import {
 } from "@/lib/utils";
 import { updateApplication } from "@/app/actions/applications";
 import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { KanbanCard, KanbanItem } from "./kanban-card";
 
@@ -57,7 +58,7 @@ const KANBAN_COLUMNS: { id: StatusKind; label: string; headerBg: string }[] = [
   {
     id: "ghosted",
     label: "Ghosted",
-    headerBg: "bg-muted/80 text-muted-foreground border-border/50",
+    headerBg: "bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30",
   },
 ];
 
@@ -118,6 +119,7 @@ export function ApplicationsKanban({
 
   const handleQuickStatusMove = (item: KanbanItem, newCategory: string) => {
     if (!item.id) return;
+    const previousCategory = item.statusCategory || getStatusKind(item.status);
     startTransition(async () => {
       try {
         await updateApplication({
@@ -130,6 +132,14 @@ export function ApplicationsKanban({
           description: `Moved "${item.role_name}" to ${
             statusLabels[newCategory as StatusKind] || newCategory
           }`,
+          action: (
+            <ToastAction
+              altText="Undo status change"
+              onClick={() => handleQuickStatusMove(item, previousCategory)}
+            >
+              Undo
+            </ToastAction>
+          ),
         });
       } catch (err) {
         console.error(err);
@@ -181,7 +191,7 @@ export function ApplicationsKanban({
           }
         }}
         className={cn(
-          "flex-1 flex flex-col w-full rounded-md border p-3 shadow-2xs transition-all duration-200",
+          "w-full md:w-[280px] md:shrink-0 flex flex-col rounded-xl border p-3.5 shadow-2xs transition-all duration-200",
           isDropTarget
             ? "border-2 border-primary bg-primary/10 ring-2 ring-primary/20 scale-[1.01]"
             : "bg-card/40 border-border/40",
@@ -246,7 +256,7 @@ export function ApplicationsKanban({
               key={col.id}
               onClick={() => setActiveMobileCol(col.id)}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-all border",
+                "flex items-center gap-1.5 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border",
                 isActive
                   ? "bg-primary text-primary-foreground border-primary shadow-2xs"
                   : "bg-card text-muted-foreground border-border/40 hover:text-foreground",
@@ -280,8 +290,8 @@ export function ApplicationsKanban({
       </div>
 
       {/* Desktop View */}
-      <div className="hidden md:block w-full overflow-x-auto pb-4 pt-1">
-        <div className="flex gap-4 min-w-[1080px] w-full items-start">
+      <div className="hidden md:block w-full overflow-x-auto pb-4 pt-1 scrollbar-thin">
+        <div className="flex gap-4 min-w-max w-full items-start">
           {KANBAN_COLUMNS.map((col, colIdx) =>
             renderColumnContent(col, colIdx),
           )}

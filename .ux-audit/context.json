@@ -10,6 +10,6 @@
     "Visibility of application history & timeline notes"
   ],
   "competitors": ["Huntr", "Teal", "Simplify"],
-  "last_flow": "analytics",
+  "last_flow": "kanban-view",
   "last_updated": "2026-08-11"
 }
