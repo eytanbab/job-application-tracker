@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Dialog,
@@ -6,14 +6,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Pencil } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ApplicationForm } from './application-form';
+} from "@/components/ui/dialog";
+import { Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ApplicationForm } from "./application-form";
 
-import { useState } from 'react';
-import { insertApplicationSchema } from '../db/schema';
-import { z } from 'zod';
+import { useState } from "react";
+import { insertApplicationSchema } from "../db/schema";
+import { z } from "zod";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const editApplicationSchema = insertApplicationSchema.omit({ userId: true });
@@ -88,4 +88,3 @@ export const EditApplicationSheet = ({
     </Dialog>
   );
 };
-

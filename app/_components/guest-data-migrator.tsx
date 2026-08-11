@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
-import { migrateGuestData } from '@/app/actions/migrate-user-data';
+import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { migrateGuestData } from "@/app/actions/migrate-user-data";
 
 export function GuestDataMigrator() {
   const { userId, isSignedIn } = useAuth();

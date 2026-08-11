@@ -16,10 +16,6 @@ import {
 import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 
-
-
-
-
 export async function getDomainLeaderboard() {
   const userId = await getCurrentUserIdOrThrow();
 
@@ -41,7 +37,10 @@ export async function getDomainLeaderboard() {
       applications.forEach(({ link, status, statusCategory }) => {
         if (!link) return;
         try {
-          const rawUrl = link.startsWith("http://") || link.startsWith("https://") ? link : `https://${link}`;
+          const rawUrl =
+            link.startsWith("http://") || link.startsWith("https://")
+              ? link
+              : `https://${link}`;
           const url = new URL(rawUrl);
           const domain = extractRootDomain(url.hostname);
 
@@ -71,11 +70,9 @@ export async function getDomainLeaderboard() {
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
-    }
+    },
   )();
 }
-
-
 
 export async function getTop5Statuses(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
@@ -116,7 +113,7 @@ export async function getTop5Statuses(month?: string, year?: string) {
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
-    }
+    },
   )();
 }
 
@@ -143,8 +140,11 @@ export async function getGhostedApplications(month?: string, year?: string) {
         .where(
           and(
             ...whereClause,
-            lt(jobApplications.date_applied, format(thirtyDaysAgo, "yyyy-MM-dd"))
-          )
+            lt(
+              jobApplications.date_applied,
+              format(thirtyDaysAgo, "yyyy-MM-dd"),
+            ),
+          ),
         );
 
       let oldestDays = 0;
@@ -156,11 +156,13 @@ export async function getGhostedApplications(month?: string, year?: string) {
           ghostedApps.push(app);
           const name = (app.company_name || "").trim();
           if (name) {
-             companyCount.set(name, (companyCount.get(name) || 0) + 1);
+            companyCount.set(name, (companyCount.get(name) || 0) + 1);
           }
-          
+
           if (app.date_applied) {
-            const dateStr = app.date_applied.includes("T") ? app.date_applied : `${app.date_applied}T12:00:00`;
+            const dateStr = app.date_applied.includes("T")
+              ? app.date_applied
+              : `${app.date_applied}T12:00:00`;
             const days = differenceInDays(new Date(), new Date(dateStr));
             if (days > oldestDays) {
               oldestDays = days;
@@ -172,7 +174,7 @@ export async function getGhostedApplications(month?: string, year?: string) {
       const topCompanies = Array.from(companyCount.entries())
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5)
-        .map(e => e[0]);
+        .map((e) => e[0]);
 
       return {
         count: ghostedApps.length,
@@ -180,21 +182,19 @@ export async function getGhostedApplications(month?: string, year?: string) {
         oldestDays,
       };
     },
-    ["analytics", "ghosted-applications", userId, month || "all", year || "all"],
+    [
+      "analytics",
+      "ghosted-applications",
+      userId,
+      month || "all",
+      year || "all",
+    ],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
-    }
+    },
   )();
 }
-
-
-
-
-
-
-
-
 
 // Total applications per year
 export async function getApplicationsPerYear(month?: string, year?: string) {
@@ -229,7 +229,7 @@ export async function getApplicationsPerYear(month?: string, year?: string) {
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
-    }
+    },
   )();
 }
 
@@ -256,7 +256,7 @@ export async function getStasusesPerYear(month?: string, year?: string) {
         .groupBy(
           jobApplications.month,
           jobApplications.year,
-          jobApplications.statusCategory
+          jobApplications.statusCategory,
         );
 
       return data.map((item) => ({
@@ -268,7 +268,7 @@ export async function getStasusesPerYear(month?: string, year?: string) {
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
-    }
+    },
   )();
 }
 
@@ -296,7 +296,7 @@ export async function getYears() {
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
-    }
+    },
   )();
 }
 
@@ -374,7 +374,9 @@ export async function getStatusPerPlatform(month?: string, year?: string) {
         const appHistory = historyMap.get(id) || [];
         const reachedInterview =
           didReachInterviewStage(status, statusCategory) ||
-          appHistory.some((h) => didReachInterviewStage(h.status, h.statusCategory));
+          appHistory.some((h) =>
+            didReachInterviewStage(h.status, h.statusCategory),
+          );
 
         if (reachedInterview) {
           platformEntry.interviewCount++;
@@ -407,13 +409,14 @@ export async function getStatusPerPlatform(month?: string, year?: string) {
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
-    }
+    },
   )();
 }
 
-
-
-export async function getDetailedApplicationBreakdown(month?: string, year?: string) {
+export async function getDetailedApplicationBreakdown(
+  month?: string,
+  year?: string,
+) {
   const userId = await getCurrentUserIdOrThrow();
 
   const whereClause = [eq(jobApplications.userId, userId)];
@@ -495,19 +498,30 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
 
       apps.forEach((app) => {
         const appHistory = historyMap.get(app.id) || [];
-        
+
         // Did it ever reach the interview stage?
         const reachedInterview =
           didReachInterviewStage(app.status, app.statusCategory) ||
-          appHistory.some((h) => didReachInterviewStage(h.status, h.statusCategory));
+          appHistory.some((h) =>
+            didReachInterviewStage(h.status, h.statusCategory),
+          );
 
         const currentKind = getStatusKind(app.status, app.statusCategory);
 
         if (currentKind === "accepted") {
           offeredCount++;
-        } else if (currentKind === "applied" || currentKind === "review" || currentKind === "interview") {
-          const dateApplied = app.dateApplied ? parseISO(app.dateApplied) : null;
-          const isOlderThan30Days = dateApplied && !isNaN(dateApplied.getTime()) ? dateApplied < thirtyDaysAgo : false;
+        } else if (
+          currentKind === "applied" ||
+          currentKind === "review" ||
+          currentKind === "interview"
+        ) {
+          const dateApplied = app.dateApplied
+            ? parseISO(app.dateApplied)
+            : null;
+          const isOlderThan30Days =
+            dateApplied && !isNaN(dateApplied.getTime())
+              ? dateApplied < thirtyDaysAgo
+              : false;
 
           if (isOlderThan30Days && currentKind === "applied") {
             if (reachedInterview) {
@@ -547,13 +561,22 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
               const kind = getStatusKind(h.status, h.statusCategory);
               return kind !== "applied" && kind !== "ghosted";
             })
-            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+            .sort(
+              (a, b) =>
+                new Date(a.createdAt).getTime() -
+                new Date(b.createdAt).getTime(),
+            );
 
           if (firstResponseHistory.length > 0 && app.dateApplied) {
             const appliedDate = parseISO(app.dateApplied);
             if (!isNaN(appliedDate.getTime())) {
-              const firstResponseDate = new Date(firstResponseHistory[0].createdAt);
-              const diffDays = Math.max(0, differenceInDays(firstResponseDate, appliedDate));
+              const firstResponseDate = new Date(
+                firstResponseHistory[0].createdAt,
+              );
+              const diffDays = Math.max(
+                0,
+                differenceInDays(firstResponseDate, appliedDate),
+              );
               totalResponseDays += diffDays;
               totalResponseCount++;
             }
@@ -562,13 +585,17 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
       });
 
       const total = apps.length;
-      
+
       // Calculate funnel counts (unique applications that reached each stage)
       const uniqueApplied = total;
-      const uniqueInterview = apps.filter(app => {
+      const uniqueInterview = apps.filter((app) => {
         const appHistory = historyMap.get(app.id) || [];
-        return didReachInterviewStage(app.status, app.statusCategory) ||
-          appHistory.some(h => didReachInterviewStage(h.status, h.statusCategory));
+        return (
+          didReachInterviewStage(app.status, app.statusCategory) ||
+          appHistory.some((h) =>
+            didReachInterviewStage(h.status, h.statusCategory),
+          )
+        );
       }).length;
       const uniqueOffer = offeredCount;
 
@@ -576,13 +603,20 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
       const respondedCount = uniqueInterview + rejectedResumeCount;
 
       // Conversions
-      const resumeConversion = uniqueApplied ? (uniqueInterview / uniqueApplied) * 100 : 0;
-      const interviewConversion = uniqueInterview ? (uniqueOffer / uniqueInterview) * 100 : 0;
-      const responseConversion = uniqueApplied ? (respondedCount / uniqueApplied) * 100 : 0;
+      const resumeConversion = uniqueApplied
+        ? (uniqueInterview / uniqueApplied) * 100
+        : 0;
+      const interviewConversion = uniqueInterview
+        ? (uniqueOffer / uniqueInterview) * 100
+        : 0;
+      const responseConversion = uniqueApplied
+        ? (respondedCount / uniqueApplied) * 100
+        : 0;
 
-      const averageResponseDays = totalResponseCount > 0
-        ? Math.round(totalResponseDays / totalResponseCount)
-        : null;
+      const averageResponseDays =
+        totalResponseCount > 0
+          ? Math.round(totalResponseDays / totalResponseCount)
+          : null;
 
       return {
         total,
@@ -609,7 +643,7 @@ export async function getDetailedApplicationBreakdown(month?: string, year?: str
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
-    }
+    },
   )();
 }
 
@@ -656,7 +690,10 @@ export async function getBestPlatformInsight(month?: string, year?: string) {
         }
       });
 
-      const platformStats = new Map<string, { name: string; total: number; interviews: number }>();
+      const platformStats = new Map<
+        string,
+        { name: string; total: number; interviews: number }
+      >();
 
       data.forEach(({ id, platform, status, statusCategory }) => {
         const trimmed = (platform || "").trim();
@@ -672,7 +709,9 @@ export async function getBestPlatformInsight(month?: string, year?: string) {
         const appHistory = historyMap.get(id) || [];
         const reachedInterview =
           didReachInterviewStage(status, statusCategory) ||
-          appHistory.some((h) => didReachInterviewStage(h.status, h.statusCategory));
+          appHistory.some((h) =>
+            didReachInterviewStage(h.status, h.statusCategory),
+          );
 
         if (reachedInterview) {
           stats.interviews++;
@@ -686,19 +725,27 @@ export async function getBestPlatformInsight(month?: string, year?: string) {
         }))
         .sort((a, b) => b.interviewRate - a.interviewRate || b.total - a.total);
 
-      const bestPlatform = platformsWithRates.length > 0 ? platformsWithRates[0] : null;
-      const secondBest = platformsWithRates.length > 1 ? platformsWithRates[1] : null;
-      const multiplier = bestPlatform && secondBest && secondBest.interviewRate > 0
-        ? bestPlatform.interviewRate / secondBest.interviewRate
-        : 1;
+      const bestPlatform =
+        platformsWithRates.length > 0 ? platformsWithRates[0] : null;
+      const secondBest =
+        platformsWithRates.length > 1 ? platformsWithRates[1] : null;
+      const multiplier =
+        bestPlatform && secondBest && secondBest.interviewRate > 0
+          ? bestPlatform.interviewRate / secondBest.interviewRate
+          : 1;
 
       return { bestPlatform, secondBest, multiplier };
     },
-    ["analytics", "best-platform-insight", userId, month || "all", year || "all"],
+    [
+      "analytics",
+      "best-platform-insight",
+      userId,
+      month || "all",
+      year || "all",
+    ],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
-    }
+    },
   )();
 }
-

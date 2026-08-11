@@ -1,19 +1,27 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { NewApplicationButton } from '@/app/_components/new-application-button';
-import { Search, X, Filter, RotateCcw, LayoutList, LayoutGrid, Plus } from 'lucide-react';
-import { statusOptions } from '@/lib/utils';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/select";
+import { NewApplicationButton } from "@/app/_components/new-application-button";
+import {
+  Search,
+  X,
+  Filter,
+  RotateCcw,
+  LayoutList,
+  LayoutGrid,
+  Plus,
+} from "lucide-react";
+import { statusOptions } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 interface DataTableToolbarProps {
   globalFilter: string;
@@ -64,7 +72,7 @@ export function DataTableToolbar({
               <button
                 type="button"
                 aria-label="Clear search filter"
-                onClick={() => setGlobalFilter('')}
+                onClick={() => setGlobalFilter("")}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 <X className="h-4 w-4" />
@@ -81,20 +89,27 @@ export function DataTableToolbar({
             <Filter className="h-3.5 w-3.5" />
             <span>Filters</span>
             {hasActiveFilters && (
-              <Badge variant="default" className="h-4 px-1.5 text-[10px] font-bold rounded-full">
+              <Badge
+                variant="default"
+                className="h-4 px-1.5 text-[10px] font-bold rounded-full"
+              >
                 •
               </Badge>
             )}
           </Button>
         </div>
 
-        <div className={cn(
-          "flex-col md:flex-row items-stretch md:items-center gap-2 flex-wrap transition-all",
-          isMobileFilterOpen ? "flex" : "hidden md:flex"
-        )}>
+        <div
+          className={cn(
+            "flex-col md:flex-row items-stretch md:items-center gap-2 flex-wrap transition-all",
+            isMobileFilterOpen ? "flex" : "hidden md:flex",
+          )}
+        >
           <Select
-            value={statusFilter || 'all'}
-            onValueChange={(value) => setStatusFilter(value === 'all' ? null : value)}
+            value={statusFilter || "all"}
+            onValueChange={(value) =>
+              setStatusFilter(value === "all" ? null : value)
+            }
           >
             <SelectTrigger className="w-full md:w-[140px] h-9 text-xs capitalize">
               <SelectValue placeholder="All Statuses" />
@@ -102,7 +117,11 @@ export function DataTableToolbar({
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
               {statusOptions.map((status) => (
-                <SelectItem key={status.value} value={status.value} className="capitalize text-xs">
+                <SelectItem
+                  key={status.value}
+                  value={status.value}
+                  className="capitalize text-xs"
+                >
                   {status.label}
                 </SelectItem>
               ))}
@@ -111,8 +130,10 @@ export function DataTableToolbar({
 
           {uniquePlatforms.length > 0 && (
             <Select
-              value={platformFilter || 'all'}
-              onValueChange={(value) => setPlatformFilter(value === 'all' ? null : value)}
+              value={platformFilter || "all"}
+              onValueChange={(value) =>
+                setPlatformFilter(value === "all" ? null : value)
+              }
             >
               <SelectTrigger className="w-full md:w-[140px] h-9 text-xs capitalize">
                 <SelectValue placeholder="All Platforms" />
@@ -120,7 +141,11 @@ export function DataTableToolbar({
               <SelectContent>
                 <SelectItem value="all">All Platforms</SelectItem>
                 {uniquePlatforms.map((plat) => (
-                  <SelectItem key={plat} value={plat} className="capitalize text-xs">
+                  <SelectItem
+                    key={plat}
+                    value={plat}
+                    className="capitalize text-xs"
+                  >
                     {plat}
                   </SelectItem>
                 ))}
@@ -146,12 +171,12 @@ export function DataTableToolbar({
         <div className="inline-flex items-center rounded-md bg-muted/60 p-1 gap-1 border border-border/20">
           <button
             type="button"
-            onClick={() => setViewMode('table')}
+            onClick={() => setViewMode("table")}
             className={cn(
-              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer',
-              viewMode === 'table'
-                ? 'bg-background text-foreground shadow-2xs font-semibold'
-                : 'text-muted-foreground hover:text-foreground'
+              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer",
+              viewMode === "table"
+                ? "bg-background text-foreground shadow-2xs font-semibold"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             <LayoutList className="h-3.5 w-3.5" />
@@ -159,12 +184,12 @@ export function DataTableToolbar({
           </button>
           <button
             type="button"
-            onClick={() => setViewMode('kanban')}
+            onClick={() => setViewMode("kanban")}
             className={cn(
-              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer',
-              viewMode === 'kanban'
-                ? 'bg-background text-foreground shadow-2xs font-semibold'
-                : 'text-muted-foreground hover:text-foreground'
+              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer",
+              viewMode === "kanban"
+                ? "bg-background text-foreground shadow-2xs font-semibold"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             <LayoutGrid className="h-3.5 w-3.5" />

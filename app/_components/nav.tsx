@@ -1,30 +1,33 @@
-'use client';
+"use client";
 
-import { Show, SignInButton, UserButton } from '@clerk/nextjs';
-import Link from 'next/link';
-import React from 'react';
-import { usePathname } from 'next/navigation';
-import { ModeToggle } from './mode-toggle';
-import { MobileSideNav } from './side-nav-mobile';
-import { Sparkles } from 'lucide-react';
+import { Show, SignInButton, UserButton } from "@clerk/nextjs";
+import Link from "next/link";
+import React from "react";
+import { usePathname } from "next/navigation";
+import { ModeToggle } from "./mode-toggle";
+import { MobileSideNav } from "./side-nav-mobile";
+import { Sparkles } from "lucide-react";
 
 const pageTitles: Record<string, string> = {
-  applications: 'Job Applications',
-  analytics: 'Analytics & Performance',
-  documents: 'Career Documents',
+  applications: "Job Applications",
+  analytics: "Analytics & Performance",
+  documents: "Career Documents",
 };
 
 const Nav = () => {
   const pathname = usePathname();
-  const rootSection = pathname.split('/')[1] || 'applications';
-  const currentTitle = pageTitles[rootSection] || 'Job Tracker';
+  const rootSection = pathname.split("/")[1] || "applications";
+  const currentTitle = pageTitles[rootSection] || "Job Tracker";
 
   return (
     <header className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-border/30 bg-background/80 px-4 sm:px-6 backdrop-blur-md">
       {/* Mobile Logo & Desktop Page Title */}
       <div className="flex items-center gap-3">
         {/* Mobile-only Logo */}
-        <Link href="/" className="flex md:hidden items-center gap-2 group cursor-pointer">
+        <Link
+          href="/"
+          className="flex md:hidden items-center gap-2 group cursor-pointer"
+        >
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs">
             <Sparkles className="h-4 w-4" />
           </div>

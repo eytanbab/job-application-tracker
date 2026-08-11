@@ -47,12 +47,8 @@
           "name": "application_status_history_application_id_job_applications_id_fk",
           "tableFrom": "application_status_history",
           "tableTo": "job_applications",
-          "columnsFrom": [
-            "application_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["application_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

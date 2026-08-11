@@ -12,7 +12,11 @@ import {
   Eye,
 } from "lucide-react";
 
-import { deleteFile, getDownloadUrl, getViewUrl } from "@/app/actions/documents";
+import {
+  deleteFile,
+  getDownloadUrl,
+  getViewUrl,
+} from "@/app/actions/documents";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -184,10 +188,7 @@ export const Document = ({ file, view = "table" }: Props) => {
               </Button>
             </DialogClose>
             <DialogClose asChild>
-              <Button
-                variant="outline"
-                disabled={isDeleting}
-              >
+              <Button variant="outline" disabled={isDeleting}>
                 Cancel
               </Button>
             </DialogClose>
@@ -234,7 +235,9 @@ export const Document = ({ file, view = "table" }: Props) => {
           </span>
           <div className="flex items-center gap-1.5">
             {file.file_size && (
-              <span className="text-[10px] text-muted-foreground">{file.file_size}</span>
+              <span className="text-[10px] text-muted-foreground">
+                {file.file_size}
+              </span>
             )}
             <span className="bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded font-bold text-[9px] tracking-wider uppercase">
               {file.category || "PDF"}
@@ -254,20 +257,30 @@ export const Document = ({ file, view = "table" }: Props) => {
             <FileText className="h-4 w-4" />
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="truncate max-w-[280px] sm:max-w-sm font-semibold text-foreground" title={file.title}>
+            <span
+              className="truncate max-w-[280px] sm:max-w-sm font-semibold text-foreground"
+              title={file.title}
+            >
               {file.title}
             </span>
             {file.category && (
               <span className="text-[10px] text-muted-foreground uppercase font-medium">
-                {file.category.replace('_', ' ')}
+                {file.category.replace("_", " ")}
               </span>
             )}
           </div>
         </div>
       </TableCell>
-      <TableCell className="text-muted-foreground py-3 truncate max-w-[200px] sm:max-w-xs" title={file.file_name}>
+      <TableCell
+        className="text-muted-foreground py-3 truncate max-w-[200px] sm:max-w-xs"
+        title={file.file_name}
+      >
         <div>{file.file_name}</div>
-        {file.file_size && <div className="text-[10px] text-muted-foreground/70">{file.file_size}</div>}
+        {file.file_size && (
+          <div className="text-[10px] text-muted-foreground/70">
+            {file.file_size}
+          </div>
+        )}
       </TableCell>
       <TableCell className="py-3 text-muted-foreground whitespace-nowrap">
         {format(file.created_at, "dd/MM/yyyy")}

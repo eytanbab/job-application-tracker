@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { Input } from '@/components/ui/input';
+import { Input } from "@/components/ui/input";
 import {
   Calendar,
   Clock,
@@ -8,17 +8,17 @@ import {
   DollarSign,
   FileText,
   MessageSquare,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { formatDate, parseISO } from 'date-fns';
-import { statusOptions, StatusKind } from '@/lib/utils';
-import { ApplicationTimeline, TimelineEntry } from './application-timeline';
+} from "@/components/ui/select";
+import { formatDate, parseISO } from "date-fns";
+import { statusOptions, StatusKind } from "@/lib/utils";
+import { ApplicationTimeline, TimelineEntry } from "./application-timeline";
 
 export interface ApplicationDetailViewProps {
   currentApp: {
@@ -57,15 +57,18 @@ export function ApplicationDetailView({
   onDeleteTimelineEntry,
 }: ApplicationDetailViewProps) {
   const formattedAppliedDate = currentApp.date_applied
-    ? formatDate(parseISO(currentApp.date_applied), 'PPP')
-    : 'Unknown date';
+    ? formatDate(parseISO(currentApp.date_applied), "PPP")
+    : "Unknown date";
 
   return (
     <>
       {/* Quick status update control */}
       <div className="rounded-md border border-border/30 bg-muted/30 p-3.5 space-y-2">
         <div className="flex items-center justify-between">
-          <label htmlFor="quick-status-select" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          <label
+            htmlFor="quick-status-select"
+            className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+          >
             Quick Update Status
           </label>
         </div>
@@ -76,12 +79,19 @@ export function ApplicationDetailView({
             value={currentKind}
             onValueChange={(cat) => handleQuickStatusChange(cat)}
           >
-            <SelectTrigger id="quick-status-select" className="w-full bg-card border-border/40 rounded-md">
+            <SelectTrigger
+              id="quick-status-select"
+              className="w-full bg-card border-border/40 rounded-md"
+            >
               <SelectValue placeholder="Select new status" />
             </SelectTrigger>
             <SelectContent>
               {statusOptions.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value} className="capitalize text-xs">
+                <SelectItem
+                  key={opt.value}
+                  value={opt.value}
+                  className="capitalize text-xs"
+                >
                   {opt.label}
                 </SelectItem>
               ))}
@@ -93,9 +103,11 @@ export function ApplicationDetailView({
               placeholder="Custom stage detail (optional)"
               value={quickStatusText}
               onChange={(e) => setQuickStatusText(e.target.value)}
-              onBlur={(e) => handleQuickStatusChange(currentKind, e.target.value)}
+              onBlur={(e) =>
+                handleQuickStatusChange(currentKind, e.target.value)
+              }
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                   e.currentTarget.blur();
                   handleQuickStatusChange(currentKind, quickStatusText);
                 }
@@ -103,7 +115,7 @@ export function ApplicationDetailView({
               className="h-9 text-xs bg-card border-border/40 pr-20"
             />
             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-medium pointer-events-none">
-              {isSaving ? 'Saving...' : 'Press Enter'}
+              {isSaving ? "Saving..." : "Press Enter"}
             </span>
           </div>
         </div>
@@ -115,25 +127,33 @@ export function ApplicationDetailView({
           <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
             <Calendar className="h-3.5 w-3.5" /> Date Applied
           </span>
-          <p className="font-medium text-foreground text-xs sm:text-sm">{formattedAppliedDate}</p>
+          <p className="font-medium text-foreground text-xs sm:text-sm">
+            {formattedAppliedDate}
+          </p>
         </div>
         <div className="space-y-1">
           <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
             <Clock className="h-3.5 w-3.5" /> Platform
           </span>
-          <p className="font-medium capitalize text-foreground text-xs sm:text-sm">{currentApp.platform || '-'}</p>
+          <p className="font-medium capitalize text-foreground text-xs sm:text-sm">
+            {currentApp.platform || "-"}
+          </p>
         </div>
         <div className="space-y-1">
           <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
             <MapPin className="h-3.5 w-3.5" /> Location
           </span>
-          <p className="font-medium text-foreground text-xs sm:text-sm">{currentApp.location || '-'}</p>
+          <p className="font-medium text-foreground text-xs sm:text-sm">
+            {currentApp.location || "-"}
+          </p>
         </div>
         <div className="space-y-1">
           <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
             <DollarSign className="h-3.5 w-3.5" /> Salary
           </span>
-          <p className="font-medium text-foreground text-xs sm:text-sm">{currentApp.salary || '-'}</p>
+          <p className="font-medium text-foreground text-xs sm:text-sm">
+            {currentApp.salary || "-"}
+          </p>
         </div>
       </div>
 
@@ -146,18 +166,19 @@ export function ApplicationDetailView({
           <div className="rounded-md border border-border/30 bg-card p-3 text-xs text-foreground leading-relaxed whitespace-pre-wrap max-h-44 overflow-y-auto">
             {currentApp.description?.trim()
               ? currentApp.description
-              : 'No job description provided.'}
+              : "No job description provided."}
           </div>
         </div>
 
         <div className="space-y-2">
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-            <MessageSquare className="h-3.5 w-3.5 text-primary" /> Personal Candidate Notes
+            <MessageSquare className="h-3.5 w-3.5 text-primary" /> Personal
+            Candidate Notes
           </h4>
           <div className="rounded-md border border-border/30 bg-card p-3 text-xs text-foreground leading-relaxed whitespace-pre-wrap max-h-44 overflow-y-auto">
             {currentApp.notes?.trim()
               ? currentApp.notes
-              : 'No personal notes added yet.'}
+              : "No personal notes added yet."}
           </div>
         </div>
       </div>

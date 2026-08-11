@@ -26,7 +26,7 @@ export const DocumentsList = async ({ query, view = "table" }: Props) => {
       (doc) =>
         doc.title.toLowerCase().includes(lowQuery) ||
         doc.file_name.toLowerCase().includes(lowQuery) ||
-        (doc.category && doc.category.toLowerCase().includes(lowQuery))
+        (doc.category && doc.category.toLowerCase().includes(lowQuery)),
     );
   }
 
@@ -86,8 +86,12 @@ export const DocumentsList = async ({ query, view = "table" }: Props) => {
           <TableRow className="hover:bg-transparent">
             <TableHead className="w-[45%] font-semibold">Title</TableHead>
             <TableHead className="w-[30%] font-semibold">File Name</TableHead>
-            <TableHead className="w-[15%] font-semibold">Date Uploaded</TableHead>
-            <TableHead className="w-[10%] text-right font-semibold">Actions</TableHead>
+            <TableHead className="w-[15%] font-semibold">
+              Date Uploaded
+            </TableHead>
+            <TableHead className="w-[10%] text-right font-semibold">
+              Actions
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

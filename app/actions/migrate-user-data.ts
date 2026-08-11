@@ -1,18 +1,18 @@
-'use server';
+"use server";
 
-import { auth } from '@clerk/nextjs/server';
-import { cookies } from 'next/headers';
-import { revalidateTag } from 'next/cache';
-import { db } from '@/app/db';
-import { documents, jobApplications } from '@/app/db/schema';
-import { eq } from 'drizzle-orm';
-import { applicationsTag, documentsTag } from './_utils/cache-tags';
-import { getCurrentUserIdOrThrow } from './_utils/user-context';
+import { auth } from "@clerk/nextjs/server";
+import { cookies } from "next/headers";
+import { revalidateTag } from "next/cache";
+import { db } from "@/app/db";
+import { documents, jobApplications } from "@/app/db/schema";
+import { eq } from "drizzle-orm";
+import { applicationsTag, documentsTag } from "./_utils/cache-tags";
+import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 
 export async function migrateGuestData() {
   const { userId } = await auth();
   const cookieStore = await cookies();
-  const guestId = cookieStore.get('guest_id')?.value;
+  const guestId = cookieStore.get("guest_id")?.value;
 
   if (!userId || !guestId || userId === guestId) return;
   const resolvedUserId = await getCurrentUserIdOrThrow();
@@ -29,11 +29,11 @@ export async function migrateGuestData() {
     .set({ userId: resolvedUserId })
     .where(eq(documents.userId, guestId));
 
-  revalidateTag(applicationsTag(guestId), 'max');
-  revalidateTag(applicationsTag(resolvedUserId), 'max');
-  revalidateTag(documentsTag(guestId), 'max');
-  revalidateTag(documentsTag(resolvedUserId), 'max');
+  revalidateTag(applicationsTag(guestId), "max");
+  revalidateTag(applicationsTag(resolvedUserId), "max");
+  revalidateTag(documentsTag(guestId), "max");
+  revalidateTag(documentsTag(resolvedUserId), "max");
 
   // clear the cookie
-  cookieStore.set('guest_id', '', { path: '/', maxAge: 0 });
+  cookieStore.set("guest_id", "", { path: "/", maxAge: 0 });
 }

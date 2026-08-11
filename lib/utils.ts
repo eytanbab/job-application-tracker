@@ -46,7 +46,7 @@ type MonthName = (typeof MONTH_NAMES)[number];
  * @returns An array of objects, each representing a month in a year with the number of applications.
  */
 export function formatApplicationsPerYear(
-  data: Data[]
+  data: Data[],
 ): { year: string; month: MonthName; numOfApplications: number }[] {
   // Group data by year
   const groupedByYear = data.reduce(
@@ -57,7 +57,7 @@ export function formatApplicationsPerYear(
       acc.get(year)!.set(monthNumber, numOfApplications);
       return acc;
     },
-    new Map<string, Map<number, number>>()
+    new Map<string, Map<number, number>>(),
   );
 
   // Generate the final structured result
@@ -69,7 +69,7 @@ export function formatApplicationsPerYear(
         month: MONTH_NAMES[index],
         numOfApplications: applications.get(monthNumber) || 0,
       };
-    })
+    }),
   );
 }
 
@@ -83,7 +83,7 @@ export function formatApplicationsPerYear(
  */
 export function transformApplicationsData(
   rawData: RawData[],
-  selectedYear: string
+  selectedYear: string,
 ): ChartData[] {
   // Filter data for the selected year
   const filteredData = rawData.filter((entry) => entry.year === selectedYear);
@@ -149,7 +149,7 @@ export const statusLabels = statusOptions.reduce(
     labels[option.value] = option.label;
     return labels;
   },
-  {} as Record<StatusKind, string>
+  {} as Record<StatusKind, string>,
 );
 
 export const isStatusKind = (status: string): status is StatusKind =>
@@ -157,7 +157,7 @@ export const isStatusKind = (status: string): status is StatusKind =>
 
 export const getStatusKind = (
   status: string | null | undefined,
-  statusCategory?: string | null
+  statusCategory?: string | null,
 ): StatusKind => {
   if (statusCategory && isStatusKind(statusCategory)) {
     return statusCategory;
@@ -187,7 +187,7 @@ export const getStatusKind = (
 
 export const getStatusDisplay = (
   status: string | null | undefined,
-  statusCategory?: string | null
+  statusCategory?: string | null,
 ) => {
   const kind = getStatusKind(status, statusCategory);
   const trimmed = status?.trim();
@@ -208,13 +208,13 @@ export const getStatusDisplay = (
 
 export const didReachInterviewStage = (
   status: string | null | undefined,
-  statusCategory?: string | null
+  statusCategory?: string | null,
 ): boolean => {
   const kind = getStatusKind(status, statusCategory);
   if (kind === "interview" || kind === "accepted") {
     return true;
   }
-  
+
   const normalizedStatus = (status ?? "").toLowerCase();
   return (
     normalizedStatus.includes("interview") ||
@@ -245,22 +245,33 @@ export function extractRootDomain(hostname: string): string {
 
   const last = parts[parts.length - 1];
   const secondLast = parts[parts.length - 2];
-  const common2ndLevel = new Set(["co", "com", "org", "net", "gov", "edu", "ac"]);
+  const common2ndLevel = new Set([
+    "co",
+    "com",
+    "org",
+    "net",
+    "gov",
+    "edu",
+    "ac",
+  ]);
 
-  if (last.length === 2 && common2ndLevel.has(secondLast) && parts.length >= 3) {
+  if (
+    last.length === 2 &&
+    common2ndLevel.has(secondLast) &&
+    parts.length >= 3
+  ) {
     return parts.slice(-3).join(".");
   }
 
   return parts.slice(-2).join(".");
 }
 
-
 /**
  * Safely formats dates (strings, Date objects, or numbers) without throwing RangeError: Invalid time value.
  */
 export function safeFormatDate(
   dateVal: Date | string | number | null | undefined,
-  formatStr: string = "yyyy-MM-dd"
+  formatStr: string = "yyyy-MM-dd",
 ): string {
   if (!dateVal) return dateFnsFormat(new Date(), formatStr);
   if (dateVal instanceof Date) {
@@ -287,4 +298,3 @@ export function safeFormatDate(
   }
   return dateFnsFormat(new Date(), formatStr);
 }
-

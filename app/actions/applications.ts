@@ -33,10 +33,10 @@ function normalizeApplicationStatus(values: FormValues): FormValues {
 }
 
 function purgeCaches(userId: string) {
-  revalidateTag(applicationsTag(userId), 'max');
-  revalidatePath('/applications');
-  revalidatePath('/analytics/overview');
-  revalidatePath('/analytics/insights');
+  revalidateTag(applicationsTag(userId), "max");
+  revalidatePath("/applications");
+  revalidatePath("/analytics/overview");
+  revalidatePath("/analytics/insights");
 }
 
 // Get all applications of current user (pure read function)
@@ -94,8 +94,6 @@ export async function getApplications() {
     return app;
   });
 }
-
-
 
 // Create a new application for the current user
 export async function createApplication(values: FormValues) {
@@ -203,7 +201,10 @@ export async function updateApplication(values: FormValues) {
       .orderBy(desc(applicationStatusHistory.createdAt))
       .limit(1);
 
-    if (latestHistory.length > 0 && latestHistory[0].createdAt > fiveMinutesAgo) {
+    if (
+      latestHistory.length > 0 &&
+      latestHistory[0].createdAt > fiveMinutesAgo
+    ) {
       await db
         .update(applicationStatusHistory)
         .set({
@@ -266,7 +267,7 @@ export async function getApplicationHistory(applicationId: string) {
   const hasAppliedEntry = history.some(
     (h) =>
       h.statusCategory === "applied" ||
-      (h.status && h.status.toLowerCase().includes("applied"))
+      (h.status && h.status.toLowerCase().includes("applied")),
   );
 
   if (!hasAppliedEntry && app[0].date_applied) {
@@ -282,7 +283,7 @@ export async function getApplicationHistory(applicationId: string) {
         });
         history.sort(
           (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         );
       }
     } catch {

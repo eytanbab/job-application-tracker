@@ -1,19 +1,30 @@
-'use client';
+"use client";
 
-import { ColumnDef } from '@tanstack/react-table';
-import { Trash2, ArrowUpDown, ExternalLink, Eye, Building2 } from 'lucide-react';
+import { ColumnDef } from "@tanstack/react-table";
+import {
+  Trash2,
+  ArrowUpDown,
+  ExternalLink,
+  Eye,
+  Building2,
+} from "lucide-react";
 
-import { EditApplicationSheet } from '@/app/_components/edit-application-sheet';
+import { EditApplicationSheet } from "@/app/_components/edit-application-sheet";
 import {
   deleteApplication,
   updateApplication,
-} from '@/app/actions/applications';
-import { formatDate, parseISO } from 'date-fns';
-import { toast } from '@/hooks/use-toast';
+} from "@/app/actions/applications";
+import { formatDate, parseISO } from "date-fns";
+import { toast } from "@/hooks/use-toast";
 
-import { Button } from '@/components/ui/button';
-import { getStatusDisplay, getStatusKind, statusLabels, StatusKind } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
+import { Button } from "@/components/ui/button";
+import {
+  getStatusDisplay,
+  getStatusKind,
+  statusLabels,
+  StatusKind,
+} from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogClose,
@@ -23,10 +34,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 
-import { z } from 'zod';
-import { insertApplicationSchema } from '@/app/db/schema';
+import { z } from "zod";
+import { insertApplicationSchema } from "@/app/db/schema";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const columnsSchema = insertApplicationSchema.omit({ userId: true });
@@ -37,30 +48,38 @@ export interface CustomColumnMeta {
 }
 
 const statusBadgeClasses: Record<StatusKind, string> = {
-  applied: 'bg-primary/15 text-primary border-primary/25 rounded-md font-semibold',
+  applied:
+    "bg-primary/15 text-primary border-primary/25 rounded-md font-semibold",
   accepted:
-    'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/25 rounded-md font-semibold',
-  ghosted: 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30 rounded-md font-semibold',
-  review: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/25 rounded-md font-semibold',
+    "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/25 rounded-md font-semibold",
+  ghosted:
+    "bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30 rounded-md font-semibold",
+  review:
+    "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/25 rounded-md font-semibold",
   interview:
-    'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/25 rounded-md font-semibold',
-  rejected: 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/25 rounded-md font-semibold',
-  other: 'bg-secondary text-secondary-foreground border-border rounded-md font-medium',
+    "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/25 rounded-md font-semibold",
+  rejected:
+    "bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/25 rounded-md font-semibold",
+  other:
+    "bg-secondary text-secondary-foreground border-border rounded-md font-medium",
 };
 
 const handleApplicationDelete = async (id: string) => {
   try {
     await deleteApplication(id);
-    toast({ description: 'Successfully deleted application!' });
+    toast({ description: "Successfully deleted application!" });
   } catch (err) {
     console.error(err);
-    toast({ description: 'Failed to delete application', variant: 'destructive' });
+    toast({
+      description: "Failed to delete application",
+      variant: "destructive",
+    });
   }
 };
 
 export const columns: ColumnDef<FormValues>[] = [
   {
-    id: 'select',
+    id: "select",
     header: ({ table }) => (
       <input
         type="checkbox"
@@ -88,14 +107,14 @@ export const columns: ColumnDef<FormValues>[] = [
     enableHiding: false,
   },
   {
-    id: 'role_name',
+    id: "role_name",
     accessorFn: (row) => `${row.role_name} ${row.company_name}`,
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           className="font-semibold p-0 hover:bg-transparent"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Role & Company
           <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
@@ -117,13 +136,13 @@ export const columns: ColumnDef<FormValues>[] = [
     },
   },
   {
-    accessorKey: 'date_applied',
+    accessorKey: "date_applied",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           className="font-semibold p-0 hover:bg-transparent"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Date Applied
           <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
@@ -131,21 +150,25 @@ export const columns: ColumnDef<FormValues>[] = [
       );
     },
     cell: ({ row }) => {
-      const rawDate = row.getValue<string>('date_applied');
+      const rawDate = row.getValue<string>("date_applied");
       if (!rawDate) return <span className="text-muted-foreground">-</span>;
-      const formattedDate = formatDate(parseISO(rawDate), 'dd/MM/yyyy');
-      return <div className="text-sm font-medium text-foreground">{formattedDate}</div>;
+      const formattedDate = formatDate(parseISO(rawDate), "dd/MM/yyyy");
+      return (
+        <div className="text-sm font-medium text-foreground">
+          {formattedDate}
+        </div>
+      );
     },
   },
   {
-    id: 'status',
+    id: "status",
     accessorFn: (row) => getStatusKind(row.status, row.statusCategory),
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           className="font-semibold p-0 hover:bg-transparent"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Status
           <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
@@ -153,10 +176,13 @@ export const columns: ColumnDef<FormValues>[] = [
       );
     },
     cell: ({ row }) => {
-      const kind = getStatusKind(row.original.status, row.original.statusCategory);
+      const kind = getStatusKind(
+        row.original.status,
+        row.original.statusCategory,
+      );
       const displayText = getStatusDisplay(
         row.original.status,
-        row.original.statusCategory
+        row.original.statusCategory,
       );
       return (
         <Badge
@@ -170,13 +196,13 @@ export const columns: ColumnDef<FormValues>[] = [
     },
   },
   {
-    accessorKey: 'location',
+    accessorKey: "location",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           className="font-semibold p-0 hover:bg-transparent"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Location
           <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
@@ -184,18 +210,22 @@ export const columns: ColumnDef<FormValues>[] = [
       );
     },
     cell: ({ row }) => {
-      const location = row.getValue<string>('location');
-      return <div className="text-sm truncate max-w-[140px] text-muted-foreground">{location || '-'}</div>;
+      const location = row.getValue<string>("location");
+      return (
+        <div className="text-sm truncate max-w-[140px] text-muted-foreground">
+          {location || "-"}
+        </div>
+      );
     },
   },
   {
-    accessorKey: 'platform',
+    accessorKey: "platform",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           className="font-semibold p-0 hover:bg-transparent"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Platform
           <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
@@ -203,7 +233,7 @@ export const columns: ColumnDef<FormValues>[] = [
       );
     },
     cell: ({ row }) => {
-      const platform = row.getValue<string>('platform');
+      const platform = row.getValue<string>("platform");
       return (
         <Badge variant="secondary" className="capitalize text-xs font-normal">
           {platform}
@@ -212,13 +242,13 @@ export const columns: ColumnDef<FormValues>[] = [
     },
   },
   {
-    accessorKey: 'salary',
+    accessorKey: "salary",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           className="font-semibold p-0 hover:bg-transparent"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Salary
           <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
@@ -226,19 +256,19 @@ export const columns: ColumnDef<FormValues>[] = [
       );
     },
     cell: ({ row }) => {
-      const salary = row.getValue<string>('salary');
+      const salary = row.getValue<string>("salary");
       return (
         <div className="text-sm font-medium text-muted-foreground truncate max-w-[120px]">
-          {salary || '-'}
+          {salary || "-"}
         </div>
       );
     },
   },
   {
-    accessorKey: 'link',
+    accessorKey: "link",
     header: () => <span className="font-semibold text-xs">Link</span>,
     cell: ({ row }) => {
-      const url = row.getValue<string>('link');
+      const url = row.getValue<string>("link");
       if (!url) return null;
       return (
         <a
@@ -256,7 +286,7 @@ export const columns: ColumnDef<FormValues>[] = [
     },
   },
   {
-    id: 'actions',
+    id: "actions",
     header: () => <span className="sr-only">Actions</span>,
     cell: ({ row, table }) => {
       const editDefaults = {
@@ -269,13 +299,13 @@ export const columns: ColumnDef<FormValues>[] = [
         try {
           await updateApplication(values);
           toast({
-            description: 'Application updated successfully!',
-            variant: 'default',
+            description: "Application updated successfully!",
+            variant: "default",
           });
         } catch (err) {
           toast({
-            description: 'Failed to update application.',
-            variant: 'destructive',
+            description: "Failed to update application.",
+            variant: "destructive",
           });
           throw err;
         }
@@ -299,7 +329,7 @@ export const columns: ColumnDef<FormValues>[] = [
               }}
               onKeyDown={(e) => {
                 e.stopPropagation();
-                if (e.key === 'Enter' || e.key === ' ') {
+                if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
                   meta.onSelectApplication!(row.original);
                 }
@@ -332,7 +362,15 @@ export const columns: ColumnDef<FormValues>[] = [
                 <DialogTitle>Are you absolutely sure?</DialogTitle>
                 <DialogDescription>
                   This action cannot be undone. This will permanently delete
-                  your application for <strong className="text-foreground">{row.original.role_name}</strong> at <strong className="text-foreground">{row.original.company_name}</strong>.
+                  your application for{" "}
+                  <strong className="text-foreground">
+                    {row.original.role_name}
+                  </strong>{" "}
+                  at{" "}
+                  <strong className="text-foreground">
+                    {row.original.company_name}
+                  </strong>
+                  .
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter className="gap-2 sm:gap-0">

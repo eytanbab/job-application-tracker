@@ -1,4 +1,3 @@
 - [x] "Quick Update Status" rerenders the form each keystroke when changing custom stage detail (FIXED: Decoupled quick status input state from currentApp and removed currentApp.status from history refetch useEffect dependencies).
 - [x] The search functionality in `/applications` does not work properly. For example, searching for a company doesn't show all the results containing this company name.
 - [x] Updating the status category does not update the stage details in the edit application form. If a user changes the status category from "Applied" to any other status, the stage details stays on apply.
-

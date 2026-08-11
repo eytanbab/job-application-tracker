@@ -73,7 +73,7 @@ export function FileUpload() {
       try {
         const { fileKey, signedUrl, error } = await generatePresignedUrl(
           file.name,
-          file.type
+          file.type,
         );
 
         if (error) {
@@ -90,7 +90,14 @@ export function FileUpload() {
 
           if (res.ok) {
             const fileUrl = signedUrl.split("?")[0];
-            await createFile(title, fileUrl, file.name, fileKey, category, formattedSize);
+            await createFile(
+              title,
+              fileUrl,
+              file.name,
+              fileKey,
+              category,
+              formattedSize,
+            );
             toast({
               description: (
                 <div className="flex items-center gap-2">
@@ -229,7 +236,7 @@ export function FileUpload() {
                         isDragging
                           ? "border-primary bg-primary/5"
                           : "border-muted-foreground/20",
-                        selectedFile ? "bg-muted/30 border-primary/50" : ""
+                        selectedFile ? "bg-muted/30 border-primary/50" : "",
                       )}
                     >
                       <input
@@ -244,7 +251,7 @@ export function FileUpload() {
                             if (!form.getValues("title")) {
                               form.setValue(
                                 "title",
-                                file.name.replace(/\.[^/.]+$/, "")
+                                file.name.replace(/\.[^/.]+$/, ""),
                               );
                             }
                           }

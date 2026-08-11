@@ -6,11 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 
-import {
-  getStatusDisplay,
-  getStatusKind,
-  safeFormatDate,
-} from "@/lib/utils";
+import { getStatusDisplay, getStatusKind, safeFormatDate } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -44,7 +40,9 @@ const formSchema = z.object({
   link: z
     .string()
     .trim()
-    .transform((val) => (val && !/^https?:\/\//i.test(val) ? `https://${val}` : val))
+    .transform((val) =>
+      val && !/^https?:\/\//i.test(val) ? `https://${val}` : val,
+    )
     .pipe(z.string().url({ message: "Please enter a valid URL." })),
   description: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
@@ -103,11 +101,7 @@ export const ApplicationForm = ({
       location: values.location.trim(),
       platform: values.platform.toLowerCase().trim(),
       statusCategory: getStatusKind(values.status, values.statusCategory),
-      status: getStatusDisplay(
-        values.status,
-        values.statusCategory
-      )
-        .trim(),
+      status: getStatusDisplay(values.status, values.statusCategory).trim(),
       salary: values.salary?.trim() || "",
     };
 

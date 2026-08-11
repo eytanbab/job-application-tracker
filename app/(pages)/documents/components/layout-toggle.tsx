@@ -4,7 +4,11 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function LayoutToggle({ currentView }: { currentView: "table" | "grid" }) {
+export function LayoutToggle({
+  currentView,
+}: {
+  currentView: "table" | "grid";
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

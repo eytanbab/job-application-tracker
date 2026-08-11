@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { z } from 'zod';
+import { z } from "zod";
 
-import { createApplication } from '@/app/actions/applications';
-import { useToast } from '@/hooks/use-toast';
-import { ApplicationForm } from '@/app/_components/application-form';
-import { insertApplicationSchema } from '@/app/db/schema';
-import { format } from 'date-fns';
+import { createApplication } from "@/app/actions/applications";
+import { useToast } from "@/hooks/use-toast";
+import { ApplicationForm } from "@/app/_components/application-form";
+import { insertApplicationSchema } from "@/app/db/schema";
+import { format } from "date-fns";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
@@ -21,31 +21,31 @@ export default function NewApplication() {
     try {
       await createApplication(values);
       toast({
-        description: 'Application submitted successfully!',
-        variant: 'default',
+        description: "Application submitted successfully!",
+        variant: "default",
       });
     } catch (err) {
       toast({
-        description: 'Failed to submit application.',
-        variant: 'destructive',
+        description: "Failed to submit application.",
+        variant: "destructive",
       });
       throw err;
     }
   };
 
   const defaultValues = {
-    role_name: '',
-    company_name: '',
-    date_applied: format(Date.now(), 'yyyy-MM-dd'),
-    link: '',
-    description: '',
-    location: '',
-    status: 'Applied',
-    statusCategory: 'applied',
-    platform: '',
-    month: '',
-    year: '',
-    salary: '',
+    role_name: "",
+    company_name: "",
+    date_applied: format(Date.now(), "yyyy-MM-dd"),
+    link: "",
+    description: "",
+    location: "",
+    status: "Applied",
+    statusCategory: "applied",
+    platform: "",
+    month: "",
+    year: "",
+    salary: "",
   };
 
   return (

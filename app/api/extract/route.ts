@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     if (!url) {
       return NextResponse.json(
         { status: "fail", message: "URL is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     }
     if (isDevelopment) {
       console.log(
-        `[API] Scraper successful. Raw content length: ${webpage.length}`
+        `[API] Scraper successful. Raw content length: ${webpage.length}`,
       );
     }
 
@@ -73,7 +73,7 @@ Content to parse:
 
     if (!response || !response.candidates || response.candidates.length === 0) {
       console.error(
-        "[API] Gemini returned no candidates (possibly safety block)."
+        "[API] Gemini returned no candidates (possibly safety block).",
       );
       return NextResponse.json({
         status: "fail",
@@ -85,7 +85,7 @@ Content to parse:
 
     if (isDevelopment) {
       console.log(
-        `[API] Gemini responded successfully. Result length: ${res?.length}`
+        `[API] Gemini responded successfully. Result length: ${res?.length}`,
       );
     }
 
@@ -105,7 +105,7 @@ Content to parse:
         status: "fail",
         message: "Failed to extract information due to an error.",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

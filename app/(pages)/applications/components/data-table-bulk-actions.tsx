@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { CheckCircle2, Trash2, X } from 'lucide-react';
-import { statusOptions } from '@/lib/utils';
+} from "@/components/ui/select";
+import { CheckCircle2, Trash2, X } from "lucide-react";
+import { statusOptions } from "@/lib/utils";
 
 interface DataTableBulkActionsProps {
   selectedCount: number;
@@ -54,7 +54,11 @@ export function DataTableBulkActions({
           </SelectTrigger>
           <SelectContent side="top">
             {statusOptions.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value} className="capitalize text-xs">
+              <SelectItem
+                key={opt.value}
+                value={opt.value}
+                className="capitalize text-xs"
+              >
                 {opt.label}
               </SelectItem>
             ))}

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Building2,
   Calendar,
@@ -14,15 +14,15 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   getStatusDisplay,
   getStatusKind,
   statusLabels,
   statusOptions,
   StatusKind,
-} from '@/lib/utils';
-import { formatDate, parseISO } from 'date-fns';
+} from "@/lib/utils";
+import { formatDate, parseISO } from "date-fns";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +31,7 @@ import {
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 
 export interface KanbanItem {
   id?: string;
@@ -71,14 +71,16 @@ export function KanbanCard({
   onQuickStatusMove,
 }: KanbanCardProps) {
   const formattedDate = item.date_applied
-    ? formatDate(parseISO(item.date_applied), 'MMM d')
-    : '';
+    ? formatDate(parseISO(item.date_applied), "MMM d")
+    : "";
   const displayLabel = getStatusDisplay(item.status, item.statusCategory);
 
   const isCustomStage =
     Boolean(item.status) &&
     item.status.trim().toLowerCase() !==
-      (statusLabels[getStatusKind(item.status, item.statusCategory)] || '').toLowerCase();
+      (
+        statusLabels[getStatusKind(item.status, item.statusCategory)] || ""
+      ).toLowerCase();
 
   return (
     <Card
@@ -87,12 +89,12 @@ export function KanbanCard({
       role="article"
       aria-label={`Application for ${item.role_name} at ${item.company_name}`}
       onDragStart={(e) => {
-        e.dataTransfer.setData('application/json', JSON.stringify(item));
+        e.dataTransfer.setData("application/json", JSON.stringify(item));
       }}
       className="group relative cursor-grab active:cursor-grabbing border bg-card hover:border-primary/50 transition-[border-color,box-shadow] hover:shadow-md rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       onClick={() => onSelectApplication(item)}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           onSelectApplication(item);
         }
@@ -109,7 +111,10 @@ export function KanbanCard({
           </p>
         </div>
 
-        <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="flex items-center gap-0.5 shrink-0"
+          onClick={(e) => e.stopPropagation()}
+        >
           {prevCol && (
             <Button
               variant="ghost"
@@ -179,7 +184,10 @@ export function KanbanCard({
 
       <CardContent className="p-3 pt-1 space-y-2 text-xs">
         {isCustomStage && (
-          <Badge variant="outline" className="text-[10px] font-normal truncate max-w-full block rounded-sm">
+          <Badge
+            variant="outline"
+            className="text-[10px] font-normal truncate max-w-full block rounded-sm"
+          >
             {displayLabel}
           </Badge>
         )}

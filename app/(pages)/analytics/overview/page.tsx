@@ -14,14 +14,21 @@ import dynamicImport from "next/dynamic";
 
 const PieChartComponent = dynamicImport(
   () => import("../components/pie-chart").then((m) => m.PieChartComponent),
-  { loading: () => <div className="h-64 bg-card rounded-xl border border-border/30 animate-pulse" /> }
+  {
+    loading: () => (
+      <div className="h-64 bg-card rounded-xl border border-border/30 animate-pulse" />
+    ),
+  },
 );
 const YearlyTrendsCard = dynamicImport(
-  () => import("../components/yearly-trends-card").then((m) => m.YearlyTrendsCard),
-  { loading: () => <div className="h-64 bg-card rounded-xl border border-border/30 animate-pulse" /> }
+  () =>
+    import("../components/yearly-trends-card").then((m) => m.YearlyTrendsCard),
+  {
+    loading: () => (
+      <div className="h-64 bg-card rounded-xl border border-border/30 animate-pulse" />
+    ),
+  },
 );
-
-
 
 import { KpiSummary } from "../components/kpi-summary";
 import { AnalyticsFilter } from "../components/analytics-filter";
@@ -68,25 +75,31 @@ export default async function Overview(props: {
   ]);
 
   const totalApplications = breakdownData.total;
-  
-  const interviewRate = breakdownData.total 
-    ? breakdownData.stages.interview / breakdownData.total 
+
+  const interviewRate = breakdownData.total
+    ? breakdownData.stages.interview / breakdownData.total
     : 0;
-  
+
   const interviewConversionRate = breakdownData.stages.interview
     ? breakdownData.stages.accepted / breakdownData.stages.interview
     : 0;
 
-  const totalRejections = breakdownData.breakdown.rejectedResume + breakdownData.breakdown.rejectedInterview;
-  const rejectionRate = breakdownData.total 
-    ? totalRejections / breakdownData.total 
+  const totalRejections =
+    breakdownData.breakdown.rejectedResume +
+    breakdownData.breakdown.rejectedInterview;
+  const rejectionRate = breakdownData.total
+    ? totalRejections / breakdownData.total
     : 0;
 
   return (
     <div className="flex flex-col gap-6 w-full opacity-100 transition-opacity duration-500">
       {/* 1. Header Filter Toolbar */}
-      <Suspense fallback={<div className="h-14 w-full bg-card rounded-xl animate-pulse" />}>
-        <AnalyticsFilter years={years.length > 0 ? years : ['2025']} />
+      <Suspense
+        fallback={
+          <div className="h-14 w-full bg-card rounded-xl animate-pulse" />
+        }
+      >
+        <AnalyticsFilter years={years.length > 0 ? years : ["2025"]} />
       </Suspense>
 
       {/* 2. Key Performance Rates */}
@@ -136,7 +149,7 @@ export default async function Overview(props: {
             total={totalApplications}
           />
           <YearlyTrendsCard
-            years={years.length > 0 ? years : ['2025']}
+            years={years.length > 0 ? years : ["2025"]}
             statusesPerYear={statusesPerYear}
             applicationsPerYear={applicationsPerYear}
             globalYear={year}

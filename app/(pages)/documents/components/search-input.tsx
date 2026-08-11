@@ -9,7 +9,7 @@ export function SearchInput({ defaultValue }: { defaultValue?: string }) {
     "q",
     parseAsString
       .withDefault(defaultValue || "")
-      .withOptions({ shallow: false, throttleMs: 300 })
+      .withOptions({ shallow: false, throttleMs: 300 }),
   );
 
   return (

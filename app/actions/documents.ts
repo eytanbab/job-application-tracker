@@ -14,12 +14,12 @@ import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 
 export async function generatePresignedUrl(
   fileName: string,
-  contentType: string
+  contentType: string,
 ) {
   try {
     if (!fileName || !contentType) {
       throw new Error(
-        "Missing required parameters: fileName and contentType and userId"
+        "Missing required parameters: fileName and contentType and userId",
       );
     }
 
@@ -62,15 +62,23 @@ export async function createFile(
   file_name: string,
   file_key: string,
   category: string = "resume",
-  file_size?: string
+  file_size?: string,
 ) {
   const userId = await getCurrentUserIdOrThrow();
 
   await db
     .insert(documents)
-    .values({ title, doc_url, userId, file_name, file_key, category, file_size })
+    .values({
+      title,
+      doc_url,
+      userId,
+      file_name,
+      file_key,
+      category,
+      file_size,
+    })
     .returning({ insertedId: documents.id });
-  revalidateTag(documentsTag(userId), 'max');
+  revalidateTag(documentsTag(userId), "max");
 }
 
 export async function getFiles() {
@@ -106,7 +114,7 @@ export async function deleteFile(id: string) {
     console.error("Delete document error:", err);
     throw err;
   } finally {
-    revalidateTag(documentsTag(userId), 'max');
+    revalidateTag(documentsTag(userId), "max");
   }
 }
 

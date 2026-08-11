@@ -1,26 +1,29 @@
-'use client';
+"use client";
 
-import { ColumnDef } from '@tanstack/react-table';
-import { cn } from '@/lib/utils';
-import { Plus } from 'lucide-react';
-import { ApplicationsKpiSummary } from './components/applications-kpi-summary';
-import { ApplicationsKanban } from './components/applications-kanban';
-import { ApplicationDetailSheet } from './components/application-detail-sheet';
-import { EditApplicationSheet } from '@/app/_components/edit-application-sheet';
-import { ApplicationForm } from '@/app/_components/application-form';
+import { ColumnDef } from "@tanstack/react-table";
+import { cn } from "@/lib/utils";
+import { Plus } from "lucide-react";
+import { ApplicationsKpiSummary } from "./components/applications-kpi-summary";
+import { ApplicationsKanban } from "./components/applications-kanban";
+import { ApplicationDetailSheet } from "./components/application-detail-sheet";
+import { EditApplicationSheet } from "@/app/_components/edit-application-sheet";
+import { ApplicationForm } from "@/app/_components/application-form";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { type FormValues } from './columns';
-import { createApplication, updateApplication } from '@/app/actions/applications';
-import { toast } from '@/hooks/use-toast';
-import { DataTableToolbar } from './components/data-table-toolbar';
-import { DataTableGrid } from './components/data-table-grid';
-import { DataTableBulkActions } from './components/data-table-bulk-actions';
-import { useDataTable, ApplicationRow } from './hooks/use-data-table';
+} from "@/components/ui/dialog";
+import { type FormValues } from "./columns";
+import {
+  createApplication,
+  updateApplication,
+} from "@/app/actions/applications";
+import { toast } from "@/hooks/use-toast";
+import { DataTableToolbar } from "./components/data-table-toolbar";
+import { DataTableGrid } from "./components/data-table-grid";
+import { DataTableBulkActions } from "./components/data-table-bulk-actions";
+import { useDataTable, ApplicationRow } from "./hooks/use-data-table";
 
 interface DataTableProps<TData extends ApplicationRow, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -83,7 +86,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
         onOpenCreate={() => setIsCreateOpen(true)}
       />
 
-      {viewMode === 'kanban' ? (
+      {viewMode === "kanban" ? (
         <ApplicationsKanban
           data={data}
           searchFilter={globalFilter}
@@ -114,7 +117,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
         onClick={() => setIsCreateOpen(true)}
         className={cn(
           "fixed right-5 z-40 md:hidden h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer ring-4 ring-background/50",
-          selectedCount > 0 ? "bottom-32" : "bottom-6"
+          selectedCount > 0 ? "bottom-32" : "bottom-6",
         )}
         aria-label="Add Application"
         title="Add Application"
@@ -125,7 +128,9 @@ export function DataTable<TData extends ApplicationRow, TValue>({
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="w-full sm:max-w-md md:max-w-lg overflow-y-auto max-h-[90vh] p-6">
           <DialogHeader className="pb-4 border-b">
-            <DialogTitle className="text-xl font-bold">New Job Application</DialogTitle>
+            <DialogTitle className="text-xl font-bold">
+              New Job Application
+            </DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <ApplicationForm
@@ -134,10 +139,13 @@ export function DataTable<TData extends ApplicationRow, TValue>({
               onSubmit={async (values) => {
                 try {
                   await createApplication(values);
-                  toast({ description: 'Application created successfully!' });
+                  toast({ description: "Application created successfully!" });
                   setIsCreateOpen(false);
                 } catch {
-                  toast({ description: 'Failed to create application', variant: 'destructive' });
+                  toast({
+                    description: "Failed to create application",
+                    variant: "destructive",
+                  });
                 }
               }}
             />
@@ -164,10 +172,13 @@ export function DataTable<TData extends ApplicationRow, TValue>({
           onSubmit={async (values) => {
             try {
               await updateApplication(values);
-              toast({ description: 'Application updated successfully!' });
+              toast({ description: "Application updated successfully!" });
               setEditingApp(null);
             } catch {
-              toast({ description: 'Failed to update application', variant: 'destructive' });
+              toast({
+                description: "Failed to update application",
+                variant: "destructive",
+              });
             }
           }}
         />

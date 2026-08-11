@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Users, XCircle, Clock } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileText, Users, XCircle, Clock } from "lucide-react";
 
 type Props = {
   totalApplications: number;
@@ -27,8 +27,12 @@ export function KpiSummary({
           <FileText className="h-4 w-4 text-muted-foreground/70" />
         </CardHeader>
         <CardContent>
-          <p className="text-3xl font-extrabold text-foreground">{formatPercent(interviewRate)}</p>
-          <p className="text-xs text-muted-foreground mt-1">Applications reaching interview stage</p>
+          <p className="text-3xl font-extrabold text-foreground">
+            {formatPercent(interviewRate)}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Applications reaching interview stage
+          </p>
         </CardContent>
       </Card>
 
@@ -40,8 +44,12 @@ export function KpiSummary({
           <Users className="h-4 w-4 text-muted-foreground/70" />
         </CardHeader>
         <CardContent>
-          <p className="text-3xl font-extrabold text-foreground">{formatPercent(interviewConversionRate)}</p>
-          <p className="text-xs text-muted-foreground mt-1">Interviews converted to offer leads</p>
+          <p className="text-3xl font-extrabold text-foreground">
+            {formatPercent(interviewConversionRate)}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Interviews converted to offer leads
+          </p>
         </CardContent>
       </Card>
 
@@ -53,8 +61,12 @@ export function KpiSummary({
           <XCircle className="h-4 w-4 text-rose-500/70" />
         </CardHeader>
         <CardContent>
-          <p className="text-3xl font-extrabold text-foreground">{formatPercent(rejectionRate)}</p>
-          <p className="text-xs text-muted-foreground mt-1">Rejections across resume & interview</p>
+          <p className="text-3xl font-extrabold text-foreground">
+            {formatPercent(rejectionRate)}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Rejections across resume & interview
+          </p>
         </CardContent>
       </Card>
 
@@ -67,10 +79,14 @@ export function KpiSummary({
         </CardHeader>
         <CardContent>
           <p className="text-3xl font-extrabold text-foreground">
-            {averageResponseDays !== null ? `${averageResponseDays} ${averageResponseDays === 1 ? 'Day' : 'Days'}` : 'N/A'}
+            {averageResponseDays !== null
+              ? `${averageResponseDays} ${averageResponseDays === 1 ? "Day" : "Days"}`
+              : "N/A"}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            {averageResponseDays !== null ? 'Average time to recruiter response' : 'Requires history date updates to calculate'}
+            {averageResponseDays !== null
+              ? "Average time to recruiter response"
+              : "Requires history date updates to calculate"}
           </p>
         </CardContent>
       </Card>

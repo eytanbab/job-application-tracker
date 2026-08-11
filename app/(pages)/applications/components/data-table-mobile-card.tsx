@@ -1,22 +1,27 @@
-'use client';
+"use client";
 
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Building2, Calendar, ExternalLink, MapPin } from 'lucide-react';
-import { getStatusDisplay, getStatusKind, StatusKind } from '@/lib/utils';
-import { formatDate, parseISO } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Building2, Calendar, ExternalLink, MapPin } from "lucide-react";
+import { getStatusDisplay, getStatusKind, StatusKind } from "@/lib/utils";
+import { formatDate, parseISO } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const statusBadgeClasses: Record<StatusKind, string> = {
-  applied: 'bg-primary/15 text-primary border border-primary/25 rounded-md font-semibold',
+  applied:
+    "bg-primary/15 text-primary border border-primary/25 rounded-md font-semibold",
   accepted:
-    'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 rounded-md font-semibold',
-  ghosted: 'bg-muted/80 text-muted-foreground border border-border/50 rounded-md font-medium',
-  review: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/25 rounded-md font-semibold',
+    "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 rounded-md font-semibold",
+  ghosted:
+    "bg-muted/80 text-muted-foreground border border-border/50 rounded-md font-medium",
+  review:
+    "bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/25 rounded-md font-semibold",
   interview:
-    'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25 rounded-md font-semibold',
-  rejected: 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/25 rounded-md font-semibold',
-  other: 'bg-secondary text-secondary-foreground border border-border rounded-md font-medium',
+    "bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25 rounded-md font-semibold",
+  rejected:
+    "bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/25 rounded-md font-semibold",
+  other:
+    "bg-secondary text-secondary-foreground border border-border rounded-md font-medium",
 };
 
 interface MobileCardItem {
@@ -46,8 +51,8 @@ export function DataTableMobileCard({
   const kind = getStatusKind(item.status, item.statusCategory);
   const displayLabel = getStatusDisplay(item.status, item.statusCategory);
   const formattedDate = item.date_applied
-    ? formatDate(parseISO(item.date_applied), 'MMM d, yyyy')
-    : '';
+    ? formatDate(parseISO(item.date_applied), "MMM d, yyyy")
+    : "";
 
   return (
     <Card
@@ -56,7 +61,7 @@ export function DataTableMobileCard({
         "cursor-pointer p-4 space-y-3 transition-all",
         isSelected
           ? "border-primary bg-primary/5 ring-1 ring-primary/20 shadow-sm"
-          : "border bg-card hover:border-primary/50"
+          : "border bg-card hover:border-primary/50",
       )}
     >
       <div className="flex items-start gap-3">

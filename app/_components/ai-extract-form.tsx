@@ -25,7 +25,9 @@ const aiFormSchema = z.object({
     .string()
     .trim()
     .min(1, { message: "Please paste a job posting URL." })
-    .transform((val) => (val && !/^https?:\/\//i.test(val) ? `https://${val}` : val))
+    .transform((val) =>
+      val && !/^https?:\/\//i.test(val) ? `https://${val}` : val,
+    )
     .pipe(z.string().url({ message: "Please enter a valid job posting URL." })),
 });
 
@@ -60,7 +62,9 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
       });
 
       if (!response.ok) {
-        setExtractError(`Server status ${response.status}: Could not scrape posting.`);
+        setExtractError(
+          `Server status ${response.status}: Could not scrape posting.`,
+        );
         toast({
           title: "Extraction failed",
           description: `Unable to read job details from this URL. Please enter details manually below.`,
@@ -75,7 +79,8 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
         setExtractError("Job details could not be parsed from this page.");
         toast({
           title: "Parsing failed",
-          description: "Could not parse job details. Please fill out the form manually.",
+          description:
+            "Could not parse job details. Please fill out the form manually.",
           variant: "destructive",
         });
         return;
@@ -143,7 +148,11 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={isPending || isLoading} className="h-9 text-xs font-semibold">
+        <Button
+          type="submit"
+          disabled={isPending || isLoading}
+          className="h-9 text-xs font-semibold"
+        >
           {isLoading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin mr-2" />

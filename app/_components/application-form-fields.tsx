@@ -139,10 +139,11 @@ export function ApplicationFormFields({
                 const isDefaultOrEmpty =
                   !currentStatus ||
                   Object.values(statusLabels).some(
-                    (lbl) => lbl.toLowerCase() === currentStatus.toLowerCase()
+                    (lbl) => lbl.toLowerCase() === currentStatus.toLowerCase(),
                   );
                 if (isDefaultOrEmpty) {
-                  const defaultLabel = statusLabels[value as keyof typeof statusLabels] || value;
+                  const defaultLabel =
+                    statusLabels[value as keyof typeof statusLabels] || value;
                   form.setValue("status", defaultLabel);
                 }
               }}
@@ -237,7 +238,7 @@ export function ApplicationFormFields({
                       variant={"outline"}
                       className={cn(
                         "group flex h-10 w-full rounded-xl border border-slate-200/90 dark:border-border/40 bg-slate-100/80 hover:bg-slate-100 hover:border-slate-300 focus:bg-white focus:border-primary/60 focus:ring-4 focus:ring-primary/15 dark:bg-muted/30 dark:hover:bg-muted/50 px-4 py-2 text-base font-normal text-foreground disabled:cursor-not-allowed disabled:opacity-50 md:text-sm shadow-2xs transition-all duration-150",
-                        !field.value && "text-muted-foreground/70"
+                        !field.value && "text-muted-foreground/70",
                       )}
                     >
                       {field.value ? (
@@ -328,7 +329,9 @@ export function ApplicationFormFields({
             <Button
               type="submit"
               disabled={isSaveDisabled}
-              title={isEditing && !isDirty ? "No changes have been made" : undefined}
+              title={
+                isEditing && !isDirty ? "No changes have been made" : undefined
+              }
             >
               {isPending ? (
                 <Loader2 className="size-8 animate-spin" />

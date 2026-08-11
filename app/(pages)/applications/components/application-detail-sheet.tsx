@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   ExternalLink,
   MapPin,
@@ -17,18 +17,25 @@ import {
   Building2,
   Pencil,
   Trash2,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   getStatusDisplay,
   getStatusKind,
   statusLabels,
   StatusKind,
-} from '@/lib/utils';
-import { getApplicationHistory, updateApplication, deleteStatusHistoryEntry } from '@/app/actions/applications';
-import { toast } from '@/hooks/use-toast';
-import { TimelineEntry } from './application-timeline';
-import { ApplicationDetailEditForm, DetailEditFormData } from './application-detail-edit-form';
-import { ApplicationDetailView } from './application-detail-view';
+} from "@/lib/utils";
+import {
+  getApplicationHistory,
+  updateApplication,
+  deleteStatusHistoryEntry,
+} from "@/app/actions/applications";
+import { toast } from "@/hooks/use-toast";
+import { TimelineEntry } from "./application-timeline";
+import {
+  ApplicationDetailEditForm,
+  DetailEditFormData,
+} from "./application-detail-edit-form";
+import { ApplicationDetailView } from "./application-detail-view";
 
 interface ApplicationDetail {
   id?: string;
@@ -58,15 +65,20 @@ interface ApplicationDetailSheetProps {
 }
 
 const statusBadgeClasses: Record<StatusKind, string> = {
-  applied: 'bg-primary/15 text-primary border-primary/25 rounded-md font-semibold',
+  applied:
+    "bg-primary/15 text-primary border-primary/25 rounded-md font-semibold",
   accepted:
-    'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/25 rounded-md font-semibold',
-  ghosted: 'bg-muted/80 text-muted-foreground border-border/50 rounded-md font-medium',
-  review: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/25 rounded-md font-semibold',
+    "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/25 rounded-md font-semibold",
+  ghosted:
+    "bg-muted/80 text-muted-foreground border-border/50 rounded-md font-medium",
+  review:
+    "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/25 rounded-md font-semibold",
   interview:
-    'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/25 rounded-md font-semibold',
-  rejected: 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/25 rounded-md font-semibold',
-  other: 'bg-secondary text-secondary-foreground border-border rounded-md font-medium',
+    "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/25 rounded-md font-semibold",
+  rejected:
+    "bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/25 rounded-md font-semibold",
+  other:
+    "bg-secondary text-secondary-foreground border-border rounded-md font-medium",
 };
 
 export function ApplicationDetailSheet({
@@ -75,45 +87,57 @@ export function ApplicationDetailSheet({
   onOpenChange,
   onDeleteClick,
 }: ApplicationDetailSheetProps) {
-  const [currentApp, setCurrentApp] = useState<ApplicationDetail | null>(initialApp);
-  const [quickStatusText, setQuickStatusText] = useState<string>(initialApp?.status || '');
+  const [currentApp, setCurrentApp] = useState<ApplicationDetail | null>(
+    initialApp,
+  );
+  const [quickStatusText, setQuickStatusText] = useState<string>(
+    initialApp?.status || "",
+  );
   const [isEditing, setIsEditing] = useState(false);
   const [history, setHistory] = useState<TimelineEntry[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isSaving, startSaveTransition] = useTransition();
 
-  const [initialEditForm, setInitialEditForm] = useState<DetailEditFormData | undefined>(undefined);
+  const [initialEditForm, setInitialEditForm] = useState<
+    DetailEditFormData | undefined
+  >(undefined);
   const [editForm, setEditForm] = useState<DetailEditFormData>({
-    role_name: '',
-    company_name: '',
-    location: '',
-    salary: '',
-    platform: '',
-    link: '',
-    date_applied: '',
-    description: '',
-    notes: '',
-    status: '',
-    statusCategory: 'applied',
+    role_name: "",
+    company_name: "",
+    location: "",
+    salary: "",
+    platform: "",
+    link: "",
+    date_applied: "",
+    description: "",
+    notes: "",
+    status: "",
+    statusCategory: "applied",
   });
 
   useEffect(() => {
     setCurrentApp(initialApp);
     if (initialApp) {
-      const effectiveStatus = getStatusDisplay(initialApp.status, initialApp.statusCategory);
+      const effectiveStatus = getStatusDisplay(
+        initialApp.status,
+        initialApp.statusCategory,
+      );
       setQuickStatusText(effectiveStatus);
       const initialValues: DetailEditFormData = {
-        role_name: initialApp.role_name || '',
-        company_name: initialApp.company_name || '',
-        location: initialApp.location || '',
-        salary: initialApp.salary || '',
-        platform: initialApp.platform || '',
-        link: initialApp.link || '',
-        date_applied: initialApp.date_applied || '',
-        description: initialApp.description || '',
-        notes: initialApp.notes || '',
+        role_name: initialApp.role_name || "",
+        company_name: initialApp.company_name || "",
+        location: initialApp.location || "",
+        salary: initialApp.salary || "",
+        platform: initialApp.platform || "",
+        link: initialApp.link || "",
+        date_applied: initialApp.date_applied || "",
+        description: initialApp.description || "",
+        notes: initialApp.notes || "",
         status: effectiveStatus,
-        statusCategory: getStatusKind(initialApp.status, initialApp.statusCategory),
+        statusCategory: getStatusKind(
+          initialApp.status,
+          initialApp.statusCategory,
+        ),
       };
       setEditForm(initialValues);
       setInitialEditForm(initialValues);
@@ -125,7 +149,7 @@ export function ApplicationDetailSheet({
             setHistory(res);
           })
           .catch((err) => {
-            console.error('Failed to load history:', err);
+            console.error("Failed to load history:", err);
           })
           .finally(() => {
             setIsLoadingHistory(false);
@@ -136,17 +160,26 @@ export function ApplicationDetailSheet({
 
   if (!currentApp) return null;
 
-  const currentKind = getStatusKind(currentApp.status, currentApp.statusCategory);
+  const currentKind = getStatusKind(
+    currentApp.status,
+    currentApp.statusCategory,
+  );
   const displayStatusText = getStatusDisplay(
     currentApp.status,
-    currentApp.statusCategory
+    currentApp.statusCategory,
   );
 
-  const handleQuickStatusChange = (newCategory: string, newStatusText?: string) => {
+  const handleQuickStatusChange = (
+    newCategory: string,
+    newStatusText?: string,
+  ) => {
     if (!currentApp.id) return;
     startSaveTransition(async () => {
       try {
-        const updatedStatus = getStatusDisplay(newStatusText || currentApp.status, newCategory);
+        const updatedStatus = getStatusDisplay(
+          newStatusText || currentApp.status,
+          newCategory,
+        );
         const payload = {
           ...currentApp,
           id: currentApp.id,
@@ -163,15 +196,20 @@ export function ApplicationDetailSheet({
         };
         await updateApplication(payload);
         setCurrentApp(payload);
-        toast({ description: `Status updated to ${statusLabels[newCategory as StatusKind] || newCategory}` });
-        
+        toast({
+          description: `Status updated to ${statusLabels[newCategory as StatusKind] || newCategory}`,
+        });
+
         if (currentApp.id) {
           const updatedHistory = await getApplicationHistory(currentApp.id);
           setHistory(updatedHistory);
         }
       } catch (err) {
         console.error(err);
-        toast({ description: 'Failed to update status', variant: 'destructive' });
+        toast({
+          description: "Failed to update status",
+          variant: "destructive",
+        });
       }
     });
   };
@@ -181,8 +219,11 @@ export function ApplicationDetailSheet({
     startSaveTransition(async () => {
       try {
         const updatedKind = editForm.statusCategory;
-        const updatedStatusText = getStatusDisplay(editForm.status, updatedKind);
-        
+        const updatedStatusText = getStatusDisplay(
+          editForm.status,
+          updatedKind,
+        );
+
         const payload = {
           ...currentApp,
           id: currentApp.id,
@@ -203,7 +244,7 @@ export function ApplicationDetailSheet({
         setCurrentApp(payload);
         setInitialEditForm({ ...editForm, status: updatedStatusText.trim() });
         setIsEditing(false);
-        toast({ description: 'Application updated successfully!' });
+        toast({ description: "Application updated successfully!" });
 
         if (currentApp.id) {
           const updatedHistory = await getApplicationHistory(currentApp.id);
@@ -211,7 +252,10 @@ export function ApplicationDetailSheet({
         }
       } catch (err) {
         console.error(err);
-        toast({ description: 'Failed to update application', variant: 'destructive' });
+        toast({
+          description: "Failed to update application",
+          variant: "destructive",
+        });
       }
     });
   };
@@ -220,9 +264,12 @@ export function ApplicationDetailSheet({
     try {
       await deleteStatusHistoryEntry(entryId);
       setHistory((prev) => prev.filter((h) => h.id !== entryId));
-      toast({ description: 'Timeline entry removed' });
+      toast({ description: "Timeline entry removed" });
     } catch {
-      toast({ description: 'Failed to remove timeline entry', variant: 'destructive' });
+      toast({
+        description: "Failed to remove timeline entry",
+        variant: "destructive",
+      });
     }
   };
 
@@ -235,20 +282,37 @@ export function ApplicationDetailSheet({
               {isEditing ? (
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <div>
-                    <label htmlFor="edit-role-name" className="text-[11px] font-semibold text-muted-foreground uppercase">Role Title</label>
+                    <label
+                      htmlFor="edit-role-name"
+                      className="text-[11px] font-semibold text-muted-foreground uppercase"
+                    >
+                      Role Title
+                    </label>
                     <Input
                       id="edit-role-name"
                       value={editForm.role_name}
-                      onChange={(e) => setEditForm({ ...editForm, role_name: e.target.value })}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, role_name: e.target.value })
+                      }
                       className="font-semibold text-base h-9"
                     />
                   </div>
                   <div>
-                    <label htmlFor="edit-company-name" className="text-[11px] font-semibold text-muted-foreground uppercase">Company Name</label>
+                    <label
+                      htmlFor="edit-company-name"
+                      className="text-[11px] font-semibold text-muted-foreground uppercase"
+                    >
+                      Company Name
+                    </label>
                     <Input
                       id="edit-company-name"
                       value={editForm.company_name}
-                      onChange={(e) => setEditForm({ ...editForm, company_name: e.target.value })}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          company_name: e.target.value,
+                        })
+                      }
                       className="text-sm h-9"
                     />
                   </div>
@@ -287,7 +351,10 @@ export function ApplicationDetailSheet({
 
           {!isEditing && (
             <div className="flex flex-wrap items-center gap-2 pt-1">
-              <Badge variant="outline" className={`border ${statusBadgeClasses[currentKind]}`}>
+              <Badge
+                variant="outline"
+                className={`border ${statusBadgeClasses[currentKind]}`}
+              >
                 {displayStatusText}
               </Badge>
 
@@ -296,14 +363,20 @@ export function ApplicationDetailSheet({
               </Badge>
 
               {currentApp.location && (
-                <Badge variant="outline" className="flex items-center gap-1 text-muted-foreground">
+                <Badge
+                  variant="outline"
+                  className="flex items-center gap-1 text-muted-foreground"
+                >
                   <MapPin className="h-3 w-3" />
                   {currentApp.location}
                 </Badge>
               )}
 
               {currentApp.salary && (
-                <Badge variant="outline" className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                <Badge
+                  variant="outline"
+                  className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"
+                >
                   <DollarSign className="h-3 w-3" />
                   {currentApp.salary}
                 </Badge>

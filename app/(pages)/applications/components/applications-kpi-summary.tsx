@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Briefcase, Clock, Users, Award } from 'lucide-react';
-import { getStatusKind } from '@/lib/utils';
+import { useMemo } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Briefcase, Clock, Users, Award } from "lucide-react";
+import { getStatusKind } from "@/lib/utils";
 
 interface ApplicationItem {
   id?: string;
@@ -34,13 +34,13 @@ export function ApplicationsKpiSummary({ data }: ApplicationsKpiSummaryProps) {
 
     data.forEach((item) => {
       const kind = getStatusKind(item.status, item.statusCategory);
-      if (kind === 'applied' || kind === 'review') {
+      if (kind === "applied" || kind === "review") {
         active++;
       }
-      if (kind === 'interview') {
+      if (kind === "interview") {
         interviewing++;
       }
-      if (kind === 'accepted') {
+      if (kind === "accepted") {
         offers++;
       }
     });
@@ -55,27 +55,27 @@ export function ApplicationsKpiSummary({ data }: ApplicationsKpiSummaryProps) {
 
   const cards = [
     {
-      title: 'Total Applications',
+      title: "Total Applications",
       value: stats.total,
-      description: 'All tracked job leads',
+      description: "All tracked job leads",
       icon: Briefcase,
     },
     {
-      title: 'Active Pipeline',
+      title: "Active Pipeline",
       value: stats.active,
-      description: 'Applied or under review',
+      description: "Applied or under review",
       icon: Clock,
     },
     {
-      title: 'Interviewing',
+      title: "Interviewing",
       value: stats.interviewing,
-      description: 'Active interview loops',
+      description: "Active interview loops",
       icon: Users,
     },
     {
-      title: 'Offers & Hired',
+      title: "Offers & Hired",
       value: stats.offers,
-      description: 'Secured job offers',
+      description: "Secured job offers",
       icon: Award,
     },
   ];

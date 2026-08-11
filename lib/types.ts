@@ -1,6 +1,6 @@
-import { FormValues } from '@/app/_components/application-form';
-import { insertApplicationSchema } from '@/app/db/schema';
-import { z } from 'zod';
+import { FormValues } from "@/app/_components/application-form";
+import { insertApplicationSchema } from "@/app/db/schema";
+import { z } from "zod";
 
 export type Data = {
   year: string;
@@ -22,12 +22,12 @@ export type ChartData = {
 
 /* ------ Open AI ------------*/
 type SuccessData = {
-  status: 'success';
+  status: "success";
   application: FormValues;
 };
 
 type FailData = {
-  status: 'fail';
+  status: "fail";
   message: string;
 };
 
