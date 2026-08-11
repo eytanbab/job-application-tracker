@@ -67,7 +67,7 @@ const statusBadgeClasses: Record<StatusKind, string> = {
   accepted:
     "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/25 rounded-md font-semibold",
   ghosted:
-    "bg-muted/80 text-muted-foreground border-border/50 rounded-md font-medium",
+    "bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30 rounded-md font-semibold",
   review:
     "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/25 rounded-md font-semibold",
   interview:
@@ -315,14 +315,7 @@ export function ApplicationDetailSheet({
               variant="outline"
               size="sm"
               className="flex-1 gap-2 h-9 font-medium rounded-md"
-              onClick={() => {
-                if (onEditClick && currentApp) {
-                  onOpenChange(false);
-                  onEditClick(currentApp);
-                } else {
-                  setIsEditing(true);
-                }
-              }}
+              onClick={() => setIsEditing(true)}
             >
               <Pencil className="h-4 w-4" /> Edit Details
             </Button>

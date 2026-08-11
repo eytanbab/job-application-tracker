@@ -13,7 +13,7 @@ const statusBadgeClasses: Record<StatusKind, string> = {
   accepted:
     "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 rounded-md font-semibold",
   ghosted:
-    "bg-muted/80 text-muted-foreground border border-border/50 rounded-md font-medium",
+    "bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30 rounded-md font-semibold",
   review:
     "bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/25 rounded-md font-semibold",
   interview:
@@ -56,9 +56,27 @@ export function DataTableMobileCard({
 
   return (
     <Card
+      tabIndex={0}
+      role="button"
+      aria-label={`Application for ${item.role_name} at ${item.company_name}`}
       onClick={() => onSelectRow(item)}
+      onKeyDown={(e) => {
+        const target = e.target as HTMLElement;
+        if (
+          target !== e.currentTarget &&
+          (target.tagName === "INPUT" ||
+            target.tagName === "A" ||
+            target.tagName === "BUTTON")
+        ) {
+          return;
+        }
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelectRow(item);
+        }
+      }}
       className={cn(
-        "cursor-pointer p-4 space-y-3 transition-all",
+        "cursor-pointer p-4 space-y-3 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
         isSelected
           ? "border-primary bg-primary/5 ring-1 ring-primary/20 shadow-sm"
           : "border bg-card hover:border-primary/50",
