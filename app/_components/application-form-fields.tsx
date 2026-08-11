@@ -237,10 +237,11 @@ export function ApplicationFormFields({
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
+                      role="combobox"
                       variant={"outline"}
                       className={cn(
-                        "group flex h-10 w-full rounded-md border border-input bg-background px-4 py-2 text-base font-normal text-foreground disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-                        !field.value && "text-muted-foreground"
+                        "group flex h-10 w-full rounded-xl border border-slate-200/90 dark:border-border/40 bg-slate-100/80 hover:bg-slate-100 hover:border-slate-300 focus:bg-white focus:border-primary/60 focus:ring-4 focus:ring-primary/15 dark:bg-muted/30 dark:hover:bg-muted/50 px-4 py-2 text-base font-normal text-foreground disabled:cursor-not-allowed disabled:opacity-50 md:text-sm shadow-2xs transition-all duration-150",
+                        !field.value && "text-muted-foreground/70"
                       )}
                     >
                       {field.value ? (

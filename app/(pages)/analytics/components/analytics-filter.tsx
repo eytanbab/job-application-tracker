@@ -66,7 +66,7 @@ export function AnalyticsFilter({ years }: { years: string[] }) {
             value={selectedMonth}
             onValueChange={(value) => updateFilter('month', value)}
           >
-            <SelectTrigger className="w-[140px] h-8 text-xs bg-background">
+            <SelectTrigger className="w-[140px] h-8 text-xs">
               <SelectValue placeholder="All Months" />
             </SelectTrigger>
             <SelectContent>
@@ -87,7 +87,7 @@ export function AnalyticsFilter({ years }: { years: string[] }) {
             value={selectedYear}
             onValueChange={(value) => updateFilter('year', value)}
           >
-            <SelectTrigger className="w-[110px] h-8 text-xs bg-background">
+            <SelectTrigger className="w-[110px] h-8 text-xs">
               <SelectValue placeholder="All Years" />
             </SelectTrigger>
             <SelectContent>

@@ -58,7 +58,7 @@ export function DataTableToolbar({
               placeholder="Search role, company, location..."
               value={globalFilter}
               onChange={(e) => setGlobalFilter(String(e.target.value))}
-              className="pl-9 pr-8 w-full h-9 text-xs bg-background"
+              className="pl-9 pr-8 w-full h-9 text-xs"
             />
             {globalFilter.length > 0 && (
               <button
@@ -96,7 +96,7 @@ export function DataTableToolbar({
             value={statusFilter || 'all'}
             onValueChange={(value) => setStatusFilter(value === 'all' ? null : value)}
           >
-            <SelectTrigger className="w-full md:w-[140px] h-9 text-xs capitalize bg-background">
+            <SelectTrigger className="w-full md:w-[140px] h-9 text-xs capitalize">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -114,7 +114,7 @@ export function DataTableToolbar({
               value={platformFilter || 'all'}
               onValueChange={(value) => setPlatformFilter(value === 'all' ? null : value)}
             >
-              <SelectTrigger className="w-full md:w-[140px] h-9 text-xs capitalize bg-background">
+              <SelectTrigger className="w-full md:w-[140px] h-9 text-xs capitalize">
                 <SelectValue placeholder="All Platforms" />
               </SelectTrigger>
               <SelectContent>

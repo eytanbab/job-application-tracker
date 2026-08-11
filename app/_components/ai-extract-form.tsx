@@ -113,7 +113,7 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
     <Form {...aiForm}>
       <form
         onSubmit={aiForm.handleSubmit(handleAiSubmit)}
-        className="flex flex-col w-full gap-2 max-w-lg bg-muted/20 p-3.5 rounded-lg border border-border/40"
+        className="flex flex-col w-full gap-2.5 max-w-lg bg-primary/5 p-4 rounded-xl border border-primary/15"
       >
         <FormField
           control={aiForm.control}
@@ -131,7 +131,7 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
                     field.onChange(e);
                     if (extractError) setExtractError(null);
                   }}
-                  className="h-9 text-xs bg-background"
+                  className="h-9 text-xs"
                 />
               </FormControl>
               {extractError && (

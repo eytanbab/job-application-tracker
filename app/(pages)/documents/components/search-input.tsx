@@ -19,7 +19,7 @@ export function SearchInput({ defaultValue }: { defaultValue?: string }) {
         placeholder="Search documents..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="pl-9 pr-8 h-9 text-xs bg-background shadow-2xs"
+        className="pl-9 pr-8 h-9 text-xs shadow-2xs"
       />
       {query.length > 0 && (
         <button

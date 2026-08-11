@@ -66,7 +66,7 @@ export function TotalApplicationsPerYearBarChart({
       {(!effectiveGlobalYear && years.length > 1) && (
         <div className="flex justify-end pb-2">
           <Select value={selectedYear} onValueChange={setUserSelectedYear}>
-            <SelectTrigger className="w-32 h-7 text-xs bg-background">
+            <SelectTrigger className="w-32 h-7 text-xs">
               <SelectValue placeholder="Select year" />
             </SelectTrigger>
             <SelectContent>

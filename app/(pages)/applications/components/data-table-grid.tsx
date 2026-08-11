@@ -165,7 +165,7 @@ export function DataTableGrid<TData extends { id?: string; role_name: string; co
                 table.setPageSize(Number(value));
               }}
             >
-              <SelectTrigger className="h-8 w-[65px] bg-background">
+              <SelectTrigger className="h-8 w-[65px]">
                 <SelectValue placeholder={table.getState().pagination.pageSize} />
               </SelectTrigger>
               <SelectContent side="top">
