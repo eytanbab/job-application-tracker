@@ -60,6 +60,20 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
   const [editingApp, setEditingApp] = useState<TData | null>(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
+  useEffect(() => {
+    const handleOpen = () => setIsCreateOpen(true);
+    window.addEventListener('open-create-application', handleOpen);
+
+    if (typeof window !== 'undefined' && sessionStorage.getItem('auto_open_create_app') === 'true') {
+      sessionStorage.removeItem('auto_open_create_app');
+      setIsCreateOpen(true);
+    }
+
+    return () => {
+      window.removeEventListener('open-create-application', handleOpen);
+    };
+  }, []);
+
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [, startBulkTransition] = useTransition();
 

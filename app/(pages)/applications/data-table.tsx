@@ -9,11 +9,11 @@ import { ApplicationDetailSheet } from './components/application-detail-sheet';
 import { EditApplicationSheet } from '@/app/_components/edit-application-sheet';
 import { ApplicationForm } from '@/app/_components/application-form';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { type FormValues } from './columns';
 import { createApplication, updateApplication } from '@/app/actions/applications';
 import { toast } from '@/hooks/use-toast';
@@ -122,11 +122,11 @@ export function DataTable<TData extends ApplicationRow, TValue>({
         <Plus className="h-6 w-6" />
       </button>
 
-      <Sheet open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <SheetContent className="w-full sm:max-w-md md:max-w-lg overflow-y-auto p-6">
-          <SheetHeader className="pb-4 border-b">
-            <SheetTitle className="text-xl font-bold">New Job Application</SheetTitle>
-          </SheetHeader>
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="w-full sm:max-w-md md:max-w-lg overflow-y-auto max-h-[90vh] p-6">
+          <DialogHeader className="pb-4 border-b">
+            <DialogTitle className="text-xl font-bold">New Job Application</DialogTitle>
+          </DialogHeader>
           <div className="py-4">
             <ApplicationForm
               defaultValues={defaultCreateValues}
@@ -142,8 +142,8 @@ export function DataTable<TData extends ApplicationRow, TValue>({
               }}
             />
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       <ApplicationDetailSheet
         application={selectedApp}
@@ -155,6 +155,11 @@ export function DataTable<TData extends ApplicationRow, TValue>({
 
       {editingApp && (
         <EditApplicationSheet
+          open={!!editingApp}
+          onOpenChange={(open) => {
+            if (!open) setEditingApp(null);
+          }}
+          showTrigger={false}
           row={{ original: editingApp as unknown as FormValues }}
           onSubmit={async (values) => {
             try {

@@ -4,8 +4,8 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React from 'react';
-import { Briefcase, BarChart3, FileText, Sparkles, PlusCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Briefcase, BarChart3, FileText, Sparkles } from 'lucide-react';
+import { NewApplicationButton } from './new-application-button';
 
 const navLinks = [
   { url: '/applications', name: 'Applications', icon: Briefcase },
@@ -36,12 +36,7 @@ const SideNav = () => {
 
         {/* Quick Action Button */}
         <div className="px-1">
-          <Link href="/applications/new" className="w-full">
-            <Button className="w-full justify-start gap-2 shadow-xs cursor-pointer font-medium text-xs h-9">
-              <PlusCircle className="h-4 w-4" />
-              <span>New Application</span>
-            </Button>
-          </Link>
+          <NewApplicationButton fullWidth label="New Application" />
         </div>
 
         {/* Nav Links */}

@@ -13,10 +13,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
+import { NewApplicationButton } from './new-application-button';
+
 export function MobileSideNav() {
   const [open, setOpen] = useState(false);
-
   const pathname = usePathname();
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild className='2xl:hidden cursor-pointer'>
@@ -26,6 +28,9 @@ export function MobileSideNav() {
         <SheetHeader>
           <SheetTitle></SheetTitle>
         </SheetHeader>
+        <div className="w-full mb-2" onClick={() => setOpen(false)}>
+          <NewApplicationButton fullWidth label="New Application" />
+        </div>
         {navItems.map((item) => {
           return (
             <Link

@@ -69,6 +69,7 @@ export const columns: ColumnDef<FormValues>[] = [
         onChange={(e) => table.toggleAllPageRowsSelected(!!e.target.checked)}
         aria-label="Select all"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
       />
     ),
     cell: ({ row }) => (
@@ -79,8 +80,10 @@ export const columns: ColumnDef<FormValues>[] = [
         onChange={(e) => row.toggleSelected(!!e.target.checked)}
         aria-label="Select row"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
       />
     ),
+
     enableSorting: false,
     enableHiding: false,
   },
@@ -243,6 +246,7 @@ export const columns: ColumnDef<FormValues>[] = [
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
           className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary hover:bg-accent/60"
           title="Open application link"
         >
@@ -281,6 +285,7 @@ export const columns: ColumnDef<FormValues>[] = [
         <div
           className="flex items-center gap-1 justify-end"
           onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
         >
           {meta?.onSelectApplication && (
             <Button
@@ -288,7 +293,17 @@ export const columns: ColumnDef<FormValues>[] = [
               size="icon"
               className="h-8 w-8 text-muted-foreground hover:text-foreground"
               title="View details"
-              onClick={() => meta.onSelectApplication!(row.original)}
+              onClick={(e) => {
+                e.stopPropagation();
+                meta.onSelectApplication!(row.original);
+              }}
+              onKeyDown={(e) => {
+                e.stopPropagation();
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  meta.onSelectApplication!(row.original);
+                }
+              }}
             >
               <Eye className="h-4 w-4" />
             </Button>
@@ -306,6 +321,8 @@ export const columns: ColumnDef<FormValues>[] = [
                 size="icon"
                 className="h-8 w-8 text-muted-foreground hover:text-destructive"
                 title="Delete application"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>

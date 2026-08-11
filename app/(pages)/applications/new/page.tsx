@@ -1,4 +1,4 @@
-import NewApplication from './components/new-application';
+import { redirect } from 'next/navigation';
 
 export async function generateMetadata() {
   return {
@@ -7,5 +7,5 @@ export async function generateMetadata() {
 }
 
 export default function NewApplicationPage() {
-  return <NewApplication />;
+  redirect('/applications');
 }

@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { NewApplicationButton } from '@/app/_components/new-application-button';
 import { Search, X, Filter, RotateCcw, LayoutList, LayoutGrid, Plus } from 'lucide-react';
 import { statusOptions } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -171,13 +172,11 @@ export function DataTableToolbar({
           </button>
         </div>
 
-        <Button
+        <NewApplicationButton
           onClick={onOpenCreate}
-          className="hidden md:inline-flex gap-2 h-9 text-xs font-semibold shadow-2xs px-3.5"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add Application</span>
-        </Button>
+          label="Add Application"
+          className="hidden md:inline-flex px-3.5 font-semibold"
+        />
       </div>
     </div>
   );

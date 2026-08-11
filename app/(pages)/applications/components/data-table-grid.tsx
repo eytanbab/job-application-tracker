@@ -71,6 +71,16 @@ export function DataTableGrid<TData extends { id?: string; role_name: string; co
                   data-state={row.getIsSelected() && 'selected'}
                   onClick={() => onSelectRow(row.original)}
                   onKeyDown={(e) => {
+                    const target = e.target as HTMLElement;
+                    if (
+                      target !== e.currentTarget &&
+                      (target.tagName === 'BUTTON' ||
+                        target.tagName === 'INPUT' ||
+                        target.tagName === 'A' ||
+                        !!target.closest('button, input, a, [role="button"]'))
+                    ) {
+                      return;
+                    }
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       onSelectRow(row.original);
