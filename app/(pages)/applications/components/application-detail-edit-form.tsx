@@ -16,6 +16,7 @@ import {
   locationOptions,
   platformOptions,
   mergeWithDefaultOptions,
+  ComboboxInput,
 } from "@/components/ui/combobox-input";
 import { getDistinctLocationsAndPlatforms } from "@/app/actions/applications";
 import { useState, useEffect, useMemo } from "react";
@@ -162,33 +163,14 @@ export function ApplicationDetailEditForm({
           >
             Platform
           </label>
-          {(() => {
-            const val = editForm.platform || "";
-            const isCustom =
-              Boolean(val) &&
-              !mergedPlatforms.some((opt) => opt.toLowerCase() === val.toLowerCase());
-            const displayOptions = isCustom ? [val, ...mergedPlatforms] : mergedPlatforms;
-
-            return (
-              <Select
-                value={val}
-                onValueChange={(value) =>
-                  setEditForm({ ...editForm, platform: value })
-                }
-              >
-                <SelectTrigger id="edit-platform" className="h-9">
-                  <SelectValue placeholder="e.g. LinkedIn" />
-                </SelectTrigger>
-                <SelectContent>
-                  {displayOptions.map((plat) => (
-                    <SelectItem key={plat} value={plat}>
-                      {plat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            );
-          })()}
+          <ComboboxInput
+            id="edit-platform"
+            value={editForm.platform || ""}
+            onChange={(val) => setEditForm({ ...editForm, platform: val })}
+            options={mergedPlatforms}
+            placeholder="e.g. LinkedIn"
+            className="h-9"
+          />
         </div>
         <div>
           <label
@@ -219,33 +201,14 @@ export function ApplicationDetailEditForm({
           >
             Location
           </label>
-          {(() => {
-            const val = editForm.location || "";
-            const isCustom =
-              Boolean(val) &&
-              !mergedLocations.some((opt) => opt.toLowerCase() === val.toLowerCase());
-            const displayOptions = isCustom ? [val, ...mergedLocations] : mergedLocations;
-
-            return (
-              <Select
-                value={val}
-                onValueChange={(value) =>
-                  setEditForm({ ...editForm, location: value })
-                }
-              >
-                <SelectTrigger id="edit-location" className="h-9">
-                  <SelectValue placeholder="e.g. Tel Aviv / Remote" />
-                </SelectTrigger>
-                <SelectContent>
-                  {displayOptions.map((loc) => (
-                    <SelectItem key={loc} value={loc}>
-                      {loc}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            );
-          })()}
+          <ComboboxInput
+            id="edit-location"
+            value={editForm.location || ""}
+            onChange={(val) => setEditForm({ ...editForm, location: val })}
+            options={mergedLocations}
+            placeholder="e.g. Tel Aviv / Remote"
+            className="h-9"
+          />
         </div>
         <div>
           <label

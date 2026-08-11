@@ -39,6 +39,7 @@ import {
   locationOptions,
   platformOptions,
   mergeWithDefaultOptions,
+  ComboboxInput,
 } from "@/components/ui/combobox-input";
 
 interface ApplicationFormFieldsProps {
@@ -120,139 +121,106 @@ export function ApplicationFormFields({
       <FormField
         control={form.control}
         name="location"
-        render={({ field }) => {
-          const val = field.value || "";
-          const isCustom =
-            Boolean(val) &&
-            !mergedLocations.some((opt) => opt.toLowerCase() === val.toLowerCase());
-          const displayOptions = isCustom ? [val, ...mergedLocations] : mergedLocations;
-
-          return (
-            <FormItem className="space-y-0 col-span-full md:col-span-1">
-              <FormLabel>Location</FormLabel>
-              <Select
-                value={val}
-                onValueChange={(value) => field.onChange(value)}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="e.g. Remote / Tel Aviv" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {displayOptions.map((loc) => (
-                    <SelectItem key={loc} value={loc}>
-                      {loc}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          );
-        }}
+        render={({ field }) => (
+          <FormItem className="space-y-0 col-span-full md:col-span-1">
+            <FormLabel>Location</FormLabel>
+            <FormControl>
+              <ComboboxInput
+                {...field}
+                options={mergedLocations}
+                placeholder="e.g. Remote / Tel Aviv"
+                value={field.value || ""}
+                onChange={(val) => field.onChange(val)}
+                onBlur={field.onBlur}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
       />
-      <FormField
-        control={form.control}
-        name="statusCategory"
-        render={({ field }) => {
-          const currentStatus = form.watch("status") || "";
-          const isStandardLabel = Object.values(statusLabels).some(
-            (lbl) => lbl.toLowerCase() === currentStatus.toLowerCase(),
-          );
-          const showCustomInput =
-            field.value === "other" || (!isStandardLabel && Boolean(currentStatus));
-
-          return (
-            <div className="col-span-full space-y-2">
+      <div className="col-span-full grid grid-cols-1 md:grid-cols-2 gap-3">
+        <FormField
+          control={form.control}
+          name="statusCategory"
+          render={({ field }) => {
+            const currentStatus = form.watch("status") || "";
+            return (
               <FormItem className="space-y-0">
-                <FormLabel>Application Status</FormLabel>
+                <FormLabel>Status Category</FormLabel>
                 <Select
                   value={field.value || getStatusKind(currentStatus)}
                   onValueChange={(value) => {
                     field.onChange(value);
-                    if (value !== "other") {
-                      const defaultLabel =
-                        statusLabels[value as keyof typeof statusLabels] || value;
-                      form.setValue("status", defaultLabel);
+                    const defaultLabel =
+                      statusLabels[value as keyof typeof statusLabels] || "";
+                    const prevStatus = form.getValues("status");
+                    const isStandard = Object.values(statusLabels).some(
+                      (lbl) => lbl.toLowerCase() === (prevStatus || "").toLowerCase(),
+                    );
+                    if (!prevStatus || isStandard) {
+                      form.setValue("status", defaultLabel || prevStatus, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      });
                     }
                   }}
                 >
                   <FormControl>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select status stage" />
+                      <SelectValue placeholder="Select status category" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {statusOptions.map((status) => (
                       <SelectItem key={status.value} value={status.value}>
-                        {status.value === "other" ? "Custom Stage..." : status.label}
+                        {status.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
               </FormItem>
+            );
+          }}
+        />
 
-              {showCustomInput && (
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field: statusField }) => (
-                    <FormItem className="space-y-0 pt-1">
-                      <FormLabel className="text-xs font-semibold text-muted-foreground">
-                        Custom Stage Label
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g. Take-home assignment / Executive chat..."
-                          {...statusField}
-                          value={statusField.value || ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field: statusField }) => (
+            <FormItem className="space-y-0">
+              <FormLabel>Stage Details / Custom Status</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="e.g. Technical Interview / Phone Screen..."
+                  {...statusField}
+                  value={statusField.value || ""}
                 />
-              )}
-            </div>
-          );
-        }}
-      />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
       <FormField
         control={form.control}
         name="platform"
-        render={({ field }) => {
-          const val = field.value || "";
-          const isCustom =
-            Boolean(val) &&
-            !mergedPlatforms.some((opt) => opt.toLowerCase() === val.toLowerCase());
-          const displayOptions = isCustom ? [val, ...mergedPlatforms] : mergedPlatforms;
-
-          return (
-            <FormItem className="space-y-0 col-span-full">
-              <FormLabel>Platform</FormLabel>
-              <Select
-                value={val}
-                onValueChange={(value) => field.onChange(value)}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="e.g. LinkedIn / Indeed / Company Site" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {displayOptions.map((plat) => (
-                    <SelectItem key={plat} value={plat}>
-                      {plat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          );
-        }}
+        render={({ field }) => (
+          <FormItem className="space-y-0 col-span-full">
+            <FormLabel>Platform</FormLabel>
+            <FormControl>
+              <ComboboxInput
+                {...field}
+                options={mergedPlatforms}
+                placeholder="e.g. LinkedIn / Indeed / Company Site"
+                value={field.value || ""}
+                onChange={(val) => field.onChange(val)}
+                onBlur={field.onBlur}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
       />
       <FormField
         control={form.control}
@@ -281,7 +249,7 @@ export function ApplicationFormFields({
                       role="combobox"
                       variant={"outline"}
                       className={cn(
-                        "group flex h-10 w-full rounded-xl border border-slate-200/90 dark:border-border/40 bg-slate-100/80 hover:bg-slate-100 hover:border-slate-300 focus:bg-white focus:border-primary/60 focus:ring-4 focus:ring-primary/15 dark:bg-muted/30 dark:hover:bg-muted/50 px-4 py-2 text-base font-normal text-foreground disabled:cursor-not-allowed disabled:opacity-50 md:text-sm shadow-2xs transition-all duration-150",
+                        "group flex h-10 w-full rounded-xl border border-slate-200/90 dark:border-border/40 bg-slate-100/80 hover:bg-slate-100 hover:border-slate-300 dark:hover:border-border/80 focus:bg-white dark:focus:bg-card focus:border-primary/60 focus:ring-4 focus:ring-primary/15 dark:bg-muted/30 dark:hover:bg-muted/50 px-4 py-2 text-base font-normal text-foreground disabled:cursor-not-allowed disabled:opacity-50 md:text-sm shadow-2xs transition-all duration-150",
                         !field.value && "text-muted-foreground/70",
                       )}
                     >
