@@ -128,16 +128,25 @@ export const ApplicationForm = ({
     });
   };
 
-  return (
-    <div className="w-full flex flex-col gap-2 items-center">
-      <AiExtractForm isPending={isPending} onAutoFill={handleAutoFill} />
+  const isEditing = Boolean(defaultValues?.id);
 
-      {/* Divider */}
-      <div className="w-full flex gap-1 items-center justify-center max-w-lg">
-        <div className="h-px w-full bg-border"></div>
-        <span>OR</span>
-        <div className="h-px w-full bg-border"></div>
-      </div>
+  return (
+    <div className="w-full flex flex-col gap-3 items-center">
+      {!isEditing && (
+        <>
+          <AiExtractForm isPending={isPending} onAutoFill={handleAutoFill} />
+
+          {/* Divider */}
+          <div className="w-full flex items-center justify-center max-w-lg my-1">
+            <div className="h-px flex-1 bg-border/60"></div>
+            <span className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Or Enter Manually
+            </span>
+            <div className="h-px flex-1 bg-border/60"></div>
+          </div>
+        </>
+      )}
+
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSubmit)}

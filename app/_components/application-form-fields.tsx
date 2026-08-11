@@ -72,7 +72,7 @@ export function ApplicationFormFields({
             <FormLabel>Company Name</FormLabel>
             <FormControl>
               <Input
-                placeholder="Apple | Facebook | etc.."
+                placeholder="e.g. Acme Corp"
                 {...field}
                 value={field.value || ""}
               />
@@ -89,7 +89,7 @@ export function ApplicationFormFields({
             <FormLabel>Salary</FormLabel>
             <FormControl>
               <Input
-                placeholder="e.g. 30k - 40k"
+                placeholder="e.g. $100k - $120k"
                 {...field}
                 value={field.value || ""}
               />
@@ -105,11 +105,22 @@ export function ApplicationFormFields({
           <FormItem className="space-y-0 col-span-full md:col-span-1">
             <FormLabel>Location</FormLabel>
             <FormControl>
-              <Input
-                placeholder="Tel Aviv"
-                {...field}
-                value={field.value || ""}
-              />
+              <>
+                <Input
+                  list="location-suggestions"
+                  placeholder="e.g. Remote / Tel Aviv"
+                  {...field}
+                  value={field.value || ""}
+                />
+                <datalist id="location-suggestions">
+                  <option value="Remote" />
+                  <option value="Hybrid" />
+                  <option value="On-site" />
+                  <option value="Tel Aviv" />
+                  <option value="New York" />
+                  <option value="London" />
+                </datalist>
+              </>
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -178,11 +189,24 @@ export function ApplicationFormFields({
           <FormItem className="space-y-0 col-span-full">
             <FormLabel>Platform</FormLabel>
             <FormControl>
-              <Input
-                placeholder="Linkedin"
-                {...field}
-                value={field.value || ""}
-              />
+              <>
+                <Input
+                  list="platform-suggestions"
+                  placeholder="e.g. LinkedIn / Indeed / Company Site"
+                  {...field}
+                  value={field.value || ""}
+                />
+                <datalist id="platform-suggestions">
+                  <option value="LinkedIn" />
+                  <option value="Indeed" />
+                  <option value="Glassdoor" />
+                  <option value="Greenhouse" />
+                  <option value="Lever" />
+                  <option value="Workday" />
+                  <option value="Company Website" />
+                  <option value="Other" />
+                </datalist>
+              </>
             </FormControl>
             <FormMessage />
           </FormItem>

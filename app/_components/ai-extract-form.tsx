@@ -21,7 +21,12 @@ import { AiData } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
 const aiFormSchema = z.object({
-  url: z.url(),
+  url: z
+    .string()
+    .trim()
+    .min(1, { message: "Please paste a job posting URL." })
+    .transform((val) => (val && !/^https?:\/\//i.test(val) ? `https://${val}` : val))
+    .pipe(z.string().url({ message: "Please enter a valid job posting URL." })),
 });
 
 interface AiExtractFormProps {
@@ -31,11 +36,12 @@ interface AiExtractFormProps {
 
 export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
   const { toast } = useToast();
-  const [aiValues, setAiValues] = useState<FormValues | null>(null);
+  const [extractError, setExtractError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const aiForm = useForm<z.infer<typeof aiFormSchema>>({
     resolver: zodResolver(aiFormSchema),
+    mode: "onSubmit",
     defaultValues: {
       url: "",
     },
@@ -43,6 +49,7 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
 
   const handleAiSubmit = async (values: z.infer<typeof aiFormSchema>) => {
     setIsLoading(true);
+    setExtractError(null);
     try {
       const response = await fetch("/api/extract", {
         method: "POST",
@@ -53,19 +60,24 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
       });
 
       if (!response.ok) {
+        setExtractError(`Server status ${response.status}: Could not scrape posting.`);
         toast({
           title: "Extraction failed",
-          description: `Server responded with status ${response.status}`,
+          description: `Unable to read job details from this URL. Please enter details manually below.`,
           variant: "destructive",
         });
-        setAiValues(null);
         return;
       }
 
       const aiAutoFill: AiData = await response.json();
 
       if (aiAutoFill.status === "fail") {
-        setAiValues(null);
+        setExtractError("Job details could not be parsed from this page.");
+        toast({
+          title: "Parsing failed",
+          description: "Could not parse job details. Please fill out the form manually.",
+          variant: "destructive",
+        });
         return;
       }
 
@@ -85,10 +97,13 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
       };
 
       onAutoFill(autoFillValues);
-      setAiValues(autoFillValues);
+      toast({
+        title: "Job details extracted! ✨",
+        description: "Form populated below. Review and save your application.",
+      });
     } catch (error) {
       console.error("Error extracting AI application data:", error);
-      setAiValues(null);
+      setExtractError("Network or scraping error occurred.");
     } finally {
       setIsLoading(false);
     }
@@ -98,38 +113,48 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
     <Form {...aiForm}>
       <form
         onSubmit={aiForm.handleSubmit(handleAiSubmit)}
-        className="flex flex-col w-full gap-2 max-w-lg"
+        className="flex flex-col w-full gap-2 max-w-lg bg-muted/20 p-3.5 rounded-lg border border-border/40"
       >
         <FormField
           control={aiForm.control}
           name="url"
           render={({ field }) => (
-            <FormItem className="space-y-0">
-              <FormLabel>URL</FormLabel>
+            <FormItem className="space-y-1">
+              <FormLabel className="text-xs font-semibold">
+                Job Posting URL for AI Auto-Fill
+              </FormLabel>
               <FormControl>
                 <Input
                   placeholder="https://www.linkedin.com/jobs/view/123456789/"
                   {...field}
+                  onChange={(e) => {
+                    field.onChange(e);
+                    if (extractError) setExtractError(null);
+                  }}
+                  className="h-9 text-xs bg-background"
                 />
               </FormControl>
-              {aiValues === null && (
-                <p className="text-sm font-medium text-destructive">
-                  Failed to extract information from the URL.
+              {extractError && (
+                <p className="text-xs font-medium text-destructive pt-0.5">
+                  {extractError} You can enter details manually below.
                 </p>
               )}
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={isPending || isLoading}>
+        <Button type="submit" disabled={isPending || isLoading} className="h-9 text-xs font-semibold">
           {isLoading ? (
-            <Loader2 className="size-8 animate-spin" />
+            <>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              Extracting details (~10-15s)...
+            </>
           ) : (
-            "Auto-Extract Details"
+            "✨ Auto-Extract Details with AI"
           )}
         </Button>
-        <p className="text-xs text-muted-foreground">
-          Extraction may take up to 1 minute.
+        <p className="text-[11px] text-muted-foreground text-center">
+          Pastes job title, company, description & location automatically.
         </p>
       </form>
     </Form>
