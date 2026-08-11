@@ -113,24 +113,11 @@ export async function createApplication(values: FormValues) {
     .returning({ insertedId: jobApplications.id });
 
   if (result[0]?.insertedId) {
-    let entryDate = new Date();
-    if (normalizedValues.date_applied) {
-      const dateStr = String(normalizedValues.date_applied).trim();
-      const todayStr = safeFormatDate(new Date(), "yyyy-MM-dd");
-      if (dateStr && dateStr !== todayStr) {
-        const isoStr = dateStr.includes("T") ? dateStr : `${dateStr}T12:00:00`;
-        const parsed = new Date(isoStr);
-        if (!isNaN(parsed.getTime())) {
-          entryDate = parsed;
-        }
-      }
-    }
-
     await db.insert(applicationStatusHistory).values({
       applicationId: result[0].insertedId,
       status: normalizedValues.status,
       statusCategory: normalizedValues.statusCategory ?? "applied",
-      createdAt: entryDate,
+      createdAt: new Date(),
     });
   }
 
@@ -249,6 +236,7 @@ export async function getApplicationHistory(applicationId: string) {
     .select({
       id: jobApplications.id,
       date_applied: jobApplications.date_applied,
+      createdAt: jobApplications.createdAt,
     })
     .from(jobApplications)
     .where(
@@ -269,36 +257,43 @@ export async function getApplicationHistory(applicationId: string) {
     .where(eq(applicationStatusHistory.applicationId, applicationId))
     .orderBy(desc(applicationStatusHistory.createdAt));
 
-  const hasAppliedEntry = history.some(
+  const sanitizedHistory = history.map((item) => {
+    const d = new Date(item.createdAt);
+    const isRounded =
+      (d.getHours() === 0 && d.getMinutes() === 0 && d.getSeconds() === 0) ||
+      (d.getHours() === 12 && d.getMinutes() === 0 && d.getSeconds() === 0) ||
+      (d.getHours() === 3 && d.getMinutes() === 0 && d.getSeconds() === 0 && d.getMilliseconds() === 0);
+
+    if (isRounded && app[0].createdAt) {
+      return {
+        ...item,
+        createdAt: app[0].createdAt,
+      };
+    }
+    return item;
+  });
+
+  const hasAppliedEntry = sanitizedHistory.some(
     (h) =>
       h.statusCategory === "applied" ||
       (h.status && h.status.toLowerCase().includes("applied")),
   );
 
   if (!hasAppliedEntry && app[0].date_applied) {
-    try {
-      const dateStr = String(app[0].date_applied).trim();
-      const isoStr = dateStr.includes("T") ? dateStr : `${dateStr}T12:00:00`;
-      const appliedDate = new Date(isoStr);
-      if (!isNaN(appliedDate.getTime())) {
-        history.push({
-          id: "",
-          applicationId,
-          status: "Applied",
-          statusCategory: "applied",
-          createdAt: appliedDate,
-        });
-        history.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        );
-      }
-    } catch {
-      // Ignore parsing error
-    }
+    sanitizedHistory.push({
+      id: "",
+      applicationId,
+      status: "Applied",
+      statusCategory: "applied",
+      createdAt: app[0].createdAt || new Date(),
+    });
+    sanitizedHistory.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
   }
 
-  return history;
+  return sanitizedHistory;
 }
 
 // Get unique locations and platforms previously used by the user
