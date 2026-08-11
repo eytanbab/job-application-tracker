@@ -14,7 +14,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { format, subDays, parseISO, isBefore } from "date-fns";
 import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
-import { getStatusDisplay, getStatusKind } from "@/lib/utils";
+import { getStatusDisplay, getStatusKind, safeFormatDate } from "@/lib/utils";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
@@ -113,19 +113,24 @@ export async function createApplication(values: FormValues) {
     .returning({ insertedId: jobApplications.id });
 
   if (result[0]?.insertedId) {
-    let appliedDate: Date;
-    try {
-      appliedDate = parseISO(normalizedValues.date_applied);
-      if (isNaN(appliedDate.getTime())) appliedDate = new Date();
-    } catch {
-      appliedDate = new Date();
+    let entryDate = new Date();
+    if (normalizedValues.date_applied) {
+      const dateStr = String(normalizedValues.date_applied).trim();
+      const todayStr = safeFormatDate(new Date(), "yyyy-MM-dd");
+      if (dateStr && dateStr !== todayStr) {
+        const isoStr = dateStr.includes("T") ? dateStr : `${dateStr}T12:00:00`;
+        const parsed = new Date(isoStr);
+        if (!isNaN(parsed.getTime())) {
+          entryDate = parsed;
+        }
+      }
     }
 
     await db.insert(applicationStatusHistory).values({
       applicationId: result[0].insertedId,
       status: normalizedValues.status,
       statusCategory: normalizedValues.statusCategory ?? "applied",
-      createdAt: appliedDate,
+      createdAt: entryDate,
     });
   }
 
@@ -272,7 +277,9 @@ export async function getApplicationHistory(applicationId: string) {
 
   if (!hasAppliedEntry && app[0].date_applied) {
     try {
-      const appliedDate = parseISO(app[0].date_applied);
+      const dateStr = String(app[0].date_applied).trim();
+      const isoStr = dateStr.includes("T") ? dateStr : `${dateStr}T12:00:00`;
+      const appliedDate = new Date(isoStr);
       if (!isNaN(appliedDate.getTime())) {
         history.push({
           id: "",
@@ -293,3 +300,30 @@ export async function getApplicationHistory(applicationId: string) {
 
   return history;
 }
+
+// Get unique locations and platforms previously used by the user
+export async function getDistinctLocationsAndPlatforms() {
+  const userId = await getCurrentUserIdOrThrow();
+  const apps = await db
+    .select({
+      location: jobApplications.location,
+      platform: jobApplications.platform,
+    })
+    .from(jobApplications)
+    .where(eq(jobApplications.userId, userId));
+
+  const rawLocations = apps
+    .map((a) => a.location?.trim())
+    .filter((loc): loc is string => Boolean(loc));
+
+  const rawPlatforms = apps
+    .map((a) => a.platform?.trim())
+    .filter((plat): plat is string => Boolean(plat));
+
+  // Capitalize nicely or preserve exact unique values
+  const userLocations = Array.from(new Set(rawLocations));
+  const userPlatforms = Array.from(new Set(rawPlatforms));
+
+  return { userLocations, userPlatforms };
+}
+

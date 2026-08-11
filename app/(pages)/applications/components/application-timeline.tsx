@@ -50,7 +50,10 @@ export function ApplicationTimeline({
               Boolean(categoryLabel) &&
               displayTitle.toLowerCase() !== categoryLabel.toLowerCase();
             const formattedTime = item.createdAt
-              ? formatDate(new Date(item.createdAt), "MMM d, yyyy · h:mm a")
+              ? formatDate(
+                  new Date(item.createdAt),
+                  item.id ? "MMM d, yyyy · h:mm a" : "MMM d, yyyy",
+                )
               : "";
             return (
               <div
