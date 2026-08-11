@@ -27,19 +27,6 @@ export default async function StatusPerPlatformPage(props: {
     getYears(),
   ]);
 
-  if (statusPerPlatform.length === 0 && !month && !year)
-    return (
-      <div className="flex flex-col gap-3 h-60 items-center justify-center rounded-xl border border-dashed border-border/50 p-8 text-center bg-card/30">
-        <p className="text-muted-foreground text-sm max-w-sm">
-          No applications found. Add your job applications to unlock platform
-          ROI analytics.
-        </p>
-        <Button asChild size="sm" className="gap-1.5 font-semibold">
-          <Link href="/applications">+ Add Application</Link>
-        </Button>
-      </div>
-    );
-
   return (
     <div className="flex flex-col gap-4 w-full">
       <Suspense
@@ -47,9 +34,21 @@ export default async function StatusPerPlatformPage(props: {
           <div className="h-14 w-full bg-card rounded-xl animate-pulse" />
         }
       >
-        <AnalyticsFilter years={years} />
+        <AnalyticsFilter years={years.length > 0 ? years : ["2025"]} />
       </Suspense>
-      <PlatformRoiDashboard data={statusPerPlatform} />
+      {statusPerPlatform.length === 0 && !month && !year ? (
+        <div className="flex flex-col gap-3 h-60 items-center justify-center rounded-xl border border-dashed border-border/50 p-8 text-center bg-card/30">
+          <p className="text-muted-foreground text-sm max-w-sm">
+            No applications found. Add your job applications to unlock platform
+            ROI analytics.
+          </p>
+          <Button asChild size="sm" className="gap-1.5 font-semibold">
+            <Link href="/applications">+ Add Application</Link>
+          </Button>
+        </div>
+      ) : (
+        <PlatformRoiDashboard data={statusPerPlatform} />
+      )}
     </div>
   );
 }

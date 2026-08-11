@@ -13,6 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, Globe } from "lucide-react";
 import { getStatusKind, statusLabels, StatusKind } from "@/lib/utils";
 
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+
 type PlatformData = {
   platformName: string;
   statuses: { status: string; value: number }[];
@@ -44,16 +48,36 @@ const getStatusBgColor = (kind: StatusKind) => {
 };
 
 export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const hasFilter = Boolean(searchParams.get("month") || searchParams.get("year"));
+
   const [sortBy, setSortBy] = useState<
     "total" | "interview" | "response" | "name"
   >("total");
 
   if (!data || data.length === 0) {
     return (
-      <div className="flex h-60 items-center justify-center rounded-lg border border-dashed p-8 text-center">
-        <p className="text-muted-foreground">
-          No platform application data found for the selected period.
+      <div className="flex flex-col gap-3 h-60 items-center justify-center rounded-xl border border-dashed border-border/50 p-8 text-center bg-card/30">
+        <p className="text-muted-foreground text-sm max-w-sm">
+          {hasFilter
+            ? "No platform application data found matching your selected timeframe filter."
+            : "No application data found. Add your job applications to unlock platform ROI analytics."}
         </p>
+        {hasFilter ? (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => router.push("?")}
+            className="gap-1.5 font-semibold text-xs cursor-pointer"
+          >
+            Clear Filters
+          </Button>
+        ) : (
+          <Button asChild size="sm" className="gap-1.5 font-semibold text-xs cursor-pointer">
+            <Link href="/applications">+ Add Application</Link>
+          </Button>
+        )}
       </div>
     );
   }
@@ -177,37 +201,49 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
           <Globe className="h-5 w-5 text-primary" />
           Platform Conversion & Yield Matrix
         </h2>
-        <div className="flex items-center gap-2 text-xs font-medium">
-          <span className="text-muted-foreground">Sort by:</span>
+        <div className="flex items-center gap-1.5 text-xs font-medium">
+          <span className="text-muted-foreground mr-1">Sort by:</span>
           <Button
-            variant={sortBy === "total" ? "secondary" : "ghost"}
+            variant={sortBy === "total" ? "default" : "ghost"}
             size="sm"
             onClick={() => setSortBy("total")}
-            className="h-7 text-xs px-2.5"
+            className={cn(
+              "h-7 text-xs px-2.5 rounded-lg cursor-pointer transition-all",
+              sortBy === "total" ? "font-bold shadow-2xs" : "font-normal text-muted-foreground"
+            )}
           >
             Volume
           </Button>
           <Button
-            variant={sortBy === "interview" ? "secondary" : "ghost"}
+            variant={sortBy === "interview" ? "default" : "ghost"}
             size="sm"
             onClick={() => setSortBy("interview")}
-            className="h-7 text-xs px-2.5"
+            className={cn(
+              "h-7 text-xs px-2.5 rounded-lg cursor-pointer transition-all",
+              sortBy === "interview" ? "font-bold shadow-2xs" : "font-normal text-muted-foreground"
+            )}
           >
             Interview Rate
           </Button>
           <Button
-            variant={sortBy === "response" ? "secondary" : "ghost"}
+            variant={sortBy === "response" ? "default" : "ghost"}
             size="sm"
             onClick={() => setSortBy("response")}
-            className="h-7 text-xs px-2.5"
+            className={cn(
+              "h-7 text-xs px-2.5 rounded-lg cursor-pointer transition-all",
+              sortBy === "response" ? "font-bold shadow-2xs" : "font-normal text-muted-foreground"
+            )}
           >
             Response Rate
           </Button>
           <Button
-            variant={sortBy === "name" ? "secondary" : "ghost"}
+            variant={sortBy === "name" ? "default" : "ghost"}
             size="sm"
             onClick={() => setSortBy("name")}
-            className="h-7 text-xs px-2.5"
+            className={cn(
+              "h-7 text-xs px-2.5 rounded-lg cursor-pointer transition-all",
+              sortBy === "name" ? "font-bold shadow-2xs" : "font-normal text-muted-foreground"
+            )}
           >
             Name
           </Button>
@@ -223,30 +259,30 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
               className="bg-background/40 backdrop-blur border border-border/50 hover:border-primary/30 transition-colors duration-300 flex flex-col justify-between"
             >
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center font-bold text-primary capitalize text-sm">
+                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center font-bold text-primary capitalize text-sm shrink-0">
                       {platform.platformName.slice(0, 2)}
                     </div>
-                    <div>
-                      <CardTitle className="text-base font-semibold capitalize">
+                    <div className="min-w-0">
+                      <CardTitle className="text-base font-semibold capitalize truncate">
                         {platform.platformName}
                       </CardTitle>
-                      <CardDescription className="text-xs">
+                      <CardDescription className="text-xs truncate">
                         {platform.total} total{" "}
                         {platform.total === 1 ? "application" : "applications"}
                       </CardDescription>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex flex-wrap items-center gap-1.5">
                     <Badge
                       variant={
                         platform.interviewRate > 0 ? "default" : "outline"
                       }
                       className={
                         platform.interviewRate > 0
-                          ? "bg-blue-500/15 text-blue-500 hover:bg-blue-500/20 border-blue-500/30"
-                          : ""
+                          ? "bg-blue-500/15 text-blue-500 hover:bg-blue-500/20 border-blue-500/30 text-[11px]"
+                          : "text-[11px]"
                       }
                     >
                       {platform.interviewRate.toFixed(1)}% interview
@@ -257,8 +293,8 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
                       }
                       className={
                         platform.responseRate >= 20
-                          ? "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/30"
-                          : ""
+                          ? "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/30 text-[11px]"
+                          : "text-[11px]"
                       }
                     >
                       {platform.responseRate.toFixed(1)}% response
