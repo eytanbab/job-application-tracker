@@ -2,13 +2,20 @@
 
 import * as React from "react";
 import { Check, ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import {
+  cn,
+  locationOptions,
+  platformOptions,
+  mergeWithDefaultOptions,
+} from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverAnchor,
 } from "@/components/ui/popover";
+
+export { locationOptions, platformOptions, mergeWithDefaultOptions };
 
 export interface ComboboxInputProps {
   value?: string;
@@ -20,34 +27,6 @@ export interface ComboboxInputProps {
   id?: string;
   name?: string;
   disabled?: boolean;
-}
-
-export const locationOptions = ["Remote", "Hybrid", "On-site"];
-
-export const platformOptions = [
-  "LinkedIn",
-  "Indeed",
-  "Glassdoor",
-  "Company Website",
-  "Other",
-];
-
-export function mergeWithDefaultOptions(
-  userOptions: string[] = [],
-  defaultOptions: string[] = [],
-): string[] {
-  const merged: string[] = [];
-  const seen = new Set<string>();
-
-  for (const item of [...userOptions, ...defaultOptions]) {
-    const trimmed = item?.trim();
-    if (trimmed && !seen.has(trimmed.toLowerCase())) {
-      seen.add(trimmed.toLowerCase());
-      merged.push(trimmed);
-    }
-  }
-
-  return merged;
 }
 
 export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputProps>(
@@ -148,9 +127,18 @@ export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputPro
               return (
                 <div
                   key={opt}
+                  role="option"
+                  aria-selected={isSelected}
+                  tabIndex={0}
                   onMouseDown={(e) => {
                     e.preventDefault();
                     handleSelectOption(opt);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleSelectOption(opt);
+                    }
                   }}
                   className={cn(
                     "relative flex w-full cursor-pointer select-none items-center rounded-lg py-1.5 pl-8 pr-2 text-xs font-medium outline-none hover:bg-accent hover:text-accent-foreground transition-colors",

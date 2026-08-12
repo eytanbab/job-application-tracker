@@ -298,3 +298,32 @@ export function safeFormatDate(
   }
   return dateFnsFormat(new Date(), formatStr);
 }
+
+export const locationOptions = ["Remote", "Hybrid", "On-site"];
+
+export const platformOptions = [
+  "LinkedIn",
+  "Indeed",
+  "Glassdoor",
+  "Company Website",
+  "Other",
+];
+
+export function mergeWithDefaultOptions(
+  userOptions: string[] = [],
+  defaultOptions: string[] = [],
+): string[] {
+  const merged: string[] = [];
+  const seen = new Set<string>();
+
+  for (const item of [...userOptions, ...defaultOptions]) {
+    const trimmed = item?.trim();
+    if (trimmed && !seen.has(trimmed.toLowerCase())) {
+      seen.add(trimmed.toLowerCase());
+      merged.push(trimmed);
+    }
+  }
+
+  return merged;
+}
+
