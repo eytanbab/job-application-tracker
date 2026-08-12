@@ -119,7 +119,7 @@ test.describe("Applications Page E2E Suite", () => {
       const rejectedItem = page.locator("[role='option']:has-text('Rejected'), [role='option']:has-text('Rejection')").first();
       if (await rejectedItem.isVisible()) {
         await rejectedItem.click();
-        await expect(page.locator("text=Status updated")).toBeVisible();
+        await expect(page.locator("text=Status updated").first()).toBeVisible();
       }
     }
 

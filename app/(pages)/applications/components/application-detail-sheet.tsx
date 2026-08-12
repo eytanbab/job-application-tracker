@@ -140,12 +140,16 @@ export function ApplicationDetailSheet({
     newStatusText?: string,
   ) => {
     if (!activeApp.id) return;
+    
+    const baseStatus = newStatusText !== undefined ? newStatusText : activeApp.status;
+    const updatedStatus = getStatusDisplay(baseStatus, newCategory);
+    
+    if (newCategory === activeApp.statusCategory && updatedStatus === activeApp.status) {
+      return;
+    }
+
     startSaveTransition(async () => {
       try {
-        const updatedStatus = getStatusDisplay(
-          newStatusText || activeApp.status,
-          newCategory,
-        );
         const payload = {
           ...activeApp,
           id: activeApp.id,

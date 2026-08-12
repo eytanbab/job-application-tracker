@@ -109,7 +109,6 @@ export function ApplicationDetailView({
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.currentTarget.blur();
-                  handleQuickStatusChange(currentKind, quickStatusText);
                 }
               }}
               className="h-9 text-xs bg-card border-border/40 pr-20"
