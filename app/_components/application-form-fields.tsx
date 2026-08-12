@@ -42,6 +42,8 @@ import {
   ComboboxInput,
 } from "@/components/ui/combobox-input";
 
+const DEFAULT_EMPTY_ARRAY: string[] = [];
+
 interface ApplicationFormFieldsProps {
   form: UseFormReturn<FormValues>;
   isPending: boolean;
@@ -54,8 +56,8 @@ export function ApplicationFormFields({
   form,
   isPending,
   onCancel,
-  userLocations = [],
-  userPlatforms = [],
+  userLocations = DEFAULT_EMPTY_ARRAY,
+  userPlatforms = DEFAULT_EMPTY_ARRAY,
 }: ApplicationFormFieldsProps) {
   const mergedLocations = useMemo(
     () => mergeWithDefaultOptions(userLocations, locationOptions),

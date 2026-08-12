@@ -2,17 +2,15 @@
 
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 export const OPEN_CREATE_APP_EVENT = "open-create-application";
 
-export function triggerOpenCreateModal(
-  router?: ReturnType<typeof useRouter>,
-  pathname?: string,
-) {
+export function triggerOpenCreateModal(router?: ReturnType<typeof useRouter>) {
   if (typeof window !== "undefined") {
-    if (pathname && !pathname.startsWith("/applications") && router) {
+    const pathname = window.location.pathname;
+    if (!pathname.startsWith("/applications") && router) {
       sessionStorage.setItem("auto_open_create_app", "true");
       router.push("/applications");
     } else {
@@ -37,13 +35,12 @@ export function NewApplicationButton({
   variant = "default",
 }: NewApplicationButtonProps) {
   const router = useRouter();
-  const pathname = usePathname();
 
   const handleClick = () => {
     if (onClick) {
       onClick();
     } else {
-      triggerOpenCreateModal(router, pathname);
+      triggerOpenCreateModal(router);
     }
   };
 

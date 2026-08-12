@@ -47,12 +47,12 @@ export function BlackHoleBreakdownCard({
                 className="h-3.5 w-full rounded-full bg-muted/60 flex overflow-hidden p-0.5 gap-0.5"
               >
                 <div
-                  className="h-full rounded-sm bg-slate-400 dark:bg-slate-500 bg-[linear-gradient(135deg,rgba(255,255,255,0.25)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.25)_50%,rgba(255,255,255,0.25)_75%,transparent_75%)] bg-[size:8px_8px] transition-all duration-500"
+                  className="h-full rounded-sm bg-slate-400 dark:bg-slate-500 bg-[linear-gradient(135deg,rgba(255,255,255,0.25)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.25)_50%,rgba(255,255,255,0.25)_75%,transparent_75%)] bg-[size:8px_8px] transition-[width] duration-500"
                   style={{ width: `${Math.max(ghostedPct, 2)}%` }}
                   title={`Ghosted (Striped Pattern): ${ghosted} (${ghostedPct.toFixed(1)}%)`}
                 />
                 <div
-                  className="h-full rounded-sm bg-rose-500 transition-all duration-500"
+                  className="h-full rounded-sm bg-rose-500 transition-[width] duration-500"
                   style={{ width: `${Math.max(rejectedPct, 2)}%` }}
                   title={`Rejected (Solid Red): ${rejected} (${rejectedPct.toFixed(1)}%)`}
                 />
