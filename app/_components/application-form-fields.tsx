@@ -60,7 +60,10 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
           const currentStatus = form.watch("status") || "";
           return (
             <FormItem className="space-y-0">
-              <FormLabel>Status Category</FormLabel>
+              <FormLabel>
+                Status Category
+                <span className="text-destructive ml-1">*</span>
+              </FormLabel>
               <Select
                 value={field.value || getStatusKind(currentStatus)}
                 onValueChange={(value) => {
@@ -203,7 +206,10 @@ export function ApplicationFormFields({
         name="role_name"
         render={({ field }) => (
           <FormItem className="space-y-0 col-span-full md:col-span-1">
-            <FormLabel>Role Title</FormLabel>
+            <FormLabel>
+              Role Title
+              <span className="text-destructive ml-1">*</span>
+            </FormLabel>
             <FormControl>
               <Input
                 placeholder="Frontend developer"
@@ -220,7 +226,10 @@ export function ApplicationFormFields({
         name="company_name"
         render={({ field }) => (
           <FormItem className="space-y-0 col-span-full md:col-span-1">
-            <FormLabel>Company Name</FormLabel>
+            <FormLabel>
+              Company Name
+              <span className="text-destructive ml-1">*</span>
+            </FormLabel>
             <FormControl>
               <Input
                 placeholder="e.g. Acme Corp"
@@ -254,7 +263,10 @@ export function ApplicationFormFields({
         name="location"
         render={({ field }) => (
           <FormItem className="space-y-0 col-span-full md:col-span-1">
-            <FormLabel>Location</FormLabel>
+            <FormLabel>
+              Location
+              <span className="text-destructive ml-1">*</span>
+            </FormLabel>
             <FormControl>
               <ComboboxInput
                 {...field}
@@ -275,7 +287,10 @@ export function ApplicationFormFields({
         name="platform"
         render={({ field }) => (
           <FormItem className="space-y-0 col-span-full">
-            <FormLabel>Platform</FormLabel>
+            <FormLabel>
+              Platform
+              <span className="text-destructive ml-1">*</span>
+            </FormLabel>
             <FormControl>
               <ComboboxInput
                 {...field}
