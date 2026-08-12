@@ -38,6 +38,7 @@ const formSchema = z.object({
   company_name: z.string().min(2, {
     message: "Company name must be at least 2 characters.",
   }),
+  date_applied: z.any(),
   link: z
     .string()
     .trim()
@@ -59,6 +60,8 @@ const formSchema = z.object({
   statusCategory: z.string().min(2, {
     message: "Choose a status category.",
   }),
+  month: z.string().optional(),
+  year: z.string().optional(),
   salary: z.string().nullable().optional(),
 });
 
