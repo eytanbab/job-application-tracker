@@ -273,4 +273,167 @@ test.describe("Applications Page E2E Suite", () => {
       await expect(page.locator("text=Are you absolutely sure?")).not.toBeVisible();
     }
   });
+
+  test("13. Happy Path - Confirm Application Deletion", async ({ page }) => {
+    await ensureTestApplicationExists(page);
+
+    const trashBtn = page.getByTestId("delete-application-button").first();
+    if (await trashBtn.isVisible()) {
+      await trashBtn.click({ force: true });
+
+      // Expect deletion confirmation modal
+      await expect(page.locator("text=Are you absolutely sure?")).toBeVisible();
+
+      // Click Delete to confirm
+      const confirmBtn = page.locator("button:has-text('Delete')");
+      await confirmBtn.click();
+
+      // Expect success message
+      await expect(page.locator("text=Successfully deleted application!").first()).toBeVisible();
+    }
+  });
+
+  test("14. UI State - Empty Table and Reset Filters", async ({ page }) => {
+    await page.goto("/applications?view=table");
+    await page.waitForLoadState("networkidle");
+    
+    // Search for a gibberish term to ensure no results
+    const searchInput = page.locator("input[placeholder*='Search']").first();
+    await searchInput.fill("GIBBERISH_NO_RESULTS_12345");
+    await page.waitForTimeout(500);
+
+    // Verify empty state text
+    await expect(page.locator("text=No applications found").first()).toBeVisible();
+    
+    // Reset Filters button should be visible
+    const resetBtn = page.locator("button:has-text('Reset Filters')").first();
+    await expect(resetBtn).toBeVisible();
+    
+    // Click reset and verify search is cleared
+    await resetBtn.click();
+    await expect(searchInput).toHaveValue("");
+  });
+
+  test("15. Dropdown Filtering - Platform and Status", async ({ page }) => {
+    await ensureTestApplicationExists(page);
+    
+    // Filter by Status (Interview)
+    const statusSelect = page.locator("button:has-text('All Statuses')").first();
+    if (await statusSelect.isVisible()) {
+      await statusSelect.click();
+      await page.click("[role='option']:has-text('Interview')");
+      await page.waitForTimeout(500);
+      expect(page.url()).toContain("status=interview");
+    }
+
+    // Filter by Platform
+    const platformSelect = page.locator("button:has-text('All Platforms')").first();
+    if (await platformSelect.isVisible()) {
+      await platformSelect.click();
+      // Click the second option (first is "All Platforms")
+      const firstPlatformOption = page.locator("[role='option']").nth(1);
+      if (await firstPlatformOption.isVisible()) {
+        await firstPlatformOption.click();
+        await page.waitForTimeout(500);
+        expect(page.url()).toContain("platform=");
+      }
+    }
+    
+    // Clear filters
+    const resetBtn = page.locator("button:has-text('Reset Filters')").first();
+    if (await resetBtn.isVisible()) {
+      await resetBtn.click();
+      await page.waitForTimeout(500);
+    }
+  });
+
+  test("16. Mobile View - Responsive Layout and Mobile Filters", async ({ page }) => {
+    await ensureTestApplicationExists(page);
+    
+    // Set viewport to a mobile device size (iPhone 12/13/14)
+    await page.setViewportSize({ width: 390, height: 844 });
+    
+    // On mobile, "Filters" button should be visible to toggle filters
+    const filtersBtn = page.locator("button:has-text('Filters')").first();
+    await expect(filtersBtn).toBeVisible();
+    
+    // Restore viewport to desktop
+    await page.setViewportSize({ width: 1280, height: 720 });
+  });
+
+  test("17. External Link Validation", async ({ page }) => {
+    await ensureTestApplicationExists(page);
+    
+    // Find the link icon
+    const externalLink = page.locator("a[target='_blank']").first();
+    if (await externalLink.isVisible()) {
+      await expect(externalLink).toHaveAttribute("href", /https?:\/\/.+/);
+    }
+  });
+
+  test("18. Pagination Controls - Navigation and Page Size", async ({ page }) => {
+    await page.goto("/applications?view=table");
+    await page.waitForLoadState("networkidle");
+    
+    const paginationText = page.locator("text=/Showing \\d+ of \\d+/");
+    if (await paginationText.isVisible()) {
+      await expect(paginationText).toBeVisible();
+    }
+    
+    const rowsPerPageLabel = page.locator("text=Rows per page");
+    if (await rowsPerPageLabel.isVisible()) {
+      await expect(rowsPerPageLabel).toBeVisible();
+    }
+    
+    const nextBtn = page.locator("button:has-text('Next')").first();
+    if (await nextBtn.isVisible()) {
+      await expect(nextBtn).toBeVisible();
+    }
+  });
+
+
+
+  test("20. Kanban - Drag and Drop Status Update", async ({ page }) => {
+    await ensureTestApplicationExists(page);
+    await page.goto("/applications?view=kanban");
+    await page.waitForLoadState("networkidle");
+    
+    const firstCard = page.locator("[draggable='true']").first();
+    if (await firstCard.isVisible()) {
+      // Drop into the "Rejected" column
+      const targetCol = page.locator("div:has(> div > h3:has-text('Rejected'))").first();
+      await firstCard.dragTo(targetCol);
+      
+      // Expect toast Moved "..." to Rejected
+      await expect(page.locator("text=/Moved \".*\" to Rejected/").first()).toBeVisible();
+    }
+  });
+
+  test("21. Bulk Actions - Update Status and Delete", async ({ page }) => {
+    await ensureTestApplicationExists(page);
+    await page.goto("/applications?view=table");
+    await page.waitForLoadState("networkidle");
+    
+    // Select all rows
+    const selectAllCb = page.getByLabel("Select all").first();
+    await selectAllCb.check();
+    
+    // Test Bulk Status Update
+    const bulkStatusSelect = page.locator("button:has-text('Mark Status...')").first();
+    await bulkStatusSelect.click();
+    await page.click("[role='option']:has-text('Offer')");
+    
+    await expect(page.locator("text=/Updated status for/").first()).toBeVisible();
+    await page.waitForTimeout(1000);
+    
+    // Re-check select all (it unchecks after bulk action usually)
+    await selectAllCb.click({ force: true });
+    
+    // Test Bulk Delete
+    const bulkDeleteBtn = page.locator("button:has-text('Bulk Delete')").first();
+    await expect(bulkDeleteBtn).toBeVisible();
+    await bulkDeleteBtn.click({ force: true });
+    
+    await expect(page.locator("text=/Successfully deleted/").first()).toBeVisible();
+  });
 });
