@@ -28,7 +28,7 @@ const aiFormSchema = z.object({
     .transform((val) =>
       val && !/^https?:\/\//i.test(val) ? `https://${val}` : val,
     )
-    .pipe(z.string().url({ message: "Please enter a valid job posting URL." })),
+    .pipe(z.url({ message: "Please enter a valid job posting URL." })),
 });
 
 interface AiExtractFormProps {

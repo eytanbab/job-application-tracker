@@ -45,7 +45,7 @@ const formSchema = z.object({
     .transform((val) =>
       val && !/^https?:\/\//i.test(val) ? `https://${val}` : val,
     )
-    .pipe(z.string().url({ message: "Please enter a valid URL." })),
+    .pipe(z.url({ message: "Please enter a valid URL." })),
   description: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   location: z.string().min(2, {
