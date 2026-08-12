@@ -2,6 +2,17 @@
 
 import { History, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { formatDate } from "date-fns";
 import { getStatusDisplay, getStatusKind, statusLabels } from "@/lib/utils";
 
@@ -80,14 +91,45 @@ export function ApplicationTimeline({
                       {formattedTime}
                     </span>
                     {item.id && (
-                      <button
-                        type="button"
-                        onClick={() => onDeleteEntry(item.id)}
-                        className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
-                        title="Delete this timeline entry"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button
+                            type="button"
+                            className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity p-0.5 cursor-pointer"
+                            title="Delete this timeline entry"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Delete Timeline Entry</DialogTitle>
+                            <DialogDescription>
+                              Are you sure you want to delete the status entry{" "}
+                              <strong className="text-foreground">
+                                {displayTitle}
+                              </strong>{" "}
+                              from your application timeline? This action cannot be undone.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <DialogFooter className="gap-2 sm:gap-0">
+                            <DialogClose asChild>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => onDeleteEntry(item.id)}
+                              >
+                                Delete Entry
+                              </Button>
+                            </DialogClose>
+                            <DialogClose asChild>
+                              <Button type="button" variant="outline" size="sm">
+                                Cancel
+                              </Button>
+                            </DialogClose>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
                     )}
                   </div>
                 </div>
