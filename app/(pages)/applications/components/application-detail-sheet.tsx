@@ -322,13 +322,13 @@ export function ApplicationDetailSheet({
               <Pencil className="h-4 w-4" /> Edit Details
             </Button>
 
-            {onDeleteClick && currentApp.id && (
+            {onDeleteClick && currentApp?.id && (
               <Button
                 variant="destructive"
                 size="sm"
                 className="gap-2 h-9 font-medium rounded-md"
                 onClick={() => {
-                  if (currentApp.id) {
+                  if (currentApp?.id) {
                     onDeleteClick(currentApp.id);
                     onOpenChange(false);
                   }
