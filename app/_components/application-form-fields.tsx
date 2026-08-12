@@ -50,6 +50,137 @@ interface ApplicationFormFieldsProps {
   userPlatforms?: string[];
 }
 
+function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
+  return (
+    <div className="col-span-full grid grid-cols-1 md:grid-cols-2 gap-3">
+      <FormField
+        control={form.control}
+        name="statusCategory"
+        render={({ field }) => {
+          const currentStatus = form.watch("status") || "";
+          return (
+            <FormItem className="space-y-0">
+              <FormLabel>Status Category</FormLabel>
+              <Select
+                value={field.value || getStatusKind(currentStatus)}
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  const defaultLabel =
+                    statusLabels[value as keyof typeof statusLabels] || "";
+                  const prevStatus = form.getValues("status");
+                  const isStandard = Object.values(statusLabels).some(
+                    (lbl) => lbl.toLowerCase() === (prevStatus || "").toLowerCase(),
+                  );
+                  if (!prevStatus || isStandard) {
+                    form.setValue("status", defaultLabel || prevStatus, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    });
+                  }
+                }}
+              >
+                <FormControl>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select status category" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {statusOptions.map((status) => (
+                    <SelectItem key={status.value} value={status.value}>
+                      {status.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
+      />
+
+      <FormField
+        control={form.control}
+        name="status"
+        render={({ field: statusField }) => (
+          <FormItem className="space-y-0">
+            <FormLabel>Stage Details / Custom Status</FormLabel>
+            <FormControl>
+              <Input
+                placeholder="e.g. Technical Interview / Phone Screen..."
+                {...statusField}
+                value={statusField.value || ""}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
+  );
+}
+
+function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
+  return (
+    <FormField
+      control={form.control}
+      name="date_applied"
+      render={({ field }) => {
+        const selectedDate = (() => {
+          if (!field.value) return undefined;
+          if ((field.value as unknown) instanceof Date) {
+            const d = field.value as unknown as Date;
+            return isNaN(d.getTime()) ? undefined : d;
+          }
+          const str = String(field.value).trim();
+          if (!str) return undefined;
+          const isoStr = str.includes("T") ? str : `${str}T12:00:00`;
+          const d = new Date(isoStr);
+          return isNaN(d.getTime()) ? undefined : d;
+        })();
+
+        return (
+          <FormItem className="space-y-0 col-span-full">
+            <FormLabel>Date applied</FormLabel>
+            <Popover>
+              <PopoverTrigger asChild>
+                <FormControl>
+                  <Button
+                    role="combobox"
+                    variant={"outline"}
+                    className={cn(
+                      "group flex h-10 w-full rounded-xl border border-slate-200/90 dark:border-border/40 bg-slate-100/80 hover:bg-slate-100 hover:border-slate-300 dark:hover:border-border/80 focus:bg-white dark:focus:bg-card focus:border-primary/60 focus:ring-4 focus:ring-primary/15 dark:bg-muted/30 dark:hover:bg-muted/50 px-4 py-2 text-base font-normal text-foreground disabled:cursor-not-allowed disabled:opacity-50 md:text-sm shadow-2xs transition-all duration-150",
+                      !field.value && "text-muted-foreground/70",
+                    )}
+                  >
+                    {field.value ? (
+                      safeFormatDate(field.value, "PPP")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
+                    <CalendarIcon className="ml-auto h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+                  </Button>
+                </FormControl>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  showYearSwitcher={false}
+                  selected={selectedDate}
+                  onSelect={field.onChange}
+                  disabled={(date: Date) =>
+                    date > new Date() || date < new Date("1900-01-01")
+                  }
+                />
+              </PopoverContent>
+            </Popover>
+            <FormMessage />
+          </FormItem>
+        );
+      }}
+    />
+  );
+}
+
 export function ApplicationFormFields({
   form,
   isPending,
@@ -138,70 +269,7 @@ export function ApplicationFormFields({
           </FormItem>
         )}
       />
-      <div className="col-span-full grid grid-cols-1 md:grid-cols-2 gap-3">
-        <FormField
-          control={form.control}
-          name="statusCategory"
-          render={({ field }) => {
-            const currentStatus = form.watch("status") || "";
-            return (
-              <FormItem className="space-y-0">
-                <FormLabel>Status Category</FormLabel>
-                <Select
-                  value={field.value || getStatusKind(currentStatus)}
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    const defaultLabel =
-                      statusLabels[value as keyof typeof statusLabels] || "";
-                    const prevStatus = form.getValues("status");
-                    const isStandard = Object.values(statusLabels).some(
-                      (lbl) => lbl.toLowerCase() === (prevStatus || "").toLowerCase(),
-                    );
-                    if (!prevStatus || isStandard) {
-                      form.setValue("status", defaultLabel || prevStatus, {
-                        shouldDirty: true,
-                        shouldValidate: true,
-                      });
-                    }
-                  }}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select status category" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {statusOptions.map((status) => (
-                      <SelectItem key={status.value} value={status.value}>
-                        {status.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            );
-          }}
-        />
-
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field: statusField }) => (
-            <FormItem className="space-y-0">
-              <FormLabel>Stage Details / Custom Status</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="e.g. Technical Interview / Phone Screen..."
-                  {...statusField}
-                  value={statusField.value || ""}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+      <StatusFormFields form={form} />
       <FormField
         control={form.control}
         name="platform"
@@ -222,63 +290,7 @@ export function ApplicationFormFields({
           </FormItem>
         )}
       />
-      <FormField
-        control={form.control}
-        name="date_applied"
-        render={({ field }) => {
-          const selectedDate = (() => {
-            if (!field.value) return undefined;
-            if ((field.value as unknown) instanceof Date) {
-              const d = field.value as unknown as Date;
-              return isNaN(d.getTime()) ? undefined : d;
-            }
-            const str = String(field.value).trim();
-            if (!str) return undefined;
-            const isoStr = str.includes("T") ? str : `${str}T12:00:00`;
-            const d = new Date(isoStr);
-            return isNaN(d.getTime()) ? undefined : d;
-          })();
-
-          return (
-            <FormItem className="space-y-0 col-span-full">
-              <FormLabel>Date applied</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      role="combobox"
-                      variant={"outline"}
-                      className={cn(
-                        "group flex h-10 w-full rounded-xl border border-slate-200/90 dark:border-border/40 bg-slate-100/80 hover:bg-slate-100 hover:border-slate-300 dark:hover:border-border/80 focus:bg-white dark:focus:bg-card focus:border-primary/60 focus:ring-4 focus:ring-primary/15 dark:bg-muted/30 dark:hover:bg-muted/50 px-4 py-2 text-base font-normal text-foreground disabled:cursor-not-allowed disabled:opacity-50 md:text-sm shadow-2xs transition-all duration-150",
-                        !field.value && "text-muted-foreground/70",
-                      )}
-                    >
-                      {field.value ? (
-                        safeFormatDate(field.value, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 text-muted-foreground group-hover:text-foreground" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    showYearSwitcher={false}
-                    selected={selectedDate}
-                    onSelect={field.onChange}
-                    disabled={(date: Date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          );
-        }}
-      />
+      <DateAppliedFormField form={form} />
       <FormField
         control={form.control}
         name="link"
