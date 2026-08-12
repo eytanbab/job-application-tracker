@@ -84,7 +84,7 @@ Use relevant module scopes: `ui`, `db`, `auth`, `api`, `tracker`, `scraper`, `s3
 
 - **Log-First Diagnostics**: Fetch and inspect full error logs/tracebacks before diagnosing issues.
 - **No Superficial Symptom Patches**: Address underlying root causes. Do not swallow errors, add dummy fallbacks, or comment out failing checks.
-- **Empirical Verification**: Run verification commands (`npx tsc` for type checking, `npm run build` for build verification) before declaring any task complete.
+- **Empirical Verification**: Run verification commands (`npx tsc` for type checking, `npm run build` for build verification, and relevant test suites) after **each time you change the code**, ensuring everything passes before declaring a task complete or committing to Git.
 
 ---
 
