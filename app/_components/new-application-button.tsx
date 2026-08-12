@@ -5,9 +5,9 @@ import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-export const OPEN_CREATE_APP_EVENT = "open-create-application";
+const OPEN_CREATE_APP_EVENT = "open-create-application";
 
-export function triggerOpenCreateModal(router?: ReturnType<typeof useRouter>) {
+function triggerOpenCreateModal(router?: ReturnType<typeof useRouter>) {
   if (typeof window !== "undefined") {
     const pathname = window.location.pathname;
     if (!pathname.startsWith("/applications") && router) {

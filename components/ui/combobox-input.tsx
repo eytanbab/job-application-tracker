@@ -2,20 +2,13 @@
 
 import * as React from "react";
 import { Check, ChevronDown } from "lucide-react";
-import {
-  cn,
-  locationOptions,
-  platformOptions,
-  mergeWithDefaultOptions,
-} from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverAnchor,
 } from "@/components/ui/popover";
-
-export { locationOptions, platformOptions, mergeWithDefaultOptions };
 
 export interface ComboboxInputProps {
   value?: string;

@@ -32,15 +32,13 @@ import {
   statusLabels,
   statusOptions,
   safeFormatDate,
-} from "@/lib/utils";
-import { useMemo } from "react";
-import { FormValues } from "./application-form";
-import {
   locationOptions,
   platformOptions,
   mergeWithDefaultOptions,
-  ComboboxInput,
-} from "@/components/ui/combobox-input";
+} from "@/lib/utils";
+import { useMemo } from "react";
+import { FormValues } from "./application-form";
+import { ComboboxInput } from "@/components/ui/combobox-input";
 
 const DEFAULT_EMPTY_ARRAY: string[] = [];
 
