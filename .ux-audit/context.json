@@ -6,6 +6,6 @@
   "platform": ["web"],
   "known_pain_points": "Chart legend clarity, responsive layout on mobile, filtering options context, visual hierarchy, navigation between analytics subpages.",
   "reference_product": "Huntr, Teal, LinkedIn Insights",
-  "last_flow": "analytics",
-  "last_updated": "2026-08-12"
+  "last_flow": "application-forms",
+  "last_updated": "2026-08-13"
 }
