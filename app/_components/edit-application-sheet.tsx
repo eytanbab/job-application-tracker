@@ -57,6 +57,7 @@ export const EditApplicationSheet = ({
           <Button
             variant="ghost"
             size="icon"
+            data-testid="edit-application-button"
             className="h-8 w-8 text-muted-foreground hover:text-foreground"
             title="Edit application"
             onClick={(e) => {

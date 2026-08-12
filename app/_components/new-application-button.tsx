@@ -47,6 +47,7 @@ export function NewApplicationButton({
   return (
     <Button
       type="button"
+      data-testid="add-application-button"
       variant={variant}
       onClick={handleClick}
       className={cn(

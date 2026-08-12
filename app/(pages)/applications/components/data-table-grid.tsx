@@ -80,6 +80,7 @@ export function DataTableGrid<
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
+                  data-testid="table-row"
                   tabIndex={0}
                   role="button"
                   data-state={row.getIsSelected() && "selected"}

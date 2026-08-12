@@ -279,6 +279,7 @@ export const columns: ColumnDef<FormValues>[] = [
             <Button
               variant="ghost"
               size="icon"
+              data-testid="view-details-button"
               className="h-8 w-8 text-muted-foreground hover:text-foreground"
               title="View details"
               onClick={(e) => {
@@ -307,6 +308,7 @@ export const columns: ColumnDef<FormValues>[] = [
               <Button
                 variant="ghost"
                 size="icon"
+                data-testid="delete-application-button"
                 className="h-8 w-8 text-muted-foreground hover:text-destructive"
                 title="Delete application"
                 onClick={(e) => e.stopPropagation()}

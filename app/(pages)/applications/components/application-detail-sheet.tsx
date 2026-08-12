@@ -96,6 +96,8 @@ export function ApplicationDetailSheet({
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isSaving, startSaveTransition] = useTransition();
 
+  const activeApp = initialApp || currentApp;
+
   useEffect(() => {
     setCurrentApp(initialApp);
     if (initialApp) {
@@ -106,6 +108,7 @@ export function ApplicationDetailSheet({
       setQuickStatusText(effectiveStatus);
 
       if (open) {
+        setIsEditing(false);
         setIsLoadingHistory(true);
         getApplicationHistory(initialApp.id as string)
           .then((res) => {
@@ -121,39 +124,39 @@ export function ApplicationDetailSheet({
     }
   }, [initialApp, open]);
 
-  if (!currentApp) return null;
+  if (!activeApp) return null;
 
   const currentKind = getStatusKind(
-    currentApp.status,
-    currentApp.statusCategory,
+    activeApp.status,
+    activeApp.statusCategory,
   );
   const displayStatusText = getStatusDisplay(
-    currentApp.status,
-    currentApp.statusCategory,
+    activeApp.status,
+    activeApp.statusCategory,
   );
 
   const handleQuickStatusChange = (
     newCategory: string,
     newStatusText?: string,
   ) => {
-    if (!currentApp.id) return;
+    if (!activeApp.id) return;
     startSaveTransition(async () => {
       try {
         const updatedStatus = getStatusDisplay(
-          newStatusText || currentApp.status,
+          newStatusText || activeApp.status,
           newCategory,
         );
         const payload = {
-          ...currentApp,
-          id: currentApp.id,
-          role_name: currentApp.role_name,
-          company_name: currentApp.company_name,
-          date_applied: currentApp.date_applied,
-          link: currentApp.link,
-          platform: currentApp.platform,
-          location: currentApp.location,
-          month: currentApp.month,
-          year: currentApp.year,
+          ...activeApp,
+          id: activeApp.id,
+          role_name: activeApp.role_name,
+          company_name: activeApp.company_name,
+          date_applied: activeApp.date_applied,
+          link: activeApp.link,
+          platform: activeApp.platform,
+          location: activeApp.location,
+          month: activeApp.month,
+          year: activeApp.year,
           statusCategory: newCategory,
           status: updatedStatus,
         };
@@ -163,8 +166,8 @@ export function ApplicationDetailSheet({
           description: `Status updated to ${statusLabels[newCategory as StatusKind] || newCategory}`,
         });
 
-        if (currentApp.id) {
-          const updatedHistory = await getApplicationHistory(currentApp.id);
+        if (activeApp.id) {
+          const updatedHistory = await getApplicationHistory(activeApp.id);
           setHistory(updatedHistory);
         }
       } catch (err) {
@@ -176,8 +179,6 @@ export function ApplicationDetailSheet({
       }
     });
   };
-
-
 
   const handleDeleteTimelineEntry = async (entryId: string) => {
     try {
@@ -205,17 +206,17 @@ export function ApplicationDetailSheet({
               ) : (
                 <>
                   <DialogTitle className="text-2xl font-bold tracking-tight text-foreground font-heading">
-                    {currentApp.role_name}
+                    {activeApp.role_name}
                   </DialogTitle>
                   <p className="flex items-center gap-1.5 text-base font-medium text-muted-foreground">
                     <Building2 className="h-4 w-4 shrink-0 text-muted-foreground/70" />
-                    {currentApp.company_name}
+                    {activeApp.company_name}
                   </p>
                 </>
               )}
             </div>
 
-            {!isEditing && currentApp.link && (
+            {!isEditing && activeApp.link && (
               <Button
                 variant="outline"
                 size="icon"
@@ -223,7 +224,7 @@ export function ApplicationDetailSheet({
                 asChild
               >
                 <a
-                  href={currentApp.link}
+                  href={activeApp.link}
                   target="_blank"
                   rel="noopener noreferrer"
                   title="Open Job Link"
@@ -244,26 +245,26 @@ export function ApplicationDetailSheet({
               </Badge>
 
               <Badge variant="secondary" className="capitalize">
-                {currentApp.platform}
+                {activeApp.platform}
               </Badge>
 
-              {currentApp.location && (
+              {activeApp.location && (
                 <Badge
                   variant="outline"
                   className="flex items-center gap-1 text-muted-foreground"
                 >
                   <MapPin className="h-3 w-3" />
-                  {currentApp.location}
+                  {activeApp.location}
                 </Badge>
               )}
 
-              {currentApp.salary && (
+              {activeApp.salary && (
                 <Badge
                   variant="outline"
                   className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"
                 >
                   <DollarSign className="h-3 w-3" />
-                  {currentApp.salary}
+                  {activeApp.salary}
                 </Badge>
               )}
             </div>
@@ -273,7 +274,7 @@ export function ApplicationDetailSheet({
         <div className="py-4 space-y-5">
           {isEditing ? (
             <ApplicationForm
-              defaultValues={currentApp as FormValues & { id?: string }}
+              defaultValues={activeApp as FormValues & { id?: string }}
               onClose={() => setIsEditing(false)}
               onSubmit={async (values) => {
                 try {
@@ -281,8 +282,8 @@ export function ApplicationDetailSheet({
                   setCurrentApp(values as ApplicationDetail);
                   setIsEditing(false);
                   toast({ description: "Application updated successfully!" });
-                  if (currentApp.id) {
-                    const updatedHistory = await getApplicationHistory(currentApp.id);
+                  if (activeApp.id) {
+                    const updatedHistory = await getApplicationHistory(activeApp.id);
                     setHistory(updatedHistory);
                   }
                 } catch {
@@ -295,7 +296,7 @@ export function ApplicationDetailSheet({
             />
           ) : (
             <ApplicationDetailView
-              currentApp={currentApp}
+              currentApp={activeApp}
               currentKind={currentKind}
               quickStatusText={quickStatusText}
               setQuickStatusText={setQuickStatusText}
@@ -314,6 +315,7 @@ export function ApplicationDetailSheet({
             <Button
               variant="outline"
               size="sm"
+              data-testid="edit-details-button"
               className="flex-1 gap-2 h-9 font-medium rounded-md"
               onClick={() => setIsEditing(true)}
             >
