@@ -47,6 +47,153 @@ const getStatusBgColor = (kind: StatusKind) => {
   }
 };
 
+function PlatformEmptyState({ hasFilter, onClearFilter }: { hasFilter: boolean; onClearFilter: () => void }) {
+  return (
+    <div className="flex flex-col gap-3 h-60 items-center justify-center rounded-xl border border-dashed border-border/50 p-8 text-center bg-card/30">
+      <p className="text-muted-foreground text-sm max-w-sm">
+        {hasFilter
+          ? "No platform application data found matching your selected timeframe filter."
+          : "No application data found. Add your job applications to unlock platform ROI analytics."}
+      </p>
+      {hasFilter ? (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onClearFilter}
+          className="gap-1.5 font-semibold text-xs cursor-pointer"
+        >
+          Clear Filters
+        </Button>
+      ) : (
+        <Button asChild size="sm" className="gap-1.5 font-semibold text-xs cursor-pointer">
+          <Link href="/applications">+ Add Application</Link>
+        </Button>
+      )}
+    </div>
+  );
+}
+
+interface EnrichedPlatform {
+  platformName: string;
+  total: number;
+  interviewCount: number;
+  offerCount: number;
+  respondedCount: number;
+  responseRate: number;
+  interviewRate: number;
+  statuses: { status: string; value: number }[];
+}
+
+function PlatformRoiCard({ platform }: { platform: EnrichedPlatform }) {
+  return (
+    <Card
+      key={platform.platformName}
+      className="bg-background/40 backdrop-blur border border-border/50 hover:border-primary/30 transition-colors duration-300 flex flex-col justify-between"
+    >
+      <CardHeader className="pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center font-bold text-primary capitalize text-sm shrink-0">
+              {platform.platformName.slice(0, 2)}
+            </div>
+            <div className="min-w-0">
+              <CardTitle className="text-base font-semibold capitalize truncate">
+                {platform.platformName}
+              </CardTitle>
+              <CardDescription className="text-xs truncate">
+                {platform.total} total{" "}
+                {platform.total === 1 ? "application" : "applications"}
+              </CardDescription>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge
+              variant={platform.interviewRate > 0 ? "default" : "outline"}
+              className={
+                platform.interviewRate > 0
+                  ? "bg-blue-500/15 text-blue-500 hover:bg-blue-500/20 border-blue-500/30 text-[11px]"
+                  : "text-[11px]"
+              }
+            >
+              {platform.interviewRate.toFixed(1)}% interview
+            </Badge>
+            <Badge
+              variant={platform.responseRate >= 20 ? "default" : "outline"}
+              className={
+                platform.responseRate >= 20
+                  ? "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/30 text-[11px]"
+                  : "text-[11px]"
+              }
+            >
+              {platform.responseRate.toFixed(1)}% response
+            </Badge>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="flex flex-col gap-4 pt-0">
+        {/* Segmented Status Progress Bar */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
+            <span>Pipeline breakdown</span>
+            <span>{platform.interviewCount} interviewed</span>
+          </div>
+          <div
+            className="h-3 w-full rounded-full bg-muted/60 flex overflow-hidden p-0.5 gap-0.5"
+            aria-label={`Pipeline breakdown for ${platform.platformName}`}
+          >
+            {platform.statuses.map((s) => {
+              const kind = getStatusKind(s.status);
+              const widthPercent =
+                platform.total > 0
+                  ? (s.value / platform.total) * 100
+                  : 0;
+              if (widthPercent <= 0) return null;
+              return (
+                <div
+                  key={s.status}
+                  aria-label={`${s.status}: ${s.value} (${widthPercent.toFixed(1)}%)`}
+                  className={`h-full rounded-sm ${getStatusBgColor(kind)} transition-[width] duration-500`}
+                  style={{ width: `${widthPercent}%` }}
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Status Badges List with matching color dots */}
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {platform.statuses.map((s) => {
+            const kind = getStatusKind(s.status);
+            const label = statusLabels[kind] || s.status;
+            const pct =
+              platform.total > 0
+                ? ((s.value / platform.total) * 100).toFixed(0)
+                : "0";
+            return (
+              <span
+                key={s.status}
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/50 text-[11px] text-foreground/80 font-medium"
+              >
+                <span
+                  className={`h-2 w-2 rounded-full shrink-0 ${getStatusBgColor(kind)}`}
+                />
+                <span className="font-semibold text-foreground">
+                  {s.value}
+                </span>
+                <span className="capitalize">{label}</span>
+                <span className="text-[10px] text-muted-foreground font-semibold">
+                  ({pct}%)
+                </span>
+              </span>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,29 +204,7 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
   >("total");
 
   if (!data || data.length === 0) {
-    return (
-      <div className="flex flex-col gap-3 h-60 items-center justify-center rounded-xl border border-dashed border-border/50 p-8 text-center bg-card/30">
-        <p className="text-muted-foreground text-sm max-w-sm">
-          {hasFilter
-            ? "No platform application data found matching your selected timeframe filter."
-            : "No application data found. Add your job applications to unlock platform ROI analytics."}
-        </p>
-        {hasFilter ? (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => router.push("?")}
-            className="gap-1.5 font-semibold text-xs cursor-pointer"
-          >
-            Clear Filters
-          </Button>
-        ) : (
-          <Button asChild size="sm" className="gap-1.5 font-semibold text-xs cursor-pointer">
-            <Link href="/applications">+ Add Application</Link>
-          </Button>
-        )}
-      </div>
-    );
+    return <PlatformEmptyState hasFilter={hasFilter} onClearFilter={() => router.push("?")} />;
   }
 
   // Calculate platform stats with conversions
@@ -252,119 +377,9 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
 
       {/* Platform ROI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {sortedPlatforms.map((platform) => {
-          return (
-            <Card
-              key={platform.platformName}
-              className="bg-background/40 backdrop-blur border border-border/50 hover:border-primary/30 transition-colors duration-300 flex flex-col justify-between"
-            >
-              <CardHeader className="pb-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center font-bold text-primary capitalize text-sm shrink-0">
-                      {platform.platformName.slice(0, 2)}
-                    </div>
-                    <div className="min-w-0">
-                      <CardTitle className="text-base font-semibold capitalize truncate">
-                        {platform.platformName}
-                      </CardTitle>
-                      <CardDescription className="text-xs truncate">
-                        {platform.total} total{" "}
-                        {platform.total === 1 ? "application" : "applications"}
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <Badge
-                      variant={
-                        platform.interviewRate > 0 ? "default" : "outline"
-                      }
-                      className={
-                        platform.interviewRate > 0
-                          ? "bg-blue-500/15 text-blue-500 hover:bg-blue-500/20 border-blue-500/30 text-[11px]"
-                          : "text-[11px]"
-                      }
-                    >
-                      {platform.interviewRate.toFixed(1)}% interview
-                    </Badge>
-                    <Badge
-                      variant={
-                        platform.responseRate >= 20 ? "default" : "outline"
-                      }
-                      className={
-                        platform.responseRate >= 20
-                          ? "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/30 text-[11px]"
-                          : "text-[11px]"
-                      }
-                    >
-                      {platform.responseRate.toFixed(1)}% response
-                    </Badge>
-                  </div>
-                </div>
-              </CardHeader>
-
-              <CardContent className="flex flex-col gap-4 pt-0">
-                {/* Segmented Status Progress Bar */}
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
-                    <span>Pipeline breakdown</span>
-                    <span>{platform.interviewCount} interviewed</span>
-                  </div>
-                  <div
-                    className="h-3 w-full rounded-full bg-muted/60 flex overflow-hidden p-0.5 gap-0.5"
-                    aria-label={`Pipeline breakdown for ${platform.platformName}`}
-                  >
-                    {platform.statuses.map((s) => {
-                      const kind = getStatusKind(s.status);
-                      const widthPercent =
-                        platform.total > 0
-                          ? (s.value / platform.total) * 100
-                          : 0;
-                      if (widthPercent <= 0) return null;
-                      return (
-                        <div
-                          key={s.status}
-                          aria-label={`${s.status}: ${s.value} (${widthPercent.toFixed(1)}%)`}
-                          className={`h-full rounded-sm ${getStatusBgColor(kind)} transition-all duration-500`}
-                          style={{ width: `${widthPercent}%` }}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Status Badges List with matching color dots */}
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {platform.statuses.map((s) => {
-                    const kind = getStatusKind(s.status);
-                    const label = statusLabels[kind] || s.status;
-                    const pct =
-                      platform.total > 0
-                        ? ((s.value / platform.total) * 100).toFixed(0)
-                        : "0";
-                    return (
-                      <span
-                        key={s.status}
-                        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/50 text-[11px] text-foreground/80 font-medium"
-                      >
-                        <span
-                          className={`h-2 w-2 rounded-full shrink-0 ${getStatusBgColor(kind)}`}
-                        />
-                        <span className="font-semibold text-foreground">
-                          {s.value}
-                        </span>
-                        <span className="capitalize">{label}</span>
-                        <span className="text-[10px] text-muted-foreground font-semibold">
-                          ({pct}%)
-                        </span>
-                      </span>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+        {sortedPlatforms.map((platform) => (
+          <PlatformRoiCard key={platform.platformName} platform={platform} />
+        ))}
       </div>
     </div>
   );
