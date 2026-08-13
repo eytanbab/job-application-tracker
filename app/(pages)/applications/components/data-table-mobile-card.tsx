@@ -137,6 +137,7 @@ export function DataTableMobileCard({
               onClick={(e) => e.stopPropagation()}
               className="p-1 -mr-1 text-muted-foreground hover:text-foreground inline-flex items-center justify-center min-h-[32px] min-w-[32px]"
               title="Open Link"
+              aria-label="Open original job posting (opens in new tab)"
             >
               <ExternalLink className="h-3.5 w-3.5" />
             </a>

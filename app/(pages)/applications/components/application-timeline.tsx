@@ -95,8 +95,9 @@ export function ApplicationTimeline({
                         <DialogTrigger asChild>
                           <button
                             type="button"
-                            className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity p-0.5 cursor-pointer"
+                            className="text-muted-foreground hover:text-destructive opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-0.5 cursor-pointer"
                             title="Delete this timeline entry"
+                            aria-label="Delete this timeline entry"
                           >
                             <X className="h-3 w-3" />
                           </button>

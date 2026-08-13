@@ -211,6 +211,11 @@ export function DataTableGrid<
             </Select>
           </div>
 
+          <span className="text-xs font-semibold text-foreground whitespace-nowrap">
+            Page {table.getState().pagination.pageIndex + 1} of{" "}
+            {Math.max(1, table.getPageCount())}
+          </span>
+
           <div className="flex gap-1.5">
             <Button
               variant="outline"
