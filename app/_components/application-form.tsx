@@ -6,7 +6,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 
-import { getStatusDisplay, getStatusKind, safeFormatDate } from "@/lib/utils";
+import {
+  getStatusDisplay,
+  getStatusKind,
+  safeFormatDate,
+  resolveUpdatedStatus,
+  StatusKind,
+  isStatusKind,
+} from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useTransition, useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -114,6 +121,12 @@ export const ApplicationForm = ({
 
   const handleSubmit = (values: FormValues) => {
     const formattedDate = safeFormatDate(values.date_applied, "yyyy-MM-dd");
+    const cat = (
+      values.statusCategory && isStatusKind(values.statusCategory)
+        ? values.statusCategory
+        : getStatusKind(values.status)
+    ) as StatusKind;
+    const resolvedStatus = resolveUpdatedStatus(values.status, cat);
 
     values = {
       ...values,
@@ -124,8 +137,8 @@ export const ApplicationForm = ({
       description: values.description,
       location: values.location.trim(),
       platform: values.platform.toLowerCase().trim(),
-      statusCategory: getStatusKind(values.status, values.statusCategory),
-      status: getStatusDisplay(values.status, values.statusCategory).trim(),
+      statusCategory: cat,
+      status: resolvedStatus,
       salary: values.salary?.trim() || "",
     };
 

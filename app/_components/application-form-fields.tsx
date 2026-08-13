@@ -35,6 +35,7 @@ import {
   locationOptions,
   platformOptions,
   mergeWithDefaultOptions,
+  isStandardStatus,
 } from "@/lib/utils";
 import { useMemo } from "react";
 import { FormValues } from "./application-form";
@@ -71,10 +72,7 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
                   const defaultLabel =
                     statusLabels[value as keyof typeof statusLabels] || "";
                   const prevStatus = form.getValues("status");
-                  const isStandard = Object.values(statusLabels).some(
-                    (lbl) => lbl.toLowerCase() === (prevStatus || "").toLowerCase(),
-                  );
-                  if (!prevStatus || isStandard) {
+                  if (!prevStatus || isStandardStatus(prevStatus)) {
                     form.setValue("status", defaultLabel || prevStatus, {
                       shouldDirty: true,
                       shouldValidate: true,

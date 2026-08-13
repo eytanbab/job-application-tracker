@@ -13,7 +13,13 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { getStatusDisplay, statusLabels, type StatusKind } from "@/lib/utils";
+import {
+  getStatusDisplay,
+  statusLabels,
+  type StatusKind,
+  resolveUpdatedStatus,
+  isStatusKind,
+} from "@/lib/utils";
 import {
   useQueryState,
   parseAsString,
@@ -266,16 +272,20 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
 
   const handleBulkStatusChange = (newCategory: string) => {
     if (selectedCount === 0) return;
+    const cat = (isStatusKind(newCategory) ? newCategory : "other") as StatusKind;
     startBulkTransition(async () => {
       try {
         await Promise.all(
           selectedRows.map((row) => {
             if (row.original.id) {
-              const updatedStatusText = getStatusDisplay("", newCategory);
+              const updatedStatusText = resolveUpdatedStatus(
+                row.original.status,
+                cat,
+              );
               return updateApplication({
                 ...row.original,
                 id: row.original.id,
-                statusCategory: newCategory,
+                statusCategory: cat,
                 status: updatedStatusText.trim(),
               } as unknown as FormValues);
             }
@@ -283,7 +293,7 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
           }),
         );
         toast({
-          description: `Updated status for ${selectedCount} application(s) to ${statusLabels[newCategory as StatusKind] || newCategory}.`,
+          description: `Updated status for ${selectedCount} application(s) to ${statusLabels[cat] || cat}.`,
         });
         setRowSelection({});
       } catch {

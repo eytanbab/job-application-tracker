@@ -7,6 +7,8 @@ import {
   getStatusKind,
   statusLabels,
   StatusKind,
+  resolveUpdatedStatus,
+  isStatusKind,
 } from "@/lib/utils";
 import { updateApplication } from "@/app/actions/applications";
 import { toast } from "@/hooks/use-toast";
@@ -119,18 +121,20 @@ export function ApplicationsKanban({
 
   const handleQuickStatusMove = (item: KanbanItem, newCategory: string) => {
     if (!item.id) return;
+    const cat = (isStatusKind(newCategory) ? newCategory : "other") as StatusKind;
     const previousCategory = item.statusCategory || getStatusKind(item.status);
+    const updatedStatus = resolveUpdatedStatus(item.status, cat);
     startTransition(async () => {
       try {
         await updateApplication({
           ...item,
           id: item.id,
-          statusCategory: newCategory,
-          status: getStatusDisplay(item.status, newCategory),
+          statusCategory: cat,
+          status: updatedStatus,
         });
         toast({
           description: `Moved "${item.role_name}" to ${
-            statusLabels[newCategory as StatusKind] || newCategory
+            statusLabels[cat] || cat
           }`,
           action: (
             <ToastAction

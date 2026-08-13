@@ -21,6 +21,7 @@ import {
   statusLabels,
   statusOptions,
   StatusKind,
+  isStandardStatus,
 } from "@/lib/utils";
 import { formatDate, parseISO } from "date-fns";
 import {
@@ -76,11 +77,7 @@ export function KanbanCard({
   const displayLabel = getStatusDisplay(item.status, item.statusCategory);
 
   const isCustomStage =
-    Boolean(item.status) &&
-    item.status.trim().toLowerCase() !==
-      (
-        statusLabels[getStatusKind(item.status, item.statusCategory)] || ""
-      ).toLowerCase();
+    Boolean(item.status) && !isStandardStatus(item.status);
 
   return (
     <Card
