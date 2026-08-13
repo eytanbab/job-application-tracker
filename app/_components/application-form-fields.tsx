@@ -377,7 +377,7 @@ export function ApplicationFormFields({
               ) : isEditing ? (
                 "Save Changes"
               ) : (
-                "Submit"
+                "Add Application"
               )}
             </Button>
           );

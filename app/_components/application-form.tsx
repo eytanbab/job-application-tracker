@@ -107,6 +107,12 @@ export const ApplicationForm = ({
   });
 
   const onCancel = () => {
+    if (form.formState.isDirty) {
+      const confirmDiscard = window.confirm(
+        "You have unsaved changes. Are you sure you want to discard them?",
+      );
+      if (!confirmDiscard) return;
+    }
     onClose();
     if (!defaultValues?.id) {
       router.push("/applications");

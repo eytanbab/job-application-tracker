@@ -113,7 +113,7 @@ export function ApplicationDetailView({
               }}
               className="h-9 text-xs bg-card border-border/40 pr-20"
             />
-            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-medium pointer-events-none">
+            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-medium pointer-events-none hidden sm:inline-block">
               {isSaving ? "Saving..." : "Press Enter"}
             </span>
           </div>
@@ -162,7 +162,7 @@ export function ApplicationDetailView({
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
             <FileText className="h-3.5 w-3.5" /> Job Description
           </h4>
-          <div className="rounded-md border border-border/30 bg-card p-3 text-xs text-foreground leading-relaxed whitespace-pre-wrap max-h-44 overflow-y-auto">
+          <div className="rounded-md border border-border/30 bg-card p-3 text-xs text-foreground leading-relaxed whitespace-pre-wrap min-h-[90px] max-h-64 sm:max-h-72 overflow-y-auto">
             {currentApp.description?.trim()
               ? currentApp.description
               : "No job description provided."}
@@ -174,7 +174,7 @@ export function ApplicationDetailView({
             <MessageSquare className="h-3.5 w-3.5 text-primary" /> Personal
             Candidate Notes
           </h4>
-          <div className="rounded-md border border-border/30 bg-card p-3 text-xs text-foreground leading-relaxed whitespace-pre-wrap max-h-44 overflow-y-auto">
+          <div className="rounded-md border border-border/30 bg-card p-3 text-xs text-foreground leading-relaxed whitespace-pre-wrap min-h-[90px] max-h-64 sm:max-h-72 overflow-y-auto">
             {currentApp.notes?.trim()
               ? currentApp.notes
               : "No personal notes added yet."}

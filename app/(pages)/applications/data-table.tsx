@@ -120,8 +120,8 @@ export function DataTable<TData extends ApplicationRow, TValue>({
         type="button"
         onClick={() => setIsCreateOpen(true)}
         className={cn(
-          "fixed right-5 z-40 md:hidden h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer ring-4 ring-background/50",
-          selectedCount > 0 ? "bottom-32" : "bottom-6",
+          "fixed right-5 z-40 md:hidden h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer ring-4 ring-background/50 bottom-6",
+          selectedCount > 0 && "hidden",
         )}
         aria-label="Add Application"
         title="Add Application"
