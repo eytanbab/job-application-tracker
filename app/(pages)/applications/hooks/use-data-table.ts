@@ -149,6 +149,15 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     setColumnFilters(nextFilters);
   }, [statusFilter, platformFilter]);
 
+  // Reset pagination to first page whenever search or filters change
+  useEffect(() => {
+    setPage(1);
+    setPagination((prev) => ({
+      ...prev,
+      pageIndex: 0,
+    }));
+  }, [globalFilter, statusFilter, platformFilter, setPage]);
+
   const [{ pageIndex, pageSize }, setPagination] = useState<PaginationState>({
     pageIndex: page - 1,
     pageSize: pageSizeParam ?? 10,
