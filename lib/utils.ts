@@ -155,6 +155,53 @@ export const statusLabels = statusOptions.reduce(
 export const isStatusKind = (status: string): status is StatusKind =>
   statusOptions.some((option) => option.value === status);
 
+const STANDARD_STATUS_STRINGS = new Set([
+  "applied",
+  "review",
+  "in review",
+  "interview",
+  "accepted",
+  "offer",
+  "accepted / offer",
+  "accepted/offer",
+  "rejected",
+  "rejection",
+  "ghosted",
+  "other",
+]);
+
+export const isStandardStatus = (
+  status: string | null | undefined,
+): boolean => {
+  if (!status) return true;
+  const normalized = status.trim().toLowerCase();
+  if (!normalized) return true;
+  if (STANDARD_STATUS_STRINGS.has(normalized)) return true;
+  return Object.values(statusLabels).some(
+    (label) => label.toLowerCase() === normalized,
+  );
+};
+
+export const resolveUpdatedStatus = (
+  currentStatus: string | null | undefined,
+  newCategory: StatusKind,
+  newStatusText?: string,
+): string => {
+  if (newStatusText !== undefined) {
+    const trimmed = newStatusText.trim();
+    if (!trimmed) {
+      return statusLabels[newCategory] || newCategory;
+    }
+    return trimmed;
+  }
+
+  if (!currentStatus || isStandardStatus(currentStatus)) {
+    return statusLabels[newCategory] || newCategory;
+  }
+
+  return currentStatus.trim();
+};
+
 export const getStatusKind = (
   status: string | null | undefined,
   statusCategory?: string | null,
