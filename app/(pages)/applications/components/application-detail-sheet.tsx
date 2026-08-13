@@ -4,6 +4,8 @@ import { useEffect, useState, useTransition } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -94,6 +96,7 @@ export function ApplicationDetailSheet({
     initialApp?.status || "",
   );
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [history, setHistory] = useState<TimelineEntry[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isSaving, startSaveTransition] = useTransition();
@@ -345,19 +348,60 @@ export function ApplicationDetailSheet({
             </Button>
 
             {onDeleteClick && currentApp?.id && (
-              <Button
-                variant="destructive"
-                size="sm"
-                className="gap-2 h-9 font-medium rounded-md"
-                onClick={() => {
-                  if (currentApp?.id) {
-                    onDeleteClick(currentApp.id);
-                    onOpenChange(false);
-                  }
-                }}
-              >
-                <Trash2 className="h-4 w-4" /> Delete
-              </Button>
+              <>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="gap-2 h-9 font-medium rounded-md"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4" /> Delete
+                </Button>
+
+                <Dialog
+                  open={isDeleteDialogOpen}
+                  onOpenChange={setIsDeleteDialogOpen}
+                >
+                  <DialogContent onClick={(e) => e.stopPropagation()}>
+                    <DialogHeader>
+                      <DialogTitle>Are you absolutely sure?</DialogTitle>
+                      <DialogDescription>
+                        This action cannot be undone. This will permanently delete
+                        your application for{" "}
+                        <strong className="text-foreground">
+                          {activeApp.role_name}
+                        </strong>{" "}
+                        at{" "}
+                        <strong className="text-foreground">
+                          {activeApp.company_name}
+                        </strong>
+                        .
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                      <Button
+                        variant="destructive"
+                        onClick={() => {
+                          if (currentApp?.id) {
+                            onDeleteClick(currentApp.id);
+                            setIsDeleteDialogOpen(false);
+                            onOpenChange(false);
+                          }
+                        }}
+                      >
+                        Delete Application
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsDeleteDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </>
             )}
           </div>
         )}
