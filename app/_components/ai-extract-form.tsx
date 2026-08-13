@@ -92,7 +92,7 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
         date_applied: format(Date.now(), "yyyy-MM-dd"),
         role_name: aiAutoFill.application.role_name,
         company_name: aiAutoFill.application.company_name,
-        link: aiAutoFill.application.link,
+        link: values.url,
         platform: aiAutoFill.application.platform,
         status: "Applied",
         statusCategory: "applied",
