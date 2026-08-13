@@ -202,6 +202,27 @@ export async function updateApplication(values: FormValues) {
 export async function deleteStatusHistoryEntry(historyId: string) {
   const userId = await getCurrentUserIdOrThrow();
 
+  const entry = await db
+    .select({
+      id: applicationStatusHistory.id,
+    })
+    .from(applicationStatusHistory)
+    .innerJoin(
+      jobApplications,
+      eq(jobApplications.id, applicationStatusHistory.applicationId),
+    )
+    .where(
+      and(
+        eq(applicationStatusHistory.id, historyId),
+        eq(jobApplications.userId, userId),
+      ),
+    )
+    .limit(1);
+
+  if (!entry.length) {
+    throw new Error("Timeline entry not found or unauthorized");
+  }
+
   await db
     .delete(applicationStatusHistory)
     .where(eq(applicationStatusHistory.id, historyId));
