@@ -22,6 +22,7 @@ interface ApplicationsKanbanProps {
   data: KanbanItem[];
   searchFilter: string;
   statusFilter: string;
+  platformFilter?: string | null;
   onSelectApplication: (app: KanbanItem) => void;
   onEditApplication: (app: KanbanItem) => void;
   onDeleteApplication: (id: string) => void;
@@ -68,6 +69,7 @@ export function ApplicationsKanban({
   data,
   searchFilter,
   statusFilter,
+  platformFilter,
   onSelectApplication,
   onEditApplication,
   onDeleteApplication,
@@ -84,17 +86,22 @@ export function ApplicationsKanban({
         if (itemKind !== statusFilter) return false;
       }
 
+      if (platformFilter && platformFilter !== "all") {
+        const itemPlatform = (item.platform || "").trim().toLowerCase();
+        if (itemPlatform !== platformFilter.trim().toLowerCase()) return false;
+      }
+
       if (!query) return true;
       return (
-        item.role_name.toLowerCase().includes(query) ||
-        item.company_name.toLowerCase().includes(query) ||
-        item.location.toLowerCase().includes(query) ||
-        item.platform.toLowerCase().includes(query) ||
+        (item.role_name || "").toLowerCase().includes(query) ||
+        (item.company_name || "").toLowerCase().includes(query) ||
+        (item.location || "").toLowerCase().includes(query) ||
+        (item.platform || "").toLowerCase().includes(query) ||
         (item.description && item.description.toLowerCase().includes(query)) ||
         (item.notes && item.notes.toLowerCase().includes(query))
       );
     });
-  }, [data, searchFilter, statusFilter]);
+  }, [data, searchFilter, statusFilter, platformFilter]);
 
   const groupedData = useMemo(() => {
     const map: Record<StatusKind, KanbanItem[]> = {

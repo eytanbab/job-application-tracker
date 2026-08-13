@@ -95,6 +95,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
           data={data}
           searchFilter={globalFilter}
           statusFilter={statusFilter}
+          platformFilter={platformFilter}
           onSelectApplication={(app) => handleSelectRow(app as TData)}
           onEditApplication={(app) => setEditingApp(app as TData)}
           onDeleteApplication={handleDelete}
