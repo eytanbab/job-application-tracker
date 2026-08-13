@@ -14,7 +14,12 @@ import { and, desc, eq } from "drizzle-orm";
 import { format, subDays, parseISO, isBefore } from "date-fns";
 import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
-import { getStatusDisplay, getStatusKind, safeFormatDate } from "@/lib/utils";
+import {
+  getStatusDisplay,
+  getStatusKind,
+  safeFormatDate,
+  statusLabels,
+} from "@/lib/utils";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema.omit({ userId: true });
@@ -23,7 +28,8 @@ type FormValues = z.input<typeof formSchema>;
 
 function normalizeApplicationStatus(values: FormValues): FormValues {
   const statusCategory = getStatusKind(values.status, values.statusCategory);
-  const status = getStatusDisplay(values.status, statusCategory).trim();
+  const rawStatus = (values.status ?? "").trim();
+  const status = rawStatus || statusLabels[statusCategory] || "Applied";
 
   return {
     ...values,
@@ -181,37 +187,12 @@ export async function updateApplication(values: FormValues) {
     );
 
   if (statusChanged) {
-    // 5-minute auto-merge of accidental status flips
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    const latestHistory = await db
-      .select({
-        id: applicationStatusHistory.id,
-        createdAt: applicationStatusHistory.createdAt,
-      })
-      .from(applicationStatusHistory)
-      .where(eq(applicationStatusHistory.applicationId, applicationId))
-      .orderBy(desc(applicationStatusHistory.createdAt))
-      .limit(1);
-
-    if (
-      latestHistory.length > 0 &&
-      latestHistory[0].createdAt > fiveMinutesAgo
-    ) {
-      await db
-        .update(applicationStatusHistory)
-        .set({
-          status: normalizedValues.status,
-          statusCategory: normalizedValues.statusCategory ?? "applied",
-          createdAt: new Date(),
-        })
-        .where(eq(applicationStatusHistory.id, latestHistory[0].id));
-    } else {
-      await db.insert(applicationStatusHistory).values({
-        applicationId,
-        status: normalizedValues.status,
-        statusCategory: normalizedValues.statusCategory ?? "applied",
-      });
-    }
+    await db.insert(applicationStatusHistory).values({
+      applicationId,
+      status: normalizedValues.status,
+      statusCategory: normalizedValues.statusCategory ?? "applied",
+      createdAt: new Date(),
+    });
   }
 
   purgeCaches(userId);
