@@ -23,6 +23,8 @@ import {
   getStatusKind,
   statusLabels,
   StatusKind,
+  resolveUpdatedStatus,
+  isStatusKind,
 } from "@/lib/utils";
 import {
   getApplicationHistory,
@@ -96,7 +98,7 @@ export function ApplicationDetailSheet({
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isSaving, startSaveTransition] = useTransition();
 
-  const activeApp = initialApp || currentApp;
+  const activeApp = currentApp || initialApp;
 
   useEffect(() => {
     setCurrentApp(initialApp);
@@ -107,7 +109,7 @@ export function ApplicationDetailSheet({
       );
       setQuickStatusText(effectiveStatus);
 
-      if (open) {
+      if (open && initialApp.id) {
         setIsEditing(false);
         setIsLoadingHistory(true);
         getApplicationHistory(initialApp.id as string)
@@ -139,35 +141,43 @@ export function ApplicationDetailSheet({
     newCategory: string,
     newStatusText?: string,
   ) => {
-    if (!activeApp.id) return;
+    if (!activeApp?.id) return;
     
-    const baseStatus = newStatusText !== undefined ? newStatusText : activeApp.status;
-    const updatedStatus = getStatusDisplay(baseStatus, newCategory);
+    const cat = (isStatusKind(newCategory) ? newCategory : "other") as StatusKind;
+    const updatedStatus = resolveUpdatedStatus(
+      activeApp.status,
+      cat,
+      newStatusText,
+    );
     
-    if (newCategory === activeApp.statusCategory && updatedStatus === activeApp.status) {
+    if (cat === activeApp.statusCategory && updatedStatus === activeApp.status) {
+      setQuickStatusText(updatedStatus);
       return;
     }
 
+    const payload: ApplicationDetail = {
+      ...activeApp,
+      id: activeApp.id,
+      role_name: activeApp.role_name,
+      company_name: activeApp.company_name,
+      date_applied: activeApp.date_applied,
+      link: activeApp.link,
+      platform: activeApp.platform,
+      location: activeApp.location,
+      month: activeApp.month,
+      year: activeApp.year,
+      statusCategory: cat,
+      status: updatedStatus,
+    };
+
+    setCurrentApp(payload);
+    setQuickStatusText(updatedStatus);
+
     startSaveTransition(async () => {
       try {
-        const payload = {
-          ...activeApp,
-          id: activeApp.id,
-          role_name: activeApp.role_name,
-          company_name: activeApp.company_name,
-          date_applied: activeApp.date_applied,
-          link: activeApp.link,
-          platform: activeApp.platform,
-          location: activeApp.location,
-          month: activeApp.month,
-          year: activeApp.year,
-          statusCategory: newCategory,
-          status: updatedStatus,
-        };
-        await updateApplication(payload);
-        setCurrentApp(payload);
+        await updateApplication(payload as unknown as FormValues);
         toast({
-          description: `Status updated to ${statusLabels[newCategory as StatusKind] || newCategory}`,
+          description: `Status updated to ${statusLabels[cat] || cat}`,
         });
 
         if (activeApp.id) {
@@ -283,7 +293,15 @@ export function ApplicationDetailSheet({
               onSubmit={async (values) => {
                 try {
                   await updateApplication(values);
-                  setCurrentApp(values as ApplicationDetail);
+                  const updated = {
+                    ...activeApp,
+                    ...values,
+                    id: activeApp.id,
+                  } as ApplicationDetail;
+                  setCurrentApp(updated);
+                  setQuickStatusText(
+                    getStatusDisplay(updated.status, updated.statusCategory),
+                  );
                   setIsEditing(false);
                   toast({ description: "Application updated successfully!" });
                   if (activeApp.id) {
