@@ -84,6 +84,8 @@ export function DataTableToolbar({
             variant="outline"
             size="sm"
             onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
+            aria-expanded={isMobileFilterOpen}
+            aria-label="Toggle filters"
             className="h-9 px-3 text-xs gap-1.5 md:hidden shrink-0 bg-background"
           >
             <Filter className="h-3.5 w-3.5" />
@@ -168,9 +170,15 @@ export function DataTableToolbar({
       </div>
 
       <div className="flex items-center justify-between lg:justify-end gap-2.5 border-t border-border/30 lg:border-t-0 pt-2.5 lg:pt-0">
-        <div className="inline-flex items-center rounded-md bg-muted/60 p-1 gap-1 border border-border/20">
+        <div
+          role="radiogroup"
+          aria-label="View mode"
+          className="inline-flex items-center rounded-md bg-muted/60 p-1 gap-1 border border-border/20"
+        >
           <button
             type="button"
+            role="radio"
+            aria-checked={viewMode === "table"}
             onClick={() => setViewMode("table")}
             className={cn(
               "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer",
@@ -184,6 +192,8 @@ export function DataTableToolbar({
           </button>
           <button
             type="button"
+            role="radio"
+            aria-checked={viewMode === "kanban"}
             onClick={() => setViewMode("kanban")}
             className={cn(
               "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer",

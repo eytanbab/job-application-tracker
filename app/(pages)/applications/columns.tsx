@@ -154,7 +154,7 @@ export const columns: ColumnDef<FormValues>[] = [
     cell: ({ row }) => {
       const rawDate = row.getValue<string>("date_applied");
       if (!rawDate) return <span className="text-muted-foreground">-</span>;
-      const formattedDate = formatDate(parseISO(rawDate), "dd/MM/yyyy");
+      const formattedDate = formatDate(parseISO(rawDate), "MMM d, yyyy");
       return (
         <div className="text-sm font-medium text-foreground">
           {formattedDate}

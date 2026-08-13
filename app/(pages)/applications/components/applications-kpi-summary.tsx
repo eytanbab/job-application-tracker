@@ -105,6 +105,11 @@ export function ApplicationsKpiSummary({
             tabIndex={0}
             role="button"
             aria-pressed={isActive}
+            title={
+              isActive
+                ? "Active filter (click to reset)"
+                : "Click to filter by status"
+            }
             onClick={() => {
               if (onStatusFilterChange) {
                 if (card.id === null) {
