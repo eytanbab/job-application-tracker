@@ -2,8 +2,8 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Applications Page E2E Suite", () => {
   const testApp = {
-    role: `QA Engineer ${Date.now()}`,
-    company: `TechCorp ${Date.now()}`,
+    role: `__E2E_TEST__ QA Engineer ${Date.now()}`,
+    company: `__E2E_TEST__ TechCorp ${Date.now()}`,
     salary: "$140,000 - $160,000",
     location: "Remote",
     platform: "LinkedIn",
@@ -27,8 +27,8 @@ test.describe("Applications Page E2E Suite", () => {
     if (count === 0) {
       const addBtn = page.getByTestId("add-application-button").first();
       await addBtn.click();
-      await page.fill("input[name='role_name']", "Test Software Engineer");
-      await page.fill("input[name='company_name']", "Test Company");
+      await page.fill("input[name='role_name']", "__E2E_TEST__ Software Engineer");
+      await page.fill("input[name='company_name']", "__E2E_TEST__ Company");
       await page.fill("input[name='location']", "Remote");
       await page.fill("input[name='platform']", "LinkedIn");
       await page.fill("input[name='link']", "https://linkedin.com/jobs/view/1000000000");
@@ -94,11 +94,11 @@ test.describe("Applications Page E2E Suite", () => {
     await ensureTestApplicationExists(page);
 
     const searchInput = page.locator("input[placeholder*='Search']").first();
-    await searchInput.fill("Test");
+    await searchInput.fill("__E2E_TEST__");
     await page.waitForTimeout(500);
 
     // Verify URL search parameter updated
-    expect(page.url()).toContain("q=Test");
+    expect(page.url()).toContain("q=__E2E_TEST__");
 
     // Clear search
     await searchInput.fill("");
@@ -199,12 +199,12 @@ test.describe("Applications Page E2E Suite", () => {
 
   test("8. Happy Path - URL Parameter Synchronization (nuqs)", async ({ page }) => {
     // Direct deep-link URL navigation
-    await page.goto("/applications?q=Test&view=table&status=interview");
+    await page.goto("/applications?q=__E2E_TEST__&view=table&status=interview");
     await page.waitForLoadState("networkidle");
 
     // Verify search input hydrated from URL
     const searchInput = page.locator("input[placeholder*='Search']").first();
-    await expect(searchInput).toHaveValue("Test");
+    await expect(searchInput).toHaveValue("__E2E_TEST__");
   });
 
   test("9. Error Handling - Form Validation Errors (Role Title)", async ({ page }) => {

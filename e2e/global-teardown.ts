@@ -22,10 +22,8 @@ export default async function globalTeardown() {
       .delete(jobApplications)
       .where(
         or(
-          like(jobApplications.role_name, "QA Engineer%"),
-          like(jobApplications.role_name, "Test Software Engineer%"),
-          like(jobApplications.company_name, "TechCorp%"),
-          like(jobApplications.company_name, "Test Company%")
+          like(jobApplications.role_name, "__E2E_TEST__%"),
+          like(jobApplications.company_name, "__E2E_TEST__%")
         )
       );
 
