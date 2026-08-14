@@ -33,7 +33,7 @@ test.describe("Applications Page E2E Suite", () => {
       await page.fill("input[name='platform']", "LinkedIn");
       await page.fill("input[name='link']", "https://linkedin.com/jobs/view/1000000000");
       await page.fill("input[name='status']", "Interview");
-      await page.click("button[type='submit']:has-text('Submit')");
+      await page.click("button[type='submit']:has-text('Add Application')");
       await page.waitForSelector("[data-testid='table-row']", { state: "visible", timeout: 5000 }).catch(() => {});
       await page.waitForTimeout(300);
     }
@@ -63,7 +63,7 @@ test.describe("Applications Page E2E Suite", () => {
     await page.fill("textarea[name='notes']", testApp.notes);
 
     // Submit form
-    await page.click("button[type='submit']:has-text('Submit')");
+    await page.click("button[type='submit']:has-text('Add Application')");
 
     // Expect row to appear in table
     await expect(page.locator(`text=${testApp.role}`).first()).toBeVisible();
@@ -197,7 +197,32 @@ test.describe("Applications Page E2E Suite", () => {
     await expect(page.locator("text=Applied").first()).toBeVisible();
   });
 
-  test("8. Happy Path - URL Parameter Synchronization (nuqs)", async ({ page }) => {
+  test("8. Happy Path - Kanban Platform Filter Synchronization", async ({ page }) => {
+    await ensureTestApplicationExists(page);
+
+    // Filter by platform
+    const platformSelect = page.locator("button:has-text('All Platforms')").first();
+    if (await platformSelect.isVisible()) {
+      await platformSelect.click();
+      const firstPlatformOption = page.locator("[role='option']").nth(1);
+      if (await firstPlatformOption.isVisible()) {
+        const selectedPlatformText = await firstPlatformOption.textContent();
+        await firstPlatformOption.click();
+        await page.waitForTimeout(300);
+
+        // Switch to Kanban
+        const kanbanBtn = page.locator("button:has-text('Kanban')").first();
+        if (await kanbanBtn.isVisible()) {
+          await kanbanBtn.click();
+          await page.waitForTimeout(300);
+          expect(page.url()).toContain("view=kanban");
+          expect(page.url()).toContain("platform=");
+        }
+      }
+    }
+  });
+
+  test("9. Happy Path - URL Parameter Synchronization (nuqs)", async ({ page }) => {
     // Direct deep-link URL navigation
     await page.goto("/applications?q=__E2E_TEST__&view=table&status=interview");
     await page.waitForLoadState("networkidle");
@@ -207,14 +232,14 @@ test.describe("Applications Page E2E Suite", () => {
     await expect(searchInput).toHaveValue("__E2E_TEST__");
   });
 
-  test("9. Error Handling - Form Validation Errors (Role Title)", async ({ page }) => {
+  test("10. Error Handling - Form Validation Errors (Role Title)", async ({ page }) => {
     const addBtn = page.getByTestId("add-application-button").first();
     await addBtn.click();
     await expect(page.locator("text=New Job Application")).toBeVisible();
 
     // Type 1-character role title
     await page.fill("input[name='role_name']", "A");
-    await page.click("button[type='submit']:has-text('Submit')");
+    await page.click("button[type='submit']:has-text('Add Application')");
 
     // Expect Zod validation error message
     await expect(
@@ -224,7 +249,7 @@ test.describe("Applications Page E2E Suite", () => {
     await page.keyboard.press("Escape");
   });
 
-  test("10. Error Handling - Edit Mode Unchanged State Guard", async ({ page }) => {
+  test("11. Error Handling - Edit Mode Unchanged State Guard", async ({ page }) => {
     await ensureTestApplicationExists(page);
 
     // Click edit application button using data-testid
@@ -239,13 +264,13 @@ test.describe("Applications Page E2E Suite", () => {
     await page.keyboard.press("Escape");
   });
 
-  test("11. Error Handling - Short Company Name Validation", async ({ page }) => {
+  test("12. Error Handling - Short Company Name Validation", async ({ page }) => {
     const addBtn = page.getByTestId("add-application-button").first();
     await addBtn.click();
     await page.fill("input[name='role_name']", "Valid Role");
     await page.fill("input[name='company_name']", "X");
 
-    await page.click("button[type='submit']:has-text('Submit')");
+    await page.click("button[type='submit']:has-text('Add Application')");
 
     // Expect company validation error message
     await expect(
@@ -255,7 +280,7 @@ test.describe("Applications Page E2E Suite", () => {
     await page.keyboard.press("Escape");
   });
 
-  test("12. Happy Path - Application Deletion Confirmation Modal", async ({ page }) => {
+  test("13. Happy Path - Application Deletion Confirmation Modal", async ({ page }) => {
     await ensureTestApplicationExists(page);
 
     const trashBtn = page.getByTestId("delete-application-button").first();
@@ -274,7 +299,7 @@ test.describe("Applications Page E2E Suite", () => {
     }
   });
 
-  test("13. Happy Path - Confirm Application Deletion", async ({ page }) => {
+  test("14. Happy Path - Confirm Application Deletion", async ({ page }) => {
     await ensureTestApplicationExists(page);
 
     const trashBtn = page.getByTestId("delete-application-button").first();
@@ -293,7 +318,7 @@ test.describe("Applications Page E2E Suite", () => {
     }
   });
 
-  test("14. UI State - Empty Table and Reset Filters", async ({ page }) => {
+  test("15. UI State - Empty Table and Reset Filters", async ({ page }) => {
     await page.goto("/applications?view=table");
     await page.waitForLoadState("networkidle");
     
@@ -314,7 +339,7 @@ test.describe("Applications Page E2E Suite", () => {
     await expect(searchInput).toHaveValue("");
   });
 
-  test("15. Dropdown Filtering - Platform and Status", async ({ page }) => {
+  test("16. Dropdown Filtering - Platform and Status", async ({ page }) => {
     await ensureTestApplicationExists(page);
     
     // Filter by Status (Interview)
@@ -330,7 +355,6 @@ test.describe("Applications Page E2E Suite", () => {
     const platformSelect = page.locator("button:has-text('All Platforms')").first();
     if (await platformSelect.isVisible()) {
       await platformSelect.click();
-      // Click the second option (first is "All Platforms")
       const firstPlatformOption = page.locator("[role='option']").nth(1);
       if (await firstPlatformOption.isVisible()) {
         await firstPlatformOption.click();
@@ -347,7 +371,7 @@ test.describe("Applications Page E2E Suite", () => {
     }
   });
 
-  test("16. Mobile View - Responsive Layout and Mobile Filters", async ({ page }) => {
+  test("17. Mobile View - Responsive Layout and Mobile Filters", async ({ page }) => {
     await ensureTestApplicationExists(page);
     
     // Set viewport to a mobile device size (iPhone 12/13/14)
@@ -361,7 +385,7 @@ test.describe("Applications Page E2E Suite", () => {
     await page.setViewportSize({ width: 1280, height: 720 });
   });
 
-  test("17. External Link Validation", async ({ page }) => {
+  test("18. External Link Validation", async ({ page }) => {
     await ensureTestApplicationExists(page);
     
     // Find the link icon
@@ -371,13 +395,20 @@ test.describe("Applications Page E2E Suite", () => {
     }
   });
 
-  test("18. Pagination Controls - Navigation and Page Size", async ({ page }) => {
+  test("19. Pagination Controls - Page Indicator & Navigation", async ({ page }) => {
     await page.goto("/applications?view=table");
     await page.waitForLoadState("networkidle");
     
+    // Verify Showing X of Y text
     const paginationText = page.locator("text=/Showing \\d+ of \\d+/");
     if (await paginationText.isVisible()) {
       await expect(paginationText).toBeVisible();
+    }
+
+    // Verify Page X of Y indicator
+    const pageIndicator = page.locator("text=/Page \\d+ of \\d+/");
+    if (await pageIndicator.isVisible()) {
+      await expect(pageIndicator).toBeVisible();
     }
     
     const rowsPerPageLabel = page.locator("text=Rows per page");
@@ -390,8 +421,6 @@ test.describe("Applications Page E2E Suite", () => {
       await expect(nextBtn).toBeVisible();
     }
   });
-
-
 
   test("20. Kanban - Drag and Drop Status Update", async ({ page }) => {
     await ensureTestApplicationExists(page);
@@ -409,30 +438,45 @@ test.describe("Applications Page E2E Suite", () => {
     }
   });
 
-  test("21. Bulk Actions - Update Status and Delete", async ({ page }) => {
+  test("21. Bulk Actions - Update Status and Delete with Confirmation Dialog", async ({ page }) => {
     await ensureTestApplicationExists(page);
     await page.goto("/applications?view=table");
     await page.waitForLoadState("networkidle");
     
-    // Select all rows
-    const selectAllCb = page.getByLabel("Select all").first();
-    await selectAllCb.check();
+    // Select first row checkbox
+    const rowCb = page.locator("input[aria-label='Select row']").first();
+    await rowCb.check();
     
     // Test Bulk Status Update
     const bulkStatusSelect = page.locator("button:has-text('Mark Status...')").first();
+    await expect(bulkStatusSelect).toBeVisible();
     await bulkStatusSelect.click();
     await page.click("[role='option']:has-text('Offer')");
     
     await expect(page.locator("text=/Updated status for/").first()).toBeVisible();
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(500);
     
-    // Re-check select all (it unchecks after bulk action usually)
-    await selectAllCb.click({ force: true });
+    // Select row again for Bulk Delete
+    await rowCb.check();
     
-    // Test Bulk Delete
-    const bulkDeleteBtn = page.locator("button:has-text('Bulk Delete')").first();
+    // Test Bulk Delete with Confirmation Dialog
+    const bulkDeleteBtn = page.getByTestId("bulk-delete-button");
     await expect(bulkDeleteBtn).toBeVisible();
-    await bulkDeleteBtn.click({ force: true });
+    await bulkDeleteBtn.click();
+
+    // Expect Confirmation Dialog to be visible
+    const confirmDialog = page.getByTestId("bulk-delete-confirm-dialog");
+    await expect(confirmDialog).toBeVisible();
+    await expect(confirmDialog.locator("text=This action cannot be undone.")).toBeVisible();
+    
+    // Click Cancel first
+    await page.getByTestId("bulk-delete-cancel-button").click();
+    await expect(confirmDialog).not.toBeVisible();
+
+    // Trigger Bulk Delete again and confirm
+    await bulkDeleteBtn.click();
+    await expect(confirmDialog).toBeVisible();
+    await page.getByTestId("bulk-delete-confirm-button").click();
     
     await expect(page.locator("text=/Successfully deleted/").first()).toBeVisible();
   });
