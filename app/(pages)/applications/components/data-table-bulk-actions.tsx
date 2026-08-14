@@ -78,6 +78,7 @@ export function DataTableBulkActions({
           </Select>
 
           <Button
+            data-testid="bulk-delete-button"
             variant="destructive"
             size="sm"
             onClick={() => setIsConfirmOpen(true)}
@@ -90,7 +91,10 @@ export function DataTableBulkActions({
       </div>
 
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
-        <DialogContent onClick={(e) => e.stopPropagation()}>
+        <DialogContent
+          data-testid="bulk-delete-confirm-dialog"
+          onClick={(e) => e.stopPropagation()}
+        >
           <DialogHeader>
             <DialogTitle>Delete {selectedCount} Applications?</DialogTitle>
             <DialogDescription>
@@ -101,6 +105,7 @@ export function DataTableBulkActions({
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button
+              data-testid="bulk-delete-confirm-button"
               variant="destructive"
               onClick={() => {
                 onBulkDelete();
@@ -110,6 +115,7 @@ export function DataTableBulkActions({
               Delete {selectedCount} Applications
             </Button>
             <Button
+              data-testid="bulk-delete-cancel-button"
               type="button"
               variant="outline"
               onClick={() => setIsConfirmOpen(false)}

@@ -69,6 +69,7 @@ export function ApplicationTimeline({
             return (
               <div
                 key={item.id || `${item.status}-${item.createdAt}`}
+                data-testid="timeline-entry"
                 className="relative space-y-0.5 group"
               >
                 <div className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background" />
