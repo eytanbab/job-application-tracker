@@ -1,6 +1,7 @@
 "use client";
 
-import { ColumnDef, Column } from "@tanstack/react-table";
+import { ColumnDef, Column, Table } from "@tanstack/react-table";
+import { useEffect, useRef } from "react";
 import {
   Trash2,
   ArrowUpDown,
@@ -101,20 +102,35 @@ function renderSortHeader<TData, TValue>(column: Column<TData, TValue>, label: s
   );
 }
 
+function SelectAllCheckbox({ table }: { table: Table<FormValues> }) {
+  const ref = useRef<HTMLInputElement>(null);
+  const isSomeSelected = table.getIsSomePageRowsSelected();
+  const isAllSelected = table.getIsAllPageRowsSelected();
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.indeterminate = !isAllSelected && isSomeSelected;
+    }
+  }, [isAllSelected, isSomeSelected]);
+
+  return (
+    <input
+      ref={ref}
+      type="checkbox"
+      className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary"
+      checked={isAllSelected}
+      onChange={(e) => table.toggleAllPageRowsSelected(!!e.target.checked)}
+      aria-label="Select all"
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => e.stopPropagation()}
+    />
+  );
+}
+
 export const columns: ColumnDef<FormValues>[] = [
   {
     id: "select",
-    header: ({ table }) => (
-      <input
-        type="checkbox"
-        className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
-        checked={table.getIsAllPageRowsSelected()}
-        onChange={(e) => table.toggleAllPageRowsSelected(!!e.target.checked)}
-        aria-label="Select all"
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
-      />
-    ),
+    header: ({ table }) => <SelectAllCheckbox table={table} />,
     cell: ({ row }) => (
       <input
         type="checkbox"
