@@ -25,7 +25,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { CalendarIcon, Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { format, endOfDay } from "date-fns";
 import {
   cn,
   getStatusKind,
@@ -146,7 +146,6 @@ function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
               <PopoverTrigger asChild>
                 <FormControl>
                   <Button
-                    role="combobox"
                     variant={"outline"}
                     className={cn(
                       "group flex h-10 w-full rounded-xl border border-slate-200/90 dark:border-border/40 bg-slate-100/80 hover:bg-slate-100 hover:border-slate-300 dark:hover:border-border/80 focus:bg-white dark:focus:bg-card focus:border-primary/60 focus:ring-4 focus:ring-primary/15 dark:bg-muted/30 dark:hover:bg-muted/50 px-4 py-2 text-base font-normal text-foreground disabled:cursor-not-allowed disabled:opacity-50 md:text-sm shadow-2xs transition-all duration-150",
@@ -169,7 +168,7 @@ function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
                   selected={selectedDate}
                   onSelect={field.onChange}
                   disabled={(date: Date) =>
-                    date > new Date() || date < new Date("1900-01-01")
+                    date > endOfDay(new Date()) || date < new Date("1900-01-01")
                   }
                 />
               </PopoverContent>

@@ -48,15 +48,17 @@ const formSchema = z.object({
   date_applied: z.any(),
   link: z
     .string()
-    .trim()
-    .transform((val) =>
-      val && !/^https?:\/\//i.test(val) ? `https://${val}` : val,
-    )
+    .nullable()
+    .optional()
+    .transform((val) => {
+      const str = (val ?? "").trim();
+      return str && !/^https?:\/\//i.test(str) ? `https://${str}` : str;
+    })
     .pipe(
       z.union([
         z.literal(""),
         z.url({ message: "Please enter a valid URL." }),
-      ])
+      ]),
     ),
   description: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
