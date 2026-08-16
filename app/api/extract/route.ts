@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { scraper } from "@/lib/scraper";
 import { geminiClient } from "@/lib/gemini";
+import { tryDeterministicExtraction } from "@/lib/parsers";
 
-export const maxDuration = 30; // Optimized extraction completes in < 5 seconds
+export const maxDuration = 30;
 const isDevelopment = process.env.NODE_ENV === "development";
 
 export async function POST(req: Request) {
@@ -19,6 +20,33 @@ export async function POST(req: Request) {
     if (isDevelopment) {
       console.log(`[API] Extracting from: ${url}`);
     }
+
+    // 1. Zero-AI Fast Path (Deterministic parsing for known platforms & JSON-LD)
+    const startTime = Date.now();
+    const deterministicData = await tryDeterministicExtraction(url);
+
+    if (deterministicData && deterministicData.role_name && deterministicData.company_name) {
+      if (isDevelopment) {
+        console.log(
+          `[API] Deterministic zero-AI extraction successful in ${Date.now() - startTime}ms:`,
+          deterministicData.role_name,
+          `@`,
+          deterministicData.company_name,
+        );
+      }
+      return NextResponse.json({
+        status: "success",
+        application: deterministicData,
+      });
+    }
+
+    // 2. AI Fallback (For unparsed SPAs or non-standard HTML structures)
+    if (isDevelopment) {
+      console.log(
+        `[API] Deterministic parser could not extract complete data. Falling back to Gemini 2.5 Flash-Lite...`,
+      );
+    }
+
     const webpage = await scraper(url);
 
     if (!webpage) {
@@ -27,11 +55,6 @@ export async function POST(req: Request) {
         status: "fail",
         message: "Failed to extract raw content from the URL.",
       });
-    }
-    if (isDevelopment) {
-      console.log(
-        `[API] Scraper successful. Raw content length: ${webpage.length}`,
-      );
     }
 
     const prompt = `You are an expert at extracting verbatim content from job listings.
@@ -51,10 +74,6 @@ If no clear job listing is found, set status to 'fail'.
 
 Webpage Content:
 ${webpage}`;
-
-    if (isDevelopment) {
-      console.log("[API] Sending extraction prompt to Gemini 2.5 Flash-Lite...");
-    }
 
     const response = await geminiClient.models.generateContent({
       model: "gemini-2.5-flash-lite",
@@ -106,12 +125,6 @@ ${webpage}`;
     }
 
     const res = response.text || "";
-
-    if (isDevelopment) {
-      console.log(
-        `[API] Gemini responded successfully. Result length: ${res?.length}`,
-      );
-    }
 
     if (!res) {
       console.error("[API] Gemini returned empty response content.");
