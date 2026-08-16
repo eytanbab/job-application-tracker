@@ -1,3 +1,9 @@
 - [x] "Quick Update Status" rerenders the form each keystroke when changing custom stage detail (FIXED: Decoupled quick status input state from currentApp and removed currentApp.status from history refetch useEffect dependencies).
 - [x] The search functionality in `/applications` does not work properly. For example, searching for a company doesn't show all the results containing this company name.
 - [x] Updating the status category does not update the stage details in the edit application form. If a user changes the status category from "Applied" to any other status, the stage details stays on apply.
+- [ ] On mobile view - Applications page, it is almost impossible to press the "Next" button as the FAB is covering it.
+- [ ] On mobile view - Applications page, "Rows per page" is overflowing and can be 2-3 lines
+- [ ] On mobile view - Applications page - Viewing application, the role name is not in the center as it has pr-6 on its parent div.
+- [ ] On mobile view - Applications page - Viewing application, external link button is too close to the 'X' button.
+- [ ] In Applications page - Viewing application, the 'quick update status' can be confusing for users who will not understand why the status shows twice. For example, the status category is "Applied" and the custom status is also "Applied".
+- [ ] In Applications page - Editing application, the stage details / custom status text size in the input is not in the same size as the reset of the inputs in the form.
