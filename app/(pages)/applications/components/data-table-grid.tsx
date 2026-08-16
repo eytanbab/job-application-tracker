@@ -198,22 +198,27 @@ export function DataTableGrid<
           </p>
 
           <div className="flex items-center space-x-1.5 shrink-0">
-            <span className="font-medium text-xs hidden xs:inline">Rows:</span>
+            <span className="font-medium text-xs hidden sm:inline">Rows per page:</span>
+            <span className="font-medium text-xs sm:hidden">Rows:</span>
             <Select
               value={`${table.getState().pagination.pageSize}`}
               onValueChange={(value) => {
                 table.setPageSize(Number(value));
               }}
             >
-              <SelectTrigger className="h-8 w-[68px] text-xs bg-background/60">
+              <SelectTrigger className="h-8 w-[64px] text-xs bg-background/60 px-2.5 font-medium cursor-pointer">
                 <SelectValue
                   placeholder={table.getState().pagination.pageSize}
                 />
               </SelectTrigger>
-              <SelectContent side="top">
+              <SelectContent side="top" className="min-w-[70px]">
                 {TABLE_ROWS.map((pageSize) => (
-                  <SelectItem key={pageSize} value={`${pageSize}`} className="text-xs cursor-pointer">
-                    {pageSize} / page
+                  <SelectItem
+                    key={pageSize}
+                    value={`${pageSize}`}
+                    className="text-xs cursor-pointer"
+                  >
+                    {pageSize}
                   </SelectItem>
                 ))}
               </SelectContent>
