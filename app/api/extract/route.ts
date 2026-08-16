@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { scraper } from "@/lib/scraper";
 import { geminiClient } from "@/lib/gemini";
 
-export const maxDuration = 60; // Allow 60 seconds for scraping + AI extraction
+export const maxDuration = 30; // Optimized extraction completes in < 5 seconds
 const isDevelopment = process.env.NODE_ENV === "development";
 
 export async function POST(req: Request) {
@@ -35,39 +35,63 @@ export async function POST(req: Request) {
     }
 
     const prompt = `You are an expert at extracting verbatim content from job listings.
-The provided text is a webpage converted to markdown. It may contain a lot of noise (menus, footers, other jobs).
-Your goal is to find the PRIMARY job listing on this page and extract its details.
+Extract the PRIMARY job listing on this page.
+Job Listing Link: ${url}
 
-Return a JSON object:
-{
-  "status": "success",
-  "application": {
-    "role_name": "Exact job title",
-    "company_name": "Exact company name",
-    "link": "${url}",
-    "platform": "Inferred platform",
-    "status": "Applied",
-    "description": "COPY AND PASTE THE ENTIRE JOB DESCRIPTION VERBATIM as PLAIN TEXT. 
-      You MUST include the full text of sections like 'About the job', 'Responsibilities', 'Requirements', etc.
-      DO NOT use any Markdown symbols (no '###', '**', '*', '__'). 
-      For lists, use simple line breaks.
-      If you find the job listing, do not truncate it. If you cannot find a clear job listing, set status to 'fail'.",
-    "location": "Job location"
-  }
-}
+Return JSON with exact details:
+- role_name: Exact job title
+- company_name: Exact company name
+- link: "${url}"
+- platform: Inferred platform (e.g. LinkedIn, Greenhouse, Lever, Indeed, Company Site)
+- status: "Applied"
+- location: Job location (e.g. "San Francisco, CA" or "Remote")
+- description: Full plain text job description including About the job, Responsibilities, and Requirements. Use simple line breaks for lists and do not use markdown symbols (*, #, _).
 
-Content to parse:
-\n\n${webpage}`;
+If no clear job listing is found, set status to 'fail'.
+
+Webpage Content:
+${webpage}`;
 
     if (isDevelopment) {
-      console.log("[API] Sending prompt to Gemini...");
+      console.log("[API] Sending extraction prompt to Gemini 2.5 Flash-Lite...");
     }
 
     const response = await geminiClient.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash-lite",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
         responseMimeType: "application/json",
+        responseSchema: {
+          type: "object",
+          properties: {
+            status: { type: "string", enum: ["success", "fail"] },
+            application: {
+              type: "object",
+              properties: {
+                role_name: { type: "string" },
+                company_name: { type: "string" },
+                link: { type: "string" },
+                platform: { type: "string" },
+                status: { type: "string" },
+                description: { type: "string" },
+                location: { type: "string" },
+              },
+              required: [
+                "role_name",
+                "company_name",
+                "link",
+                "platform",
+                "status",
+                "description",
+                "location",
+              ],
+            },
+          },
+          required: ["status", "application"],
+        },
+        thinkingConfig: {
+          thinkingBudget: 0,
+        },
       },
     });
 

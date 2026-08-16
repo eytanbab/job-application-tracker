@@ -166,7 +166,7 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
           {isLoading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              Extracting details (~10-15s)...
+              Extracting details...
             </>
           ) : (
             "✨ Auto-Extract Details with AI"
