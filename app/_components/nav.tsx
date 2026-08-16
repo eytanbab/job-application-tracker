@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { ModeToggle } from "./mode-toggle";
 import { MobileSideNav } from "./side-nav-mobile";
 import { Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const pageTitles: Record<string, string> = {
   applications: "Job Applications",
@@ -45,10 +46,17 @@ const Nav = () => {
       </div>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         <ModeToggle />
         <Show when="signed-out">
-          <SignInButton />
+          <SignInButton mode="modal">
+            <Button
+              size="sm"
+              className="h-8 px-3 text-xs font-semibold rounded-lg shadow-2xs cursor-pointer"
+            >
+              Sign In
+            </Button>
+          </SignInButton>
         </Show>
         <Show when="signed-in">
           <UserButton />
