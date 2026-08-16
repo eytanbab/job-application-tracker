@@ -55,11 +55,6 @@ export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputPro
     // Synchronize forwarded ref and internal inputRef
     React.useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
-    // Reset active index when options change
-    React.useEffect(() => {
-      setActiveIndex(-1);
-    }, [filteredOptions]);
-
     // Scroll active item into view
     React.useEffect(() => {
       if (open && activeIndex >= 0 && listboxRef.current) {
@@ -149,10 +144,10 @@ export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputPro
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               onFocus={() => {
-                if (!disabled) setOpen(true);
+                if (!disabled && !open) setOpen(true);
               }}
               onClick={() => {
-                if (!disabled) setOpen(true);
+                if (!disabled && !open) setOpen(true);
               }}
               onBlur={onBlur}
               placeholder={placeholder}
@@ -170,15 +165,11 @@ export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputPro
               type="button"
               tabIndex={-1}
               disabled={disabled}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 if (!disabled) {
-                  setOpen((prev) => {
-                    const next = !prev;
-                    if (next) inputRef.current?.focus();
-                    return next;
-                  });
+                  setOpen((prev) => !prev);
                 }
               }}
               aria-label={open ? "Close suggestions" : "Open suggestions"}
