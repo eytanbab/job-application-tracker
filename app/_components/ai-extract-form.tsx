@@ -133,7 +133,7 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
               </FormLabel>
               <FormControl>
                 <Input
-                  placeholder="https://www.linkedin.com/jobs/view/123456789/"
+                  placeholder="Paste LinkedIn, Indeed, or job URL..."
                   {...field}
                   onChange={(e) => {
                     field.onChange(e);

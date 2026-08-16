@@ -37,7 +37,7 @@ import {
   mergeWithDefaultOptions,
   isStandardStatus,
 } from "@/lib/utils";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { FormValues } from "./application-form";
 import { ComboboxInput } from "@/components/ui/combobox-input";
 
@@ -196,22 +196,37 @@ export function ApplicationFormFields({
     () => mergeWithDefaultOptions(userPlatforms, platformOptions),
     [userPlatforms],
   );
+
+  const isEditing = Boolean(form.getValues("id" as any));
+  const hasOptionalData = Boolean(
+    form.watch("salary") ||
+      form.watch("link") ||
+      form.watch("description") ||
+      form.watch("notes"),
+  );
+
+  const [showMoreDetails, setShowMoreDetails] = useState(
+    isEditing || hasOptionalData,
+  );
+
   return (
     <>
+      {/* 1. Essential Fields */}
       <FormField
         control={form.control}
         name="role_name"
         render={({ field }) => (
-          <FormItem className="space-y-0 col-span-full md:col-span-1">
-            <FormLabel>
+          <FormItem className="space-y-1 col-span-full sm:col-span-1">
+            <FormLabel className="text-xs font-semibold">
               Role Title
               <span className="text-destructive ml-1">*</span>
             </FormLabel>
             <FormControl>
               <Input
-                placeholder="Frontend developer"
+                placeholder="Frontend Developer"
                 {...field}
                 value={field.value || ""}
+                className="h-9 text-xs"
               />
             </FormControl>
             <FormMessage />
@@ -222,8 +237,8 @@ export function ApplicationFormFields({
         control={form.control}
         name="company_name"
         render={({ field }) => (
-          <FormItem className="space-y-0 col-span-full md:col-span-1">
-            <FormLabel>
+          <FormItem className="space-y-1 col-span-full sm:col-span-1">
+            <FormLabel className="text-xs font-semibold">
               Company Name
               <span className="text-destructive ml-1">*</span>
             </FormLabel>
@@ -232,59 +247,22 @@ export function ApplicationFormFields({
                 placeholder="e.g. Acme Corp"
                 {...field}
                 value={field.value || ""}
+                className="h-9 text-xs"
               />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
-      <FormField
-        control={form.control}
-        name="salary"
-        render={({ field }) => (
-          <FormItem className="space-y-0 col-span-full md:col-span-1">
-            <FormLabel>Salary</FormLabel>
-            <FormControl>
-              <Input
-                placeholder="e.g. $100k - $120k"
-                {...field}
-                value={field.value || ""}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="location"
-        render={({ field }) => (
-          <FormItem className="space-y-0 col-span-full md:col-span-1">
-            <FormLabel>
-              Location
-              <span className="text-destructive ml-1">*</span>
-            </FormLabel>
-            <FormControl>
-              <ComboboxInput
-                {...field}
-                options={mergedLocations}
-                placeholder="e.g. Remote / Tel Aviv"
-                value={field.value || ""}
-                onChange={(val) => field.onChange(val)}
-                onBlur={field.onBlur}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+
       <StatusFormFields form={form} />
+
       <FormField
         control={form.control}
         name="platform"
         render={({ field }) => (
-          <FormItem className="space-y-0 col-span-full">
-            <FormLabel>
+          <FormItem className="space-y-1 col-span-full sm:col-span-1">
+            <FormLabel className="text-xs font-semibold">
               Platform
               <span className="text-destructive ml-1">*</span>
             </FormLabel>
@@ -292,62 +270,11 @@ export function ApplicationFormFields({
               <ComboboxInput
                 {...field}
                 options={mergedPlatforms}
-                placeholder="e.g. LinkedIn / Indeed / Company Site"
+                placeholder="e.g. LinkedIn / Indeed"
                 value={field.value || ""}
                 onChange={(val) => field.onChange(val)}
                 onBlur={field.onBlur}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <DateAppliedFormField form={form} />
-      <FormField
-        control={form.control}
-        name="link"
-        render={({ field }) => (
-          <FormItem className="space-y-0 col-span-full">
-            <FormLabel>Job posting URL</FormLabel>
-            <FormControl>
-              <Input
-                placeholder="https://www.linkedin.com/jobs/view/123456789/"
-                {...field}
-                value={field.value || ""}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="description"
-        render={({ field }) => (
-          <FormItem className="space-y-0 col-span-full">
-            <FormLabel>Job Description</FormLabel>
-            <FormControl>
-              <Textarea
-                placeholder="Role responsibilities, requirements, or posting text..."
-                {...field}
-                value={field.value || ""}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="notes"
-        render={({ field }) => (
-          <FormItem className="space-y-0 col-span-full">
-            <FormLabel>Personal Candidate Notes</FormLabel>
-            <FormControl>
-              <Textarea
-                placeholder="Interview feedback, recruiter contact info, referral notes..."
-                {...field}
-                value={field.value || ""}
+                className="h-9 text-xs"
               />
             </FormControl>
             <FormMessage />
@@ -355,25 +282,160 @@ export function ApplicationFormFields({
         )}
       />
 
-      <div className="mt-4 flex flex-col gap-2 w-full col-span-full">
+      <FormField
+        control={form.control}
+        name="location"
+        render={({ field }) => (
+          <FormItem className="space-y-1 col-span-full sm:col-span-1">
+            <FormLabel className="text-xs font-semibold">
+              Location
+              <span className="text-destructive ml-1">*</span>
+            </FormLabel>
+            <FormControl>
+              <ComboboxInput
+                {...field}
+                options={mergedLocations}
+                placeholder="e.g. Remote / New York"
+                value={field.value || ""}
+                onChange={(val) => field.onChange(val)}
+                onBlur={field.onBlur}
+                className="h-9 text-xs"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <DateAppliedFormField form={form} />
+
+      {/* 2. Collapsible Progressive Disclosure for Optional Fields */}
+      <div className="col-span-full pt-1">
+        {!showMoreDetails ? (
+          <button
+            type="button"
+            onClick={() => setShowMoreDetails(true)}
+            className="text-xs font-semibold text-primary hover:underline flex items-center gap-1.5 py-1 cursor-pointer"
+          >
+            <span>+ Add More Details (Salary, URL, Description, Notes)</span>
+          </button>
+        ) : (
+          <div className="space-y-3 pt-2 border-t border-border/40">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Additional Details
+              </span>
+              {!isEditing && (
+                <button
+                  type="button"
+                  onClick={() => setShowMoreDetails(false)}
+                  className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  Hide
+                </button>
+              )}
+            </div>
+
+            <FormField
+              control={form.control}
+              name="salary"
+              render={({ field }) => (
+                <FormItem className="space-y-1">
+                  <FormLabel className="text-xs font-semibold">Salary (Optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g. $100k - $120k"
+                      {...field}
+                      value={field.value || ""}
+                      className="h-9 text-xs"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="link"
+              render={({ field }) => (
+                <FormItem className="space-y-1">
+                  <FormLabel className="text-xs font-semibold">Job Posting URL (Optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="https://www.linkedin.com/jobs/view/..."
+                      {...field}
+                      value={field.value || ""}
+                      className="h-9 text-xs"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem className="space-y-1">
+                  <FormLabel className="text-xs font-semibold">Job Description (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Role responsibilities, requirements, or posting text..."
+                      {...field}
+                      value={field.value || ""}
+                      className="text-xs min-h-[70px] max-h-40"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem className="space-y-1">
+                  <FormLabel className="text-xs font-semibold">Personal Candidate Notes (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Interview feedback, recruiter contact info, referral notes..."
+                      {...field}
+                      value={field.value || ""}
+                      className="text-xs min-h-[70px] max-h-40"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* 3. Submit / Cancel Action Buttons */}
+      <div className="mt-3 flex flex-col gap-2 w-full col-span-full pt-2">
         {(() => {
           const { isDirty } = form.formState;
-          const isEditing = Boolean(form.getValues("id" as any));
-          const isSaveDisabled = isPending || (isEditing && !isDirty);
+          const isEditingApp = Boolean(form.getValues("id" as any));
+          const isSaveDisabled = isPending || (isEditingApp && !isDirty);
 
           return (
             <Button
               type="submit"
               disabled={isSaveDisabled}
+              className="h-10 text-xs font-semibold rounded-xl shadow-xs cursor-pointer"
               title={
-                isEditing && !isDirty ? "No changes have been made" : undefined
+                isEditingApp && !isDirty ? "No changes have been made" : undefined
               }
             >
               {isPending ? (
-                <Loader2 className="size-8 animate-spin" />
-              ) : isEditing && !isDirty ? (
+                <Loader2 className="size-5 animate-spin" />
+              ) : isEditingApp && !isDirty ? (
                 "No Changes"
-              ) : isEditing ? (
+              ) : isEditingApp ? (
                 "Save Changes"
               ) : (
                 "Add Application"
@@ -386,6 +448,7 @@ export function ApplicationFormFields({
           variant="outline"
           onClick={onCancel}
           disabled={isPending}
+          className="h-10 text-xs rounded-xl cursor-pointer"
         >
           Cancel
         </Button>

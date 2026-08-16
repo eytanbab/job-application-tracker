@@ -72,13 +72,13 @@ export const EditApplicationSheet = ({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="w-full sm:max-w-md md:max-w-lg overflow-y-auto max-h-[90vh] p-6">
-        <DialogHeader className="pb-4 border-b">
+      <DialogContent className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-md md:max-w-lg overflow-y-auto max-h-[85dvh] sm:max-h-[90vh] p-4 sm:p-6 rounded-2xl">
+        <DialogHeader className="pb-3 border-b">
           <DialogTitle className="text-xl font-bold">
             Edit Job Application
           </DialogTitle>
         </DialogHeader>
-        <div className="py-4">
+        <div className="py-2">
           <ApplicationForm
             defaultValues={row.original}
             onSubmit={onSubmit}
