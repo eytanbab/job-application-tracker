@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
 import { Plus } from "lucide-react";
-import { ApplicationsKpiSummary } from "./components/applications-kpi-summary";
+import { StatusFilterPills } from "./components/status-filter-pills";
 import { ApplicationsKanban } from "./components/applications-kanban";
 import { ApplicationDetailSheet } from "./components/application-detail-sheet";
 import { EditApplicationSheet } from "@/app/_components/edit-application-sheet";
@@ -66,8 +66,8 @@ export function DataTable<TData extends ApplicationRow, TValue>({
   } = useDataTable({ columns, data });
 
   return (
-    <div className="w-full space-y-6">
-      <ApplicationsKpiSummary
+    <div className="w-full space-y-4">
+      <StatusFilterPills
         data={data}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
@@ -121,7 +121,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
         type="button"
         onClick={() => setIsCreateOpen(true)}
         className={cn(
-          "fixed right-5 z-40 md:hidden h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer ring-4 ring-background/50 bottom-6",
+          "fixed right-5 z-40 md:hidden h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer ring-4 ring-background/50 bottom-[calc(1.5rem+env(safe-area-inset-bottom))]",
           selectedCount > 0 && "hidden",
         )}
         aria-label="Add Application"
@@ -131,13 +131,13 @@ export function DataTable<TData extends ApplicationRow, TValue>({
       </button>
 
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="w-full sm:max-w-md md:max-w-lg overflow-y-auto max-h-[90vh] p-6">
-          <DialogHeader className="pb-4 border-b">
+        <DialogContent className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-md md:max-w-lg overflow-y-auto max-h-[85dvh] sm:max-h-[90vh] p-4 sm:p-6 rounded-2xl">
+          <DialogHeader className="pb-3 border-b">
             <DialogTitle className="text-xl font-bold">
               New Job Application
             </DialogTitle>
           </DialogHeader>
-          <div className="py-4">
+          <div className="py-2">
             <ApplicationForm
               defaultValues={defaultCreateValues}
               onClose={() => setIsCreateOpen(false)}

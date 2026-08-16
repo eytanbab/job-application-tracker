@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CheckCircle2, Trash2, X } from "lucide-react";
+import { CheckCircle2, Trash2, X, ChevronDown } from "lucide-react";
 import { statusOptions } from "@/lib/utils";
 
 interface DataTableBulkActionsProps {
@@ -39,53 +39,64 @@ export function DataTableBulkActions({
 
   return (
     <>
-      <div className="fixed bottom-0 md:bottom-6 left-0 right-0 md:left-1/2 md:-translate-x-1/2 z-50 bg-foreground text-background shadow-2xl md:shadow-lg md:rounded-md rounded-t-xl px-4 py-3 md:py-2.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 border-t md:border border-border transition-[transform,opacity] duration-200">
+      <div className="fixed bottom-0 md:bottom-6 left-0 right-0 md:left-1/2 md:-translate-x-1/2 z-50 bg-card/95 text-card-foreground backdrop-blur-md shadow-2xl md:shadow-lg md:rounded-xl rounded-t-2xl px-4 pt-3 pb-[calc(0.85rem+env(safe-area-inset-bottom))] md:py-2.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 border-t md:border border-border/60 transition-[transform,opacity] duration-200 md:max-w-xl">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-xs font-bold flex items-center gap-1.5">
-            <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-            {selectedCount} selected
+          <span className="text-xs font-bold flex items-center gap-2 text-foreground">
+            <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+            <span>{selectedCount} application{selectedCount > 1 ? "s" : ""} selected</span>
           </span>
 
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={onDeselectAll}
-            className="p-1 text-background/70 hover:text-background rounded-sm flex items-center gap-1 text-xs"
+            className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
             title="Deselect all"
           >
             <span>Cancel</span>
-            <X className="h-4 w-4" />
-          </button>
+            <X className="h-3.5 w-3.5" />
+          </Button>
         </div>
 
-        <div className="hidden md:block h-4 w-px bg-background/30" />
+        <div className="hidden md:block h-4 w-px bg-border/60" />
 
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <Select onValueChange={onBulkStatusChange}>
-            <SelectTrigger className="h-9 md:h-8 text-xs bg-background text-foreground flex-1 md:w-[150px] font-medium border-none">
-              <SelectValue placeholder="Mark Status..." />
-            </SelectTrigger>
-            <SelectContent side="top">
-              {statusOptions.map((opt) => (
-                <SelectItem
-                  key={opt.value}
-                  value={opt.value}
-                  className="capitalize text-xs"
-                >
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 md:h-8 text-xs flex-1 md:w-[140px] justify-between font-medium cursor-pointer"
+              >
+                <span>Mark Status</span>
+                <ChevronDown className="h-3.5 w-3.5 opacity-50 ml-1 shrink-0" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start" className="w-[150px]">
+              <DropdownMenuRadioGroup onValueChange={onBulkStatusChange}>
+                {statusOptions.map((opt) => (
+                  <DropdownMenuRadioItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="capitalize text-xs cursor-pointer"
+                  >
+                    {opt.label}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <Button
             data-testid="bulk-delete-button"
             variant="destructive"
             size="sm"
             onClick={() => setIsConfirmOpen(true)}
-            className="h-9 md:h-8 text-xs gap-1.5 font-semibold shrink-0"
+            className="h-9 md:h-8 text-xs gap-1.5 font-semibold shrink-0 cursor-pointer"
           >
             <Trash2 className="h-3.5 w-3.5" />
-            <span>Bulk Delete</span>
+            <span>Delete</span>
           </Button>
         </div>
       </div>

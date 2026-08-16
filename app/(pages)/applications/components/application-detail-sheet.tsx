@@ -212,8 +212,8 @@ export function ApplicationDetailSheet({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-2xl md:max-w-3xl overflow-y-auto max-h-[92vh] sm:max-h-[85vh] p-4 sm:p-6 rounded-xl sm:rounded-md shadow-lg border border-border/40">
-        <DialogHeader className="space-y-3 pb-4 border-b">
+      <DialogContent className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-2xl md:max-w-3xl overflow-y-auto max-h-[85dvh] sm:max-h-[85vh] p-4 sm:p-6 rounded-2xl sm:rounded-xl shadow-lg border border-border/40">
+        <DialogHeader className="space-y-3 pb-3 border-b">
           <div className="flex items-start justify-between gap-3 pr-6">
             <div className="space-y-1 w-full">
               {isEditing ? (
@@ -336,7 +336,7 @@ export function ApplicationDetailSheet({
 
         {/* Footer Actions */}
         {!isEditing && (
-          <div className="pt-4 border-t border-border/40 flex items-center justify-between gap-3">
+          <div className="sticky bottom-0 bg-card/95 backdrop-blur-sm pt-3 pb-1 border-t border-border/40 flex items-center justify-between gap-3 -mx-4 -mb-4 sm:-mx-6 sm:-mb-6 px-4 sm:px-6 rounded-b-2xl sm:rounded-b-xl">
             <Button
               variant="outline"
               size="sm"

@@ -54,6 +54,11 @@ export function DataTableMobileCard({
     ? formatDate(parseISO(item.date_applied), "MMM d, yyyy")
     : "";
 
+  const companyInitial = (item.company_name || "?")
+    .trim()
+    .charAt(0)
+    .toUpperCase();
+
   return (
     <Card
       tabIndex={0}
@@ -76,72 +81,80 @@ export function DataTableMobileCard({
         }
       }}
       className={cn(
-        "cursor-pointer p-4 space-y-3 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+        "cursor-pointer p-3.5 sm:p-4 rounded-xl border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary select-none active:scale-[0.99]",
         isSelected
-          ? "border-primary bg-primary/5 ring-1 ring-primary/20 shadow-sm"
-          : "border bg-card hover:border-primary/50",
+          ? "border-primary bg-primary/5 ring-1 ring-primary/20 shadow-xs"
+          : "border-border/40 bg-card hover:border-primary/40 hover:shadow-xs",
       )}
     >
       <div className="flex items-start gap-3">
-        <input
-          type="checkbox"
-          className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary shrink-0"
-          checked={isSelected}
-          onChange={(e) => {
-            e.stopPropagation();
-            onToggleSelected(!!e.target.checked);
-          }}
-          onClick={(e) => e.stopPropagation()}
-          aria-label="Select application"
-        />
+        {/* Selection Checkbox & Company Avatar */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <label
+            className="flex items-center justify-center p-1 -m-1 cursor-pointer"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary shrink-0"
+              checked={isSelected}
+              onChange={(e) => onToggleSelected(!!e.target.checked)}
+              aria-label="Select application"
+            />
+          </label>
 
+          <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-base select-none shadow-2xs">
+            {companyInitial}
+          </div>
+        </div>
+
+        {/* Content & Metadata */}
         <div className="flex-1 min-w-0 space-y-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-bold text-sm sm:text-base text-foreground line-clamp-2 leading-tight">
+            <h3 className="font-bold text-sm sm:text-base text-foreground line-clamp-1 leading-snug">
               {item.role_name}
             </h3>
 
             <Badge
               variant="outline"
-              className={`capitalize shrink-0 text-[11px] py-0.5 px-2 ${statusBadgeClasses[kind]}`}
+              className={`capitalize shrink-0 text-[11px] py-0.5 px-2 rounded-md ${statusBadgeClasses[kind]}`}
             >
               {displayLabel}
             </Badge>
           </div>
 
-          <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 truncate">
-            <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
-            <span className="truncate">{item.company_name}</span>
-          </p>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border/40 gap-2">
-        <span className="flex items-center gap-1.5 text-[11px]">
-          <Calendar className="h-3.5 w-3.5 shrink-0" />
-          {formattedDate}
-        </span>
-
-        <div className="flex items-center gap-2 text-[11px]">
-          {item.location && (
-            <span className="flex items-center gap-1 max-w-[130px] truncate">
-              <MapPin className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">{item.location}</span>
+          <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5 truncate">
+            <span className="font-semibold text-foreground/90 truncate">
+              {item.company_name}
             </span>
-          )}
-          {item.link && (
-            <a
-              href={item.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="p-1 -mr-1 text-muted-foreground hover:text-foreground inline-flex items-center justify-center min-h-[32px] min-w-[32px]"
-              title="Open Link"
-              aria-label="Open original job posting (opens in new tab)"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
-          )}
+            {item.location && (
+              <>
+                <span className="text-muted-foreground/40 font-normal">·</span>
+                <span className="truncate">{item.location}</span>
+              </>
+            )}
+          </p>
+
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1">
+            <span className="flex items-center gap-1 font-normal">
+              <Calendar className="h-3 w-3 text-muted-foreground/70" />
+              {formattedDate}
+            </span>
+
+            {item.link && (
+              <a
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="p-1 -mr-1 text-muted-foreground hover:text-foreground inline-flex items-center justify-center rounded-md hover:bg-accent/60 transition-colors"
+                title="Open job posting"
+                aria-label="Open original job posting (opens in new tab)"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </Card>

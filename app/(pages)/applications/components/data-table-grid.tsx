@@ -51,7 +51,7 @@ export function DataTableGrid<
   return (
     <div className="space-y-4">
       {/* Desktop Table View */}
-      <div className="hidden md:block rounded-md border border-border/40 bg-card overflow-hidden shadow-2xs">
+      <div className="hidden lg:block rounded-xl border border-border/40 bg-card overflow-x-auto shadow-2xs [scrollbar-width:thin]">
         <Table>
           <TableHeader className="bg-muted/30">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -148,7 +148,7 @@ export function DataTableGrid<
       </div>
 
       {/* Mobile Card View */}
-      <div className="md:hidden space-y-3">
+      <div className="lg:hidden space-y-3">
         {table.getRowModel().rows?.length ? (
           table
             .getRowModel()
@@ -162,16 +162,24 @@ export function DataTableGrid<
               />
             ))
         ) : (
-          <div className="text-center p-8 border rounded-md bg-card text-muted-foreground text-sm space-y-2">
-            <p className="font-semibold text-foreground">
-              No applications found
-            </p>
+          <div className="text-center p-6 sm:p-8 border border-border/40 rounded-xl bg-card text-muted-foreground text-xs sm:text-sm space-y-3 shadow-2xs">
+            <Filter className="h-7 w-7 mx-auto text-muted-foreground/50" />
+            <div className="space-y-1">
+              <p className="font-semibold text-foreground text-sm">
+                No applications found
+              </p>
+              <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                {hasActiveFilters
+                  ? "No job applications match your current filters. Try resetting your search."
+                  : 'You have not added any job applications yet. Click the "+" button below to get started.'}
+              </p>
+            </div>
             {hasActiveFilters && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={clearFilters}
-                className="text-xs"
+                className="text-xs h-8"
               >
                 Reset Filters
               </Button>
