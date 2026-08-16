@@ -7,21 +7,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const navItems = [
-  {
-    url: "/applications",
-    name: "applications",
-  },
-  {
-    url: "/analytics/overview",
-    name: "analytics",
-  },
-  {
-    url: "/documents",
-    name: "documents",
-  },
-];
-
 const MONTH_NAMES = [
   "Jan",
   "Feb",

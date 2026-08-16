@@ -43,15 +43,15 @@ function extractJsonLdJob(html: string): string | null {
               location = jobPosting.jobLocation;
             } else if (Array.isArray(jobPosting.jobLocation)) {
               location = jobPosting.jobLocation
-                .map((loc: Record<string, unknown>) => {
+                .flatMap((loc: Record<string, unknown>) => {
                   const addr = loc.address as Record<string, unknown> | undefined;
-                  return addr
+                  const str = addr
                     ? [addr.addressLocality, addr.addressRegion, addr.addressCountry]
                         .filter(Boolean)
                         .join(", ")
                     : "";
+                  return str ? [str] : [];
                 })
-                .filter(Boolean)
                 .join(" / ");
             } else if (typeof jobPosting.jobLocation === "object") {
               const addr = (jobPosting.jobLocation as Record<string, unknown>)
