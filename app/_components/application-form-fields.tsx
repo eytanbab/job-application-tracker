@@ -110,6 +110,7 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
                 placeholder="e.g. Technical Interview / Phone Screen..."
                 {...statusField}
                 value={statusField.value || ""}
+                className="h-9 text-xs"
               />
             </FormControl>
             <FormMessage />

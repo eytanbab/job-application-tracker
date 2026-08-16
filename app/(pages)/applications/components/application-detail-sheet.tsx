@@ -214,20 +214,20 @@ export function ApplicationDetailSheet({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-2xl md:max-w-3xl overflow-y-auto max-h-[85dvh] sm:max-h-[85vh] p-4 sm:p-6 rounded-2xl sm:rounded-xl shadow-lg border border-border/40">
         <DialogHeader className="space-y-3 pb-3 border-b">
-          <div className="flex items-start justify-between gap-3 pr-6">
-            <div className="space-y-1 w-full">
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-1 w-full min-w-0">
               {isEditing ? (
                 <DialogTitle className="text-2xl font-bold tracking-tight text-foreground font-heading">
                   Edit Job Application
                 </DialogTitle>
               ) : (
                 <>
-                  <DialogTitle className="text-2xl font-bold tracking-tight text-foreground font-heading">
+                  <DialogTitle className="text-2xl font-bold tracking-tight text-foreground font-heading break-words">
                     {activeApp.role_name}
                   </DialogTitle>
                   <p className="flex items-center gap-1.5 text-base font-medium text-muted-foreground">
                     <Building2 className="h-4 w-4 shrink-0 text-muted-foreground/70" />
-                    {activeApp.company_name}
+                    <span className="truncate">{activeApp.company_name}</span>
                   </p>
                 </>
               )}
@@ -237,7 +237,7 @@ export function ApplicationDetailSheet({
               <Button
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 shrink-0 rounded-md"
+                className="h-9 w-9 shrink-0 rounded-md mr-8 cursor-pointer"
                 asChild
               >
                 <a
@@ -245,6 +245,7 @@ export function ApplicationDetailSheet({
                   target="_blank"
                   rel="noopener noreferrer"
                   title="Open Job Link"
+                  aria-label="Open job posting in new tab"
                 >
                   <ExternalLink className="h-4 w-4" />
                 </a>

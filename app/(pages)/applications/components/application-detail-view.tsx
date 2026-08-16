@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDate, parseISO } from "date-fns";
-import { statusOptions, StatusKind } from "@/lib/utils";
+import { statusOptions, statusLabels, StatusKind } from "@/lib/utils";
 import { ApplicationTimeline, TimelineEntry } from "./application-timeline";
 
 export interface ApplicationDetailViewProps {
@@ -63,59 +63,80 @@ export function ApplicationDetailView({
   return (
     <>
       {/* Quick status update control */}
-      <div className="rounded-md border border-border/30 bg-muted/30 p-3.5 space-y-2">
+      <div className="rounded-xl border border-border/40 bg-muted/20 p-3.5 space-y-3">
         <div className="flex items-center justify-between">
-          <label
-            htmlFor="quick-status-select"
-            className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
-          >
-            Quick Update Status
-          </label>
+          <span className="text-xs font-semibold text-foreground tracking-wide">
+            Update Status & Stage
+          </span>
+          <span className="text-[10px] text-muted-foreground">
+            {isSaving ? "Saving changes..." : "Auto-saves on change"}
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <Select
-            disabled={isSaving}
-            value={currentKind}
-            onValueChange={(cat) => handleQuickStatusChange(cat)}
-          >
-            <SelectTrigger
-              id="quick-status-select"
-              className="w-full bg-card border-border/40 rounded-md"
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="space-y-1">
+            <label
+              htmlFor="quick-status-select"
+              className="text-[11px] font-medium text-muted-foreground block"
             >
-              <SelectValue placeholder="Select new status" />
-            </SelectTrigger>
-            <SelectContent>
-              {statusOptions.map((opt) => (
-                <SelectItem
-                  key={opt.value}
-                  value={opt.value}
-                  className="capitalize text-xs"
-                >
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              Stage Category
+            </label>
+            <Select
+              disabled={isSaving}
+              value={currentKind}
+              onValueChange={(cat) => handleQuickStatusChange(cat)}
+            >
+              <SelectTrigger
+                id="quick-status-select"
+                className="w-full bg-card border-border/40 rounded-lg h-9 text-xs"
+              >
+                <SelectValue placeholder="Select stage category" />
+              </SelectTrigger>
+              <SelectContent>
+                {statusOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="capitalize text-xs cursor-pointer"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-          <div className="relative flex-1">
-            <Input
-              placeholder="Custom stage detail (optional)"
-              value={quickStatusText}
-              onChange={(e) => setQuickStatusText(e.target.value)}
-              onBlur={(e) =>
-                handleQuickStatusChange(currentKind, e.target.value)
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.currentTarget.blur();
+          <div className="space-y-1">
+            <label
+              htmlFor="quick-stage-detail"
+              className="text-[11px] font-medium text-muted-foreground block"
+            >
+              Custom Stage Detail (Optional)
+            </label>
+            <div className="relative">
+              <Input
+                id="quick-stage-detail"
+                placeholder={
+                  statusLabels[currentKind]
+                    ? `e.g. ${statusLabels[currentKind]} - Round 2`
+                    : "e.g. Technical Interview / Phone Screen"
                 }
-              }}
-              className="h-9 text-xs bg-card border-border/40 pr-20"
-            />
-            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-medium pointer-events-none hidden sm:inline-block">
-              {isSaving ? "Saving..." : "Press Enter"}
-            </span>
+                value={quickStatusText}
+                onChange={(e) => setQuickStatusText(e.target.value)}
+                onBlur={(e) =>
+                  handleQuickStatusChange(currentKind, e.target.value)
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.currentTarget.blur();
+                  }
+                }}
+                className="h-9 text-xs bg-card border-border/40 rounded-lg pr-14"
+              />
+              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-medium pointer-events-none hidden sm:inline-block">
+                Enter ↵
+              </span>
+            </div>
           </div>
         </div>
       </div>

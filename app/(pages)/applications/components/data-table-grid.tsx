@@ -49,7 +49,7 @@ export function DataTableGrid<
   onSelectRow,
 }: DataTableGridProps<TData>) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-24 lg:pb-4">
       {/* Desktop Table View */}
       <div className="hidden lg:block rounded-xl border border-border/40 bg-card overflow-x-auto shadow-2xs [scrollbar-width:thin]">
         <Table>
@@ -189,48 +189,52 @@ export function DataTableGrid<
       </div>
 
       {/* Pagination Controls */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 py-2 px-1 text-xs text-muted-foreground">
-        <p>
-          Showing {table.getRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} application(s)
-        </p>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2 pb-1 px-1 text-xs text-muted-foreground border-t border-border/30">
+        {/* Top/Left Row: Application count & Page size */}
+        <div className="flex items-center justify-between sm:justify-start gap-4">
+          <p className="font-medium text-xs">
+            Showing {table.getRowModel().rows.length} of{" "}
+            {table.getFilteredRowModel().rows.length} application(s)
+          </p>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center space-x-2">
-            <span className="font-medium">Rows per page</span>
+          <div className="flex items-center space-x-1.5 shrink-0">
+            <span className="font-medium text-xs hidden xs:inline">Rows:</span>
             <Select
               value={`${table.getState().pagination.pageSize}`}
               onValueChange={(value) => {
                 table.setPageSize(Number(value));
               }}
             >
-              <SelectTrigger className="h-8 w-[65px]">
+              <SelectTrigger className="h-8 w-[68px] text-xs bg-background/60">
                 <SelectValue
                   placeholder={table.getState().pagination.pageSize}
                 />
               </SelectTrigger>
               <SelectContent side="top">
                 {TABLE_ROWS.map((pageSize) => (
-                  <SelectItem key={pageSize} value={`${pageSize}`}>
-                    {pageSize}
+                  <SelectItem key={pageSize} value={`${pageSize}`} className="text-xs cursor-pointer">
+                    {pageSize} / page
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+        </div>
 
+        {/* Bottom/Right Row: Page Index & Navigation Buttons */}
+        <div className="flex items-center justify-between sm:justify-end gap-3">
           <span className="text-xs font-semibold text-foreground whitespace-nowrap">
             Page {table.getState().pagination.pageIndex + 1} of{" "}
             {Math.max(1, table.getPageCount())}
           </span>
 
-          <div className="flex gap-1.5">
+          <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
-              className="h-8 text-xs px-3"
+              className="h-8 text-xs px-3 cursor-pointer"
             >
               Previous
             </Button>
@@ -239,7 +243,7 @@ export function DataTableGrid<
               size="sm"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
-              className="h-8 text-xs px-3"
+              className="h-8 text-xs px-3 cursor-pointer"
             >
               Next
             </Button>
