@@ -10,15 +10,14 @@ import {
   PopoverAnchor,
 } from "@/components/ui/popover";
 
-export interface ComboboxInputProps {
+export interface ComboboxInputProps
+  extends Omit<React.ComponentProps<"input">, "onChange" | "value"> {
   value?: string;
   onChange?: (value: string) => void;
-  onBlur?: () => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   options: string[];
   placeholder?: string;
   className?: string;
-  id?: string;
-  name?: string;
   disabled?: boolean;
 }
 
@@ -28,23 +27,50 @@ export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputPro
       value = "",
       onChange,
       onBlur,
+      onKeyDown,
       options,
       placeholder,
       className,
       id,
       name,
       disabled,
+      ...props
     },
     ref,
   ) => {
     const [open, setOpen] = React.useState(false);
-    const containerRef = React.useRef<HTMLDivElement>(null);
+    const [activeIndex, setActiveIndex] = React.useState<number>(-1);
+    const listboxRef = React.useRef<HTMLDivElement>(null);
+    const inputRef = React.useRef<HTMLInputElement | null>(null);
+    const reactId = React.useId();
+    const inputId = id || reactId;
+    const listboxId = `${inputId}-listbox`;
 
     const filteredOptions = React.useMemo(() => {
       const q = (value || "").trim().toLowerCase();
       if (!q) return options;
       return options.filter((opt) => opt.toLowerCase().includes(q));
     }, [options, value]);
+
+    // Synchronize forwarded ref and internal inputRef
+    React.useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
+
+    // Reset active index when options change
+    React.useEffect(() => {
+      setActiveIndex(-1);
+    }, [filteredOptions]);
+
+    // Scroll active item into view
+    React.useEffect(() => {
+      if (open && activeIndex >= 0 && listboxRef.current) {
+        const activeElem = listboxRef.current.querySelector(
+          `#${listboxId}-option-${activeIndex}`,
+        );
+        if (activeElem) {
+          activeElem.scrollIntoView({ block: "nearest" });
+        }
+      }
+    }, [activeIndex, open, listboxId]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.target.value;
@@ -55,19 +81,73 @@ export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputPro
     const handleSelectOption = (opt: string) => {
       onChange?.(opt);
       setOpen(false);
+      setActiveIndex(-1);
+      inputRef.current?.focus();
     };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      onKeyDown?.(e);
+      if (e.defaultPrevented) return;
+
+      if (disabled) return;
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (!open) {
+          setOpen(true);
+          setActiveIndex(0);
+        } else if (filteredOptions.length > 0) {
+          setActiveIndex((prev) =>
+            prev < filteredOptions.length - 1 ? prev + 1 : 0,
+          );
+        }
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (!open) {
+          setOpen(true);
+          setActiveIndex(filteredOptions.length - 1);
+        } else if (filteredOptions.length > 0) {
+          setActiveIndex((prev) =>
+            prev > 0 ? prev - 1 : filteredOptions.length - 1,
+          );
+        }
+      } else if (e.key === "Enter") {
+        if (open && activeIndex >= 0 && activeIndex < filteredOptions.length) {
+          e.preventDefault();
+          handleSelectOption(filteredOptions[activeIndex]);
+        }
+      } else if (e.key === "Escape") {
+        if (open) {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen(false);
+          setActiveIndex(-1);
+        }
+      } else if (e.key === "Tab") {
+        if (open) {
+          setOpen(false);
+          setActiveIndex(-1);
+        }
+      }
+    };
+
+    const activeOptionId =
+      open && activeIndex >= 0 && filteredOptions[activeIndex]
+        ? `${listboxId}-option-${activeIndex}`
+        : undefined;
 
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverAnchor asChild>
-          <div ref={containerRef} className="relative w-full flex items-center">
+          <div className="relative w-full flex items-center">
             <Input
-              ref={ref}
-              id={id}
+              ref={inputRef}
+              id={inputId}
               name={name}
               value={value}
               disabled={disabled}
               onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
               onFocus={() => {
                 if (!disabled) setOpen(true);
               }}
@@ -78,6 +158,13 @@ export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputPro
               placeholder={placeholder}
               className={cn("pr-9 cursor-text", className)}
               autoComplete="off"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded={open}
+              aria-haspopup="listbox"
+              aria-controls={open ? listboxId : undefined}
+              aria-activedescendant={activeOptionId}
+              {...props}
             />
             <button
               type="button"
@@ -86,9 +173,18 @@ export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputPro
               onMouseDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (!disabled) setOpen((prev) => !prev);
+                if (!disabled) {
+                  setOpen((prev) => {
+                    const next = !prev;
+                    if (next) inputRef.current?.focus();
+                    return next;
+                  });
+                }
               }}
-              aria-label="Toggle options"
+              aria-label={open ? "Close suggestions" : "Open suggestions"}
+              aria-haspopup="listbox"
+              aria-expanded={open}
+              aria-controls={open ? listboxId : undefined}
               className="absolute right-3 flex items-center justify-center text-muted-foreground hover:text-foreground transition-transform duration-150 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ChevronDown
@@ -101,6 +197,10 @@ export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputPro
           </div>
         </PopoverAnchor>
         <PopoverContent
+          ref={listboxRef}
+          id={listboxId}
+          role="listbox"
+          aria-label={placeholder || "Suggestions"}
           align="start"
           sideOffset={4}
           onOpenAutoFocus={(e) => e.preventDefault()}
@@ -110,32 +210,41 @@ export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputPro
           className="w-[var(--radix-popover-trigger-width)] max-h-60 overflow-y-auto overscroll-contain p-1 rounded-xl border border-border/30 bg-popover/95 backdrop-blur-md text-popover-foreground shadow-lg z-50 pointer-events-auto [scrollbar-width:thin]"
         >
           {filteredOptions.length === 0 ? (
-            <div className="py-2 px-3 text-xs text-muted-foreground italic">
+            <div
+              className="py-2 px-3 text-xs text-muted-foreground italic"
+              role="status"
+              aria-live="polite"
+            >
               Custom entry: "{value}"
             </div>
           ) : (
-            filteredOptions.map((opt) => {
+            filteredOptions.map((opt, index) => {
               const isSelected =
                 (value || "").toLowerCase().trim() === opt.toLowerCase().trim();
+              const isHighlighted = activeIndex === index;
+              const optionId = `${listboxId}-option-${index}`;
+
               return (
                 <div
                   key={opt}
+                  id={optionId}
                   role="option"
                   aria-selected={isSelected}
-                  tabIndex={0}
+                  data-highlighted={isHighlighted ? "" : undefined}
                   onMouseDown={(e) => {
                     e.preventDefault();
                     handleSelectOption(opt);
                   }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      handleSelectOption(opt);
-                    }
+                  onMouseEnter={() => {
+                    setActiveIndex(index);
                   }}
                   className={cn(
-                    "relative flex w-full cursor-pointer select-none items-center rounded-lg py-1.5 pl-8 pr-2 text-xs font-medium outline-none hover:bg-accent hover:text-accent-foreground transition-colors",
-                    isSelected && "bg-accent/50 text-accent-foreground",
+                    "relative flex w-full cursor-pointer select-none items-center rounded-lg py-1.5 pl-8 pr-2 text-xs font-medium outline-none transition-colors",
+                    isHighlighted
+                      ? "bg-accent text-accent-foreground"
+                      : isSelected
+                        ? "bg-accent/50 text-accent-foreground"
+                        : "hover:bg-accent hover:text-accent-foreground",
                   )}
                 >
                   {isSelected && (
