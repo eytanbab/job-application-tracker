@@ -110,8 +110,9 @@ NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 # Database (Neon Serverless PostgreSQL)
 DATABASE_URL=postgresql://user:password@ep-xyz.region.aws.neon.tech/neondb?sslmode=require
 
-# Google Gemini AI (For job extraction fallback)
-GEMINI_API_KEY=AIzaSy...
+# Google Gemini AI
+GEMINI_EXTRACTION_API_KEY=AIzaSy...   # For job posting scraping & extraction
+GEMINI_ATS_API_KEY=AIzaSy...          # For ATS Resume Compatibility & bullet optimization
 
 # AWS S3 (For resume & document storage)
 AWS_ACCESS_KEY_ID=AKIA...

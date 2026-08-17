@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { scraper } from "@/lib/scraper";
-import { geminiClient } from "@/lib/gemini";
+import { geminiExtractionClient } from "@/lib/gemini";
 import { tryDeterministicExtraction } from "@/lib/parsers";
 
 export const maxDuration = 30;
@@ -75,7 +75,7 @@ If no clear job listing is found, set status to 'fail'.
 Webpage Content:
 ${webpage}`;
 
-    const response = await geminiClient.models.generateContent({
+    const response = await geminiExtractionClient.models.generateContent({
       model: "gemini-2.5-flash-lite",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
