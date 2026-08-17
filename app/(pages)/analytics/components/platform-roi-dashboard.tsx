@@ -203,7 +203,7 @@ function PlatformRoiCard({ platform }: { platform: EnrichedPlatform }) {
         {/* Drill-down action link */}
         <div className="border-t border-border/30 pt-2 flex justify-end">
           <Link
-            href={`/applications?search=${encodeURIComponent(platform.platformName)}`}
+            href={`/applications?platform=${encodeURIComponent(platform.platformName)}`}
             className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline cursor-pointer"
           >
             View applications
@@ -307,7 +307,7 @@ function PlatformRoiTable({ platforms }: { platforms: EnrichedPlatform[] }) {
               </td>
               <td className="py-3 px-4 text-right">
                 <Button asChild variant="ghost" size="sm" className="h-7 text-xs font-semibold gap-1 cursor-pointer">
-                  <Link href={`/applications?search=${encodeURIComponent(platform.platformName)}`}>
+                  <Link href={`/applications?platform=${encodeURIComponent(platform.platformName)}`}>
                     View
                     <ArrowRight className="h-3 w-3" />
                   </Link>

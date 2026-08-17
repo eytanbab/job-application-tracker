@@ -62,7 +62,7 @@ export function GhostingRiskCard({
                     {followUpCompanies.map((company) => (
                       <Link
                         key={company}
-                        href={`/applications?search=${encodeURIComponent(company)}`}
+                        href={`/applications?q=${encodeURIComponent(company)}`}
                         className="rounded bg-blue-500/10 hover:bg-blue-500/20 px-1.5 py-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400 transition-colors cursor-pointer"
                       >
                         {company} →
@@ -89,7 +89,7 @@ export function GhostingRiskCard({
                     {companies.map((company) => (
                       <Link
                         key={company}
-                        href={`/applications?search=${encodeURIComponent(company)}`}
+                        href={`/applications?q=${encodeURIComponent(company)}`}
                         className="rounded bg-amber-500/10 hover:bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400 transition-colors cursor-pointer"
                       >
                         {company} →
