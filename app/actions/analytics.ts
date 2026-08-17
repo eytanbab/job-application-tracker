@@ -132,7 +132,6 @@ export async function getGhostedApplications(month?: string, year?: string) {
 
   return unstable_cache(
     async () => {
-      const thirtyDaysAgo = subDays(new Date(), 30);
       const applications = await db
         .select({
           id: jobApplications.id,
@@ -142,49 +141,74 @@ export async function getGhostedApplications(month?: string, year?: string) {
           company_name: jobApplications.company_name,
         })
         .from(jobApplications)
-        .where(
-          and(
-            ...whereClause,
-            lt(
-              jobApplications.date_applied,
-              format(thirtyDaysAgo, "yyyy-MM-dd"),
-            ),
-          ),
-        );
+        .where(and(...whereClause));
 
       let oldestDays = 0;
       const ghostedApps: typeof applications = [];
-      const companyCount = new Map<string, number>();
+      const ghostedCompanyCount = new Map<string, number>();
+      const followUpApps: typeof applications = [];
+      const followUpCompanyCount = new Map<string, number>();
+
+      const now = new Date();
 
       applications.forEach((app) => {
-        if (getStatusKind(app.status, app.statusCategory) === "applied") {
-          ghostedApps.push(app);
-          const name = (app.company_name || "").trim();
-          if (name) {
-            companyCount.set(name, (companyCount.get(name) || 0) + 1);
-          }
+        const kind = getStatusKind(app.status, app.statusCategory);
+        if (!app.date_applied) return;
 
-          if (app.date_applied) {
-            const dateStr = app.date_applied.includes("T")
-              ? app.date_applied
-              : `${app.date_applied}T12:00:00`;
-            const days = differenceInDays(new Date(), new Date(dateStr));
-            if (days > oldestDays) {
-              oldestDays = days;
+        const dateStr = app.date_applied.includes("T")
+          ? app.date_applied
+          : `${app.date_applied}T12:00:00`;
+        const appliedDate = new Date(dateStr);
+        if (isNaN(appliedDate.getTime())) return;
+
+        const daysAgo = differenceInDays(now, appliedDate);
+
+        if (kind === "applied") {
+          if (daysAgo >= 30) {
+            ghostedApps.push(app);
+            const name = (app.company_name || "").trim();
+            if (name) {
+              ghostedCompanyCount.set(
+                name,
+                (ghostedCompanyCount.get(name) || 0) + 1,
+              );
+            }
+            if (daysAgo > oldestDays) {
+              oldestDays = daysAgo;
+            }
+          }
+        }
+
+        if (kind === "applied" || kind === "review") {
+          if (daysAgo >= 7 && daysAgo <= 14) {
+            followUpApps.push(app);
+            const name = (app.company_name || "").trim();
+            if (name) {
+              followUpCompanyCount.set(
+                name,
+                (followUpCompanyCount.get(name) || 0) + 1,
+              );
             }
           }
         }
       });
 
-      const topCompanies = Array.from(companyCount.entries())
+      const topGhostedCompanies = Array.from(ghostedCompanyCount.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map((e) => e[0]);
+
+      const topFollowUpCompanies = Array.from(followUpCompanyCount.entries())
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5)
         .map((e) => e[0]);
 
       return {
         count: ghostedApps.length,
-        companies: topCompanies,
+        companies: topGhostedCompanies,
         oldestDays,
+        followUpCount: followUpApps.length,
+        followUpCompanies: topFollowUpCompanies,
       };
     },
     [
@@ -453,6 +477,11 @@ export async function getDetailedApplicationBreakdown(
           },
           breakdown: {
             active: 0,
+            activeStages: {
+              applied: 0,
+              review: 0,
+              interview: 0,
+            },
             offered: 0,
             rejectedResume: 0,
             rejectedInterview: 0,
@@ -490,6 +519,9 @@ export async function getDetailedApplicationBreakdown(
       });
 
       let activeCount = 0;
+      let activeAppliedCount = 0;
+      let activeReviewCount = 0;
+      let activeInterviewCount = 0;
       let offeredCount = 0;
       let rejectedResumeCount = 0;
       let rejectedInterviewCount = 0;
@@ -536,6 +568,9 @@ export async function getDetailedApplicationBreakdown(
             }
           } else {
             activeCount++;
+            if (currentKind === "applied") activeAppliedCount++;
+            else if (currentKind === "review") activeReviewCount++;
+            else if (currentKind === "interview") activeInterviewCount++;
           }
         } else if (currentKind === "ghosted") {
           if (reachedInterview) {
@@ -551,6 +586,7 @@ export async function getDetailedApplicationBreakdown(
           }
         } else {
           activeCount++;
+          activeAppliedCount++;
         }
 
         // Response velocity calculation (time to first recruiter response, excluding ghosted apps)
@@ -632,6 +668,11 @@ export async function getDetailedApplicationBreakdown(
         },
         breakdown: {
           active: activeCount,
+          activeStages: {
+            applied: activeAppliedCount,
+            review: activeReviewCount,
+            interview: activeInterviewCount,
+          },
           offered: offeredCount,
           rejectedResume: rejectedResumeCount,
           rejectedInterview: rejectedInterviewCount,
@@ -650,6 +691,76 @@ export async function getDetailedApplicationBreakdown(
       tags: [applicationsTag(userId)],
     },
   )();
+}
+
+export async function getFunnelBottleneckInsight(
+  month?: string,
+  year?: string,
+) {
+  const breakdown = await getDetailedApplicationBreakdown(month, year);
+  const total = breakdown.total;
+  const resumeRate = breakdown.resumeConversion;
+  const interviewRate = breakdown.interviewConversion;
+  const totalInterviews = breakdown.stages.interview;
+
+  if (total === 0) {
+    return {
+      status: "empty" as const,
+      stage: "No Data",
+      headline: "Pipeline Awaiting Applications",
+      description:
+        "Track job applications to identify where candidates drop off in your funnel.",
+      actionAdvice: "Add your active applications to begin funnel analysis.",
+      health: "neutral" as const,
+    };
+  }
+
+  if (total < 5) {
+    return {
+      status: "gathering" as const,
+      stage: "Gathering Data",
+      headline: `${total} ${total === 1 ? "Application" : "Applications"} Tracked`,
+      description:
+        "Add 5–10 applications to calculate statistically meaningful bottleneck diagnostics.",
+      actionAdvice:
+        "Keep tracking your applications to unlock funnel bottleneck insights.",
+      health: "neutral" as const,
+    };
+  }
+
+  if (resumeRate < 15) {
+    return {
+      status: "resume_bottleneck" as const,
+      stage: "Resume Screening",
+      headline: "Resume Pass Rate Below Benchmark",
+      description: `Your resume screening pass rate is ${resumeRate.toFixed(1)}% (market benchmark: 15.0%–25.0%).`,
+      actionAdvice:
+        "Tailor keyword matches on resumes and review bullet point impact metrics.",
+      health: "warning" as const,
+    };
+  }
+
+  if (totalInterviews >= 2 && interviewRate < 20) {
+    return {
+      status: "interview_bottleneck" as const,
+      stage: "Interview Stage",
+      headline: "Interview-to-Offer Drop-Off",
+      description: `Strong resume screening (${resumeRate.toFixed(1)}%), but interview conversion is ${interviewRate.toFixed(1)}% (benchmark: 20.0%–35.0%).`,
+      actionAdvice:
+        "Focus on behavioral storytelling (STAR method) and deep technical prep.",
+      health: "warning" as const,
+    };
+  }
+
+  return {
+    status: "healthy" as const,
+    stage: "Pipeline Healthy",
+    headline: "Balanced Funnel Throughput",
+    description: `Resume pass rate (${resumeRate.toFixed(1)}%) and interview rate (${interviewRate.toFixed(1)}%) are meeting target benchmarks.`,
+    actionAdvice:
+      "Pipeline is healthy. Maintain current application pacing and quality.",
+    health: "healthy" as const,
+  };
 }
 
 export async function getBestPlatformInsight(month?: string, year?: string) {
