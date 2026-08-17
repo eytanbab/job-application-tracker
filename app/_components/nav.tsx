@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 const pageTitles: Record<string, string> = {
   applications: "Job Applications",
   analytics: "Analytics & Performance",
+  "ats-checker": "ATS Resume Checker",
   documents: "Career Documents",
 };
 

@@ -4,12 +4,13 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
-import { Briefcase, BarChart3, FileText, Sparkles } from "lucide-react";
+import { Briefcase, BarChart3, FileText, FileCheck, Sparkles } from "lucide-react";
 import { NewApplicationButton } from "./new-application-button";
 
 const navLinks = [
   { url: "/applications", name: "Applications", icon: Briefcase },
   { url: "/analytics/overview", name: "Analytics", icon: BarChart3 },
+  { url: "/ats-checker", name: "ATS Checker", icon: FileCheck },
   { url: "/documents", name: "Documents", icon: FileText },
 ];
 

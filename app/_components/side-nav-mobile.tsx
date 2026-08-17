@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Menu, Briefcase, BarChart3, FileText, Sparkles } from "lucide-react";
+import { Menu, Briefcase, BarChart3, FileText, FileCheck, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -18,6 +18,7 @@ import { useState } from "react";
 const mobileNavLinks = [
   { url: "/applications", name: "Applications", icon: Briefcase },
   { url: "/analytics/overview", name: "Analytics", icon: BarChart3 },
+  { url: "/ats-checker", name: "ATS Checker", icon: FileCheck },
   { url: "/documents", name: "Documents", icon: FileText },
 ];
 
