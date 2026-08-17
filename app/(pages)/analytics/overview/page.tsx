@@ -7,7 +7,7 @@ import {
   getDetailedApplicationBreakdown,
   getBestPlatformInsight,
   getGhostedApplications,
-  getDomainLeaderboard,
+  getFunnelBottleneckInsight,
 } from "@/app/actions/analytics";
 
 import dynamicImport from "next/dynamic";
@@ -34,7 +34,7 @@ import { KpiSummary } from "../components/kpi-summary";
 import { AnalyticsFilter } from "../components/analytics-filter";
 import { BestPlatformsCard } from "../components/best-platforms-card";
 import { GhostingRiskCard } from "../components/ghosting-risk-card";
-import { DomainLeaderboardCard } from "../components/domain-leaderboard-card";
+import { FunnelBottleneckCard } from "../components/funnel-bottleneck-card";
 import { BarChart3, Lightbulb, TrendingUp } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -64,7 +64,7 @@ export default async function Overview(props: {
     breakdownData,
     bestPlatformInsight,
     ghostedApplications,
-    domainLeaderboard,
+    funnelBottleneck,
   ] = await Promise.all([
     getTop5Statuses(month, year),
     getApplicationsPerYear(month, year),
@@ -73,7 +73,7 @@ export default async function Overview(props: {
     getDetailedApplicationBreakdown(month, year),
     getBestPlatformInsight(month, year),
     getGhostedApplications(month, year),
-    getDomainLeaderboard(month, year),
+    getFunnelBottleneckInsight(month, year),
   ]);
 
   const totalApplications = breakdownData.total;
@@ -84,13 +84,6 @@ export default async function Overview(props: {
 
   const interviewConversionRate = breakdownData.stages.interview
     ? breakdownData.stages.accepted / breakdownData.stages.interview
-    : 0;
-
-  const totalRejections =
-    breakdownData.breakdown.rejectedResume +
-    breakdownData.breakdown.rejectedInterview;
-  const rejectionRate = breakdownData.total
-    ? totalRejections / breakdownData.total
     : 0;
 
   const availableYears = years.length > 0 ? years : [currentYear];
@@ -118,9 +111,10 @@ export default async function Overview(props: {
         </div>
         <KpiSummary
           totalApplications={totalApplications}
+          activeCount={breakdownData.breakdown.active}
+          activeStages={breakdownData.breakdown.activeStages}
           interviewRate={interviewRate}
           interviewConversionRate={interviewConversionRate}
-          rejectionRate={rejectionRate}
           averageResponseDays={breakdownData.averageResponseDays}
         />
       </section>
@@ -137,7 +131,7 @@ export default async function Overview(props: {
           <BestPlatformsCard {...bestPlatformInsight} />
           <GhostingRiskCard {...ghostedApplications} />
           <div className="sm:col-span-2 lg:col-span-1">
-            <DomainLeaderboardCard domains={domainLeaderboard} />
+            <FunnelBottleneckCard {...funnelBottleneck} />
           </div>
         </div>
       </section>

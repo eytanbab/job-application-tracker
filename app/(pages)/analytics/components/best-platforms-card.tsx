@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Target } from "lucide-react";
+import Link from "next/link";
 
 type Props = {
   bestPlatform: {
@@ -23,7 +24,7 @@ export function BestPlatformsCard({
   multiplier,
 }: Props) {
   return (
-    <Card className="bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow">
+    <Card className="bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow flex flex-col justify-between">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Best Performing Platform
@@ -61,6 +62,12 @@ export function BestPlatformsCard({
                 Your highest converting job platform right now.
               </p>
             )}
+            <Link
+              href="/analytics/status-per-platform"
+              className="mt-2.5 inline-flex items-center text-xs font-semibold text-primary hover:underline cursor-pointer"
+            >
+              View Platform ROI →
+            </Link>
           </div>
         )}
       </CardContent>

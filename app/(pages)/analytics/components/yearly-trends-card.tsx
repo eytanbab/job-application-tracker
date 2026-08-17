@@ -51,7 +51,7 @@ export function YearlyTrendsCard({
   applicationsPerYear,
   globalYear,
 }: YearlyTrendsCardProps) {
-  const [activeTab, setActiveTab] = useState<"status" | "volume">("status");
+  const [activeTab, setActiveTab] = useState<"status" | "volume">("volume");
   const currentYear = new Date().getFullYear().toString();
   const effectiveGlobalYear =
     globalYear && globalYear !== "all" ? globalYear : undefined;
