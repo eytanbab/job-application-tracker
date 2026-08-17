@@ -16,8 +16,13 @@ import {
 import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 
-export async function getDomainLeaderboard() {
+export async function getDomainLeaderboard(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  const whereClause = [eq(jobApplications.userId, userId)];
+  if (month && month !== "all")
+    whereClause.push(eq(jobApplications.month, month));
+  if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
     async () => {
@@ -28,7 +33,7 @@ export async function getDomainLeaderboard() {
           statusCategory: jobApplications.statusCategory,
         })
         .from(jobApplications)
-        .where(eq(jobApplications.userId, userId));
+        .where(and(...whereClause));
 
       const domainStats: {
         [domain: string]: { total: number; interviews: number };
@@ -66,7 +71,7 @@ export async function getDomainLeaderboard() {
         .sort((a, b) => b.successRate - a.successRate || b.total - a.total)
         .slice(0, 5);
     },
-    ["analytics", "domain-leaderboard", userId],
+    ["analytics", "domain-leaderboard", userId, month || "all", year || "all"],
     {
       revalidate: CACHE_REVALIDATE_SECONDS,
       tags: [applicationsTag(userId)],
