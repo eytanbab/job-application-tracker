@@ -10,6 +10,7 @@
 - [x] On mobile view - Applications page - Viewing application, external link button is too close to the 'X' button (FIXED: Added mr-8 margin to separate action button from modal close button).
 - [x] In Applications page - Viewing application, the 'quick update status' can be confusing for users who will not understand why the status shows twice (FIXED: Added explicit Stage Category and Custom Stage Detail labels with contextual placeholders).
 - [x] In Applications page - Editing application, the stage details / custom status text size in the input is not in the same size as the reset of the inputs in the form (FIXED: Added className="h-9 text-xs" to stage details input).
+- [x] In application view, the description needs a copy button to easily copy the job description (FIXED: Added 1-click Copy button with checkmark transition and toast feedback to Job Description header in ApplicationDetailView).
 
 ## Analytics Overview (`/analytics/overview`)
 - [x] Missing active pipeline operational metric in top KPI summary (FIXED: Replaced negative-framed Rejection Rate with Active Pipeline KPI displaying concurrent in-flight volume and stage breakdown pills).
@@ -27,3 +28,16 @@
 - [x] Sorting controls lack ARIA group semantics and active state indicators (FIXED: Wrapped sort controls in `role="group"` with `aria-label` and `aria-pressed`).
 - [x] Lack of dense table comparison mode for multi-platform tracking (FIXED: Added Table/Matrix comparison view toggle with responsive row layouts and quick actions).
 - [x] Filter reset leaving trailing `?` in browser URL (FIXED: Switched to `usePathname()` for clean navigation).
+
+## ATS Resume Checker (`/ats-checker`)
+- [x] Tab switching in resume section destroying uploaded file or pasted draft (FIXED: Decoupled tab draft states in `ResumeInputSection` so toggling between tabs preserves all inputs).
+- [x] Form inputs unlocked during active Gemini inference (FIXED: Passed `disabled={isAnalyzing}` to freeze dropzone, textarea, and mode switchers during processing).
+- [x] Silent disabled submit button without requirement indicators (FIXED: Added dynamic live requirement badges above submit button explaining exact readiness).
+- [x] Missing client-side file size and format validation (FIXED: Added client guards checking `<10MB` and `application/pdf` with immediate toast alerts).
+- [x] Re-scan workflow wiping user inputs (FIXED: Added "Edit Inputs & Re-scan" button to results toolbar preserving in-memory draft).
+- [x] Full-width mobile CTA ergonomics (FIXED: Applied `w-full sm:w-auto` to primary action button).
+- [x] Truncated missing keyword placement advice (FIXED: Added expandable "Show all placement tips" toggle in `KeywordGapMatrix`).
+- [x] Sub-44px popover touch target on dimension cards (FIXED: Wrapped popover triggers in padded `h-6 w-6` interactive wrappers).
+- [x] Static progress bar colors for failing scores (FIXED: Dynamically mapped dimension bar colors by score tier: Emerald for ≥75%, Amber for 50–74%, Rose for <50%).
+- [x] Lack of sample job description for instant exploration (FIXED: Added 1-click "Try Sample Job Description" button in `JobDescriptionInput`).
+- [x] Missing full diagnostic summary export (FIXED: Added "Copy Full Report" action to results toolbar).
