@@ -1,6 +1,4 @@
 import { Suspense } from "react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { getStatusPerPlatform, getYears } from "@/app/actions/analytics";
 import { PlatformRoiDashboard } from "../components/platform-roi-dashboard";
 import { AnalyticsFilter } from "../components/analytics-filter";
@@ -22,33 +20,27 @@ export default async function StatusPerPlatformPage(props: {
   const year =
     typeof searchParams.year === "string" ? searchParams.year : undefined;
 
+  const currentYear = new Date().getFullYear().toString();
+
   const [statusPerPlatform, years] = await Promise.all([
     getStatusPerPlatform(month, year),
     getYears(),
   ]);
 
+  const availableYears = years.length > 0 ? years : [currentYear];
+
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-6 w-full opacity-100 transition-opacity duration-500">
+      <h1 className="sr-only">Platform ROI & Application Status</h1>
       <Suspense
         fallback={
           <div className="h-14 w-full bg-card rounded-xl animate-pulse" />
         }
       >
-        <AnalyticsFilter years={years.length > 0 ? years : ["2025"]} />
+        <AnalyticsFilter years={availableYears} />
       </Suspense>
-      {statusPerPlatform.length === 0 && !month && !year ? (
-        <div className="flex flex-col gap-3 h-60 items-center justify-center rounded-xl border border-dashed border-border/50 p-8 text-center bg-card/30">
-          <p className="text-muted-foreground text-sm max-w-sm">
-            No applications found. Add your job applications to unlock platform
-            ROI analytics.
-          </p>
-          <Button asChild size="sm" className="gap-1.5 font-semibold">
-            <Link href="/applications">+ Add Application</Link>
-          </Button>
-        </div>
-      ) : (
-        <PlatformRoiDashboard data={statusPerPlatform} />
-      )}
+
+      <PlatformRoiDashboard data={statusPerPlatform} />
     </div>
   );
 }

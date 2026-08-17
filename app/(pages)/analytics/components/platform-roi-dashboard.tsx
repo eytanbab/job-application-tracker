@@ -10,10 +10,10 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Globe } from "lucide-react";
+import { Sparkles, Globe, LayoutGrid, Table as TableIcon, ArrowRight } from "lucide-react";
 import { getStatusKind, statusLabels, StatusKind } from "@/lib/utils";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -47,7 +47,13 @@ const getStatusBgColor = (kind: StatusKind) => {
   }
 };
 
-function PlatformEmptyState({ hasFilter, onClearFilter }: { hasFilter: boolean; onClearFilter: () => void }) {
+function PlatformEmptyState({
+  hasFilter,
+  onClearFilter,
+}: {
+  hasFilter: boolean;
+  onClearFilter: () => void;
+}) {
   return (
     <div className="flex flex-col gap-3 h-60 items-center justify-center rounded-xl border border-dashed border-border/50 p-8 text-center bg-card/30">
       <p className="text-muted-foreground text-sm max-w-sm">
@@ -88,7 +94,7 @@ function PlatformRoiCard({ platform }: { platform: EnrichedPlatform }) {
   return (
     <Card
       key={platform.platformName}
-      className="bg-background/40 backdrop-blur border border-border/50 hover:border-primary/30 transition-colors duration-300 flex flex-col justify-between"
+      className="bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow flex flex-col justify-between"
     >
       <CardHeader className="pb-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
@@ -108,21 +114,21 @@ function PlatformRoiCard({ platform }: { platform: EnrichedPlatform }) {
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge
-              variant={platform.interviewRate > 0 ? "default" : "outline"}
+              variant="outline"
               className={
                 platform.interviewRate > 0
-                  ? "bg-blue-500/15 text-blue-500 hover:bg-blue-500/20 border-blue-500/30 text-[11px]"
-                  : "text-[11px]"
+                  ? "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30 text-[11px] font-semibold"
+                  : "text-[11px] font-medium"
               }
             >
               {platform.interviewRate.toFixed(1)}% interview
             </Badge>
             <Badge
-              variant={platform.responseRate >= 20 ? "default" : "outline"}
+              variant="outline"
               className={
                 platform.responseRate >= 20
-                  ? "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/30 text-[11px]"
-                  : "text-[11px]"
+                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-[11px] font-semibold"
+                  : "text-[11px] font-medium"
               }
             >
               {platform.responseRate.toFixed(1)}% response
@@ -140,7 +146,11 @@ function PlatformRoiCard({ platform }: { platform: EnrichedPlatform }) {
           </div>
           <div
             className="h-3 w-full rounded-full bg-muted/60 flex overflow-hidden p-0.5 gap-0.5"
-            aria-label={`Pipeline breakdown for ${platform.platformName}`}
+            role="progressbar"
+            aria-label={`Pipeline breakdown for ${platform.platformName}: ${platform.total} total`}
+            aria-valuenow={platform.total}
+            aria-valuemin={0}
+            aria-valuemax={platform.total}
           >
             {platform.statuses.map((s) => {
               const kind = getStatusKind(s.status);
@@ -189,22 +199,146 @@ function PlatformRoiCard({ platform }: { platform: EnrichedPlatform }) {
             );
           })}
         </div>
+
+        {/* Drill-down action link */}
+        <div className="border-t border-border/30 pt-2 flex justify-end">
+          <Link
+            href={`/applications?search=${encodeURIComponent(platform.platformName)}`}
+            className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline cursor-pointer"
+          >
+            View applications
+            <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
       </CardContent>
     </Card>
   );
 }
 
+function PlatformRoiTable({ platforms }: { platforms: EnrichedPlatform[] }) {
+  return (
+    <div className="w-full overflow-x-auto rounded-xl border border-border/30 bg-card shadow-2xs">
+      <table className="w-full text-left text-xs border-collapse">
+        <thead className="bg-muted/50 text-muted-foreground uppercase tracking-wider font-semibold border-b border-border/30">
+          <tr>
+            <th className="py-3 px-4">Platform</th>
+            <th className="py-3 px-4 text-center">Volume</th>
+            <th className="py-3 px-4 text-center">Interview Yield</th>
+            <th className="py-3 px-4 text-center">Response Rate</th>
+            <th className="py-3 px-4">Pipeline Distribution</th>
+            <th className="py-3 px-4 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border/20 text-foreground">
+          {platforms.map((platform) => (
+            <tr
+              key={platform.platformName}
+              className="hover:bg-muted/30 transition-colors"
+            >
+              <td className="py-3 px-4 font-semibold capitalize">
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center font-bold text-primary text-xs shrink-0">
+                    {platform.platformName.slice(0, 2)}
+                  </div>
+                  <span>{platform.platformName}</span>
+                </div>
+              </td>
+              <td className="py-3 px-4 text-center font-bold">
+                {platform.total}
+              </td>
+              <td className="py-3 px-4 text-center">
+                <Badge
+                  variant="outline"
+                  className={
+                    platform.interviewRate > 0
+                      ? "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30 text-xs font-semibold"
+                      : "text-xs font-medium"
+                  }
+                >
+                  {platform.interviewRate.toFixed(1)}% ({platform.interviewCount})
+                </Badge>
+              </td>
+              <td className="py-3 px-4 text-center">
+                <Badge
+                  variant="outline"
+                  className={
+                    platform.responseRate >= 20
+                      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-xs font-semibold"
+                      : "text-xs font-medium"
+                  }
+                >
+                  {platform.responseRate.toFixed(1)}% ({platform.respondedCount})
+                </Badge>
+              </td>
+              <td className="py-3 px-4 min-w-[200px]">
+                <div className="flex flex-col gap-1">
+                  <div
+                    className="h-2 w-full rounded-full bg-muted/60 flex overflow-hidden p-0.5 gap-0.5"
+                    role="progressbar"
+                    aria-label={`Pipeline for ${platform.platformName}`}
+                    aria-valuenow={platform.total}
+                    aria-valuemin={0}
+                    aria-valuemax={platform.total}
+                  >
+                    {platform.statuses.map((s) => {
+                      const kind = getStatusKind(s.status);
+                      const widthPercent =
+                        platform.total > 0
+                          ? (s.value / platform.total) * 100
+                          : 0;
+                      if (widthPercent <= 0) return null;
+                      return (
+                        <div
+                          key={s.status}
+                          className={`h-full rounded-xs ${getStatusBgColor(kind)}`}
+                          style={{ width: `${widthPercent}%` }}
+                        />
+                      );
+                    })}
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground truncate">
+                    {platform.statuses.map((s) => (
+                      <span key={s.status}>
+                        {s.value} {statusLabels[getStatusKind(s.status)] || s.status}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </td>
+              <td className="py-3 px-4 text-right">
+                <Button asChild variant="ghost" size="sm" className="h-7 text-xs font-semibold gap-1 cursor-pointer">
+                  <Link href={`/applications?search=${encodeURIComponent(platform.platformName)}`}>
+                    View
+                    <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const hasFilter = Boolean(searchParams.get("month") || searchParams.get("year"));
 
   const [sortBy, setSortBy] = useState<
     "total" | "interview" | "response" | "name"
   >("total");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
   if (!data || data.length === 0) {
-    return <PlatformEmptyState hasFilter={hasFilter} onClearFilter={() => router.push("?")} />;
+    return (
+      <PlatformEmptyState
+        hasFilter={hasFilter}
+        onClearFilter={() => router.push(pathname)}
+      />
+    );
   }
 
   // Calculate platform stats with conversions
@@ -254,12 +388,12 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
     return a.platformName.localeCompare(b.platformName);
   });
 
-  // Top Interview platform (where interviewCount > 0)
+  // Top Interview platform (where interviewCount > 0 and total >= 2)
   const topInterviewPlatform = [...enrichedPlatforms]
     .filter((p) => p.interviewCount > 0 && p.total >= 2)
     .sort((a, b) => b.interviewRate - a.interviewRate)[0];
 
-  // Top Response platform (overall responses)
+  // Top Response platform (overall responses and total >= 2)
   const topResponsePlatform = [...enrichedPlatforms]
     .filter((p) => p.respondedCount > 0 && p.total >= 2)
     .sort((a, b) => b.responseRate - a.responseRate)[0];
@@ -271,8 +405,8 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
         <Card className="relative overflow-hidden border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-accent/5 to-transparent backdrop-blur-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-emerald-500 animate-bounce" />
-              <CardTitle className="text-base font-semibold">
+              <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400 motion-safe:animate-pulse" />
+              <CardTitle className="text-base font-bold">
                 Top Interview Channel
               </CardTitle>
             </div>
@@ -281,7 +415,7 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
                 {topInterviewPlatform.platformName}
               </strong>{" "}
               is your highest-yielding interview source with a{" "}
-              <strong className="text-emerald-500">
+              <strong className="text-emerald-700 dark:text-emerald-400 font-bold">
                 {topInterviewPlatform.interviewRate.toFixed(1)}% interview
                 conversion rate
               </strong>{" "}
@@ -297,8 +431,8 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
         <Card className="relative overflow-hidden border border-primary/20 bg-gradient-to-r from-primary/10 via-accent/5 to-transparent backdrop-blur-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary animate-bounce" />
-              <CardTitle className="text-base font-semibold">
+              <Sparkles className="h-5 w-5 text-primary motion-safe:animate-pulse" />
+              <CardTitle className="text-base font-bold">
                 Top Response Channel
               </CardTitle>
             </div>
@@ -307,7 +441,7 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
                 {topResponsePlatform.platformName}
               </strong>{" "}
               has your highest overall response rate at{" "}
-              <strong className="text-primary">
+              <strong className="text-primary font-bold">
                 {topResponsePlatform.responseRate.toFixed(1)}%
               </strong>{" "}
               ({topResponsePlatform.respondedCount}{" "}
@@ -322,65 +456,123 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
 
       {/* Controls & Sorting Header */}
       <div className="flex items-center justify-between flex-wrap gap-3 pb-1">
-        <h2 className="text-lg font-bold flex items-center gap-2">
-          <Globe className="h-5 w-5 text-primary" />
-          Platform Conversion & Yield Matrix
-        </h2>
-        <div className="flex items-center gap-1.5 text-xs font-medium">
-          <span className="text-muted-foreground mr-1">Sort by:</span>
-          <Button
-            variant={sortBy === "total" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setSortBy("total")}
-            className={cn(
-              "h-7 text-xs px-2.5 rounded-lg cursor-pointer transition-all",
-              sortBy === "total" ? "font-bold shadow-2xs" : "font-normal text-muted-foreground"
-            )}
+        <div className="flex items-center gap-2">
+          <Globe className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-bold uppercase tracking-wider text-primary">
+            Platform Conversion & Yield Matrix
+          </h2>
+        </div>
+
+        <div className="flex items-center flex-wrap gap-2">
+          {/* Sorting Control Group */}
+          <div
+            role="group"
+            aria-label="Sort platform data"
+            className="inline-flex items-center rounded-lg bg-muted/60 p-1 gap-1 border border-border/20 text-xs font-medium"
           >
-            Volume
-          </Button>
-          <Button
-            variant={sortBy === "interview" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setSortBy("interview")}
-            className={cn(
-              "h-7 text-xs px-2.5 rounded-lg cursor-pointer transition-all",
-              sortBy === "interview" ? "font-bold shadow-2xs" : "font-normal text-muted-foreground"
-            )}
+            <span className="text-[11px] text-muted-foreground px-1.5">Sort:</span>
+            <button
+              type="button"
+              aria-pressed={sortBy === "total"}
+              onClick={() => setSortBy("total")}
+              className={cn(
+                "px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer",
+                sortBy === "total"
+                  ? "bg-background text-foreground shadow-2xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Volume
+            </button>
+            <button
+              type="button"
+              aria-pressed={sortBy === "interview"}
+              onClick={() => setSortBy("interview")}
+              className={cn(
+                "px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer",
+                sortBy === "interview"
+                  ? "bg-background text-foreground shadow-2xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Interview Rate
+            </button>
+            <button
+              type="button"
+              aria-pressed={sortBy === "response"}
+              onClick={() => setSortBy("response")}
+              className={cn(
+                "px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer",
+                sortBy === "response"
+                  ? "bg-background text-foreground shadow-2xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Response Rate
+            </button>
+            <button
+              type="button"
+              aria-pressed={sortBy === "name"}
+              onClick={() => setSortBy("name")}
+              className={cn(
+                "px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer",
+                sortBy === "name"
+                  ? "bg-background text-foreground shadow-2xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Name
+            </button>
+          </div>
+
+          {/* View Mode Toggle (Grid vs Table) */}
+          <div
+            role="group"
+            aria-label="View mode layout"
+            className="inline-flex items-center rounded-lg bg-muted/60 p-1 gap-1 border border-border/20"
           >
-            Interview Rate
-          </Button>
-          <Button
-            variant={sortBy === "response" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setSortBy("response")}
-            className={cn(
-              "h-7 text-xs px-2.5 rounded-lg cursor-pointer transition-all",
-              sortBy === "response" ? "font-bold shadow-2xs" : "font-normal text-muted-foreground"
-            )}
-          >
-            Response Rate
-          </Button>
-          <Button
-            variant={sortBy === "name" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setSortBy("name")}
-            className={cn(
-              "h-7 text-xs px-2.5 rounded-lg cursor-pointer transition-all",
-              sortBy === "name" ? "font-bold shadow-2xs" : "font-normal text-muted-foreground"
-            )}
-          >
-            Name
-          </Button>
+            <button
+              type="button"
+              aria-label="Grid card view"
+              aria-pressed={viewMode === "grid"}
+              onClick={() => setViewMode("grid")}
+              className={cn(
+                "p-1.5 rounded-md transition-all cursor-pointer",
+                viewMode === "grid"
+                  ? "bg-background text-foreground shadow-2xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              aria-label="Compact table view"
+              aria-pressed={viewMode === "table"}
+              onClick={() => setViewMode("table")}
+              className={cn(
+                "p-1.5 rounded-md transition-all cursor-pointer",
+                viewMode === "table"
+                  ? "bg-background text-foreground shadow-2xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <TableIcon className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Platform ROI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {sortedPlatforms.map((platform) => (
-          <PlatformRoiCard key={platform.platformName} platform={platform} />
-        ))}
-      </div>
+      {/* Main Content Display (Grid or Table) */}
+      {viewMode === "grid" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {sortedPlatforms.map((platform) => (
+            <PlatformRoiCard key={platform.platformName} platform={platform} />
+          ))}
+        </div>
+      ) : (
+        <PlatformRoiTable platforms={sortedPlatforms} />
+      )}
     </div>
   );
 }
