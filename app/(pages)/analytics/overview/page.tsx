@@ -16,7 +16,7 @@ const PieChartComponent = dynamicImport(
   () => import("../components/pie-chart").then((m) => m.PieChartComponent),
   {
     loading: () => (
-      <div className="h-64 bg-card rounded-xl border border-border/30 animate-pulse" />
+      <div className="min-h-[360px] bg-card rounded-xl border border-border/30 animate-pulse" />
     ),
   },
 );
@@ -25,7 +25,7 @@ const YearlyTrendsCard = dynamicImport(
     import("../components/yearly-trends-card").then((m) => m.YearlyTrendsCard),
   {
     loading: () => (
-      <div className="h-64 bg-card rounded-xl border border-border/30 animate-pulse" />
+      <div className="min-h-[360px] bg-card rounded-xl border border-border/30 animate-pulse" />
     ),
   },
 );
@@ -54,6 +54,8 @@ export default async function Overview(props: {
   const year =
     typeof searchParams.year === "string" ? searchParams.year : undefined;
 
+  const currentYear = new Date().getFullYear().toString();
+
   const [
     top5Statuses,
     applicationsPerYear,
@@ -71,7 +73,7 @@ export default async function Overview(props: {
     getDetailedApplicationBreakdown(month, year),
     getBestPlatformInsight(month, year),
     getGhostedApplications(month, year),
-    getDomainLeaderboard(),
+    getDomainLeaderboard(month, year),
   ]);
 
   const totalApplications = breakdownData.total;
@@ -91,22 +93,26 @@ export default async function Overview(props: {
     ? totalRejections / breakdownData.total
     : 0;
 
+  const availableYears = years.length > 0 ? years : [currentYear];
+
   return (
     <div className="flex flex-col gap-6 w-full opacity-100 transition-opacity duration-500">
+      <h1 className="sr-only">Analytics Overview</h1>
+
       {/* 1. Header Filter Toolbar */}
       <Suspense
         fallback={
           <div className="h-14 w-full bg-card rounded-xl animate-pulse" />
         }
       >
-        <AnalyticsFilter years={years.length > 0 ? years : ["2025"]} />
+        <AnalyticsFilter years={availableYears} />
       </Suspense>
 
       {/* 2. Key Performance Rates */}
       <section className="space-y-3">
         <div className="flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-primary" />
-          <h2 className="text-xs font-bold uppercase tracking-wider text-primary">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-primary">
             Key Performance Rates
           </h2>
         </div>
@@ -123,14 +129,16 @@ export default async function Overview(props: {
       <section className="space-y-3">
         <div className="flex items-center gap-2">
           <Lightbulb className="h-4 w-4 text-primary" />
-          <h2 className="text-xs font-bold uppercase tracking-wider text-primary">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-primary">
             Strategy Coaching
           </h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <BestPlatformsCard {...bestPlatformInsight} />
           <GhostingRiskCard {...ghostedApplications} />
-          <DomainLeaderboardCard domains={domainLeaderboard} />
+          <div className="sm:col-span-2 lg:col-span-1">
+            <DomainLeaderboardCard domains={domainLeaderboard} />
+          </div>
         </div>
       </section>
 
@@ -138,7 +146,7 @@ export default async function Overview(props: {
       <section className="space-y-3 pt-1">
         <div className="flex items-center gap-2">
           <BarChart3 className="h-4 w-4 text-primary" />
-          <h2 className="text-xs font-bold uppercase tracking-wider text-primary">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-primary">
             Trends & Status
           </h2>
         </div>
@@ -149,7 +157,7 @@ export default async function Overview(props: {
             total={totalApplications}
           />
           <YearlyTrendsCard
-            years={years.length > 0 ? years : ["2025"]}
+            years={availableYears}
             statusesPerYear={statusesPerYear}
             applicationsPerYear={applicationsPerYear}
             globalYear={year}

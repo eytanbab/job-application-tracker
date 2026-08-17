@@ -28,6 +28,8 @@ import {
 } from "@/components/ui/chart";
 import { getColor } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { PieChart as PieChartIcon } from "lucide-react";
+import Link from "next/link";
 
 const chartConfig = {
   companies: {
@@ -88,91 +90,113 @@ export function PieChartComponent({ title, data, total }: Props) {
       </CardHeader>
 
       <CardContent className="flex-1 w-full flex flex-col items-center justify-center p-3">
-        <div
-          role="img"
-          aria-label={`${title} chart showing total of ${grandTotal} applications across ${chartData.length} stages`}
-          className="relative w-full aspect-square max-h-[190px] flex items-center justify-center"
-        >
-          <ChartContainer
-            config={chartConfig}
-            className="w-full h-full aspect-square mx-auto"
-          >
-            <PieChart>
-              <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-              <Pie
-                data={chartData}
-                dataKey="freq"
-                nameKey="name"
-                innerRadius={52}
-                outerRadius={76}
-                paddingAngle={3}
-                strokeWidth={0}
-              >
-                {chartData.map((entry) => (
-                  <Cell
-                    key={`cell-${entry.name}`}
-                    fill={entry.fill}
-                    className="hover:opacity-80 transition-opacity cursor-pointer"
-                  />
-                ))}
-              </Pie>
-            </PieChart>
-          </ChartContainer>
-
-          {/* Centered Donut Total Indicator */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-            <span className="text-2xl font-extrabold text-foreground leading-none">
-              {grandTotal}
-            </span>
-            <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wider mt-0.5">
-              Total
-            </span>
+        {grandTotal === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 px-4 text-center my-auto">
+            <div className="h-10 w-10 rounded-full bg-muted/60 flex items-center justify-center text-muted-foreground mb-3">
+              <PieChartIcon className="h-5 w-5" />
+            </div>
+            <p className="text-sm font-semibold text-foreground">
+              No status data available
+            </p>
+            <p className="text-xs text-muted-foreground mt-1 max-w-[220px]">
+              Track applications to see your status progression breakdown.
+            </p>
+            <Link
+              href="/applications"
+              className="mt-4 inline-flex items-center text-xs font-semibold text-primary hover:underline cursor-pointer"
+            >
+              Go to Applications →
+            </Link>
           </div>
-        </div>
+        ) : (
+          <>
+            <div
+              role="img"
+              aria-label={`${title} chart showing total of ${grandTotal} applications across ${chartData.length} stages`}
+              className="relative w-full aspect-square max-h-[190px] flex items-center justify-center"
+            >
+              <ChartContainer
+                config={chartConfig}
+                className="w-full h-full aspect-square mx-auto"
+              >
+                <PieChart>
+                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                  <Pie
+                    data={chartData}
+                    dataKey="freq"
+                    nameKey="name"
+                    innerRadius={52}
+                    outerRadius={76}
+                    paddingAngle={3}
+                    strokeWidth={0}
+                  >
+                    {chartData.map((entry) => (
+                      <Cell
+                        key={`cell-${entry.name}`}
+                        fill={entry.fill}
+                        className="hover:opacity-80 transition-opacity cursor-pointer"
+                      />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ChartContainer>
 
-        <CardFooter className="w-full pt-3 px-1 pb-1">
-          <ul
-            className="flex flex-col gap-1.5 text-xs w-full"
-            aria-label={`${title} legend`}
-          >
-            {chartData.map((item) => {
-              const percentage =
-                grandTotal > 0
-                  ? ((item.freq * 100) / grandTotal).toFixed(1)
-                  : "0.0";
-              return (
-                <li
-                  key={item.name}
-                  tabIndex={0}
-                  aria-label={`${item.name}: ${item.freq} applications, ${percentage} percent of total`}
-                  className="flex items-center justify-between capitalize text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md p-1 -mx-1 transition-colors"
-                >
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    <span
-                      className="h-2.5 w-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: item.fill }}
-                      aria-hidden="true"
-                    />
-                    <span className="font-medium text-foreground truncate max-w-[150px]">
-                      {item.name}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="font-semibold text-foreground text-xs">
-                      {item.freq}
-                    </span>
-                    <Badge
-                      variant="secondary"
-                      className="text-[10px] px-1.5 py-0 h-4 font-semibold"
+              {/* Centered Donut Total Indicator */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+                <span className="text-2xl font-extrabold text-foreground leading-none">
+                  {grandTotal}
+                </span>
+                <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wider mt-0.5">
+                  Total
+                </span>
+              </div>
+            </div>
+
+            <CardFooter className="w-full pt-3 px-1 pb-1">
+              <ul
+                className="flex flex-col gap-1.5 text-xs w-full"
+                aria-label={`${title} legend`}
+              >
+                {chartData.map((item) => {
+                  const percentage =
+                    grandTotal > 0
+                      ? ((item.freq * 100) / grandTotal).toFixed(1)
+                      : "0.0";
+                  return (
+                    <li
+                      key={item.name}
+                      tabIndex={0}
+                      aria-label={`${item.name}: ${item.freq} applications, ${percentage} percent of total`}
+                      className="flex items-center justify-between capitalize text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md p-1 -mx-1 transition-colors"
                     >
-                      {percentage}%
-                    </Badge>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </CardFooter>
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <span
+                          className="h-2.5 w-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: item.fill }}
+                          aria-hidden="true"
+                        />
+                        <span className="font-medium text-foreground truncate max-w-[150px]">
+                          {item.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="font-semibold text-foreground text-xs">
+                          {item.freq}
+                        </span>
+                        <Badge
+                          variant="secondary"
+                          className="text-[10px] px-1.5 py-0 h-4 font-semibold"
+                        >
+                          {percentage}%
+                        </Badge>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </CardFooter>
+          </>
+        )}
       </CardContent>
     </Card>
   );

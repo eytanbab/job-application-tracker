@@ -58,11 +58,12 @@ export function StatusesPerYearBarChart({
   hideCardWrapper,
 }: Props) {
   const [userSelectedYear, setUserSelectedYear] = useState<string | null>(null);
+  const currentYear = new Date().getFullYear().toString();
 
   const effectiveGlobalYear =
     globalYear && globalYear !== "all" ? globalYear : undefined;
   const selectedYear =
-    effectiveGlobalYear || userSelectedYear || years[0] || "2025";
+    effectiveGlobalYear || userSelectedYear || years[0] || currentYear;
 
   const chartData = useMemo(() => {
     return transformApplicationsData(rawData, selectedYear);
@@ -70,7 +71,7 @@ export function StatusesPerYearBarChart({
 
   const content = (
     <div className="w-full">
-      {!effectiveGlobalYear && years.length > 1 && (
+      {!hideCardWrapper && !effectiveGlobalYear && years.length > 1 && (
         <div className="flex justify-end pb-2">
           <Select value={selectedYear} onValueChange={setUserSelectedYear}>
             <SelectTrigger className="w-32 h-7 text-xs">

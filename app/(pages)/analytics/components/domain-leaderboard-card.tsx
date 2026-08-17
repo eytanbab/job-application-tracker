@@ -18,7 +18,7 @@ export function DomainLeaderboardCard({ domains }: Props) {
   return (
     <Card className="w-full bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-base font-bold">
+        <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           ATS Domain Performance
         </CardTitle>
         <LinkIcon className="h-4 w-4 text-muted-foreground/70" />
@@ -47,10 +47,22 @@ export function DomainLeaderboardCard({ domains }: Props) {
                       {percentageText}%)
                     </span>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-muted/60 overflow-hidden">
+                  <div
+                    role="progressbar"
+                    aria-valuenow={percentageVal}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`${item.domain} interview rate: ${percentageText}%`}
+                    className="h-2 w-full rounded-full bg-muted/60 overflow-hidden"
+                  >
                     <div
                       className="h-full rounded-full bg-primary transition-[width] duration-500"
-                      style={{ width: `${Math.max(percentageVal, 5)}%` }}
+                      style={{
+                        width:
+                          percentageVal > 0
+                            ? `${Math.max(percentageVal, 5)}%`
+                            : "0%",
+                      }}
                     />
                   </div>
                 </div>

@@ -47,7 +47,11 @@ export function BestPlatformsCard({
                 {bestPlatform.interviewRate.toFixed(1)}% rate
               </span>
             </div>
-            {multiplier > 1 && secondBest ? (
+            {bestPlatform.interviewRate === 0 ? (
+              <p className="text-xs text-muted-foreground mt-1">
+                No interviews recorded on this platform yet. Keep applying to unlock conversion insights.
+              </p>
+            ) : multiplier > 1 && secondBest && secondBest.interviewRate > 0 ? (
               <p className="text-xs text-muted-foreground mt-1">
                 You get {multiplier.toFixed(1)}× more interviews from{" "}
                 {bestPlatform.name} than {secondBest.name}. Focus there.

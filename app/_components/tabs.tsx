@@ -20,7 +20,10 @@ export default function Tabs() {
 
   return (
     <div className="flex items-center gap-2">
-      <div className="inline-flex w-fit max-w-full overflow-x-auto flex-nowrap items-center gap-1 rounded-xl bg-muted/60 p-1 scrollbar-none">
+      <nav
+        aria-label="Analytics sections"
+        className="inline-flex w-fit max-w-full overflow-x-auto flex-nowrap items-center gap-1 rounded-xl bg-muted/60 p-1 scrollbar-none"
+      >
         {TABS.map((item) => {
           const params = new URLSearchParams(searchParams.toString());
           const queryString = params.toString();
@@ -31,6 +34,7 @@ export default function Tabs() {
             <Link
               key={item.url}
               href={href}
+              aria-current={isActive ? "page" : undefined}
               className={cn(
                 "inline-flex items-center shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer capitalize",
                 isActive
@@ -42,7 +46,7 @@ export default function Tabs() {
             </Link>
           );
         })}
-      </div>
+      </nav>
       {isFiltered && (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold">
           <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />

@@ -47,7 +47,7 @@ export function KpiSummary({
                   (Applications Reaching Interview Stage) ÷ (Total Applications)
                 </p>
                 <p className="font-semibold text-foreground pt-1">Target Benchmark</p>
-                <p className="text-emerald-500 font-medium">15.0% – 25.0% typical pass rate</p>
+                <p className="text-emerald-700 dark:text-emerald-400 font-medium">15.0% – 25.0% typical pass rate</p>
               </PopoverContent>
             </Popover>
           </div>
@@ -86,7 +86,7 @@ export function KpiSummary({
                   (Accepted Offers) ÷ (Total Interviewed Applications)
                 </p>
                 <p className="font-semibold text-foreground pt-1">Target Benchmark</p>
-                <p className="text-emerald-500 font-medium">20.0% – 35.0% conversion rate</p>
+                <p className="text-emerald-700 dark:text-emerald-400 font-medium">20.0% – 35.0% conversion rate</p>
               </PopoverContent>
             </Popover>
           </div>
@@ -125,7 +125,7 @@ export function KpiSummary({
                   (Resume Rejections + Post-Interview Rejections) ÷ (Total Applications)
                 </p>
                 <p className="font-semibold text-foreground pt-1">Baseline Expectation</p>
-                <p className="text-amber-500 font-medium">50.0% – 70.0% baseline rejection rate</p>
+                <p className="text-amber-700 dark:text-amber-400 font-medium">50.0% – 70.0% baseline rejection rate</p>
               </PopoverContent>
             </Popover>
           </div>
@@ -164,7 +164,7 @@ export function KpiSummary({
                   Average days elapsed between application submission & recruiter status update
                 </p>
                 <p className="font-semibold text-foreground pt-1">Target Response Time</p>
-                <p className="text-blue-500 font-medium">7 – 14 calendar days</p>
+                <p className="text-blue-700 dark:text-blue-400 font-medium">7 – 14 calendar days</p>
               </PopoverContent>
             </Popover>
           </div>

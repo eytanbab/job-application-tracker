@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import {
   Select,
@@ -29,6 +29,7 @@ const months = [
 
 export function AnalyticsFilter({ years }: { years: string[] }) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
@@ -42,14 +43,15 @@ export function AnalyticsFilter({ years }: { years: string[] }) {
     } else {
       params.set(key, value);
     }
+    const queryString = params.toString();
     startTransition(() => {
-      router.push(`?${params.toString()}`);
+      router.push(queryString ? `${pathname}?${queryString}` : pathname);
     });
   };
 
   const clearFilters = () => {
     startTransition(() => {
-      router.push("?");
+      router.push(pathname);
     });
   };
 
