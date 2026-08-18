@@ -248,7 +248,7 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
         if (p) set.add(p);
       }
     }
-    return Array.from(set);
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [data]);
 
   const selectedRows = table.getSelectedRowModel().rows;

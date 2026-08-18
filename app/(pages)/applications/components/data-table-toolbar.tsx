@@ -98,7 +98,11 @@ export function DataTableToolbar({
                   <ChevronDown className="h-3.5 w-3.5 opacity-50 shrink-0 ml-1" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[150px]">
+              <DropdownMenuContent
+                align="start"
+                collisionPadding={8}
+                className="w-48 max-h-64 sm:max-h-72 overflow-y-auto overflow-x-hidden"
+              >
                 <DropdownMenuRadioGroup
                   value={platformFilter || "all"}
                   onValueChange={(value) =>
@@ -109,15 +113,16 @@ export function DataTableToolbar({
                     value="all"
                     className="text-xs capitalize cursor-pointer"
                   >
-                    All Platforms
+                    <span className="truncate">All Platforms</span>
                   </DropdownMenuRadioItem>
                   {uniquePlatforms.map((plat) => (
                     <DropdownMenuRadioItem
                       key={plat}
                       value={plat}
+                      title={plat}
                       className="text-xs capitalize cursor-pointer"
                     >
-                      {plat}
+                      <span className="truncate">{plat}</span>
                     </DropdownMenuRadioItem>
                   ))}
                 </DropdownMenuRadioGroup>
