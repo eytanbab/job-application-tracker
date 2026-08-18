@@ -589,7 +589,7 @@ export async function getDetailedApplicationBreakdown(
           activeAppliedCount++;
         }
 
-        // Response velocity calculation (time to first recruiter response, excluding ghosted apps)
+        // Response velocity calculation (time to first recruiter response, excluding ghosted apps and backdated/imported records)
         const isGhostedApp =
           currentKind === "ghosted" ||
           (currentKind === "applied" &&
@@ -614,12 +614,19 @@ export async function getDetailedApplicationBreakdown(
               const firstResponseDate = new Date(
                 firstResponseHistory[0].createdAt,
               );
-              const diffDays = Math.max(
-                0,
-                differenceInDays(firstResponseDate, appliedDate),
-              );
-              totalResponseDays += diffDays;
-              totalResponseCount++;
+
+              // Ignore legacy imported single-history records created >30 days after date_applied
+              const isBackdatedSingleRecord =
+                appHistory.length === 1 &&
+                app.createdAt &&
+                differenceInDays(new Date(app.createdAt), appliedDate) > 30;
+
+              const diffDays = differenceInDays(firstResponseDate, appliedDate);
+
+              if (!isBackdatedSingleRecord && diffDays >= 0 && diffDays <= 60) {
+                totalResponseDays += diffDays;
+                totalResponseCount++;
+              }
             }
           }
         }
