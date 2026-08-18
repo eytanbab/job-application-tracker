@@ -5,7 +5,9 @@ import path from "path";
 import { like, or } from "drizzle-orm";
 import { jobApplications } from "../app/db/schema";
 
+dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 dotenv.config({ path: path.resolve(process.cwd(), ".env.test") });
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 export default async function globalTeardown() {
   if (!process.env.DATABASE_URL) {
@@ -17,13 +19,15 @@ export default async function globalTeardown() {
     const sql = neon(process.env.DATABASE_URL);
     const db = drizzle(sql);
 
-    console.log("Cleaning up test applications from e2e database...");
+    console.log("Cleaning up ephemeral test applications from e2e database...");
     const result = await db
       .delete(jobApplications)
       .where(
         or(
           like(jobApplications.role_name, "__E2E_TEST__%"),
-          like(jobApplications.company_name, "__E2E_TEST__%")
+          like(jobApplications.company_name, "__E2E_TEST__%"),
+          like(jobApplications.role_name, "__TIMELINE_TEST__%"),
+          like(jobApplications.company_name, "__TIMELINE_TEST__%")
         )
       );
 
