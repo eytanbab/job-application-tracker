@@ -2,6 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Building2, Calendar, ExternalLink, MapPin } from "lucide-react";
 import { getStatusDisplay, getStatusKind, StatusKind } from "@/lib/utils";
 import { formatDate, parseISO } from "date-fns";
@@ -90,18 +91,17 @@ export function DataTableMobileCard({
       <div className="flex items-start gap-3">
         {/* Selection Checkbox & Company Avatar */}
         <div className="flex items-center gap-2.5 shrink-0">
-          <label
-            className="flex items-center justify-center p-1 -m-1 cursor-pointer"
+          <div
+            className="flex items-center justify-center p-1 -m-1"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
           >
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary shrink-0"
+            <Checkbox
               checked={isSelected}
-              onChange={(e) => onToggleSelected(!!e.target.checked)}
+              onCheckedChange={(checked) => onToggleSelected(!!checked)}
               aria-label="Select application"
             />
-          </label>
+          </div>
 
           <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-base select-none shadow-2xs">
             {companyInitial}

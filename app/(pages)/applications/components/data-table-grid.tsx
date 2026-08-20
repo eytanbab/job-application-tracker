@@ -82,7 +82,6 @@ export function DataTableGrid<
                   key={row.id}
                   data-testid="table-row"
                   tabIndex={0}
-                  role="button"
                   data-state={row.getIsSelected() && "selected"}
                   onClick={() => onSelectRow(row.original)}
                   onKeyDown={(e) => {
@@ -171,7 +170,7 @@ export function DataTableGrid<
               <p className="text-xs text-muted-foreground max-w-xs mx-auto">
                 {hasActiveFilters
                   ? "No job applications match your current filters. Try resetting your search."
-                  : 'You have not added any job applications yet. Click the "+" button below to get started.'}
+                  : "You have not added any job applications yet. Tap the + button to get started."}
               </p>
             </div>
             {hasActiveFilters && (
@@ -179,7 +178,7 @@ export function DataTableGrid<
                 variant="outline"
                 size="sm"
                 onClick={clearFilters}
-                className="text-xs h-8"
+                className="text-xs h-8 cursor-pointer"
               >
                 Reset Filters
               </Button>
@@ -189,7 +188,7 @@ export function DataTableGrid<
       </div>
 
       {/* Pagination Controls */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2 pb-1 px-1 text-xs text-muted-foreground border-t border-border/30">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-2 pb-1 px-1 text-xs text-muted-foreground border-t border-border/30">
         {/* Top/Left Row: Application count & Page size */}
         <div className="flex items-center justify-between sm:justify-start gap-4">
           <p className="font-medium text-xs">

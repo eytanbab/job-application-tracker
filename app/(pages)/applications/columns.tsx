@@ -21,6 +21,7 @@ import { formatDate, parseISO } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   getStatusDisplay,
   getStatusKind,
@@ -103,27 +104,23 @@ function renderSortHeader<TData, TValue>(column: Column<TData, TValue>, label: s
 }
 
 function SelectAllCheckbox({ table }: { table: Table<FormValues> }) {
-  const ref = useRef<HTMLInputElement>(null);
   const isSomeSelected = table.getIsSomePageRowsSelected();
   const isAllSelected = table.getIsAllPageRowsSelected();
 
-  useEffect(() => {
-    if (ref.current) {
-      ref.current.indeterminate = !isAllSelected && isSomeSelected;
-    }
-  }, [isAllSelected, isSomeSelected]);
-
   return (
-    <input
-      ref={ref}
-      type="checkbox"
-      className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary"
-      checked={isAllSelected}
-      onChange={(e) => table.toggleAllPageRowsSelected(!!e.target.checked)}
-      aria-label="Select all"
+    <div
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
-    />
+      className="flex items-center justify-center"
+    >
+      <Checkbox
+        checked={isAllSelected ? true : isSomeSelected ? "indeterminate" : false}
+        onCheckedChange={(checked: boolean) =>
+          table.toggleAllPageRowsSelected(!!checked)
+        }
+        aria-label="Select all"
+      />
+    </div>
   );
 }
 
@@ -132,15 +129,17 @@ export const columns: ColumnDef<FormValues>[] = [
     id: "select",
     header: ({ table }) => <SelectAllCheckbox table={table} />,
     cell: ({ row }) => (
-      <input
-        type="checkbox"
-        className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
-        checked={row.getIsSelected()}
-        onChange={(e) => row.toggleSelected(!!e.target.checked)}
-        aria-label="Select row"
+      <div
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
-      />
+        className="flex items-center justify-center"
+      >
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(checked: boolean) => row.toggleSelected(!!checked)}
+          aria-label="Select row"
+        />
+      </div>
     ),
 
     enableSorting: false,
@@ -232,7 +231,7 @@ export const columns: ColumnDef<FormValues>[] = [
     cell: ({ row }) => {
       const salary = row.getValue<string>("salary");
       return (
-        <div className="text-sm font-medium text-muted-foreground truncate max-w-[120px]">
+        <div className="text-sm font-medium text-muted-foreground truncate max-w-[170px] lg:max-w-none whitespace-nowrap">
           {salary || "-"}
         </div>
       );
@@ -244,15 +243,20 @@ export const columns: ColumnDef<FormValues>[] = [
     cell: ({ row }) => {
       const url = row.getValue<string>("link");
       if (!url) return null;
+      const href =
+        url.startsWith("http://") || url.startsWith("https://")
+          ? url
+          : `https://${url}`;
       return (
         <a
-          href={url}
+          href={href}
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary hover:bg-accent/60"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary hover:bg-accent/60 cursor-pointer"
           title="Open application link"
+          aria-label="Open application link (opens in new tab)"
         >
           <ExternalLink className="h-4 w-4" />
         </a>

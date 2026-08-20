@@ -188,7 +188,7 @@ export function DataTableToolbar({
           <NewApplicationButton
             onClick={onOpenCreate}
             label="Add Application"
-            className="hidden md:inline-flex px-3.5 font-semibold h-9"
+            className="hidden lg:inline-flex px-3.5 font-semibold h-9"
           />
         </div>
       </div>
