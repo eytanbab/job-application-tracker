@@ -160,8 +160,14 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
                         ? `e.g. ${statusLabels[currentCategory as keyof typeof statusLabels]} - Round 2`
                         : "e.g. Round 2 Technical Interview"
                     }
-                    {...statusField}
-                    value={statusField.value || ""}
+                    value={
+                      statusField.value && !isStandardStatus(statusField.value)
+                        ? statusField.value
+                        : ""
+                    }
+                    onChange={(e) => {
+                      statusField.onChange(e.target.value);
+                    }}
                     className="h-9 text-xs"
                   />
                 </FormControl>
@@ -176,17 +182,9 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
       {!showCustomStage && (
         <button
           type="button"
+          aria-expanded={false}
           onClick={() => {
             setShowCustomStage(true);
-            const currentCat =
-              form.getValues("statusCategory") ||
-              getStatusKind(form.getValues("status"));
-            const currentVal = form.getValues("status");
-            if (!currentVal || isStandardStatus(currentVal)) {
-              const defaultLabel =
-                statusLabels[currentCat as keyof typeof statusLabels] || "";
-              form.setValue("status", defaultLabel, { shouldDirty: true });
-            }
           }}
           className="text-[11px] font-medium text-primary hover:underline inline-flex items-center gap-1 cursor-pointer pt-0.5"
         >
@@ -495,8 +493,17 @@ export function ApplicationFormFields({
         )}
       </div>
 
-      {/* 3. Submit / Cancel Action Buttons */}
-      <div className="mt-3 flex flex-col gap-2 w-full col-span-full pt-2">
+      {/* 3. Submit / Cancel Action Buttons (Sticky footer in modal) */}
+      <div className="sticky bottom-0 bg-card/95 backdrop-blur-sm mt-3 pt-3 pb-1 border-t border-border/40 flex flex-col sm:flex-row gap-2 w-full col-span-full -mx-4 -mb-4 sm:-mx-6 sm:-mb-6 px-4 sm:px-6 rounded-b-2xl z-10">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isPending}
+          className="h-10 text-xs rounded-xl cursor-pointer sm:order-1 sm:w-1/3"
+        >
+          Cancel
+        </Button>
         {(() => {
           const { isDirty } = form.formState;
           const isEditingApp = Boolean(form.getValues("id" as any));
@@ -506,7 +513,7 @@ export function ApplicationFormFields({
             <Button
               type="submit"
               disabled={isSaveDisabled}
-              className="h-10 text-xs font-semibold rounded-xl shadow-xs cursor-pointer"
+              className="h-10 text-xs font-semibold rounded-xl shadow-xs cursor-pointer sm:order-2 sm:flex-1"
               title={
                 isEditingApp && !isDirty ? "No changes have been made" : undefined
               }
@@ -523,15 +530,6 @@ export function ApplicationFormFields({
             </Button>
           );
         })()}
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={isPending}
-          className="h-10 text-xs rounded-xl cursor-pointer"
-        >
-          Cancel
-        </Button>
       </div>
     </>
   );

@@ -27,6 +27,7 @@ import {
   StatusKind,
   resolveUpdatedStatus,
   isStatusKind,
+  isStandardStatus,
 } from "@/lib/utils";
 import {
   getApplicationHistory,
@@ -106,11 +107,8 @@ export function ApplicationDetailSheet({
   useEffect(() => {
     setCurrentApp(initialApp);
     if (initialApp) {
-      const effectiveStatus = getStatusDisplay(
-        initialApp.status,
-        initialApp.statusCategory,
-      );
-      setQuickStatusText(effectiveStatus);
+      const isStandard = isStandardStatus(initialApp.status);
+      setQuickStatusText(isStandard ? "" : (initialApp.status || ""));
 
       if (open && initialApp.id) {
         setIsEditing(false);
@@ -153,8 +151,10 @@ export function ApplicationDetailSheet({
       newStatusText,
     );
     
+    const customText = isStandardStatus(updatedStatus) ? "" : updatedStatus;
+
     if (cat === activeApp.statusCategory && updatedStatus === activeApp.status) {
-      setQuickStatusText(updatedStatus);
+      setQuickStatusText(customText);
       return;
     }
 
@@ -174,7 +174,7 @@ export function ApplicationDetailSheet({
     };
 
     setCurrentApp(payload);
-    setQuickStatusText(updatedStatus);
+    setQuickStatusText(customText);
 
     startSaveTransition(async () => {
       try {
@@ -289,7 +289,7 @@ export function ApplicationDetailSheet({
           )}
         </DialogHeader>
 
-        <div className="py-4 space-y-5">
+        <div className="py-4 pb-16 sm:pb-6 space-y-5">
           {isEditing ? (
             <ApplicationForm
               defaultValues={activeApp as FormValues & { id?: string }}
@@ -304,7 +304,7 @@ export function ApplicationDetailSheet({
                   } as ApplicationDetail;
                   setCurrentApp(updated);
                   setQuickStatusText(
-                    getStatusDisplay(updated.status, updated.statusCategory),
+                    isStandardStatus(updated.status) ? "" : (updated.status || ""),
                   );
                   setIsEditing(false);
                   toast({ description: "Application updated successfully!" });

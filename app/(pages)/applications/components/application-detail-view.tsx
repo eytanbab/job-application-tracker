@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Calendar,
-  Clock,
+  Globe,
   MapPin,
   DollarSign,
   FileText,
@@ -65,17 +65,32 @@ export function ApplicationDetailView({
 
   const handleCopyJd = () => {
     if (!currentApp.description) return;
-    navigator.clipboard.writeText(currentApp.description);
-    setCopiedJd(true);
-    toast({
-      title: "Copied to clipboard",
-      description: "Job description copied successfully.",
-    });
-    setTimeout(() => setCopiedJd(false), 2000);
+    try {
+      navigator.clipboard.writeText(currentApp.description).then(() => {
+        setCopiedJd(true);
+        toast({
+          title: "Copied to clipboard",
+          description: "Job description copied successfully.",
+        });
+        setTimeout(() => setCopiedJd(false), 2000);
+      }).catch(() => {
+        toast({
+          title: "Copy failed",
+          description: "Could not copy job description to clipboard.",
+          variant: "destructive",
+        });
+      });
+    } catch {
+      toast({
+        title: "Copy failed",
+        description: "Clipboard access unavailable.",
+        variant: "destructive",
+      });
+    }
   };
 
   const formattedAppliedDate = currentApp.date_applied
-    ? formatDate(parseISO(currentApp.date_applied), "PPP")
+    ? formatDate(parseISO(currentApp.date_applied), "MMM d, yyyy")
     : "Unknown date";
 
   return (
@@ -171,7 +186,7 @@ export function ApplicationDetailView({
         </div>
         <div className="space-y-1">
           <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
-            <Clock className="h-3.5 w-3.5" /> Platform
+            <Globe className="h-3.5 w-3.5" /> Platform
           </span>
           <p className="font-medium capitalize text-foreground text-xs sm:text-sm">
             {currentApp.platform || "-"}
