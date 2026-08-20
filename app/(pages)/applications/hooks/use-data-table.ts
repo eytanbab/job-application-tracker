@@ -24,6 +24,7 @@ import {
   useQueryState,
   parseAsString,
   parseAsInteger,
+  parseAsBoolean,
   useQueryStates,
 } from "nuqs";
 import {
@@ -69,6 +70,11 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
   const [editingApp, setEditingApp] = useState<TData | null>(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
+  const [createParam, setCreateParam] = useQueryState(
+    "create",
+    parseAsBoolean.withDefault(false).withOptions({ shallow: false }),
+  );
+
   useEffect(() => {
     const handleOpen = () => setIsCreateOpen(true);
     window.addEventListener("open-create-application", handleOpen);
@@ -81,10 +87,15 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
       setIsCreateOpen(true);
     }
 
+    if (createParam) {
+      setIsCreateOpen(true);
+      setCreateParam(null);
+    }
+
     return () => {
       window.removeEventListener("open-create-application", handleOpen);
     };
-  }, []);
+  }, [createParam, setCreateParam]);
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [, startBulkTransition] = useTransition();
@@ -257,23 +268,46 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
   const handleBulkDelete = () => {
     if (selectedCount === 0) return;
     startBulkTransition(async () => {
-      try {
-        await Promise.all(
-          selectedRows.map((row) => {
-            if (row.original.id) {
-              return deleteApplication(row.original.id);
-            }
-            return Promise.resolve();
-          }),
-        );
+      const results = await Promise.allSettled(
+        selectedRows.map(async (row) => {
+          if (row.original.id) {
+            await deleteApplication(row.original.id);
+            return row.id;
+          }
+          return row.id;
+        }),
+      );
+      const successfulIds = new Set(
+        results
+          .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
+          .map((r) => r.value),
+      );
+      const succeededCount = successfulIds.size;
+      const failedCount = selectedCount - succeededCount;
+
+      if (failedCount === 0) {
         toast({
-          description: `Successfully deleted ${selectedCount} application(s).`,
+          description: `Successfully deleted ${succeededCount} application(s).`,
         });
         setRowSelection({});
-      } catch {
+      } else if (succeededCount === 0) {
         toast({
           description: "Failed to delete applications.",
           variant: "destructive",
+        });
+      } else {
+        toast({
+          description: `Deleted ${succeededCount} of ${selectedCount} application(s). ${failedCount} failed.`,
+          variant: "destructive",
+        });
+        setRowSelection((prev) => {
+          const next: RowSelectionState = {};
+          Object.keys(prev).forEach((rowKey) => {
+            if (!successfulIds.has(rowKey)) {
+              next[rowKey] = true;
+            }
+          });
+          return next;
         });
       }
     });
@@ -283,32 +317,55 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     if (selectedCount === 0) return;
     const cat = (isStatusKind(newCategory) ? newCategory : "other") as StatusKind;
     startBulkTransition(async () => {
-      try {
-        await Promise.all(
-          selectedRows.map((row) => {
-            if (row.original.id) {
-              const updatedStatusText = resolveUpdatedStatus(
-                row.original.status,
-                cat,
-              );
-              return updateApplication({
-                ...row.original,
-                id: row.original.id,
-                statusCategory: cat,
-                status: updatedStatusText.trim(),
-              } as unknown as FormValues);
-            }
-            return Promise.resolve();
-          }),
-        );
+      const results = await Promise.allSettled(
+        selectedRows.map(async (row) => {
+          if (row.original.id) {
+            const updatedStatusText = resolveUpdatedStatus(
+              row.original.status,
+              cat,
+            );
+            await updateApplication({
+              ...row.original,
+              id: row.original.id,
+              statusCategory: cat,
+              status: updatedStatusText.trim(),
+            } as unknown as FormValues);
+            return row.id;
+          }
+          return row.id;
+        }),
+      );
+      const successfulIds = new Set(
+        results
+          .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
+          .map((r) => r.value),
+      );
+      const succeededCount = successfulIds.size;
+      const failedCount = selectedCount - succeededCount;
+
+      if (failedCount === 0) {
         toast({
-          description: `Updated status for ${selectedCount} application(s) to ${statusLabels[cat] || cat}.`,
+          description: `Updated status for ${succeededCount} application(s) to ${statusLabels[cat] || cat}.`,
         });
         setRowSelection({});
-      } catch {
+      } else if (succeededCount === 0) {
         toast({
           description: "Failed to update application statuses.",
           variant: "destructive",
+        });
+      } else {
+        toast({
+          description: `Updated ${succeededCount} of ${selectedCount} application(s). ${failedCount} failed.`,
+          variant: "destructive",
+        });
+        setRowSelection((prev) => {
+          const next: RowSelectionState = {};
+          Object.keys(prev).forEach((rowKey) => {
+            if (!successfulIds.has(rowKey)) {
+              next[rowKey] = true;
+            }
+          });
+          return next;
         });
       }
     });

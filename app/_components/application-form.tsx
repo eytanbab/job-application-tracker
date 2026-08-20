@@ -21,6 +21,15 @@ import { format } from "date-fns";
 import { AiExtractForm } from "./ai-extract-form";
 import { ApplicationFormFields } from "./application-form-fields";
 import { getDistinctLocationsAndPlatforms } from "@/app/actions/applications";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const createApplicationSchema = insertApplicationSchema.omit({
@@ -108,17 +117,21 @@ export const ApplicationForm = ({
     defaultValues: defaultValues,
   });
 
-  const onCancel = () => {
-    if (form.formState.isDirty) {
-      const confirmDiscard = window.confirm(
-        "You have unsaved changes. Are you sure you want to discard them?",
-      );
-      if (!confirmDiscard) return;
-    }
+  const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
+
+  const handleCloseForm = () => {
     onClose();
     if (!defaultValues?.id) {
       router.push("/applications");
     }
+  };
+
+  const onCancel = () => {
+    if (form.formState.isDirty) {
+      setIsDiscardDialogOpen(true);
+      return;
+    }
+    handleCloseForm();
   };
 
   const handleAutoFill = (autoFillValues: FormValues) => {
@@ -141,7 +154,7 @@ export const ApplicationForm = ({
       date_applied: formattedDate,
       role_name: values.role_name.trim(),
       company_name: values.company_name.trim(),
-      link: values.link.toLowerCase().trim(),
+      link: values.link.trim(),
       description: values.description,
       location: values.location.trim(),
       platform: values.platform.toLowerCase().trim(),
@@ -199,6 +212,39 @@ export const ApplicationForm = ({
           />
         </form>
       </Form>
+
+      {/* In-app Discard Confirmation Dialog */}
+      <Dialog open={isDiscardDialogOpen} onOpenChange={setIsDiscardDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Discard Unsaved Changes?</DialogTitle>
+            <DialogDescription>
+              You have modified this job application. Are you sure you want to discard your changes?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDiscardDialogOpen(false)}
+              className="cursor-pointer"
+            >
+              Keep Editing
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => {
+                setIsDiscardDialogOpen(false);
+                handleCloseForm();
+              }}
+              className="cursor-pointer"
+            >
+              Discard Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

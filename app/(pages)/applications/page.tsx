@@ -4,7 +4,7 @@ import { getApplications } from "@/app/actions/applications";
 
 export async function generateMetadata() {
   return {
-    title: "JAT | Applications",
+    title: "JobTracker | Applications",
   };
 }
 
@@ -13,7 +13,13 @@ export default async function Dashboard() {
     const data = await getApplications();
     return <DataTable columns={columns} data={data as any} />;
   } catch (err) {
-    console.log("error fetching data from db.", err);
-    return <DataTable columns={columns} data={[] as any} />;
+    console.error("Error fetching applications from database:", err);
+    return (
+      <DataTable
+        columns={columns}
+        data={[] as any}
+        error="Unable to connect to the database. Your existing job applications could not be loaded."
+      />
+    );
   }
 }

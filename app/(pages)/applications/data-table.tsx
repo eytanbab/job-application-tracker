@@ -2,7 +2,8 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
-import { Plus } from "lucide-react";
+import { Plus, AlertCircle, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { StatusFilterPills } from "./components/status-filter-pills";
 import { ApplicationsKanban } from "./components/applications-kanban";
 import { ApplicationDetailSheet } from "./components/application-detail-sheet";
@@ -28,11 +29,13 @@ import { useDataTable, ApplicationRow } from "./hooks/use-data-table";
 interface DataTableProps<TData extends ApplicationRow, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  error?: string | null;
 }
 
 export function DataTable<TData extends ApplicationRow, TValue>({
   columns,
   data,
+  error,
 }: DataTableProps<TData, TValue>) {
   const {
     viewMode,
@@ -67,11 +70,36 @@ export function DataTable<TData extends ApplicationRow, TValue>({
 
   return (
     <div className="w-full space-y-4">
-      <StatusFilterPills
-        data={data}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-      />
+      {error && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-destructive flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-2.5 text-sm font-medium">
+            <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
+            <span>{error}</span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.location.reload()}
+            className="border-destructive/30 hover:bg-destructive/20 text-destructive text-xs shrink-0 cursor-pointer"
+          >
+            <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+            Retry Connection
+          </Button>
+        </div>
+      )}
+
+      <div
+        className={cn(
+          "w-full",
+          viewMode === "kanban" && "hidden md:block",
+        )}
+      >
+        <StatusFilterPills
+          data={data}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+        />
+      </div>
 
       <DataTableToolbar
         globalFilter={globalFilter}
