@@ -28,7 +28,11 @@ interface ApplicationsKanbanProps {
   onDeleteApplication: (id: string) => void;
 }
 
-const KANBAN_COLUMNS: { id: StatusKind; label: string; headerBg: string }[] = [
+const BASE_KANBAN_COLUMNS: {
+  id: StatusKind;
+  label: string;
+  headerBg: string;
+}[] = [
   {
     id: "applied",
     label: "Applied",
@@ -61,7 +65,8 @@ const KANBAN_COLUMNS: { id: StatusKind; label: string; headerBg: string }[] = [
   {
     id: "ghosted",
     label: "Ghosted",
-    headerBg: "bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30",
+    headerBg:
+      "bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30",
   },
 ];
 
@@ -77,6 +82,7 @@ export function ApplicationsKanban({
   const [, startTransition] = useTransition();
   const [dragOverCol, setDragOverCol] = useState<StatusKind | null>(null);
   const [activeMobileCol, setActiveMobileCol] = useState<StatusKind>("applied");
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   const filteredData = useMemo(() => {
     const query = searchFilter.toLowerCase().trim();
@@ -125,6 +131,42 @@ export function ApplicationsKanban({
 
     return map;
   }, [filteredData]);
+
+  const kanbanColumns = useMemo(() => {
+    if (groupedData.other && groupedData.other.length > 0) {
+      return [
+        ...BASE_KANBAN_COLUMNS,
+        {
+          id: "other" as StatusKind,
+          label: "Other / Custom",
+          headerBg:
+            "bg-secondary text-secondary-foreground border-border/60",
+        },
+      ];
+    }
+    return BASE_KANBAN_COLUMNS;
+  }, [groupedData.other]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    const threshold = 50;
+
+    const currentIndex = kanbanColumns.findIndex(
+      (c) => c.id === activeMobileCol,
+    );
+    if (diff > threshold && currentIndex < kanbanColumns.length - 1) {
+      setActiveMobileCol(kanbanColumns[currentIndex + 1].id);
+    } else if (diff < -threshold && currentIndex > 0) {
+      setActiveMobileCol(kanbanColumns[currentIndex - 1].id);
+    }
+    setTouchStartX(null);
+  };
 
   const handleQuickStatusMove = (item: KanbanItem, newCategory: string) => {
     if (!item.id) return;
@@ -175,13 +217,13 @@ export function ApplicationsKanban({
   };
 
   const renderColumnContent = (
-    col: (typeof KANBAN_COLUMNS)[0],
+    col: { id: StatusKind; label: string; headerBg: string },
     colIdx: number,
   ) => {
-    const items = groupedData[col.id] || [];
-    const prevCol = colIdx > 0 ? KANBAN_COLUMNS[colIdx - 1] : null;
+    const items: KanbanItem[] = groupedData[col.id] || [];
+    const prevCol = colIdx > 0 ? kanbanColumns[colIdx - 1] : null;
     const nextCol =
-      colIdx < KANBAN_COLUMNS.length - 1 ? KANBAN_COLUMNS[colIdx + 1] : null;
+      colIdx < kanbanColumns.length - 1 ? kanbanColumns[colIdx + 1] : null;
 
     const isDropTarget = dragOverCol === col.id;
 
@@ -258,17 +300,26 @@ export function ApplicationsKanban({
 
   return (
     <div className="w-full space-y-4">
-      {/* Mobile Column Switcher */}
-      <div className="md:hidden flex items-center gap-1 overflow-x-auto pb-2 scrollbar-none">
-        {KANBAN_COLUMNS.map((col) => {
+      {/* Mobile Column Switcher (ARIA Tablist) */}
+      <div
+        role="tablist"
+        aria-label="Kanban pipeline stages"
+        className="md:hidden flex items-center gap-1.5 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {kanbanColumns.map((col) => {
           const count = (groupedData[col.id] || []).length;
           const isActive = activeMobileCol === col.id;
           return (
             <button
               key={col.id}
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`kanban-panel-${col.id}`}
+              id={`kanban-tab-${col.id}`}
+              type="button"
               onClick={() => setActiveMobileCol(col.id)}
               className={cn(
-                "flex items-center gap-1.5 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border",
+                "flex items-center gap-1.5 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border cursor-pointer shrink-0 select-none",
                 isActive
                   ? "bg-primary text-primary-foreground border-primary shadow-2xs"
                   : "bg-card text-muted-foreground border-border/40 hover:text-foreground",
@@ -277,7 +328,7 @@ export function ApplicationsKanban({
               <span>{col.label}</span>
               <span
                 className={cn(
-                  "px-1.5 py-0.2 rounded-full text-[10px] font-bold",
+                  "px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums",
                   isActive
                     ? "bg-primary-foreground/20 text-primary-foreground"
                     : "bg-muted text-muted-foreground",
@@ -290,13 +341,20 @@ export function ApplicationsKanban({
         })}
       </div>
 
-      {/* Mobile View */}
-      <div className="md:hidden">
+      {/* Mobile View with Touch Swipe */}
+      <div
+        role="tabpanel"
+        id={`kanban-panel-${activeMobileCol}`}
+        aria-labelledby={`kanban-tab-${activeMobileCol}`}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className="md:hidden touch-pan-y select-none"
+      >
         {(() => {
-          const colIdx = KANBAN_COLUMNS.findIndex(
+          const colIdx = kanbanColumns.findIndex(
             (c) => c.id === activeMobileCol,
           );
-          const col = KANBAN_COLUMNS[colIdx];
+          const col = kanbanColumns[colIdx];
           return col ? renderColumnContent(col, colIdx) : null;
         })()}
       </div>
@@ -304,7 +362,7 @@ export function ApplicationsKanban({
       {/* Desktop View */}
       <div className="hidden md:block w-full overflow-x-auto pb-4 pt-1 scrollbar-thin">
         <div className="flex gap-4 min-w-max w-full items-start">
-          {KANBAN_COLUMNS.map((col, colIdx) =>
+          {kanbanColumns.map((col, colIdx) =>
             renderColumnContent(col, colIdx),
           )}
         </div>

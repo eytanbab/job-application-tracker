@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { CheckCircle2, Trash2, X, ChevronDown } from "lucide-react";
-import { statusOptions } from "@/lib/utils";
+import { statusOptions, statusLabels, StatusKind } from "@/lib/utils";
 
 interface DataTableBulkActionsProps {
   selectedCount: number;
@@ -34,8 +34,13 @@ export function DataTableBulkActions({
   onBulkDelete,
 }: DataTableBulkActionsProps) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [pendingStatusCategory, setPendingStatusCategory] = useState<string | null>(null);
 
   if (selectedCount === 0) return null;
+
+  const targetStatusLabel = pendingStatusCategory
+    ? statusLabels[pendingStatusCategory as StatusKind] || pendingStatusCategory
+    : "";
 
   return (
     <>
@@ -51,7 +56,7 @@ export function DataTableBulkActions({
             variant="ghost"
             size="sm"
             onClick={onDeselectAll}
-            className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
+            className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground gap-1 cursor-pointer"
             title="Deselect all"
           >
             <span>Cancel</span>
@@ -74,7 +79,7 @@ export function DataTableBulkActions({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="start" className="w-[150px]">
-              <DropdownMenuRadioGroup onValueChange={onBulkStatusChange}>
+              <DropdownMenuRadioGroup onValueChange={(val) => setPendingStatusCategory(val)}>
                 {statusOptions.map((opt) => (
                   <DropdownMenuRadioItem
                     key={opt.value}
@@ -101,6 +106,7 @@ export function DataTableBulkActions({
         </div>
       </div>
 
+      {/* Bulk Delete Confirmation Dialog */}
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
         <DialogContent
           data-testid="bulk-delete-confirm-dialog"
@@ -116,22 +122,65 @@ export function DataTableBulkActions({
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button
+              data-testid="bulk-delete-cancel-button"
+              type="button"
+              variant="outline"
+              onClick={() => setIsConfirmOpen(false)}
+              className="cursor-pointer"
+            >
+              Cancel
+            </Button>
+            <Button
               data-testid="bulk-delete-confirm-button"
               variant="destructive"
               onClick={() => {
                 onBulkDelete();
                 setIsConfirmOpen(false);
               }}
+              className="cursor-pointer"
             >
               Delete {selectedCount} Applications
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Status Change Confirmation Dialog */}
+      <Dialog
+        open={Boolean(pendingStatusCategory)}
+        onOpenChange={(open) => !open && setPendingStatusCategory(null)}
+      >
+        <DialogContent onClick={(e) => e.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle>
+              Update {selectedCount} Application{selectedCount > 1 ? "s" : ""} to {targetStatusLabel}?
+            </DialogTitle>
+            <DialogDescription>
+              This will update the pipeline status and add a timeline event for all{" "}
+              <strong className="text-foreground">{selectedCount}</strong>{" "}
+              selected job applications.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
-              data-testid="bulk-delete-cancel-button"
               type="button"
               variant="outline"
-              onClick={() => setIsConfirmOpen(false)}
+              onClick={() => setPendingStatusCategory(null)}
+              className="cursor-pointer"
             >
               Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                if (pendingStatusCategory) {
+                  onBulkStatusChange(pendingStatusCategory);
+                  setPendingStatusCategory(null);
+                }
+              }}
+              className="cursor-pointer"
+            >
+              Update Status
             </Button>
           </DialogFooter>
         </DialogContent>
