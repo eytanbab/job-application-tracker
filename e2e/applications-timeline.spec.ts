@@ -20,7 +20,6 @@ test.describe("Applications Timeline & Status History E2E Suite", () => {
     await page.fill("input[name='company_name']", testCompany);
     await page.fill("input[name='location']", "Remote");
     await page.fill("input[name='platform']", "LinkedIn");
-    await page.fill("input[name='status']", "Applied");
     await page.click("button[type='submit']:has-text('Add Application')");
 
     // Wait for row to appear

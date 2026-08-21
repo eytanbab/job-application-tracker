@@ -52,17 +52,33 @@ interface ApplicationFormFieldsProps {
 }
 
 function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
+  const currentStatus = form.watch("status") || "";
+  const currentCategory =
+    form.watch("statusCategory") || getStatusKind(currentStatus);
+
+  const initialHasCustom = useMemo(() => {
+    const rawStatus = form.getValues("status");
+    return Boolean(rawStatus && !isStandardStatus(rawStatus));
+  }, [form]);
+
+  const [showCustomStage, setShowCustomStage] = useState(initialHasCustom);
+
   return (
-    <div className="col-span-full grid grid-cols-1 md:grid-cols-2 gap-3">
-      <FormField
-        control={form.control}
-        name="statusCategory"
-        render={({ field }) => {
-          const currentStatus = form.watch("status") || "";
-          return (
-            <FormItem className="space-y-0">
-              <FormLabel>
-                Status Category
+    <div className="col-span-full space-y-1.5">
+      <div
+        className={cn(
+          "grid gap-3 transition-all",
+          showCustomStage ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1",
+        )}
+      >
+        {/* Primary Status / Pipeline Category Field */}
+        <FormField
+          control={form.control}
+          name="statusCategory"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel className="text-xs font-semibold">
+                Status / Pipeline Stage
                 <span className="text-destructive ml-1">*</span>
               </FormLabel>
               <Select
@@ -72,8 +88,12 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
                   const defaultLabel =
                     statusLabels[value as keyof typeof statusLabels] || "";
                   const prevStatus = form.getValues("status");
-                  if (!prevStatus || isStandardStatus(prevStatus)) {
-                    form.setValue("status", defaultLabel || prevStatus, {
+                  if (
+                    !showCustomStage ||
+                    !prevStatus ||
+                    isStandardStatus(prevStatus)
+                  ) {
+                    form.setValue("status", defaultLabel, {
                       shouldDirty: true,
                       shouldValidate: true,
                     });
@@ -81,13 +101,17 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
                 }}
               >
                 <FormControl>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full h-9 text-xs">
                     <SelectValue placeholder="Select status category" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
                   {statusOptions.map((status) => (
-                    <SelectItem key={status.value} value={status.value}>
+                    <SelectItem
+                      key={status.value}
+                      value={status.value}
+                      className="text-xs capitalize cursor-pointer"
+                    >
                       {status.label}
                     </SelectItem>
                   ))}
@@ -95,28 +119,80 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
               </Select>
               <FormMessage />
             </FormItem>
-          );
-        }}
-      />
+          )}
+        />
 
-      <FormField
-        control={form.control}
-        name="status"
-        render={({ field: statusField }) => (
-          <FormItem className="space-y-0">
-            <FormLabel>Stage Details / Custom Status</FormLabel>
-            <FormControl>
-              <Input
-                placeholder="e.g. Technical Interview / Phone Screen..."
-                {...statusField}
-                value={statusField.value || ""}
-                className="h-9 text-xs"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
+        {/* Optional Custom Stage Name Input */}
+        {showCustomStage && (
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field: statusField }) => (
+              <FormItem className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <FormLabel className="text-xs font-semibold">
+                    Custom Stage Name
+                  </FormLabel>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const categoryLabel =
+                        statusLabels[
+                          currentCategory as keyof typeof statusLabels
+                        ] || "Applied";
+                      form.setValue("status", categoryLabel, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      });
+                      setShowCustomStage(false);
+                    }}
+                    className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    Use standard only
+                  </button>
+                </div>
+                <FormControl>
+                  <Input
+                    placeholder={
+                      statusLabels[
+                        currentCategory as keyof typeof statusLabels
+                      ]
+                        ? `e.g. ${statusLabels[currentCategory as keyof typeof statusLabels]} - Round 2`
+                        : "e.g. Round 2 Technical Interview"
+                    }
+                    {...statusField}
+                    value={statusField.value || ""}
+                    className="h-9 text-xs"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         )}
-      />
+      </div>
+
+      {/* Progressive Disclosure Toggle when custom stage is hidden */}
+      {!showCustomStage && (
+        <button
+          type="button"
+          onClick={() => {
+            setShowCustomStage(true);
+            const currentCat =
+              form.getValues("statusCategory") ||
+              getStatusKind(form.getValues("status"));
+            const currentVal = form.getValues("status");
+            if (!currentVal || isStandardStatus(currentVal)) {
+              const defaultLabel =
+                statusLabels[currentCat as keyof typeof statusLabels] || "";
+              form.setValue("status", defaultLabel, { shouldDirty: true });
+            }
+          }}
+          className="text-[11px] font-medium text-primary hover:underline inline-flex items-center gap-1 cursor-pointer pt-0.5"
+        >
+          <span>+ Add custom stage name (e.g. Round 2 Technical)</span>
+        </button>
+      )}
     </div>
   );
 }
@@ -141,24 +217,27 @@ function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
         })();
 
         return (
-          <FormItem className="space-y-0 col-span-full">
-            <FormLabel>Date applied</FormLabel>
+          <FormItem className="space-y-1 col-span-full">
+            <FormLabel className="text-xs font-semibold">
+              Date Applied
+              <span className="text-destructive ml-1">*</span>
+            </FormLabel>
             <Popover>
               <PopoverTrigger asChild>
                 <FormControl>
                   <Button
-                    variant={"outline"}
+                    variant="outline"
                     className={cn(
-                      "group flex h-10 w-full rounded-xl border border-slate-200/90 dark:border-border/40 bg-slate-100/80 hover:bg-slate-100 hover:border-slate-300 dark:hover:border-border/80 focus:bg-white dark:focus:bg-card focus:border-primary/60 focus:ring-4 focus:ring-primary/15 dark:bg-muted/30 dark:hover:bg-muted/50 px-4 py-2 text-base font-normal text-foreground disabled:cursor-not-allowed disabled:opacity-50 md:text-sm shadow-2xs transition-all duration-150",
-                      !field.value && "text-muted-foreground/70",
+                      "w-full h-9 justify-start text-left text-xs font-normal bg-background/60 px-3 border-input cursor-pointer",
+                      !field.value && "text-muted-foreground",
                     )}
                   >
+                    <CalendarIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     {field.value ? (
-                      safeFormatDate(field.value, "PPP")
+                      <span>{safeFormatDate(field.value, "PPP")}</span>
                     ) : (
-                      <span>Pick a date</span>
+                      <span className="text-muted-foreground">Pick a date</span>
                     )}
-                    <CalendarIcon className="ml-auto h-4 w-4 text-muted-foreground group-hover:text-foreground" />
                   </Button>
                 </FormControl>
               </PopoverTrigger>
