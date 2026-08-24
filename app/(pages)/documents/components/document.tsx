@@ -57,7 +57,7 @@ export const Document = ({ file, view = "table" }: Props) => {
     startDeleteTransition(async () => {
       try {
         await deleteFile(file.id);
-        toast({ description: "successfully deleted document!" });
+        toast({ description: "Document deleted successfully." });
         router.refresh();
       } catch (err) {
         console.error(err);
@@ -210,7 +210,7 @@ export const Document = ({ file, view = "table" }: Props) => {
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <FileText className="h-4.5 w-4.5" />
             </div>
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
+            <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
               {renderActions("h-3.5 w-3.5")}
             </div>
           </div>

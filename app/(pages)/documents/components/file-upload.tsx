@@ -147,6 +147,14 @@ export function FileUpload() {
     }
   };
 
+  const handleRemoveFile = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    form.setValue("file", null as unknown as File);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -162,7 +170,15 @@ export function FileUpload() {
           <span>Upload Document</span>
         </Button>
       </DialogTrigger>
-      <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
+      <DialogContent
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => {
+          if (isPending) e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          if (isPending) e.preventDefault();
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="text-xl sm:text-2xl font-bold">
             Upload Document
@@ -182,13 +198,13 @@ export function FileUpload() {
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  <FormLabel className="text-xs font-semibold text-foreground">
                     Document Label
                   </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="e.g. Senior Frontend Resume 2026"
-                      className="h-11 sm:h-10 text-base sm:text-sm"
+                      className="h-10 text-xs sm:text-sm"
                       {...field}
                     />
                   </FormControl>
@@ -202,7 +218,7 @@ export function FileUpload() {
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  <FormLabel className="text-xs font-semibold text-foreground">
                     Document Category
                   </FormLabel>
                   <Select
@@ -211,7 +227,7 @@ export function FileUpload() {
                     value={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger className="h-11 sm:h-10 text-base sm:text-sm">
+                      <SelectTrigger className="h-10 text-xs sm:text-sm">
                         <SelectValue placeholder="Select document category" />
                       </SelectTrigger>
                     </FormControl>
@@ -220,7 +236,7 @@ export function FileUpload() {
                         <SelectItem
                           key={cat.value}
                           value={cat.value}
-                          className="text-xs cursor-pointer"
+                          className="text-xs sm:text-sm cursor-pointer"
                         >
                           {cat.label}
                         </SelectItem>
@@ -237,7 +253,7 @@ export function FileUpload() {
               name="file"
               render={({ field: { onChange } }) => (
                 <FormItem>
-                  <FormLabel className="text-sm sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  <FormLabel className="text-xs font-semibold text-foreground">
                     File Attachment
                   </FormLabel>
                   <FormControl>
@@ -298,11 +314,8 @@ export function FileUpload() {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="mt-2 text-sm sm:text-xs h-8 gap-2 hover:text-destructive font-medium"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              form.setValue("file", null as unknown as File);
-                            }}
+                            className="mt-2 text-xs h-8 gap-2 hover:text-destructive font-medium cursor-pointer"
+                            onClick={handleRemoveFile}
                           >
                             <X className="h-4 w-4" />
                             Remove
