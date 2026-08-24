@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Eraser, Sparkles } from "lucide-react";
+import { Briefcase, Eraser, Sparkles, Clipboard } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface JobDescriptionInputProps {
   value: string;
@@ -49,10 +50,36 @@ export function JobDescriptionInput({
     onChange(SAMPLE_JOB_DESCRIPTION);
   };
 
+  const handlePasteJd = async () => {
+    if (disabled) return;
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text && text.trim().length > 0) {
+        onChange(text);
+        toast({
+          title: "Pasted from clipboard",
+          description: "Job description updated.",
+        });
+      } else {
+        toast({
+          title: "Clipboard empty",
+          description: "No text found on your clipboard to paste.",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Paste action unavailable",
+        description: "Please paste into the text area manually.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Card className="bg-card shadow-2xs border border-border/30 rounded-xl flex flex-col justify-between">
       <CardHeader className="pb-3 border-b border-border/30">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div>
             <div className="flex items-center gap-2">
               <Briefcase className="h-4 w-4 text-primary" />
@@ -65,7 +92,19 @@ export function JobDescriptionInput({
             </CardDescription>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 self-start sm:self-auto shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={disabled}
+              onClick={handlePasteJd}
+              className="h-7 text-xs font-semibold gap-1 text-foreground hover:bg-muted/50 cursor-pointer"
+            >
+              <Clipboard className="h-3 w-3 text-muted-foreground" />
+              <span>Paste</span>
+            </Button>
+
             {!value && (
               <Button
                 type="button"
@@ -90,7 +129,7 @@ export function JobDescriptionInput({
                 className="h-7 text-xs font-semibold gap-1 text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 <Eraser className="h-3.5 w-3.5" />
-                Clear
+                <span>Clear</span>
               </Button>
             )}
           </div>

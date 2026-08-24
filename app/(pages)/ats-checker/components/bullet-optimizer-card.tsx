@@ -63,7 +63,7 @@ export function BulletOptimizerCard({
             key={`bullet-${idx}`}
             className="p-4 rounded-xl bg-muted/20 border border-border/30 space-y-3"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
               {/* Original Bullet */}
               <div className="p-3 rounded-lg bg-background border border-border/40 flex flex-col justify-between">
                 <div>

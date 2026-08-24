@@ -46,6 +46,10 @@
 - [x] Static progress bar colors for failing scores (FIXED: Dynamically mapped dimension bar colors by score tier: Emerald for ≥75%, Amber for 50–74%, Rose for <50%).
 - [x] Lack of sample job description for instant exploration (FIXED: Added 1-click "Try Sample Job Description" button in `JobDescriptionInput`).
 - [x] Missing full diagnostic summary export (FIXED: Added "Copy Full Report" action to results toolbar).
+- [x] If a user has documents saved, the platform automatically shows them in "1. Provide Your Resume". This whole section is messy and makes it hard for the user to understand what he sees. This whole section needs a UX rework to reduce the cognitive load and make it clearer (FIXED: Replaced generic banner with a dedicated Active Document Summary Card displaying title, category badge, file metadata, and cloud-synced readiness).
+- [x] On small devices, the dropdown of the selected documents is overflowing the screen and its layout is horrible as it contains both the title and the document name in it, making it break the layout (FIXED: Added responsive `truncate` and `max-w` constraints to `SelectItem` and `SelectTrigger`, formatting title and file size into compact layout).
+- [x] On small devices, "2. Target Job Description" drops to 2 lines making the whole layout shift (FIXED: Synchronized `CardHeader` layout to `flex flex-col sm:flex-row sm:items-center justify-between gap-2.5` to eliminate 2-line title wrapping).
+- [x] There is no paste button for users to easily paste their resume and the job description (FIXED: Added 1-click "Paste" buttons using `navigator.clipboard.readText()` to both `ResumeInputSection` and `JobDescriptionInput`).
 
 ## Documents (`/documents`)
 
