@@ -49,5 +49,5 @@
 
 ## Documents (`/documents`)
 
-- [ ] In the Upload Document form, in Document Category, the dropdown is not a shadcn/ui component.
-- [ ] After a document is added / deleted, the user needs to manually refresh to update his view.
+- [x] In the Upload Document form, in Document Category, the dropdown is not a shadcn/ui component (FIXED: Replaced native HTML select with shadcn/ui Select, SelectTrigger, SelectValue, SelectContent, and SelectItem components).
+- [x] After a document is added / deleted, the user needs to manually refresh to update his view (FIXED: Added `revalidatePath("/documents")` to `createFile` and `deleteFile` server actions and added `router.refresh()` in client components on successful upload and deletion transitions).

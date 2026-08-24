@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidateTag, unstable_cache } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 import { db } from "@/app/db";
 import { documents } from "@/app/db/schema";
@@ -79,6 +79,7 @@ export async function createFile(
     })
     .returning({ insertedId: documents.id });
   revalidateTag(documentsTag(userId), "max");
+  revalidatePath("/documents");
 }
 
 export async function getFiles() {
@@ -115,6 +116,7 @@ export async function deleteFile(id: string) {
     throw err;
   } finally {
     revalidateTag(documentsTag(userId), "max");
+    revalidatePath("/documents");
   }
 }
 

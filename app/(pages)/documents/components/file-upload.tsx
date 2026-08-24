@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -16,6 +17,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -52,6 +60,7 @@ const FormSchema = z.object({
 });
 
 export function FileUpload() {
+  const router = useRouter();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
@@ -108,6 +117,7 @@ export function FileUpload() {
             });
             form.reset({ title: "", category: "resume" });
             setIsOpen(false);
+            router.refresh();
           } else {
             toast({
               description: "Failed to upload to storage.",
@@ -195,16 +205,28 @@ export function FileUpload() {
                   <FormLabel className="text-sm sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
                     Document Category
                   </FormLabel>
-                  <select
-                    {...field}
-                    className="flex h-10 w-full rounded-xl border border-border/30 bg-muted/40 px-3 py-2 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    value={field.value}
                   >
-                    {documentCategories.map((cat) => (
-                      <option key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </option>
-                    ))}
-                  </select>
+                    <FormControl>
+                      <SelectTrigger className="h-11 sm:h-10 text-base sm:text-sm">
+                        <SelectValue placeholder="Select document category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {documentCategories.map((cat) => (
+                        <SelectItem
+                          key={cat.value}
+                          value={cat.value}
+                          className="text-xs cursor-pointer"
+                        >
+                          {cat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

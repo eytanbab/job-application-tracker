@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
 import {
@@ -46,6 +47,7 @@ type Props = {
 };
 
 export const Document = ({ file, view = "table" }: Props) => {
+  const router = useRouter();
   const { toast } = useToast();
   const [isDeleting, startDeleteTransition] = useTransition();
   const [isDownloading, setIsDownloading] = useState(false);
@@ -56,6 +58,7 @@ export const Document = ({ file, view = "table" }: Props) => {
       try {
         await deleteFile(file.id);
         toast({ description: "successfully deleted document!" });
+        router.refresh();
       } catch (err) {
         console.error(err);
         toast({
