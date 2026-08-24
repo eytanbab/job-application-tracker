@@ -11,7 +11,7 @@
 - [x] On mobile view - Applications page - Viewing application, external link button is too close to the 'X' button (FIXED: Added mr-8 margin to separate action button from modal close button).
 - [x] In Applications page - Viewing application, the 'quick update status' can be confusing for users who will not understand why the status shows twice (FIXED: Added explicit Stage Category and Custom Stage Detail labels with contextual placeholders).
 - [x] In Applications page - Editing application, the stage details / custom status text size in the input is not in the same size as the reset of the inputs in the form (FIXED: Added className="h-9 text-xs" to stage details input).
-- [x] In application view, the description needs a copy button to easily copy the job description (FIXED: Added 1-click Copy button with checkmark transition and toast feedback to Job Description header in ApplicationDetailView).
+- [x] When viewing an application, if a user has a custom stage detail, for example, an application with "Interview" as the stage category and "Screening Interview" as the custom stage detail, and he changes it to "Rejected", the application automatically saves it after the user changes the status category, and the custom stage stays the same as before, and it is getting added to the application timeline. Then the user changes the custom stage detail to "Rejected after screening interview", and it again saves it, making the application history have double incorrect entries (FIXED: Updated `resolveUpdatedStatus` to reset custom stage text to the default category label when switching categories, and updated `updateApplication` to update rather than duplicate recent status history entries for same-category refinements).
 
 ## Analytics Overview (`/analytics/overview`)
 
@@ -46,3 +46,8 @@
 - [x] Static progress bar colors for failing scores (FIXED: Dynamically mapped dimension bar colors by score tier: Emerald for ≥75%, Amber for 50–74%, Rose for <50%).
 - [x] Lack of sample job description for instant exploration (FIXED: Added 1-click "Try Sample Job Description" button in `JobDescriptionInput`).
 - [x] Missing full diagnostic summary export (FIXED: Added "Copy Full Report" action to results toolbar).
+
+## Documents (`/documents`)
+
+- [ ] In the Upload Document form, in Document Category, the dropdown is not a shadcn/ui component.
+- [ ] After a document is added / deleted, the user needs to manually refresh to update his view.

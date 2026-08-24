@@ -184,6 +184,11 @@ export const resolveUpdatedStatus = (
     return statusLabels[newCategory] || newCategory;
   }
 
+  const currentCategory = getStatusKind(currentStatus);
+  if (currentCategory !== newCategory) {
+    return statusLabels[newCategory] || newCategory;
+  }
+
   return currentStatus.trim();
 };
 

@@ -187,12 +187,42 @@ export async function updateApplication(values: FormValues) {
     );
 
   if (statusChanged) {
-    await db.insert(applicationStatusHistory).values({
-      applicationId,
-      status: normalizedValues.status,
-      statusCategory: normalizedValues.statusCategory ?? "applied",
-      createdAt: new Date(),
-    });
+    const latestHistory = await db
+      .select({
+        id: applicationStatusHistory.id,
+        statusCategory: applicationStatusHistory.statusCategory,
+        createdAt: applicationStatusHistory.createdAt,
+      })
+      .from(applicationStatusHistory)
+      .where(eq(applicationStatusHistory.applicationId, applicationId))
+      .orderBy(desc(applicationStatusHistory.createdAt))
+      .limit(1);
+
+    const now = new Date();
+    const isRecentSameCategoryUpdate =
+      latestHistory.length > 0 &&
+      latestHistory[0].statusCategory ===
+        (normalizedValues.statusCategory ?? "applied") &&
+      latestHistory[0].createdAt &&
+      now.getTime() - new Date(latestHistory[0].createdAt).getTime() <
+        15 * 60 * 1000;
+
+    if (isRecentSameCategoryUpdate) {
+      await db
+        .update(applicationStatusHistory)
+        .set({
+          status: normalizedValues.status,
+          createdAt: now,
+        })
+        .where(eq(applicationStatusHistory.id, latestHistory[0].id));
+    } else {
+      await db.insert(applicationStatusHistory).values({
+        applicationId,
+        status: normalizedValues.status,
+        statusCategory: normalizedValues.statusCategory ?? "applied",
+        createdAt: now,
+      });
+    }
   }
 
   purgeCaches(userId);
