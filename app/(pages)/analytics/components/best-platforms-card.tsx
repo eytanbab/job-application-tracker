@@ -16,13 +16,25 @@ type Props = {
     interviewRate: number;
   } | null;
   multiplier: number;
+  month?: string;
+  year?: string;
 };
 
 export function BestPlatformsCard({
   bestPlatform,
   secondBest,
   multiplier,
+  month,
+  year,
 }: Props) {
+  const searchParams = new URLSearchParams();
+  if (month && month !== "all") searchParams.set("month", month);
+  if (year && year !== "all") searchParams.set("year", year);
+  const queryString = searchParams.toString();
+  const href = queryString
+    ? `/analytics/status-per-platform?${queryString}`
+    : "/analytics/status-per-platform";
+
   return (
     <Card className="bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow flex flex-col justify-between">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -63,7 +75,7 @@ export function BestPlatformsCard({
               </p>
             )}
             <Link
-              href="/analytics/status-per-platform"
+              href={href}
               className="mt-2.5 inline-flex items-center text-xs font-semibold text-primary hover:underline cursor-pointer"
             >
               View Platform ROI →

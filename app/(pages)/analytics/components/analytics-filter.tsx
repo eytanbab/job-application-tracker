@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { parseAsString, useQueryStates } from "nuqs";
 import { useTransition } from "react";
 import {
   Select,
@@ -28,30 +28,32 @@ const months = [
 ];
 
 export function AnalyticsFilter({ years }: { years: string[] }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const selectedMonth = searchParams.get("month") || "all";
-  const selectedYear = searchParams.get("year") || "all";
+  const [filters, setFilters] = useQueryStates(
+    {
+      month: parseAsString.withDefault("all"),
+      year: parseAsString.withDefault("all"),
+    },
+    {
+      shallow: false,
+      startTransition,
+    },
+  );
 
-  const updateFilter = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value === "all") {
-      params.delete(key);
-    } else {
-      params.set(key, value);
-    }
-    const queryString = params.toString();
-    startTransition(() => {
-      router.push(queryString ? `${pathname}?${queryString}` : pathname);
+  const selectedMonth = filters.month;
+  const selectedYear = filters.year;
+
+  const updateFilter = (key: "month" | "year", value: string) => {
+    setFilters({
+      [key]: value === "all" ? null : value,
     });
   };
 
   const clearFilters = () => {
-    startTransition(() => {
-      router.push(pathname);
+    setFilters({
+      month: null,
+      year: null,
     });
   };
 
