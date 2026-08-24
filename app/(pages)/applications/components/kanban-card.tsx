@@ -151,6 +151,7 @@ export function KanbanCard({
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label="More actions"
                   className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground opacity-70 group-hover:opacity-100"
                 >
                   <MoreVertical className="h-4 w-4" />

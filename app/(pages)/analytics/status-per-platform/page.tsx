@@ -1,7 +1,19 @@
 import { Suspense } from "react";
+import dynamicImport from "next/dynamic";
 import { getStatusPerPlatform, getYears } from "@/app/actions/analytics";
-import { PlatformRoiDashboard } from "../components/platform-roi-dashboard";
 import { AnalyticsFilter } from "../components/analytics-filter";
+
+const PlatformRoiDashboard = dynamicImport(
+  () =>
+    import("../components/platform-roi-dashboard").then(
+      (m) => m.PlatformRoiDashboard,
+    ),
+  {
+    loading: () => (
+      <div className="min-h-[400px] bg-card rounded-xl border border-border/30 animate-pulse" />
+    ),
+  },
+);
 
 export const dynamic = "force-dynamic";
 

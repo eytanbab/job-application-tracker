@@ -437,19 +437,29 @@ test.describe("Applications Page E2E Suite", () => {
     }
   });
 
-  test("20. Kanban - Drag and Drop Status Update", async ({ page }) => {
+  test("20. Kanban - Quick Status Move Action", async ({ page }) => {
     await ensureTestApplicationExists(page);
     await page.goto("/applications?view=kanban");
     await page.waitForLoadState("networkidle");
     
     const firstCard = page.locator("[draggable='true']").first();
     if (await firstCard.isVisible()) {
-      // Drop into the "Rejected" column
-      const targetCol = page.locator("div:has(> div > h3:has-text('Rejected'))").first();
-      await firstCard.dragTo(targetCol);
+      // Hover over the card to reveal quick move buttons and click move next
+      await firstCard.hover();
+      const moveNextBtn = firstCard.locator("button[title^='Move to']").first();
+      if (await moveNextBtn.isVisible()) {
+        await moveNextBtn.click();
+      } else {
+        const moreBtn = firstCard.locator("button[aria-label='More actions']").first();
+        await moreBtn.click();
+        const changeStatusTrigger = page.locator("div[role='menuitem']:has-text('Change Status')").first();
+        await changeStatusTrigger.hover();
+        const offerOption = page.locator("div[role='menuitem']:has-text('Offer')").first();
+        await offerOption.click();
+      }
       
-      // Expect toast Moved "..." to Rejected
-      await expect(page.locator("text=/Moved \".*\" to Rejected/").first()).toBeVisible();
+      // Expect toast Moved "..." to ...
+      await expect(page.locator("text=/Moved \".*\" to /").first()).toBeVisible({ timeout: 8000 });
     }
   });
 

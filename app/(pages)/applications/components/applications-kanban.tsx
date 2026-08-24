@@ -188,6 +188,7 @@ export function ApplicationsKanban({
     return (
       <div
         key={col.id}
+        data-testid={`kanban-column-${col.id}`}
         onDragOver={(e) => {
           e.preventDefault();
           setDragOverCol(col.id);

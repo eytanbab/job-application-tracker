@@ -60,7 +60,7 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
 }) {
   const [viewMode, setViewMode] = useQueryState(
     "view",
-    parseAsString.withDefault("table").withOptions({ shallow: false }),
+    parseAsString.withDefault("table").withOptions({ shallow: true }),
   );
 
   const [selectedApp, setSelectedApp] = useState<TData | null>(null);
@@ -93,17 +93,17 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     "q",
     parseAsString
       .withDefault("")
-      .withOptions({ shallow: false, throttleMs: 300 }),
+      .withOptions({ shallow: true, throttleMs: 200 }),
   );
 
   const [statusFilter, setStatusFilter] = useQueryState(
     "status",
-    parseAsString.withDefault("").withOptions({ shallow: false }),
+    parseAsString.withDefault("").withOptions({ shallow: true }),
   );
 
   const [platformFilter, setPlatformFilter] = useQueryState(
     "platform",
-    parseAsString.withDefault("").withOptions({ shallow: false }),
+    parseAsString.withDefault("").withOptions({ shallow: true }),
   );
 
   const [sortingState, setSortingState] = useQueryStates(
@@ -111,17 +111,17 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
       sort: parseAsString,
       dir: parseAsString,
     },
-    { shallow: false },
+    { shallow: true },
   );
 
   const [page, setPage] = useQueryState(
     "page",
-    parseAsInteger.withDefault(1).withOptions({ shallow: false }),
+    parseAsInteger.withDefault(1).withOptions({ shallow: true }),
   );
 
   const [pageSizeParam, setPageSizeParam] = useQueryState(
     "size",
-    parseAsInteger.withOptions({ shallow: false }),
+    parseAsInteger.withOptions({ shallow: true }),
   );
 
   const sorting: SortingState = useMemo(() => {
