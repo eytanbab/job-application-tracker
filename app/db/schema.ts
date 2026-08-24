@@ -5,53 +5,74 @@ import {
   date,
   uuid,
   timestamp,
+  index,
 } from "drizzle-orm/pg-core";
 
 import { createInsertSchema } from "drizzle-zod";
 
-export const jobApplications = pgTable("job_applications", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull(), // Clerk user ID
-  role_name: text("role_name").notNull(),
-  company_name: text("company_name").notNull(),
-  date_applied: date("date_applied").notNull(),
-  link: text("link").notNull(),
-  platform: varchar("platform", { length: 255 }).notNull(),
-  status: varchar("status", { length: 255 }).notNull(),
-  statusCategory: varchar("status_category", { length: 32 })
-    .default("applied")
-    .notNull(),
-  month: varchar("month").notNull(),
-  year: varchar("year").notNull(),
-  description: text("description"),
-  notes: text("notes"),
-  location: text("location").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  salary: text("salary"),
-});
+export const jobApplications = pgTable(
+  "job_applications",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: varchar("user_id", { length: 255 }).notNull(), // Clerk user ID
+    role_name: text("role_name").notNull(),
+    company_name: text("company_name").notNull(),
+    date_applied: date("date_applied").notNull(),
+    link: text("link").notNull(),
+    platform: varchar("platform", { length: 255 }).notNull(),
+    status: varchar("status", { length: 255 }).notNull(),
+    statusCategory: varchar("status_category", { length: 32 })
+      .default("applied")
+      .notNull(),
+    month: varchar("month").notNull(),
+    year: varchar("year").notNull(),
+    description: text("description"),
+    notes: text("notes"),
+    location: text("location").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    salary: text("salary"),
+  },
+  (table) => [
+    index("job_apps_user_id_idx").on(table.userId),
+    index("job_apps_user_date_idx").on(table.userId, table.date_applied),
+    index("job_apps_user_period_idx").on(table.userId, table.year, table.month),
+  ],
+);
 
 export const insertApplicationSchema = createInsertSchema(jobApplications);
 
-export const documents = pgTable("documents", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull(),
-  title: varchar("title").notNull(),
-  category: varchar("category", { length: 32 }).default("resume").notNull(),
-  file_size: text("file_size"),
-  doc_url: varchar("doc_url").notNull(),
-  created_at: timestamp("created_at").defaultNow().notNull(),
-  file_name: varchar("file_name").notNull(),
-  file_key: varchar("file_key").notNull(),
-});
+export const documents = pgTable(
+  "documents",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: varchar("user_id", { length: 255 }).notNull(),
+    title: varchar("title").notNull(),
+    category: varchar("category", { length: 32 }).default("resume").notNull(),
+    file_size: text("file_size"),
+    doc_url: varchar("doc_url").notNull(),
+    created_at: timestamp("created_at").defaultNow().notNull(),
+    file_name: varchar("file_name").notNull(),
+    file_key: varchar("file_key").notNull(),
+  },
+  (table) => [
+    index("documents_user_id_idx").on(table.userId),
+  ],
+);
 
-export const applicationStatusHistory = pgTable("application_status_history", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  applicationId: uuid("application_id")
-    .notNull()
-    .references(() => jobApplications.id, { onDelete: "cascade" }),
-  status: varchar("status", { length: 255 }).notNull(),
-  statusCategory: varchar("status_category", { length: 32 }).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const applicationStatusHistory = pgTable(
+  "application_status_history",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    applicationId: uuid("application_id")
+      .notNull()
+      .references(() => jobApplications.id, { onDelete: "cascade" }),
+    status: varchar("status", { length: 255 }).notNull(),
+    statusCategory: varchar("status_category", { length: 32 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("status_history_app_id_idx").on(table.applicationId),
+  ],
+);
 
 const insertStatusHistorySchema = createInsertSchema(applicationStatusHistory);
