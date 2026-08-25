@@ -38,6 +38,30 @@ function normalizeApplicationStatus(values: FormValues): FormValues {
   };
 }
 
+function extractCleanApplicationFields(values: FormValues) {
+  const normalized = normalizeApplicationStatus(values);
+  const formattedDate = safeFormatDate(normalized.date_applied, "yyyy-MM-dd");
+  const parsedDate = new Date(`${formattedDate}T12:00:00`);
+  const month = !isNaN(parsedDate.getTime()) ? format(parsedDate, "M") : format(new Date(), "M");
+  const year = !isNaN(parsedDate.getTime()) ? format(parsedDate, "yyyy") : format(new Date(), "yyyy");
+
+  return {
+    role_name: (normalized.role_name || "").trim(),
+    company_name: (normalized.company_name || "").trim(),
+    date_applied: formattedDate,
+    link: (normalized.link || "").trim(),
+    description: normalized.description ?? null,
+    notes: normalized.notes ?? null,
+    location: (normalized.location || "").trim(),
+    platform: (normalized.platform || "").toLowerCase().trim(),
+    status: normalized.status,
+    statusCategory: normalized.statusCategory ?? "applied",
+    salary: normalized.salary ? normalized.salary.trim() : null,
+    month,
+    year,
+  };
+}
+
 function purgeCaches(userId: string) {
   revalidateTag(applicationsTag(userId), "max");
   revalidatePath("/applications");
@@ -104,25 +128,21 @@ export async function getApplications() {
 // Create a new application for the current user
 export async function createApplication(values: FormValues) {
   const userId = await getCurrentUserIdOrThrow();
-
-  const normalizedValues = normalizeApplicationStatus(values);
-  const application: z.input<typeof insertApplicationSchema> = {
-    ...normalizedValues,
-    userId,
-    month: format(new Date(normalizedValues.date_applied), "M"),
-    year: format(new Date(normalizedValues.date_applied), "yyyy"),
-  };
+  const fields = extractCleanApplicationFields(values);
 
   const result = await db
     .insert(jobApplications)
-    .values(application)
+    .values({
+      ...fields,
+      userId,
+    })
     .returning({ insertedId: jobApplications.id });
 
   if (result[0]?.insertedId) {
     await db.insert(applicationStatusHistory).values({
       applicationId: result[0].insertedId,
-      status: normalizedValues.status,
-      statusCategory: normalizedValues.statusCategory ?? "applied",
+      status: fields.status,
+      statusCategory: fields.statusCategory ?? "applied",
       createdAt: new Date(),
     });
   }
@@ -149,13 +169,7 @@ export async function updateApplication(values: FormValues) {
   }
   const userId = await getCurrentUserIdOrThrow();
   const applicationId = values.id;
-
-  const normalizedValues = normalizeApplicationStatus(values);
-  const application = {
-    ...normalizedValues,
-    month: format(new Date(normalizedValues.date_applied), "M"),
-    year: format(new Date(normalizedValues.date_applied), "yyyy"),
-  };
+  const fields = extractCleanApplicationFields(values);
 
   const currentApp = await db
     .select({
@@ -173,12 +187,12 @@ export async function updateApplication(values: FormValues) {
 
   const statusChanged =
     !currentApp[0] ||
-    currentApp[0].status !== normalizedValues.status ||
-    currentApp[0].statusCategory !== normalizedValues.statusCategory;
+    currentApp[0].status !== fields.status ||
+    currentApp[0].statusCategory !== fields.statusCategory;
 
   await db
     .update(jobApplications)
-    .set(application)
+    .set(fields)
     .where(
       and(
         eq(jobApplications.userId, userId),
@@ -201,8 +215,7 @@ export async function updateApplication(values: FormValues) {
     const now = new Date();
     const isRecentSameCategoryUpdate =
       latestHistory.length > 0 &&
-      latestHistory[0].statusCategory ===
-        (normalizedValues.statusCategory ?? "applied") &&
+      latestHistory[0].statusCategory === (fields.statusCategory ?? "applied") &&
       latestHistory[0].createdAt &&
       now.getTime() - new Date(latestHistory[0].createdAt).getTime() <
         15 * 60 * 1000;
@@ -211,15 +224,15 @@ export async function updateApplication(values: FormValues) {
       await db
         .update(applicationStatusHistory)
         .set({
-          status: normalizedValues.status,
+          status: fields.status,
           createdAt: now,
         })
         .where(eq(applicationStatusHistory.id, latestHistory[0].id));
     } else {
       await db.insert(applicationStatusHistory).values({
         applicationId,
-        status: normalizedValues.status,
-        statusCategory: normalizedValues.statusCategory ?? "applied",
+        status: fields.status,
+        statusCategory: fields.statusCategory ?? "applied",
         createdAt: now,
       });
     }

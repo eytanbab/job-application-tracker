@@ -3,8 +3,9 @@
 ## Applications & Forms
 
 - [x] "Quick Update Status" rerenders the form each keystroke when changing custom stage detail (FIXED: Decoupled quick status input state from currentApp and removed currentApp.status from history refetch useEffect dependencies).
-- [x] The search functionality in `/applications` does not work properly. For example, searching for a company doesn't show all the results containing this company name.
-- [x] Updating the status category does not update the stage details in the edit application form. If a user changes the status category from "Applied" to any other status, the stage details stays on apply.
+- [x] The search functionality in `/applications` does not work properly. For example, searching for a company doesn't show all the results containing this company name (FIXED: Implemented custom case-insensitive multi-field global filter in `use-data-table.ts` searching across company name, role name, location, platform, status, statusCategory, salary, and description).
+- [x] Updating the status category does not update the stage details in the edit application form. If a user changes the status category from "Applied" to any other status, the stage details stays on apply (FIXED: Updated `onValueChange` in `application-form-fields.tsx` to detect category transitions, automatically reset `status` to the standard label of the newly selected category, and clear previous custom text).
+- [x] When viewing an application, the section of edit application and delete just floats at the bottom end of the modal (FIXED: Restructured `DialogContent` in `application-detail-sheet.tsx` into a flex layout with a fixed header, scrollable body, and docked bottom footer).
 - [x] On mobile view - Applications page, it is almost impossible to press the "Next" button as the FAB is covering it (FIXED: Added pb-24 bottom clearance to grid container on mobile).
 - [x] On mobile view - Applications page, "Rows per page" is overflowing and can be 2-3 lines (FIXED: Reorganized pagination controls into responsive stacked rows on mobile).
 - [x] On mobile view - Applications page - Viewing application, the role name is not in the center as it has pr-6 on its parent div (FIXED: Removed asymmetric pr-6 from header flex wrapper).

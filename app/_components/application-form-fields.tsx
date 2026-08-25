@@ -36,6 +36,7 @@ import {
   platformOptions,
   mergeWithDefaultOptions,
   isStandardStatus,
+  StatusKind,
 } from "@/lib/utils";
 import { useMemo, useState } from "react";
 import { FormValues } from "./application-form";
@@ -85,10 +86,14 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
                 value={field.value || getStatusKind(currentStatus)}
                 onValueChange={(value) => {
                   field.onChange(value);
+                  const nextCategory = value as StatusKind;
                   const defaultLabel =
-                    statusLabels[value as keyof typeof statusLabels] || "";
+                    statusLabels[nextCategory] || "";
                   const prevStatus = form.getValues("status");
+                  const prevCat = getStatusKind(prevStatus, field.value);
+
                   if (
+                    prevCat !== nextCategory ||
                     !showCustomStage ||
                     !prevStatus ||
                     isStandardStatus(prevStatus)
@@ -97,6 +102,9 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
                       shouldDirty: true,
                       shouldValidate: true,
                     });
+                    if (prevCat !== nextCategory) {
+                      setShowCustomStage(false);
+                    }
                   }
                 }}
               >

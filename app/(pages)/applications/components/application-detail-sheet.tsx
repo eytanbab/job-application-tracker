@@ -212,8 +212,8 @@ export function ApplicationDetailSheet({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-2xl md:max-w-3xl overflow-y-auto max-h-[85dvh] sm:max-h-[85vh] p-4 sm:p-6 rounded-2xl sm:rounded-xl shadow-lg border border-border/40">
-        <DialogHeader className="space-y-3 pb-3 border-b">
+      <DialogContent className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-2xl md:max-w-3xl flex flex-col max-h-[88dvh] sm:max-h-[85vh] p-0 rounded-2xl sm:rounded-xl shadow-2xl border border-border/40 overflow-hidden bg-card">
+        <DialogHeader className="space-y-3 p-4 sm:p-6 pb-3.5 border-b border-border/40 shrink-0 bg-card">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1 w-full min-w-0">
               {isEditing ? (
@@ -289,7 +289,7 @@ export function ApplicationDetailSheet({
           )}
         </DialogHeader>
 
-        <div className="py-4 pb-16 sm:pb-6 space-y-5">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 py-4 space-y-5 min-w-0">
           {isEditing ? (
             <ApplicationForm
               defaultValues={activeApp as FormValues & { id?: string }}
@@ -337,7 +337,7 @@ export function ApplicationDetailSheet({
 
         {/* Footer Actions */}
         {!isEditing && (
-          <div className="sticky bottom-0 bg-card/95 backdrop-blur-sm pt-3 pb-1 border-t border-border/40 flex items-center justify-between gap-3 -mx-4 -mb-4 sm:-mx-6 sm:-mb-6 px-4 sm:px-6 rounded-b-2xl sm:rounded-b-xl">
+          <div className="p-4 sm:p-6 py-3 border-t border-border/40 bg-card/95 backdrop-blur-sm flex items-center justify-between gap-3 shrink-0">
             <Button
               variant="outline"
               size="sm"

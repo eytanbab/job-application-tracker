@@ -222,7 +222,30 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    globalFilterFn: "includesString",
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const search = String(filterValue ?? "").toLowerCase().trim();
+      if (!search) return true;
+      const app = row.original;
+      const company = String(app.company_name ?? "").toLowerCase();
+      const role = String(app.role_name ?? "").toLowerCase();
+      const location = String(app.location ?? "").toLowerCase();
+      const platform = String(app.platform ?? "").toLowerCase();
+      const status = String(app.status ?? "").toLowerCase();
+      const category = String(app.statusCategory ?? "").toLowerCase();
+      const salary = String(app.salary ?? "").toLowerCase();
+      const description = String(app.description ?? "").toLowerCase();
+
+      return (
+        company.includes(search) ||
+        role.includes(search) ||
+        location.includes(search) ||
+        platform.includes(search) ||
+        status.includes(search) ||
+        category.includes(search) ||
+        salary.includes(search) ||
+        description.includes(search)
+      );
+    },
     onGlobalFilterChange: setGlobalFilter,
     onColumnFiltersChange: setColumnFilters,
     onRowSelectionChange: setRowSelection,

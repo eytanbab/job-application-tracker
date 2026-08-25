@@ -103,6 +103,8 @@ export function ApplicationsKanban({
         (item.company_name || "").toLowerCase().includes(query) ||
         (item.location || "").toLowerCase().includes(query) ||
         (item.platform || "").toLowerCase().includes(query) ||
+        (item.status || "").toLowerCase().includes(query) ||
+        (item.statusCategory || "").toLowerCase().includes(query) ||
         (item.description && item.description.toLowerCase().includes(query)) ||
         (item.notes && item.notes.toLowerCase().includes(query))
       );
