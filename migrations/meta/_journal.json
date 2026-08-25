@@ -92,6 +92,27 @@
       "when": 1784571042223,
       "tag": "0012_easy_wildside",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1785000000000,
+      "tag": "0013_remove_status_label_and_notes",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1785100000000,
+      "tag": "0014_add_documents_category_and_size",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1787600000000,
+      "tag": "0015_create_interviews",
+      "breakpoints": true
     }
   ]
 }

@@ -75,4 +75,44 @@ export const applicationStatusHistory = pgTable(
   ],
 );
 
-const insertStatusHistorySchema = createInsertSchema(applicationStatusHistory);
+export const insertStatusHistorySchema = createInsertSchema(applicationStatusHistory);
+
+export const interviews = pgTable(
+  "interviews",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    applicationId: uuid("application_id")
+      .notNull()
+      .references(() => jobApplications.id, { onDelete: "cascade" }),
+    userId: varchar("user_id", { length: 255 }).notNull(),
+    roundType: varchar("round_type", { length: 64 }).notNull(), // phone_screen, technical, behavioral, take_home, onsite, hiring_manager, final, other
+    roundLabel: varchar("round_label", { length: 255 }), // custom label e.g. "System Design Round"
+    roundNumber: text("round_number").notNull().default("1"), // numeric order stored as text/int
+    scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
+    durationMins: text("duration_mins").default("30"),
+    timezone: varchar("timezone", { length: 64 }),
+    format: varchar("format", { length: 32 }).default("video").notNull(), // video, phone, onsite
+    meetingLink: text("meeting_link"),
+    location: text("location"),
+    interviewerName: varchar("interviewer_name", { length: 255 }),
+    interviewerTitle: varchar("interviewer_title", { length: 255 }),
+    interviewerLinkedin: text("interviewer_linkedin"),
+    status: varchar("status", { length: 32 }).default("scheduled").notNull(), // scheduled, completed, cancelled, rescheduled, no_show
+    prepNotes: text("prep_notes"),
+    questionsToAsk: text("questions_to_ask"),
+    focusAreas: text("focus_areas"),
+    sentiment: varchar("sentiment", { length: 16 }), // 'great' | 'okay' | 'rough' or numeric '1'..'5'
+    debriefNotes: text("debrief_notes"),
+    questionsAsked: text("questions_asked"),
+    nextSteps: text("next_steps"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("interviews_app_id_idx").on(table.applicationId),
+    index("interviews_user_id_idx").on(table.userId),
+    index("interviews_scheduled_idx").on(table.userId, table.scheduledAt),
+  ],
+);
+
+export const insertInterviewSchema = createInsertSchema(interviews);

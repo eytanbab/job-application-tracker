@@ -4,9 +4,9 @@ import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { revalidateTag } from "next/cache";
 import { db } from "@/app/db";
-import { documents, jobApplications } from "@/app/db/schema";
+import { documents, jobApplications, interviews } from "@/app/db/schema";
 import { eq } from "drizzle-orm";
-import { applicationsTag, documentsTag } from "./_utils/cache-tags";
+import { applicationsTag, documentsTag, interviewsTag } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 
 export async function migrateGuestData() {
@@ -29,10 +29,17 @@ export async function migrateGuestData() {
     .set({ userId: resolvedUserId })
     .where(eq(documents.userId, guestId));
 
+  await db
+    .update(interviews)
+    .set({ userId: resolvedUserId })
+    .where(eq(interviews.userId, guestId));
+
   revalidateTag(applicationsTag(guestId), "max");
   revalidateTag(applicationsTag(resolvedUserId), "max");
   revalidateTag(documentsTag(guestId), "max");
   revalidateTag(documentsTag(resolvedUserId), "max");
+  revalidateTag(interviewsTag(guestId), "max");
+  revalidateTag(interviewsTag(resolvedUserId), "max");
 
   // clear the cookie
   cookieStore.set("guest_id", "", { path: "/", maxAge: 0 });
