@@ -25,6 +25,7 @@ import { DataTableToolbar } from "./components/data-table-toolbar";
 import { DataTableGrid } from "./components/data-table-grid";
 import { DataTableBulkActions } from "./components/data-table-bulk-actions";
 import { useDataTable, ApplicationRow } from "./hooks/use-data-table";
+import { UpcomingInterviewsBanner } from "@/components/interviews/upcoming-interviews-banner";
 
 interface DataTableProps<TData extends ApplicationRow, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -68,6 +69,13 @@ export function DataTable<TData extends ApplicationRow, TValue>({
     setRowSelection,
   } = useDataTable({ columns, data });
 
+  const handleSelectAppFromBanner = (appId: string) => {
+    const targetApp = data.find((d) => d.id === appId);
+    if (targetApp) {
+      handleSelectRow(targetApp);
+    }
+  };
+
   return (
     <div className="w-full space-y-4">
       {error && (
@@ -87,6 +95,9 @@ export function DataTable<TData extends ApplicationRow, TValue>({
           </Button>
         </div>
       )}
+
+      {/* Cross-Application Upcoming Interviews & Pipeline Radar */}
+      <UpcomingInterviewsBanner onSelectApplication={handleSelectAppFromBanner} />
 
       <div
         className={cn(

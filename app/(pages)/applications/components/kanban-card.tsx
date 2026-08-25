@@ -193,14 +193,21 @@ export function KanbanCard({
 
       <CardContent className="p-3 pt-1 space-y-2 text-xs">
         <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-          {isCustomStage && (
+          {isCustomStage ? (
             <Badge
               variant="outline"
-              className="text-[10px] font-normal truncate max-w-full block rounded-sm"
+              className="text-[10px] font-normal truncate max-w-full block rounded-sm bg-primary/5 text-primary border-primary/20"
             >
               {displayLabel}
             </Badge>
-          )}
+          ) : item.statusCategory === "interview" ? (
+            <Badge
+              variant="outline"
+              className="text-[10px] font-semibold truncate max-w-full block rounded-sm bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30"
+            >
+              🗓️ Interviewing
+            </Badge>
+          ) : null}
           {item.platform && (
             <Badge
               variant="secondary"

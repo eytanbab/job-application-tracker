@@ -24,6 +24,7 @@ import { statusOptions, statusLabels, StatusKind } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { ApplicationTimeline, TimelineEntry } from "./application-timeline";
+import { InterviewPipeline } from "@/components/interviews/interview-pipeline";
 
 export interface ApplicationDetailViewProps {
   currentApp: {
@@ -209,6 +210,17 @@ export function ApplicationDetailView({
           </p>
         </div>
       </div>
+
+      {/* Structured Interview Pipeline & Scheduling */}
+      {currentApp.id && (
+        <InterviewPipeline
+          applicationId={currentApp.id}
+          application={{
+            role_name: currentApp.role_name,
+            company_name: currentApp.company_name,
+          }}
+        />
+      )}
 
       {/* Separated Job Description & Personal Notes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
