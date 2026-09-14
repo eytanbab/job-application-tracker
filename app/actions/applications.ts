@@ -71,27 +71,30 @@ function purgeCaches(userId: string) {
 
 // Automatically transition applications older than 30 days without rejection or acceptance to Ghosted
 export async function syncGhostedApplications(userId?: string) {
-  const effectiveUserId = userId || (await getCurrentUserIdOrThrow());
   const thirtyDaysAgo = subDays(new Date(), 30);
   const thresholdDateStr = format(thirtyDaysAgo, "yyyy-MM-dd");
+
+  const whereConditions = [
+    lte(jobApplications.date_applied, thresholdDateStr),
+    inArray(jobApplications.statusCategory, ["applied", "review"]),
+  ];
+
+  if (userId) {
+    whereConditions.push(eq(jobApplications.userId, userId));
+  }
 
   // 1. Query applications that are older than 30 days and not in terminal/ghosted categories
   const candidates = await db
     .select({
       id: jobApplications.id,
+      userId: jobApplications.userId,
       status: jobApplications.status,
       statusCategory: jobApplications.statusCategory,
       date_applied: jobApplications.date_applied,
       createdAt: jobApplications.createdAt,
     })
     .from(jobApplications)
-    .where(
-      and(
-        eq(jobApplications.userId, effectiveUserId),
-        lte(jobApplications.date_applied, thresholdDateStr),
-        inArray(jobApplications.statusCategory, ["applied", "review"]),
-      ),
-    );
+    .where(and(...whereConditions));
 
   if (candidates.length === 0) {
     return 0;
@@ -129,16 +132,7 @@ export async function syncGhostedApplications(userId?: string) {
 
   const qualifyingIds = qualifyingApps.map((a) => a.id);
 
-  // 4. Update job_applications in DB
-  await db
-    .update(jobApplications)
-    .set({
-      status: "Ghosted",
-      statusCategory: "ghosted",
-    })
-    .where(inArray(jobApplications.id, qualifyingIds));
-
-  // 5. Query existing ghosted history entries to prevent duplicate history records
+  // 4. Query existing ghosted history entries to prevent duplicate history records
   const existingGhostedHistory = await db
     .select({ applicationId: applicationStatusHistory.applicationId })
     .from(applicationStatusHistory)
@@ -173,21 +167,41 @@ export async function syncGhostedApplications(userId?: string) {
       };
     });
 
+  // 5. Update applications and insert history atomically
+  const batchOperations: any[] = [
+    db
+      .update(jobApplications)
+      .set({
+        status: "Ghosted",
+        statusCategory: "ghosted",
+      })
+      .where(inArray(jobApplications.id, qualifyingIds)),
+  ];
+
   if (historyEntries.length > 0) {
-    await db.insert(applicationStatusHistory).values(historyEntries);
+    batchOperations.push(
+      db.insert(applicationStatusHistory).values(historyEntries),
+    );
   }
 
-  // 6. Purge caches
-  purgeCaches(effectiveUserId);
+  await db.batch(batchOperations as any);
+
+  // 6. Purge caches for affected users
+  if (userId) {
+    purgeCaches(userId);
+  } else {
+    const affectedUserIds = Array.from(new Set(qualifyingApps.map((a) => a.userId)));
+    for (const uid of affectedUserIds) {
+      purgeCaches(uid);
+    }
+  }
 
   return qualifyingApps.length;
 }
 
-// Get all applications of current user (syncs ghosted status then reads persisted records)
+// Get all applications of current user
 export async function getApplications() {
   const userId = await getCurrentUserIdOrThrow();
-
-  await syncGhostedApplications(userId);
 
   const rows = await db
     .select()
@@ -221,26 +235,28 @@ export async function getApplications() {
 export async function createApplication(values: FormValues) {
   const userId = await getCurrentUserIdOrThrow();
   const fields = extractCleanApplicationFields(values);
+  const applicationId = crypto.randomUUID();
 
-  const result = await db
-    .insert(jobApplications)
-    .values({
+  // Atomically insert the application and its initial status history in a single batch
+  await db.batch([
+    db.insert(jobApplications).values({
+      id: applicationId,
       ...fields,
       userId,
-    })
-    .returning({ insertedId: jobApplications.id });
-
-  if (result[0]?.insertedId) {
-    await db.insert(applicationStatusHistory).values({
-      applicationId: result[0].insertedId,
+    }),
+    db.insert(applicationStatusHistory).values({
+      applicationId,
       status: fields.status,
       statusCategory: fields.statusCategory ?? "applied",
       createdAt: new Date(),
-    });
-  }
+    }),
+  ]);
+
+  // Sync ghosted applications during mutation in the background
+  syncGhostedApplications(userId).catch(console.error);
 
   purgeCaches(userId);
-  return result;
+  return [{ insertedId: applicationId }];
 }
 
 // Delete a single application with id for current user
@@ -282,16 +298,6 @@ export async function updateApplication(values: FormValues) {
     currentApp[0].status !== fields.status ||
     currentApp[0].statusCategory !== fields.statusCategory;
 
-  await db
-    .update(jobApplications)
-    .set(fields)
-    .where(
-      and(
-        eq(jobApplications.userId, userId),
-        eq(jobApplications.id, applicationId),
-      ),
-    );
-
   if (statusChanged) {
     const latestHistory = await db
       .select({
@@ -312,22 +318,44 @@ export async function updateApplication(values: FormValues) {
       now.getTime() - new Date(latestHistory[0].createdAt).getTime() <
         15 * 60 * 1000;
 
-    if (isRecentSameCategoryUpdate) {
-      await db
-        .update(applicationStatusHistory)
-        .set({
+    const historyOperation = isRecentSameCategoryUpdate
+      ? db
+          .update(applicationStatusHistory)
+          .set({
+            status: fields.status,
+            createdAt: now,
+          })
+          .where(eq(applicationStatusHistory.id, latestHistory[0].id))
+      : db.insert(applicationStatusHistory).values({
+          applicationId,
           status: fields.status,
+          statusCategory: fields.statusCategory ?? "applied",
           createdAt: now,
-        })
-        .where(eq(applicationStatusHistory.id, latestHistory[0].id));
-    } else {
-      await db.insert(applicationStatusHistory).values({
-        applicationId,
-        status: fields.status,
-        statusCategory: fields.statusCategory ?? "applied",
-        createdAt: now,
-      });
-    }
+        });
+
+    // Execute both the application update and the status history entry atomically in a single batch
+    await db.batch([
+      db
+        .update(jobApplications)
+        .set(fields)
+        .where(
+          and(
+            eq(jobApplications.userId, userId),
+            eq(jobApplications.id, applicationId),
+          ),
+        ),
+      historyOperation as any,
+    ]);
+  } else {
+    await db
+      .update(jobApplications)
+      .set(fields)
+      .where(
+        and(
+          eq(jobApplications.userId, userId),
+          eq(jobApplications.id, applicationId),
+        ),
+      );
   }
 
   purgeCaches(userId);

@@ -15,7 +15,6 @@ import {
 } from "@/lib/utils";
 import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
-import { syncGhostedApplications } from "./applications";
 import { buildMonthCondition } from "./_utils/filter-utils";
 
 export async function getDomainLeaderboard(month?: string, year?: string) {
@@ -93,28 +92,23 @@ export async function getTop5Statuses(month?: string, year?: string) {
     async () => {
       const data = await db
         .select({
-          status: jobApplications.status,
           statusCategory: jobApplications.statusCategory,
+          freq: count(jobApplications.id),
         })
         .from(jobApplications)
-        .where(and(...whereClause));
+        .where(and(...whereClause))
+        .groupBy(jobApplications.statusCategory)
+        .orderBy(desc(count(jobApplications.id)))
+        .limit(5);
 
-      const statusMap = new Map<string, { name: string; freq: number }>();
-
-      data.forEach(({ status, statusCategory }) => {
-        const kind = getStatusKind(status, statusCategory);
+      return data.map((item) => {
+        const kind = getStatusKind(null, item.statusCategory);
         const label = statusLabels[kind] || kind;
-
-        if (statusMap.has(kind)) {
-          statusMap.get(kind)!.freq++;
-        } else {
-          statusMap.set(kind, { name: label, freq: 1 });
-        }
+        return {
+          name: label,
+          freq: Number(item.freq),
+        };
       });
-
-      return Array.from(statusMap.values())
-        .sort((a, b) => b.freq - a.freq)
-        .slice(0, 5);
     },
     ["analytics", "top-5-statuses", userId, month || "all", year || "all"],
     {
@@ -126,8 +120,6 @@ export async function getTop5Statuses(month?: string, year?: string) {
 
 export async function getGhostedApplications(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
-
-  await syncGhostedApplications(userId);
 
   const whereClause = [eq(jobApplications.userId, userId)];
   const monthCondition = buildMonthCondition(month);
@@ -377,18 +369,18 @@ export async function getStatusPerPlatform(month?: string, year?: string) {
         .from(jobApplications)
         .where(and(...whereClause));
 
-      const appIds = data.map((d) => d.id);
-      const history =
-        appIds.length > 0
-          ? await db
-              .select({
-                applicationId: applicationStatusHistory.applicationId,
-                statusCategory: applicationStatusHistory.statusCategory,
-                status: applicationStatusHistory.status,
-              })
-              .from(applicationStatusHistory)
-              .where(inArray(applicationStatusHistory.applicationId, appIds))
-          : [];
+      const history = await db
+        .select({
+          applicationId: applicationStatusHistory.applicationId,
+          statusCategory: applicationStatusHistory.statusCategory,
+          status: applicationStatusHistory.status,
+        })
+        .from(applicationStatusHistory)
+        .innerJoin(
+          jobApplications,
+          eq(jobApplications.id, applicationStatusHistory.applicationId),
+        )
+        .where(and(...whereClause));
 
       const historyMap = new Map<string, typeof history>();
       history.forEach((h) => {
@@ -476,8 +468,6 @@ export async function getDetailedApplicationBreakdown(
 ) {
   const userId = await getCurrentUserIdOrThrow();
 
-  await syncGhostedApplications(userId);
-
   const whereClause = [eq(jobApplications.userId, userId)];
   const monthCondition = buildMonthCondition(month);
   if (monthCondition) whereClause.push(monthCondition);
@@ -525,8 +515,7 @@ export async function getDetailedApplicationBreakdown(
         };
       }
 
-      // 2. Fetch history for these applications
-      const appIds = apps.map((app) => app.id);
+      // 2. Fetch history for these applications via relational join
       const history = await db
         .select({
           applicationId: applicationStatusHistory.applicationId,
@@ -535,7 +524,11 @@ export async function getDetailedApplicationBreakdown(
           createdAt: applicationStatusHistory.createdAt,
         })
         .from(applicationStatusHistory)
-        .where(inArray(applicationStatusHistory.applicationId, appIds));
+        .innerJoin(
+          jobApplications,
+          eq(jobApplications.id, applicationStatusHistory.applicationId),
+        )
+        .where(and(...whereClause));
 
       // Group history by applicationId
       const historyMap = new Map<string, typeof history>();

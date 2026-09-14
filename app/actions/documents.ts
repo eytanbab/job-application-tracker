@@ -4,7 +4,7 @@ import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 import { db } from "@/app/db";
 import { documents } from "@/app/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
@@ -31,8 +31,13 @@ export async function generatePresignedUrl(
       throw new Error("Invalid file type");
     }
 
+    // Sanitize file name to avoid path traversal and invalid characters
+    const sanitizedFileName = fileName
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .slice(0, 100);
+
     // Generate a unique filename for the file in the S3 bucket
-    const fileKey = `${userId}/${Date.now().toString()}-${fileName}`;
+    const fileKey = `${userId}/${Date.now().toString()}-${sanitizedFileName}`;
 
     const uploadParams = {
       Bucket: process.env.NEXT_AWS_S3_BUCKET_NAME || "", // Get the bucket name from env variable
@@ -84,7 +89,21 @@ export async function createFile(
 
 export async function getFiles() {
   const userId = await getCurrentUserIdOrThrow();
-  return db.select().from(documents).where(eq(documents.userId, userId));
+
+  return unstable_cache(
+    async () => {
+      return db
+        .select()
+        .from(documents)
+        .where(eq(documents.userId, userId))
+        .orderBy(desc(documents.created_at));
+    },
+    ["documents-list", userId],
+    {
+      revalidate: CACHE_REVALIDATE_SECONDS,
+      tags: [documentsTag(userId)],
+    },
+  )();
 }
 
 export async function deleteFile(id: string) {

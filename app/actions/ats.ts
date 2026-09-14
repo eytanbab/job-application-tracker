@@ -3,6 +3,8 @@
 import { db } from "@/app/db";
 import { documents } from "@/app/db/schema";
 import { and, eq, desc } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
+import { documentsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 import { geminiAtsClient } from "@/lib/gemini";
 import { s3Client } from "@/lib/s3-client";
@@ -52,20 +54,29 @@ export type ResumeInputPayload =
 export async function getSavedResumes() {
   const userId = await getCurrentUserIdOrThrow();
 
-  const userDocuments = await db
-    .select({
-      id: documents.id,
-      title: documents.title,
-      fileName: documents.file_name,
-      fileSize: documents.file_size,
-      category: documents.category,
-      createdAt: documents.created_at,
-    })
-    .from(documents)
-    .where(eq(documents.userId, userId))
-    .orderBy(desc(documents.created_at));
+  return unstable_cache(
+    async () => {
+      const userDocuments = await db
+        .select({
+          id: documents.id,
+          title: documents.title,
+          fileName: documents.file_name,
+          fileSize: documents.file_size,
+          category: documents.category,
+          createdAt: documents.created_at,
+        })
+        .from(documents)
+        .where(eq(documents.userId, userId))
+        .orderBy(desc(documents.created_at));
 
-  return userDocuments;
+      return userDocuments;
+    },
+    ["ats-saved-resumes", userId],
+    {
+      revalidate: CACHE_REVALIDATE_SECONDS,
+      tags: [documentsTag(userId)],
+    },
+  )();
 }
 
 export async function analyzeResumeWithAts(
@@ -87,6 +98,13 @@ export async function analyzeResumeWithAts(
       return {
         success: false,
         error: "Please provide a valid job description with at least 30 characters.",
+      };
+    }
+
+    if (jobDescription.length > 50000) {
+      return {
+        success: false,
+        error: "Job description exceeds the maximum limit of 50,000 characters.",
       };
     }
 
@@ -150,6 +168,13 @@ export async function analyzeResumeWithAts(
         return {
           success: false,
           error: "Could not retrieve document stream from storage.",
+        };
+      }
+
+      if (s3Response.ContentLength && s3Response.ContentLength > 10 * 1024 * 1024) {
+        return {
+          success: false,
+          error: "Document exceeds the maximum 10 MB limit for ATS scanning.",
         };
       }
 

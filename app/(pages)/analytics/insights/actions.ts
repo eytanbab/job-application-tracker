@@ -7,7 +7,6 @@ import {
   CACHE_REVALIDATE_SECONDS,
 } from "@/app/actions/_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "@/app/actions/_utils/user-context";
-import { syncGhostedApplications } from "@/app/actions/applications";
 import { didReachInterviewStage, getStatusKind } from "@/lib/utils";
 import { buildMonthCondition } from "@/app/actions/_utils/filter-utils";
 
@@ -65,8 +64,6 @@ export async function getPlatformRoi(month?: string, year?: string) {
 
 export async function getBlackHoleBreakdown(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
-
-  await syncGhostedApplications(userId);
 
   const whereClause = [eq(jobApplications.userId, userId)];
   const monthCondition = buildMonthCondition(month);
