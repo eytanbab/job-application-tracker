@@ -9,12 +9,13 @@ import {
 import { getCurrentUserIdOrThrow } from "@/app/actions/_utils/user-context";
 import { syncGhostedApplications } from "@/app/actions/applications";
 import { didReachInterviewStage, getStatusKind } from "@/lib/utils";
+import { buildMonthCondition } from "@/app/actions/_utils/filter-utils";
 
 export async function getPlatformRoi(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
   const whereClause = [eq(jobApplications.userId, userId)];
-  if (month && month !== "all")
-    whereClause.push(eq(jobApplications.month, month));
+  const monthCondition = buildMonthCondition(month);
+  if (monthCondition) whereClause.push(monthCondition);
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
@@ -68,8 +69,8 @@ export async function getBlackHoleBreakdown(month?: string, year?: string) {
   await syncGhostedApplications(userId);
 
   const whereClause = [eq(jobApplications.userId, userId)];
-  if (month && month !== "all")
-    whereClause.push(eq(jobApplications.month, month));
+  const monthCondition = buildMonthCondition(month);
+  if (monthCondition) whereClause.push(monthCondition);
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
@@ -107,8 +108,8 @@ export async function getBlackHoleBreakdown(month?: string, year?: string) {
 export async function getRoleTargetingAnalysis(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
   const whereClause = [eq(jobApplications.userId, userId)];
-  if (month && month !== "all")
-    whereClause.push(eq(jobApplications.month, month));
+  const monthCondition = buildMonthCondition(month);
+  if (monthCondition) whereClause.push(monthCondition);
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
@@ -167,8 +168,8 @@ export async function getWorkModeAnalysis(
 ): Promise<WorkModeData[]> {
   const userId = await getCurrentUserIdOrThrow();
   const whereClause = [eq(jobApplications.userId, userId)];
-  if (month && month !== "all")
-    whereClause.push(eq(jobApplications.month, month));
+  const monthCondition = buildMonthCondition(month);
+  if (monthCondition) whereClause.push(monthCondition);
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
@@ -240,8 +241,8 @@ export async function getSalaryInsights(
 ): Promise<SalaryInsightsData> {
   const userId = await getCurrentUserIdOrThrow();
   const whereClause = [eq(jobApplications.userId, userId)];
-  if (month && month !== "all")
-    whereClause.push(eq(jobApplications.month, month));
+  const monthCondition = buildMonthCondition(month);
+  if (monthCondition) whereClause.push(monthCondition);
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(

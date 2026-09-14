@@ -16,13 +16,14 @@ import {
 import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 import { syncGhostedApplications } from "./applications";
+import { buildMonthCondition } from "./_utils/filter-utils";
 
 export async function getDomainLeaderboard(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
 
   const whereClause = [eq(jobApplications.userId, userId)];
-  if (month && month !== "all")
-    whereClause.push(eq(jobApplications.month, month));
+  const monthCondition = buildMonthCondition(month);
+  if (monthCondition) whereClause.push(monthCondition);
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
@@ -84,8 +85,8 @@ export async function getTop5Statuses(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
 
   const whereClause = [eq(jobApplications.userId, userId)];
-  if (month && month !== "all")
-    whereClause.push(eq(jobApplications.month, month));
+  const monthCondition = buildMonthCondition(month);
+  if (monthCondition) whereClause.push(monthCondition);
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
@@ -129,8 +130,8 @@ export async function getGhostedApplications(month?: string, year?: string) {
   await syncGhostedApplications(userId);
 
   const whereClause = [eq(jobApplications.userId, userId)];
-  if (month && month !== "all")
-    whereClause.push(eq(jobApplications.month, month));
+  const monthCondition = buildMonthCondition(month);
+  if (monthCondition) whereClause.push(monthCondition);
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
@@ -142,6 +143,7 @@ export async function getGhostedApplications(month?: string, year?: string) {
           status: jobApplications.status,
           statusCategory: jobApplications.statusCategory,
           company_name: jobApplications.company_name,
+          role_name: jobApplications.role_name,
         })
         .from(jobApplications)
         .where(and(...whereClause));
@@ -166,9 +168,10 @@ export async function getGhostedApplications(month?: string, year?: string) {
 
         const daysAgo = differenceInDays(now, appliedDate);
 
+        // Only mark as ghosted if explicitly ghosted OR unresponded initial application (applied/review) after 30 days
         const isGhosted =
           kind === "ghosted" ||
-          (kind !== "rejected" && kind !== "accepted" && daysAgo >= 30);
+          ((kind === "applied" || kind === "review") && daysAgo >= 30);
 
         if (isGhosted) {
           ghostedApps.push(app);
@@ -210,12 +213,30 @@ export async function getGhostedApplications(month?: string, year?: string) {
         .slice(0, 5)
         .map((e) => e[0]);
 
+      const followUpQueue = followUpApps.slice(0, 10).map((app) => ({
+        id: app.id,
+        company: (app.company_name || "").trim(),
+        role: (app.role_name || "").trim(),
+        daysAgo: differenceInDays(now, new Date(app.date_applied)),
+        dateApplied: app.date_applied,
+      }));
+
+      const unansweredQueue = ghostedApps.slice(0, 10).map((app) => ({
+        id: app.id,
+        company: (app.company_name || "").trim(),
+        role: (app.role_name || "").trim(),
+        daysAgo: differenceInDays(now, new Date(app.date_applied)),
+        dateApplied: app.date_applied,
+      }));
+
       return {
         count: ghostedApps.length,
         companies: topGhostedCompanies,
         oldestDays,
         followUpCount: followUpApps.length,
         followUpCompanies: topFollowUpCompanies,
+        followUpQueue,
+        unansweredQueue,
       };
     },
     [
@@ -237,8 +258,8 @@ export async function getApplicationsPerYear(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
 
   const whereClause = [eq(jobApplications.userId, userId)];
-  if (month && month !== "all")
-    whereClause.push(eq(jobApplications.month, month));
+  const monthCondition = buildMonthCondition(month);
+  if (monthCondition) whereClause.push(monthCondition);
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
@@ -274,8 +295,8 @@ export async function getStasusesPerYear(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
 
   const whereClause = [eq(jobApplications.userId, userId)];
-  if (month && month !== "all")
-    whereClause.push(eq(jobApplications.month, month));
+  const monthCondition = buildMonthCondition(month);
+  if (monthCondition) whereClause.push(monthCondition);
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
@@ -340,8 +361,8 @@ export async function getStatusPerPlatform(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
 
   const whereClause = [eq(jobApplications.userId, userId)];
-  if (month && month !== "all")
-    whereClause.push(eq(jobApplications.month, month));
+  const monthCondition = buildMonthCondition(month);
+  if (monthCondition) whereClause.push(monthCondition);
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
@@ -458,8 +479,8 @@ export async function getDetailedApplicationBreakdown(
   await syncGhostedApplications(userId);
 
   const whereClause = [eq(jobApplications.userId, userId)];
-  if (month && month !== "all")
-    whereClause.push(eq(jobApplications.month, month));
+  const monthCondition = buildMonthCondition(month);
+  if (monthCondition) whereClause.push(monthCondition);
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(
@@ -540,8 +561,6 @@ export async function getDetailedApplicationBreakdown(
       let totalResponseDays = 0;
       let totalResponseCount = 0;
 
-      const thirtyDaysAgo = subDays(new Date(), 30);
-
       apps.forEach((app) => {
         const appHistory = historyMap.get(app.id) || [];
 
@@ -556,30 +575,11 @@ export async function getDetailedApplicationBreakdown(
 
         if (currentKind === "accepted") {
           offeredCount++;
-        } else if (
-          currentKind === "applied" ||
-          currentKind === "review" ||
-          currentKind === "interview"
-        ) {
-          const dateApplied = app.dateApplied
-            ? parseISO(app.dateApplied)
-            : null;
-          const isOlderThan30Days =
-            dateApplied && !isNaN(dateApplied.getTime())
-              ? dateApplied < thirtyDaysAgo
-              : false;
-
-          if (isOlderThan30Days) {
-            if (reachedInterview) {
-              ghostedInterviewCount++;
-            } else {
-              ghostedResumeCount++;
-            }
+        } else if (currentKind === "rejected") {
+          if (reachedInterview) {
+            rejectedInterviewCount++;
           } else {
-            activeCount++;
-            if (currentKind === "applied") activeAppliedCount++;
-            else if (currentKind === "review") activeReviewCount++;
-            else if (currentKind === "interview") activeInterviewCount++;
+            rejectedResumeCount++;
           }
         } else if (currentKind === "ghosted") {
           if (reachedInterview) {
@@ -587,24 +587,17 @@ export async function getDetailedApplicationBreakdown(
           } else {
             ghostedResumeCount++;
           }
-        } else if (currentKind === "rejected") {
-          if (reachedInterview) {
-            rejectedInterviewCount++;
-          } else {
-            rejectedResumeCount++;
-          }
         } else {
+          // Active pipeline (applied, review, interview, or any other non-terminal status)
           activeCount++;
-          activeAppliedCount++;
+          if (currentKind === "applied") activeAppliedCount++;
+          else if (currentKind === "review") activeReviewCount++;
+          else if (currentKind === "interview") activeInterviewCount++;
+          else activeAppliedCount++;
         }
 
-        // Response velocity calculation (time to first recruiter response, excluding ghosted apps and backdated/imported records)
-        const isGhostedApp =
-          currentKind === "ghosted" ||
-          (currentKind !== "rejected" &&
-            currentKind !== "accepted" &&
-            app.dateApplied &&
-            parseISO(app.dateApplied) < thirtyDaysAgo);
+        // Response velocity calculation (time to first recruiter response, excluding ghosted apps)
+        const isGhostedApp = currentKind === "ghosted";
 
         if (!isGhostedApp) {
           const firstResponseHistory = appHistory
@@ -784,8 +777,8 @@ export async function getBestPlatformInsight(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
 
   const whereClause = [eq(jobApplications.userId, userId)];
-  if (month && month !== "all")
-    whereClause.push(eq(jobApplications.month, month));
+  const monthCondition = buildMonthCondition(month);
+  if (monthCondition) whereClause.push(monthCondition);
   if (year && year !== "all") whereClause.push(eq(jobApplications.year, year));
 
   return unstable_cache(

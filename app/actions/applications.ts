@@ -89,11 +89,7 @@ export async function syncGhostedApplications(userId?: string) {
       and(
         eq(jobApplications.userId, effectiveUserId),
         lte(jobApplications.date_applied, thresholdDateStr),
-        notInArray(jobApplications.statusCategory, [
-          "rejected",
-          "accepted",
-          "ghosted",
-        ]),
+        inArray(jobApplications.statusCategory, ["applied", "review"]),
       ),
     );
 
@@ -120,11 +116,11 @@ export async function syncGhostedApplications(userId?: string) {
     recentHistory.map((h) => h.applicationId),
   );
 
-  // 3. Filter candidates: ensure kind is not rejected or accepted, and no recent activity
+  // 3. Filter candidates: ensure kind is applied or review, and no recent activity
   const qualifyingApps = candidates.filter((app) => {
     if (recentlyActiveAppIds.has(app.id)) return false;
     const kind = getStatusKind(app.status, app.statusCategory);
-    return kind !== "rejected" && kind !== "accepted" && kind !== "ghosted";
+    return kind === "applied" || kind === "review";
   });
 
   if (qualifyingApps.length === 0) {
