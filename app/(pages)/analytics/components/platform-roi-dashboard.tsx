@@ -121,7 +121,9 @@ function PlatformRoiCard({ platform }: { platform: EnrichedPlatform }) {
                   : "text-[11px] font-medium"
               }
             >
-              {platform.interviewRate.toFixed(1)}% interview
+              {platform.total < 3 && platform.interviewCount > 0
+                ? `${platform.interviewCount}/${platform.total} interview (early)`
+                : `${platform.interviewRate.toFixed(1)}% interview`}
             </Badge>
             <Badge
               variant="outline"
@@ -131,7 +133,9 @@ function PlatformRoiCard({ platform }: { platform: EnrichedPlatform }) {
                   : "text-[11px] font-medium"
               }
             >
-              {platform.responseRate.toFixed(1)}% response
+              {platform.total < 3 && platform.respondedCount > 0
+                ? `${platform.respondedCount}/${platform.total} response`
+                : `${platform.responseRate.toFixed(1)}% response`}
             </Badge>
           </div>
         </div>
@@ -388,15 +392,28 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
     return a.platformName.localeCompare(b.platformName);
   });
 
-  // Top Interview platform (where interviewCount > 0 and total >= 2)
-  const topInterviewPlatform = [...enrichedPlatforms]
-    .filter((p) => p.interviewCount > 0 && p.total >= 2)
-    .sort((a, b) => b.interviewRate - a.interviewRate)[0];
+  // Prioritize platforms with at least 3 applications for statistical validity
+  const significantInterviewPlatforms = enrichedPlatforms
+    .filter((p) => p.interviewCount > 0 && p.total >= 3)
+    .sort((a, b) => b.interviewRate - a.interviewRate || b.total - a.total);
 
-  // Top Response platform (overall responses and total >= 2)
-  const topResponsePlatform = [...enrichedPlatforms]
+  const fallbackInterviewPlatforms = enrichedPlatforms
+    .filter((p) => p.interviewCount > 0 && p.total >= 2)
+    .sort((a, b) => b.interviewRate - a.interviewRate || b.total - a.total);
+
+  const topInterviewPlatform =
+    significantInterviewPlatforms[0] || fallbackInterviewPlatforms[0];
+
+  const significantResponsePlatforms = enrichedPlatforms
+    .filter((p) => p.respondedCount > 0 && p.total >= 3)
+    .sort((a, b) => b.responseRate - a.responseRate || b.total - a.total);
+
+  const fallbackResponsePlatforms = enrichedPlatforms
     .filter((p) => p.respondedCount > 0 && p.total >= 2)
-    .sort((a, b) => b.responseRate - a.responseRate)[0];
+    .sort((a, b) => b.responseRate - a.responseRate || b.total - a.total);
+
+  const topResponsePlatform =
+    significantResponsePlatforms[0] || fallbackResponsePlatforms[0];
 
   return (
     <div className="flex flex-col gap-6 w-full opacity-100 transition-opacity duration-500">
@@ -423,7 +440,8 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
               {topInterviewPlatform.interviewCount === 1
                 ? "interview"
                 : "interviews"}{" "}
-              from {topInterviewPlatform.total} applications).
+              from {topInterviewPlatform.total} applications
+              {topInterviewPlatform.total < 4 ? " — early signal" : ""}).
             </CardDescription>
           </CardHeader>
         </Card>
@@ -448,7 +466,8 @@ export function PlatformRoiDashboard({ data }: PlatformRoiDashboardProps) {
               {topResponsePlatform.respondedCount === 1
                 ? "response"
                 : "responses"}{" "}
-              from {topResponsePlatform.total} applications).
+              from {topResponsePlatform.total} applications
+              {topResponsePlatform.total < 4 ? " — early signal" : ""}).
             </CardDescription>
           </CardHeader>
         </Card>

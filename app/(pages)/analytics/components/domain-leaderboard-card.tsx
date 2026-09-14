@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link as LinkIcon } from "lucide-react";
 
 type DomainItem = {
@@ -17,11 +17,16 @@ export function DomainLeaderboardCard({ domains }: Props) {
 
   return (
     <Card className="w-full bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          ATS Domain Performance
-        </CardTitle>
-        <LinkIcon className="h-4 w-4 text-muted-foreground/70" />
+      <CardHeader className="pb-2">
+        <div className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base font-bold">
+            ATS Platform Distribution
+          </CardTitle>
+          <LinkIcon className="h-4 w-4 text-muted-foreground/70" />
+        </div>
+        <CardDescription className="text-xs text-muted-foreground mt-0.5">
+          Direct employer ATS portals (Greenhouse, Lever, Ashby)
+        </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3.5 pt-2">
         {domains.length === 0 ? (

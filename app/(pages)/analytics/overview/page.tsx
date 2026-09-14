@@ -5,7 +5,6 @@ import {
   getTop5Statuses,
   getYears,
   getDetailedApplicationBreakdown,
-  getBestPlatformInsight,
   getGhostedApplications,
   getFunnelBottleneckInsight,
 } from "@/app/actions/analytics";
@@ -32,10 +31,10 @@ const YearlyTrendsCard = dynamicImport(
 
 import { KpiSummary } from "../components/kpi-summary";
 import { AnalyticsFilter } from "../components/analytics-filter";
-import { BestPlatformsCard } from "../components/best-platforms-card";
+import { ApplicationFunnelCard } from "../components/application-funnel-card";
 import { GhostingRiskCard } from "../components/ghosting-risk-card";
 import { FunnelBottleneckCard } from "../components/funnel-bottleneck-card";
-import { BarChart3, Lightbulb, TrendingUp } from "lucide-react";
+import { BarChart3, BellRing, Filter, TrendingUp } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -62,7 +61,6 @@ export default async function Overview(props: {
     years,
     statusesPerYear,
     breakdownData,
-    bestPlatformInsight,
     ghostedApplications,
     funnelBottleneck,
   ] = await Promise.all([
@@ -71,7 +69,6 @@ export default async function Overview(props: {
     getYears(),
     getStasusesPerYear(month, year),
     getDetailedApplicationBreakdown(month, year),
-    getBestPlatformInsight(month, year),
     getGhostedApplications(month, year),
     getFunnelBottleneckInsight(month, year),
   ]);
@@ -119,28 +116,49 @@ export default async function Overview(props: {
         />
       </section>
 
-      {/* 3. Strategy Coaching */}
+      {/* 3. Action Center */}
       <section className="space-y-3">
         <div className="flex items-center gap-2">
-          <Lightbulb className="h-4 w-4 text-primary" />
+          <BellRing className="h-4 w-4 text-primary" />
           <h2 className="text-sm font-bold uppercase tracking-wider text-primary">
-            Strategy Coaching
+            Action Center
           </h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <BestPlatformsCard
-            {...bestPlatformInsight}
-            month={month}
-            year={year}
-          />
-          <GhostingRiskCard {...ghostedApplications} />
-          <div className="sm:col-span-2 lg:col-span-1">
+        <GhostingRiskCard {...ghostedApplications} />
+      </section>
+
+      {/* 4. Funnel Progression & Diagnostics */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-bold uppercase tracking-wider text-primary">
+            Funnel Progression & Diagnostics
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <ApplicationFunnelCard
+              total={totalApplications}
+              activeCount={breakdownData.breakdown.active}
+              interviewCount={breakdownData.stages.interview}
+              offerCount={breakdownData.stages.accepted}
+              ghostedCount={
+                breakdownData.breakdown.ghostedResume +
+                breakdownData.breakdown.ghostedInterview
+              }
+              rejectedCount={
+                breakdownData.breakdown.rejectedResume +
+                breakdownData.breakdown.rejectedInterview
+              }
+            />
+          </div>
+          <div className="lg:col-span-1">
             <FunnelBottleneckCard {...funnelBottleneck} />
           </div>
         </div>
       </section>
 
-      {/* 4. Charts */}
+      {/* 5. Volume Trends & Status */}
       <section className="space-y-3 pt-1">
         <div className="flex items-center gap-2">
           <BarChart3 className="h-4 w-4 text-primary" />

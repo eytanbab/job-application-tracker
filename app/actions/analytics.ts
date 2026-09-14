@@ -15,6 +15,7 @@ import {
 } from "@/lib/utils";
 import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
+import { syncGhostedApplications } from "./applications";
 
 export async function getDomainLeaderboard(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
@@ -125,6 +126,8 @@ export async function getTop5Statuses(month?: string, year?: string) {
 export async function getGhostedApplications(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
 
+  await syncGhostedApplications(userId);
+
   const whereClause = [eq(jobApplications.userId, userId)];
   if (month && month !== "all")
     whereClause.push(eq(jobApplications.month, month));
@@ -163,32 +166,36 @@ export async function getGhostedApplications(month?: string, year?: string) {
 
         const daysAgo = differenceInDays(now, appliedDate);
 
-        if (kind === "applied") {
-          if (daysAgo >= 30) {
-            ghostedApps.push(app);
-            const name = (app.company_name || "").trim();
-            if (name) {
-              ghostedCompanyCount.set(
-                name,
-                (ghostedCompanyCount.get(name) || 0) + 1,
-              );
-            }
-            if (daysAgo > oldestDays) {
-              oldestDays = daysAgo;
-            }
+        const isGhosted =
+          kind === "ghosted" ||
+          (kind !== "rejected" && kind !== "accepted" && daysAgo >= 30);
+
+        if (isGhosted) {
+          ghostedApps.push(app);
+          const name = (app.company_name || "").trim();
+          if (name) {
+            ghostedCompanyCount.set(
+              name,
+              (ghostedCompanyCount.get(name) || 0) + 1,
+            );
+          }
+          if (daysAgo > oldestDays) {
+            oldestDays = daysAgo;
           }
         }
 
-        if (kind === "applied" || kind === "review") {
-          if (daysAgo >= 7 && daysAgo <= 14) {
-            followUpApps.push(app);
-            const name = (app.company_name || "").trim();
-            if (name) {
-              followUpCompanyCount.set(
-                name,
-                (followUpCompanyCount.get(name) || 0) + 1,
-              );
-            }
+        if (
+          (kind === "applied" || kind === "review") &&
+          daysAgo >= 7 &&
+          daysAgo <= 14
+        ) {
+          followUpApps.push(app);
+          const name = (app.company_name || "").trim();
+          if (name) {
+            followUpCompanyCount.set(
+              name,
+              (followUpCompanyCount.get(name) || 0) + 1,
+            );
           }
         }
       });
@@ -448,6 +455,8 @@ export async function getDetailedApplicationBreakdown(
 ) {
   const userId = await getCurrentUserIdOrThrow();
 
+  await syncGhostedApplications(userId);
+
   const whereClause = [eq(jobApplications.userId, userId)];
   if (month && month !== "all")
     whereClause.push(eq(jobApplications.month, month));
@@ -560,7 +569,7 @@ export async function getDetailedApplicationBreakdown(
               ? dateApplied < thirtyDaysAgo
               : false;
 
-          if (isOlderThan30Days && currentKind === "applied") {
+          if (isOlderThan30Days) {
             if (reachedInterview) {
               ghostedInterviewCount++;
             } else {
@@ -592,7 +601,8 @@ export async function getDetailedApplicationBreakdown(
         // Response velocity calculation (time to first recruiter response, excluding ghosted apps and backdated/imported records)
         const isGhostedApp =
           currentKind === "ghosted" ||
-          (currentKind === "applied" &&
+          (currentKind !== "rejected" &&
+            currentKind !== "accepted" &&
             app.dateApplied &&
             parseISO(app.dateApplied) < thirtyDaysAgo);
 
@@ -841,17 +851,34 @@ export async function getBestPlatformInsight(month?: string, year?: string) {
         }
       });
 
-      const platformsWithRates = Array.from(platformStats.values())
-        .map((p) => ({
-          ...p,
-          interviewRate: p.total > 0 ? (p.interviews / p.total) * 100 : 0,
-        }))
+      const platformsWithRates = Array.from(platformStats.values()).map((p) => ({
+        ...p,
+        interviewRate: p.total > 0 ? (p.interviews / p.total) * 100 : 0,
+      }));
+
+      // Prioritize platforms with at least 3 applications to avoid small-sample distortion (e.g. 1 application = 100%)
+      const significantPlatforms = platformsWithRates
+        .filter((p) => p.total >= 3)
         .sort((a, b) => b.interviewRate - a.interviewRate || b.total - a.total);
 
+      const allSorted = [...platformsWithRates].sort(
+        (a, b) => b.interviewRate - a.interviewRate || b.total - a.total,
+      );
+
       const bestPlatform =
-        platformsWithRates.length > 0 ? platformsWithRates[0] : null;
+        significantPlatforms.length > 0
+          ? significantPlatforms[0]
+          : allSorted.length > 0
+            ? allSorted[0]
+            : null;
+
       const secondBest =
-        platformsWithRates.length > 1 ? platformsWithRates[1] : null;
+        significantPlatforms.length > 1
+          ? significantPlatforms[1]
+          : allSorted.length > 1 && allSorted[1].name !== bestPlatform?.name
+            ? allSorted[1]
+            : null;
+
       const multiplier =
         bestPlatform && secondBest && secondBest.interviewRate > 0
           ? bestPlatform.interviewRate / secondBest.interviewRate

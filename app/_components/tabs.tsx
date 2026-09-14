@@ -5,9 +5,8 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
 const TABS = [
-  { url: "/analytics/overview", name: "Overview" },
-  { url: "/analytics/status-per-platform", name: "Platform ROI" },
-  { url: "/analytics/insights", name: "Strategic Insights" },
+  { url: "/analytics/overview", name: "Pipeline & Overview" },
+  { url: "/analytics/insights", name: "Channel & Strategy" },
 ];
 
 export default function Tabs() {
