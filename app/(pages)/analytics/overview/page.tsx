@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import dynamicImport from "next/dynamic";
 import {
   getApplicationsPerYear,
   getStasusesPerYear,
@@ -6,41 +7,44 @@ import {
   getYears,
   getDetailedApplicationBreakdown,
   getGhostedApplications,
-  getFunnelBottleneckInsight,
+  getStatusPerPlatform,
+  getDomainLeaderboard,
 } from "@/app/actions/analytics";
+import {
+  getWorkModeAnalysis,
+  getSalaryInsights,
+} from "../insights/actions";
 
-import dynamicImport from "next/dynamic";
+import { AnalyticsFilter } from "../components/analytics-filter";
+import { ExecutivePulseStrip } from "../components/executive-pulse-strip";
+import { ActionCenterTray } from "../components/action-center-tray";
+import { PipelineFlowRibbon } from "../components/pipeline-flow-ribbon";
+import { ChannelMarketTabs } from "../components/channel-market-tabs";
 
 const PieChartComponent = dynamicImport(
   () => import("../components/pie-chart").then((m) => m.PieChartComponent),
   {
     loading: () => (
-      <div className="min-h-[360px] bg-card rounded-xl border border-border/30 animate-pulse" />
+      <div className="min-h-[320px] bg-card/40 rounded-xl border border-border/30 animate-pulse" />
     ),
   },
 );
+
 const YearlyTrendsCard = dynamicImport(
   () =>
     import("../components/yearly-trends-card").then((m) => m.YearlyTrendsCard),
   {
     loading: () => (
-      <div className="min-h-[360px] bg-card rounded-xl border border-border/30 animate-pulse" />
+      <div className="min-h-[320px] bg-card/40 rounded-xl border border-border/30 animate-pulse" />
     ),
   },
 );
-
-import { KpiSummary } from "../components/kpi-summary";
-import { AnalyticsFilter } from "../components/analytics-filter";
-import { ApplicationFunnelCard } from "../components/application-funnel-card";
-import { GhostingRiskCard } from "../components/ghosting-risk-card";
-import { FunnelBottleneckCard } from "../components/funnel-bottleneck-card";
-import { BarChart3, BellRing, Filter, TrendingUp } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   return {
-    title: "JAT | Overview",
+    title: "JAT | Analytics & Intelligence",
   };
 }
 
@@ -56,21 +60,27 @@ export default async function Overview(props: {
   const currentYear = new Date().getFullYear().toString();
 
   const [
+    years,
+    breakdownData,
+    ghostedData,
+    statusPerPlatform,
+    domainLeaderboard,
+    workModes,
+    salaryInsights,
     top5Statuses,
     applicationsPerYear,
-    years,
     statusesPerYear,
-    breakdownData,
-    ghostedApplications,
-    funnelBottleneck,
   ] = await Promise.all([
-    getTop5Statuses(month, year),
-    getApplicationsPerYear(month, year),
     getYears(),
-    getStasusesPerYear(month, year),
     getDetailedApplicationBreakdown(month, year),
     getGhostedApplications(month, year),
-    getFunnelBottleneckInsight(month, year),
+    getStatusPerPlatform(month, year),
+    getDomainLeaderboard(month, year),
+    getWorkModeAnalysis(month, year),
+    getSalaryInsights(month, year),
+    getTop5Statuses(month, year),
+    getApplicationsPerYear(undefined, year),
+    getStasusesPerYear(undefined, year),
   ]);
 
   const totalApplications = breakdownData.total;
@@ -86,27 +96,19 @@ export default async function Overview(props: {
   const availableYears = years.length > 0 ? years : [currentYear];
 
   return (
-    <div className="flex flex-col gap-6 w-full opacity-100 transition-opacity duration-500">
-      <h1 className="sr-only">Analytics Overview</h1>
-
-      {/* 1. Header Filter Toolbar */}
+    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto opacity-100 transition-opacity duration-500 pb-12">
+      {/* 1. Timeframe Filter Toolbar */}
       <Suspense
         fallback={
-          <div className="h-14 w-full bg-card rounded-xl animate-pulse" />
+          <div className="h-14 w-full bg-card/40 rounded-xl border border-border/30 animate-pulse" />
         }
       >
         <AnalyticsFilter years={availableYears} />
       </Suspense>
 
-      {/* 2. Key Performance Rates */}
-      <section className="space-y-3">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-bold uppercase tracking-wider text-primary">
-            Key Performance Rates
-          </h2>
-        </div>
-        <KpiSummary
+      {/* 2. Executive Pulse Strip */}
+      <section aria-label="Executive Pipeline Summary">
+        <ExecutivePulseStrip
           totalApplications={totalApplications}
           activeCount={breakdownData.breakdown.active}
           activeStages={breakdownData.breakdown.activeStages}
@@ -116,59 +118,57 @@ export default async function Overview(props: {
         />
       </section>
 
-      {/* 3. Action Center */}
-      <section className="space-y-3">
-        <div className="flex items-center gap-2">
-          <BellRing className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-bold uppercase tracking-wider text-primary">
-            Action Center
-          </h2>
-        </div>
-        <GhostingRiskCard {...ghostedApplications} />
+      {/* 3. Tactical Action Center */}
+      <section aria-label="Follow-Up Queue">
+        <ActionCenterTray
+          count={ghostedData.count}
+          oldestDays={ghostedData.oldestDays}
+          followUpCount={ghostedData.followUpCount}
+          followUpQueue={ghostedData.followUpQueue}
+        />
       </section>
 
-      {/* 4. Funnel Progression & Diagnostics */}
-      <section className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-bold uppercase tracking-wider text-primary">
-            Funnel Progression & Diagnostics
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2">
-            <ApplicationFunnelCard
-              total={totalApplications}
-              activeCount={breakdownData.breakdown.active}
-              interviewCount={breakdownData.stages.interview}
-              offerCount={breakdownData.stages.accepted}
-              ghostedCount={
-                breakdownData.breakdown.ghostedResume +
-                breakdownData.breakdown.ghostedInterview
-              }
-              rejectedCount={
-                breakdownData.breakdown.rejectedResume +
-                breakdownData.breakdown.rejectedInterview
-              }
-            />
-          </div>
-          <div className="lg:col-span-1">
-            <FunnelBottleneckCard {...funnelBottleneck} />
-          </div>
-        </div>
+      {/* 4. Stepped Pipeline Conversion Ribbon */}
+      <section aria-label="Pipeline Progression and Outcomes">
+        <PipelineFlowRibbon
+          total={totalApplications}
+          activeCount={breakdownData.breakdown.active}
+          interviewCount={breakdownData.stages.interview}
+          offerCount={breakdownData.stages.accepted}
+          ghostedCount={
+            breakdownData.breakdown.ghostedResume +
+            breakdownData.breakdown.ghostedInterview
+          }
+          rejectedCount={
+            breakdownData.breakdown.rejectedResume +
+            breakdownData.breakdown.rejectedInterview
+          }
+        />
       </section>
 
-      {/* 5. Volume Trends & Status */}
-      <section className="space-y-3 pt-1">
-        <div className="flex items-center gap-2">
-          <BarChart3 className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-bold uppercase tracking-wider text-primary">
-            Trends & Status
+      {/* 5. Channel & Market Intelligence */}
+      <section aria-label="Channel and Market Intelligence">
+        <ChannelMarketTabs
+          platforms={statusPerPlatform}
+          domains={domainLeaderboard}
+          modes={workModes}
+          salary={salaryInsights}
+        />
+      </section>
+
+      {/* 6. Historical Volume Trends & Status Breakdown */}
+      <section aria-label="Historical Volume Trends" className="space-y-3 pt-1">
+        <div className="border-b border-border/20 pb-2">
+          <h2 className="text-sm font-bold tracking-tight text-foreground">
+            Volume Trends & Status Distribution
           </h2>
+          <p className="text-xs text-muted-foreground">
+            Historical trajectory across active and completed pipeline stages over time.
+          </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <PieChartComponent
-            title="Status Breakdown"
+            title="Status Distribution"
             data={top5Statuses}
             total={totalApplications}
           />

@@ -53,7 +53,7 @@ export function KpiSummary({
             <PopoverContent className="w-64 text-xs p-3 space-y-1.5 z-50">
               <p className="font-semibold text-foreground">Definition</p>
               <p className="text-muted-foreground">
-                Applications currently in flight across Applied, In Review, and Interview stages.
+                Applications currently active across Applied, In Review, and Interview stages.
               </p>
               <p className="font-semibold text-foreground pt-1">Recommended Pacing</p>
               <p className="text-emerald-700 dark:text-emerald-400 font-medium">10 – 15 active roles (sustainable search)</p>
@@ -75,7 +75,7 @@ export function KpiSummary({
           <p className="text-xs text-muted-foreground mt-1">
             {activeCount > 0
               ? `${activeStages.applied} applied • ${activeStages.review} review • ${activeStages.interview} interview`
-              : "No active applications in flight"}
+              : "No active applications"}
           </p>
         </CardContent>
       </Card>

@@ -60,7 +60,7 @@ export function ApplicationFunnelCard({
     },
     {
       id: "active",
-      label: "2. In-Flight / Active",
+      label: "2. Active Pipeline",
       count: activeCount,
       pctOfTotal: total > 0 ? (activeCount / total) * 100 : 0,
       color: "bg-purple-500",

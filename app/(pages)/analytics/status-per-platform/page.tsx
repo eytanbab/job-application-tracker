@@ -13,5 +13,5 @@ export default async function StatusPerPlatformPage(props: {
     params.set("year", searchParams.year);
 
   const query = params.toString();
-  redirect(`/analytics/insights${query ? `?${query}` : ""}`);
+  redirect(`/analytics/overview${query ? `?${query}` : ""}`);
 }
