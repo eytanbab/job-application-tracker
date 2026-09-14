@@ -9,9 +9,9 @@ import {
   applicationStatusHistory,
 } from "@/app/db/schema";
 import { z } from "zod";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lte, notInArray } from "drizzle-orm";
 
-import { format, subDays, parseISO, isBefore } from "date-fns";
+import { addDays, format, isBefore, parseISO, subDays } from "date-fns";
 import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 import {
@@ -69,9 +69,129 @@ function purgeCaches(userId: string) {
   revalidatePath("/analytics/insights");
 }
 
-// Get all applications of current user (pure read function)
+// Automatically transition applications older than 30 days without rejection or acceptance to Ghosted
+export async function syncGhostedApplications(userId?: string) {
+  const effectiveUserId = userId || (await getCurrentUserIdOrThrow());
+  const thirtyDaysAgo = subDays(new Date(), 30);
+  const thresholdDateStr = format(thirtyDaysAgo, "yyyy-MM-dd");
+
+  // 1. Query applications that are older than 30 days and not in terminal/ghosted categories
+  const candidates = await db
+    .select({
+      id: jobApplications.id,
+      status: jobApplications.status,
+      statusCategory: jobApplications.statusCategory,
+      date_applied: jobApplications.date_applied,
+      createdAt: jobApplications.createdAt,
+    })
+    .from(jobApplications)
+    .where(
+      and(
+        eq(jobApplications.userId, effectiveUserId),
+        lte(jobApplications.date_applied, thresholdDateStr),
+        notInArray(jobApplications.statusCategory, [
+          "rejected",
+          "accepted",
+          "ghosted",
+        ]),
+      ),
+    );
+
+  if (candidates.length === 0) {
+    return 0;
+  }
+
+  // 2. Query recent status history to avoid ghosting applications with recent activity in the last 30 days
+  const candidateIds = candidates.map((c) => c.id);
+  const recentHistory = await db
+    .select({
+      applicationId: applicationStatusHistory.applicationId,
+      createdAt: applicationStatusHistory.createdAt,
+    })
+    .from(applicationStatusHistory)
+    .where(
+      and(
+        inArray(applicationStatusHistory.applicationId, candidateIds),
+        gte(applicationStatusHistory.createdAt, thirtyDaysAgo),
+      ),
+    );
+
+  const recentlyActiveAppIds = new Set(
+    recentHistory.map((h) => h.applicationId),
+  );
+
+  // 3. Filter candidates: ensure kind is not rejected or accepted, and no recent activity
+  const qualifyingApps = candidates.filter((app) => {
+    if (recentlyActiveAppIds.has(app.id)) return false;
+    const kind = getStatusKind(app.status, app.statusCategory);
+    return kind !== "rejected" && kind !== "accepted" && kind !== "ghosted";
+  });
+
+  if (qualifyingApps.length === 0) {
+    return 0;
+  }
+
+  const qualifyingIds = qualifyingApps.map((a) => a.id);
+
+  // 4. Update job_applications in DB
+  await db
+    .update(jobApplications)
+    .set({
+      status: "Ghosted",
+      statusCategory: "ghosted",
+    })
+    .where(inArray(jobApplications.id, qualifyingIds));
+
+  // 5. Query existing ghosted history entries to prevent duplicate history records
+  const existingGhostedHistory = await db
+    .select({ applicationId: applicationStatusHistory.applicationId })
+    .from(applicationStatusHistory)
+    .where(
+      and(
+        inArray(applicationStatusHistory.applicationId, qualifyingIds),
+        eq(applicationStatusHistory.statusCategory, "ghosted"),
+      ),
+    );
+  const appsWithGhostedHistory = new Set(
+    existingGhostedHistory.map((h) => h.applicationId),
+  );
+
+  const now = new Date();
+  const historyEntries = qualifyingApps
+    .filter((app) => !appsWithGhostedHistory.has(app.id))
+    .map((app) => {
+      const appliedDate = parseISO(app.date_applied);
+      let milestoneDate = !isNaN(appliedDate.getTime())
+        ? addDays(appliedDate, 30)
+        : now;
+
+      if (milestoneDate > now) {
+        milestoneDate = now;
+      }
+
+      return {
+        applicationId: app.id,
+        status: "Ghosted",
+        statusCategory: "ghosted",
+        createdAt: milestoneDate,
+      };
+    });
+
+  if (historyEntries.length > 0) {
+    await db.insert(applicationStatusHistory).values(historyEntries);
+  }
+
+  // 6. Purge caches
+  purgeCaches(effectiveUserId);
+
+  return qualifyingApps.length;
+}
+
+// Get all applications of current user (syncs ghosted status then reads persisted records)
 export async function getApplications() {
   const userId = await getCurrentUserIdOrThrow();
+
+  await syncGhostedApplications(userId);
 
   const rows = await db
     .select()
@@ -82,32 +202,8 @@ export async function getApplications() {
       desc(jobApplications.createdAt),
     );
 
-  const thirtyDaysAgo = subDays(new Date(), 30);
-
-  // Dynamically auto-categorize >30 day old applied/review status as ghosted
   return rows.map((app) => {
-    const kind = getStatusKind(app.status, app.statusCategory);
-    if ((kind === "applied" || kind === "review") && app.date_applied) {
-      try {
-        const appliedDate = parseISO(app.date_applied);
-        if (isBefore(appliedDate, thirtyDaysAgo)) {
-          const rawLower = (app.status || "").trim().toLowerCase();
-          const isGenericStatus =
-            !rawLower ||
-            rawLower === "applied" ||
-            rawLower === "in review" ||
-            rawLower === "review";
-
-          return {
-            ...app,
-            statusCategory: "ghosted",
-            status: isGenericStatus ? "Ghosted" : app.status,
-          };
-        }
-      } catch {
-        // Ignore date parsing error
-      }
-    } else if (app.statusCategory === "ghosted") {
+    if (app.statusCategory === "ghosted") {
       const rawLower = (app.status || "").trim().toLowerCase();
       if (
         !rawLower ||
@@ -281,6 +377,8 @@ export async function getApplicationHistory(applicationId: string) {
     .select({
       id: jobApplications.id,
       date_applied: jobApplications.date_applied,
+      status: jobApplications.status,
+      statusCategory: jobApplications.statusCategory,
       createdAt: jobApplications.createdAt,
     })
     .from(jobApplications)
@@ -302,21 +400,7 @@ export async function getApplicationHistory(applicationId: string) {
     .where(eq(applicationStatusHistory.applicationId, applicationId))
     .orderBy(desc(applicationStatusHistory.createdAt));
 
-  const sanitizedHistory = history.map((item) => {
-    const d = new Date(item.createdAt);
-    const isRounded =
-      (d.getHours() === 0 && d.getMinutes() === 0 && d.getSeconds() === 0) ||
-      (d.getHours() === 12 && d.getMinutes() === 0 && d.getSeconds() === 0) ||
-      (d.getHours() === 3 && d.getMinutes() === 0 && d.getSeconds() === 0 && d.getMilliseconds() === 0);
-
-    if (isRounded && app[0].createdAt) {
-      return {
-        ...item,
-        createdAt: app[0].createdAt,
-      };
-    }
-    return item;
-  });
+  const sanitizedHistory = [...history];
 
   const hasAppliedEntry = sanitizedHistory.some(
     (h) =>
@@ -332,11 +416,36 @@ export async function getApplicationHistory(applicationId: string) {
       statusCategory: "applied",
       createdAt: app[0].createdAt || new Date(),
     });
-    sanitizedHistory.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
   }
+
+  const hasGhostedEntry = sanitizedHistory.some(
+    (h) =>
+      h.statusCategory === "ghosted" ||
+      (h.status && h.status.toLowerCase().includes("ghost")),
+  );
+
+  if (!hasGhostedEntry && app[0].statusCategory === "ghosted") {
+    const appliedDate = app[0].date_applied
+      ? parseISO(app[0].date_applied)
+      : null;
+    const ghostedDate =
+      appliedDate && !isNaN(appliedDate.getTime())
+        ? addDays(appliedDate, 30)
+        : app[0].createdAt || new Date();
+
+    sanitizedHistory.push({
+      id: "",
+      applicationId,
+      status: "Ghosted",
+      statusCategory: "ghosted",
+      createdAt: ghostedDate,
+    });
+  }
+
+  sanitizedHistory.sort(
+    (a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
 
   return sanitizedHistory;
 }
