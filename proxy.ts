@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { signGuestId, verifyGuestId } from "@/lib/security/guest-token";
 
 const isProtectedRoute = createRouteMatcher([
   // '/applications(.*)',
@@ -13,13 +14,16 @@ export default clerkMiddleware(async (auth, req) => {
   const res = NextResponse.next();
 
   if (!userId) {
-    const guestId = req.cookies.get("guest_id")?.value;
+    const rawGuestCookie = req.cookies.get("guest_id")?.value;
+    const validGuestId = verifyGuestId(rawGuestCookie);
 
-    if (!guestId) {
+    if (!validGuestId) {
       const newGuestId = crypto.randomUUID();
-      res.cookies.set("guest_id", newGuestId, {
+      const signedToken = signGuestId(newGuestId);
+      res.cookies.set("guest_id", signedToken, {
         path: "/",
-        httpOnly: false,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         maxAge: 60 * 60 * 24 * 365, // 1 year
       });

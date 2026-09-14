@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { scraper } from "@/lib/scraper";
 import { geminiExtractionClient } from "@/lib/gemini";
 import { tryDeterministicExtraction } from "@/lib/parsers";
+import { validateSafeUrl } from "@/lib/security/url-validator";
 
 export const maxDuration = 30;
 const isDevelopment = process.env.NODE_ENV === "development";
@@ -17,13 +18,23 @@ export async function POST(req: Request) {
       );
     }
 
+    const validation = validateSafeUrl(url);
+    if (!validation.safe) {
+      return NextResponse.json(
+        { status: "fail", message: validation.error || "Invalid or forbidden URL" },
+        { status: 400 },
+      );
+    }
+
+    const safeUrl = validation.url!.toString();
+
     if (isDevelopment) {
-      console.log(`[API] Extracting from: ${url}`);
+      console.log(`[API] Extracting from: ${safeUrl}`);
     }
 
     // 1. Zero-AI Fast Path (Deterministic parsing for known platforms & JSON-LD)
     const startTime = Date.now();
-    const deterministicData = await tryDeterministicExtraction(url);
+    const deterministicData = await tryDeterministicExtraction(safeUrl);
 
     if (deterministicData && deterministicData.role_name && deterministicData.company_name) {
       if (isDevelopment) {
@@ -47,7 +58,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const webpage = await scraper(url);
+    const webpage = await scraper(safeUrl);
 
     if (!webpage) {
       console.error("[API] Scraper returned empty content.");
