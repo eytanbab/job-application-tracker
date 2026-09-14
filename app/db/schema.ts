@@ -36,6 +36,7 @@ export const jobApplications = pgTable(
     index("job_apps_user_id_idx").on(table.userId),
     index("job_apps_user_date_idx").on(table.userId, table.date_applied),
     index("job_apps_user_period_idx").on(table.userId, table.year, table.month),
+    index("job_apps_user_status_cat_idx").on(table.userId, table.statusCategory),
   ],
 );
 
@@ -72,6 +73,10 @@ export const applicationStatusHistory = pgTable(
   },
   (table) => [
     index("status_history_app_id_idx").on(table.applicationId),
+    index("status_history_app_created_idx").on(
+      table.applicationId,
+      table.createdAt,
+    ),
   ],
 );
 
