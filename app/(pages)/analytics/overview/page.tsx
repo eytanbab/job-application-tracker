@@ -20,6 +20,7 @@ import { ExecutivePulseStrip } from "../components/executive-pulse-strip";
 import { ActionCenterTray } from "../components/action-center-tray";
 import { PipelineFlowRibbon } from "../components/pipeline-flow-ribbon";
 import { ChannelMarketTabs } from "../components/channel-market-tabs";
+import AnalyticsOverviewLoading from "./loading";
 
 const PieChartComponent = dynamicImport(
   () => import("../components/pie-chart").then((m) => m.PieChartComponent),
@@ -48,19 +49,16 @@ export async function generateMetadata() {
   };
 }
 
-export default async function Overview(props: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+async function AnalyticsDashboardContent({
+  month,
+  year,
+  availableYears,
+}: {
+  month?: string;
+  year?: string;
+  availableYears: string[];
 }) {
-  const searchParams = await props.searchParams;
-  const month =
-    typeof searchParams.month === "string" ? searchParams.month : undefined;
-  const year =
-    typeof searchParams.year === "string" ? searchParams.year : undefined;
-
-  const currentYear = new Date().getFullYear().toString();
-
   const [
-    years,
     breakdownData,
     ghostedData,
     statusPerPlatform,
@@ -71,7 +69,6 @@ export default async function Overview(props: {
     applicationsPerYear,
     statusesPerYear,
   ] = await Promise.all([
-    getYears(),
     getDetailedApplicationBreakdown(month, year),
     getGhostedApplications(month, year),
     getStatusPerPlatform(month, year),
@@ -93,19 +90,8 @@ export default async function Overview(props: {
     ? breakdownData.stages.accepted / breakdownData.stages.interview
     : 0;
 
-  const availableYears = years.length > 0 ? years : [currentYear];
-
   return (
-    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto opacity-100 transition-opacity duration-500 pb-12 min-w-0">
-      {/* 1. Timeframe Filter Toolbar */}
-      <Suspense
-        fallback={
-          <div className="h-14 w-full bg-card/40 rounded-xl border border-border/30 animate-pulse" />
-        }
-      >
-        <AnalyticsFilter years={availableYears} />
-      </Suspense>
-
+    <>
       {/* 2. Executive Pulse Strip */}
       <section aria-label="Executive Pipeline Summary">
         <ExecutivePulseStrip
@@ -180,6 +166,45 @@ export default async function Overview(props: {
           />
         </div>
       </section>
+    </>
+  );
+}
+
+export default async function Overview(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const searchParams = await props.searchParams;
+  const month =
+    typeof searchParams.month === "string" ? searchParams.month : undefined;
+  const year =
+    typeof searchParams.year === "string" ? searchParams.year : undefined;
+
+  const currentYear = new Date().getFullYear().toString();
+  const years = await getYears();
+  const availableYears = years.length > 0 ? years : [currentYear];
+
+  return (
+    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto opacity-100 transition-opacity duration-500 pb-12 min-w-0">
+      {/* 1. Timeframe Filter Toolbar */}
+      <Suspense
+        fallback={
+          <div className="h-14 w-full bg-card/40 rounded-xl border border-border/30 animate-pulse" />
+        }
+      >
+        <AnalyticsFilter years={availableYears} />
+      </Suspense>
+
+      {/* 2-6. Reactive Suspense Data Content with Key */}
+      <Suspense
+        key={`${month || "all"}-${year || "all"}`}
+        fallback={<AnalyticsOverviewLoading hideFilter />}
+      >
+        <AnalyticsDashboardContent
+          month={month}
+          year={year}
+          availableYears={availableYears}
+        />
+      </Suspense>
     </div>
   );
 }
