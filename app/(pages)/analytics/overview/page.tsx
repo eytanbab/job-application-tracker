@@ -96,7 +96,7 @@ export default async function Overview(props: {
   const availableYears = years.length > 0 ? years : [currentYear];
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto opacity-100 transition-opacity duration-500 pb-12">
+    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto opacity-100 transition-opacity duration-500 pb-12 min-w-0">
       {/* 1. Timeframe Filter Toolbar */}
       <Suspense
         fallback={
@@ -166,7 +166,7 @@ export default async function Overview(props: {
             Historical trajectory across active and completed pipeline stages over time.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full min-w-0">
           <PieChartComponent
             title="Status Distribution"
             data={top5Statuses}

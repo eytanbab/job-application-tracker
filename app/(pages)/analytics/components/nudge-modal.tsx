@@ -62,7 +62,7 @@ Best regards,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl p-6 bg-card border border-border/40 rounded-2xl shadow-xl">
+      <DialogContent className="max-w-xl w-[calc(100vw-2rem)] sm:w-full p-4 sm:p-6 bg-card border border-border/40 rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="space-y-1">
           <div className="flex items-center justify-between pr-6">
             <DialogTitle className="text-base font-bold text-foreground">
@@ -75,11 +75,11 @@ Best regards,
         </DialogHeader>
 
         {/* Channel Selection */}
-        <div className="flex items-center gap-1.5 p-1 bg-muted/50 rounded-lg border border-border/30 w-fit">
+        <div className="grid grid-cols-2 sm:flex items-center gap-1.5 p-1 bg-muted/50 rounded-lg border border-border/30 w-full sm:w-fit">
           <button
             type="button"
             onClick={() => setChannel("email")}
-            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+            className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
               channel === "email"
                 ? "bg-background text-foreground shadow-2xs"
                 : "text-muted-foreground hover:text-foreground"
@@ -91,7 +91,7 @@ Best regards,
           <button
             type="button"
             onClick={() => setChannel("linkedin")}
-            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+            className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
               channel === "linkedin"
                 ? "bg-background text-foreground shadow-2xs"
                 : "text-muted-foreground hover:text-foreground"

@@ -103,30 +103,30 @@ export function ChannelPerformanceMatrix({
         </div>
 
         {/* View Toggle */}
-        <div className="flex items-center gap-1 p-0.5 rounded-lg bg-muted/40 border border-border/30 w-fit shrink-0 self-start sm:self-auto">
+        <div className="grid grid-cols-2 sm:flex items-center gap-1 p-0.5 rounded-lg bg-muted/40 border border-border/30 w-full sm:w-fit shrink-0">
           <button
             type="button"
             onClick={() => setActiveTab("platforms")}
-            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+            className={`inline-flex min-w-0 items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
               activeTab === "platforms"
                 ? "bg-background text-foreground shadow-2xs"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Globe className="h-3.5 w-3.5" />
-            Job Boards ({platforms.length})
+            <Globe className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate min-w-0">Job Boards ({platforms.length})</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("ats")}
-            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+            className={`inline-flex min-w-0 items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
               activeTab === "ats"
                 ? "bg-background text-foreground shadow-2xs"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Layers className="h-3.5 w-3.5" />
-            Direct ATS Portals ({domains.length})
+            <Layers className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate min-w-0">ATS Portals ({domains.length})</span>
           </button>
         </div>
       </div>
@@ -141,7 +141,7 @@ export function ChannelPerformanceMatrix({
           <div className="space-y-3">
             {/* Top platform highlight banner if qualified */}
             {topPlatform && (
-              <div className="p-3 rounded-lg bg-background/50 border border-border/30 flex items-center justify-between text-xs">
+              <div className="p-3 rounded-lg bg-background/50 border border-border/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
                 <span className="text-foreground">
                   <strong className="font-semibold capitalize text-primary">{topPlatform.platformName}</strong> is
                   your highest-yielding channel with a{" "}
@@ -150,14 +150,89 @@ export function ChannelPerformanceMatrix({
                   </strong>{" "}
                   ({topPlatform.interviewCount} of {topPlatform.total} applications).
                 </span>
-                <Badge variant="outline" className="text-[10px] font-mono shrink-0 border-border/40">
+                <Badge variant="outline" className="text-[10px] font-mono shrink-0 border-border/40 self-start sm:self-auto">
                   Sample: {topPlatform.total} apps
                 </Badge>
               </div>
             )}
 
-            {/* Platform Table */}
-            <div className="w-full overflow-x-auto">
+            {/* Mobile Platform Cards (< md) */}
+            <div className="md:hidden flex flex-col gap-2.5">
+              {enrichedPlatforms.map((platform) => (
+                <div
+                  key={platform.platformName}
+                  className="p-3 rounded-lg border border-border/30 bg-background/50 flex flex-col gap-2.5 text-xs"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold capitalize text-foreground text-sm truncate min-w-0">
+                      {platform.platformName}
+                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant="outline" className="text-[10px] font-mono font-medium border-border/30">
+                        {platform.total} {platform.total === 1 ? "app" : "apps"}
+                      </Badge>
+                      <Link
+                        href={`/applications?platform=${encodeURIComponent(platform.platformName)}`}
+                        className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                      >
+                        View
+                        <ArrowRight className="h-3 w-3" />
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs py-1 border-y border-border/20">
+                    <div>
+                      <span className="text-[10px] text-muted-foreground block">Interview Yield</span>
+                      {platform.total < 3 && platform.interviewCount > 0 ? (
+                        <span className="font-mono text-xs text-muted-foreground">
+                          {platform.interviewCount}/{platform.total} <span className="text-[10px] opacity-75">(early)</span>
+                        </span>
+                      ) : (
+                        <span className="font-mono font-semibold text-foreground">
+                          {platform.interviewRate.toFixed(1)}% ({platform.interviewCount})
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-muted-foreground block">Response Rate</span>
+                      <span className="font-mono font-medium text-foreground">
+                        {platform.responseRate.toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Stage Distribution Bar */}
+                  <div className="space-y-1">
+                    <div className="h-1.5 w-full rounded-full bg-muted/60 flex overflow-hidden">
+                      {platform.statuses.map((s) => {
+                        const kind = getStatusKind(s.status);
+                        const width = platform.total > 0 ? (s.value / platform.total) * 100 : 0;
+                        if (width <= 0) return null;
+                        return (
+                          <div
+                            key={s.status}
+                            className={`h-full ${getStatusBgColor(kind)}`}
+                            style={{ width: `${width}%` }}
+                            title={`${s.status}: ${s.value}`}
+                          />
+                        );
+                      })}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
+                      {platform.statuses.map((s) => (
+                        <span key={s.status}>
+                          {s.value} {statusLabels[getStatusKind(s.status)] || s.status}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop & Tablet Platform Table (>= md) */}
+            <div className="hidden md:block w-full overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="text-muted-foreground font-medium border-b border-border/20">
                   <tr>
@@ -241,45 +316,79 @@ export function ChannelPerformanceMatrix({
             No direct ATS portal links recorded. Direct employer links (Greenhouse, Lever, Ashby) will appear here.
           </p>
         ) : (
-          <div className="w-full overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="text-muted-foreground font-medium border-b border-border/20">
-                <tr>
-                  <th className="py-2.5 pr-4 font-normal">ATS Domain</th>
-                  <th className="py-2.5 px-4 font-normal text-center">Volume</th>
-                  <th className="py-2.5 px-4 font-normal text-center">Interviews</th>
-                  <th className="py-2.5 px-4 font-normal text-center">Conversion Rate</th>
-                  <th className="py-2.5 pl-4 font-normal">Progress Bar</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/20">
-                {domains.map((item) => (
-                  <tr key={item.domain} className="hover:bg-muted/20 transition-colors">
-                    <td className="py-3 pr-4 font-mono font-medium text-foreground">
+          <>
+            {/* Mobile ATS Cards (< md) */}
+            <div className="md:hidden flex flex-col gap-2">
+              {domains.map((item) => (
+                <div
+                  key={item.domain}
+                  className="p-3 rounded-lg border border-border/30 bg-background/50 flex flex-col gap-2 text-xs"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono font-medium text-foreground truncate min-w-0">
                       {item.domain}
-                    </td>
-                    <td className="py-3 px-4 text-center font-mono font-bold text-foreground">
-                      {item.total}
-                    </td>
-                    <td className="py-3 px-4 text-center font-mono text-foreground">
-                      {item.interviews}
-                    </td>
-                    <td className="py-3 px-4 text-center font-mono font-semibold text-foreground">
-                      {item.successRate.toFixed(1)}%
-                    </td>
-                    <td className="py-3 pl-4 min-w-[150px]">
-                      <div className="h-1.5 w-full rounded-full bg-muted/60 overflow-hidden">
-                        <div
-                          className="h-full bg-primary rounded-full"
-                          style={{ width: `${Math.max(item.successRate, 4)}%` }}
-                        />
-                      </div>
-                    </td>
+                    </span>
+                    <Badge variant="outline" className="text-[10px] font-mono border-border/30 shrink-0">
+                      {item.total} {item.total === 1 ? "app" : "apps"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span>{item.interviews} interviews</span>
+                    <span className="font-mono font-semibold text-foreground">
+                      {item.successRate.toFixed(1)}% yield
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-muted/60 overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full"
+                      style={{ width: `${Math.max(item.successRate, 4)}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop & Tablet ATS Table (>= md) */}
+            <div className="hidden md:block w-full overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="text-muted-foreground font-medium border-b border-border/20">
+                  <tr>
+                    <th className="py-2.5 pr-4 font-normal">ATS Domain</th>
+                    <th className="py-2.5 px-4 font-normal text-center">Volume</th>
+                    <th className="py-2.5 px-4 font-normal text-center">Interviews</th>
+                    <th className="py-2.5 px-4 font-normal text-center">Conversion Rate</th>
+                    <th className="py-2.5 pl-4 font-normal">Progress Bar</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-border/20">
+                  {domains.map((item) => (
+                    <tr key={item.domain} className="hover:bg-muted/20 transition-colors">
+                      <td className="py-3 pr-4 font-mono font-medium text-foreground">
+                        {item.domain}
+                      </td>
+                      <td className="py-3 px-4 text-center font-mono font-bold text-foreground">
+                        {item.total}
+                      </td>
+                      <td className="py-3 px-4 text-center font-mono text-foreground">
+                        {item.interviews}
+                      </td>
+                      <td className="py-3 px-4 text-center font-mono font-semibold text-foreground">
+                        {item.successRate.toFixed(1)}%
+                      </td>
+                      <td className="py-3 pl-4 min-w-[150px]">
+                        <div className="h-1.5 w-full rounded-full bg-muted/60 overflow-hidden">
+                          <div
+                            className="h-full bg-primary rounded-full"
+                            style={{ width: `${Math.max(item.successRate, 4)}%` }}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )
       )}
     </div>

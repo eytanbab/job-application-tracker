@@ -60,21 +60,21 @@ export function MarketRealityMatrix({
               return (
                 <div
                   key={mode.name}
-                  className="p-3 rounded-lg border border-border/30 bg-background/50 flex items-center justify-between text-xs"
+                  className="p-3 rounded-lg border border-border/30 bg-background/50 flex items-center justify-between gap-2 text-xs"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-1.5 rounded-md bg-muted/60 text-muted-foreground">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div className="p-1.5 rounded-md bg-muted/60 text-muted-foreground shrink-0">
                       <Icon className="h-3.5 w-3.5" />
                     </div>
-                    <div>
-                      <div className="font-semibold text-foreground">{mode.name}</div>
-                      <div className="text-[11px] text-muted-foreground">
+                    <div className="min-w-0">
+                      <div className="font-semibold text-foreground truncate">{mode.name}</div>
+                      <div className="text-[11px] text-muted-foreground truncate">
                         {mode.total} {mode.total === 1 ? "application" : "applications"} ({mode.sharePct.toFixed(0)}%)
                       </div>
                     </div>
                   </div>
 
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <div className="font-mono font-bold text-foreground">
                       {mode.yieldRate.toFixed(1)}% yield
                     </div>
@@ -91,7 +91,7 @@ export function MarketRealityMatrix({
 
       {/* 2. Compensation Data */}
       <div className="rounded-xl border border-border/40 bg-card/60 shadow-2xs backdrop-blur-sm p-4 sm:p-5 flex flex-col justify-between gap-3">
-        <div className="border-b border-border/20 pb-2 flex items-center justify-between">
+        <div className="border-b border-border/20 pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
           <div>
             <h3 className="text-sm font-bold tracking-tight text-foreground">
               Compensation Data
@@ -101,7 +101,7 @@ export function MarketRealityMatrix({
             </p>
           </div>
           {salary.statedCount > 0 && (
-            <span className="text-[11px] font-mono text-muted-foreground">
+            <span className="text-[11px] font-mono text-muted-foreground self-start sm:self-auto">
               {salary.statedCount}/{salary.totalCount} stated ({coveragePct}%)
             </span>
           )}
@@ -113,36 +113,36 @@ export function MarketRealityMatrix({
           </p>
         ) : (
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="p-3.5 rounded-lg border border-border/30 bg-background/50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 text-xs">
+              <div className="p-3 sm:p-3.5 rounded-lg border border-border/30 bg-background/50">
                 <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
                   <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
                   Average Target
                 </span>
-                <span className="text-xl sm:text-2xl font-bold font-mono text-foreground mt-1 block tabular-nums">
+                <span className="text-lg sm:text-2xl font-bold font-mono text-foreground mt-1 block tabular-nums truncate">
                   {formatCurrency(salary.avgSalary)}
                 </span>
               </div>
 
-              <div className="p-3.5 rounded-lg border border-border/30 bg-background/50">
+              <div className="p-3 sm:p-3.5 rounded-lg border border-border/30 bg-background/50">
                 <span className="text-[11px] font-medium text-muted-foreground block">
                   Stated Range
                 </span>
-                <span className="text-xl sm:text-2xl font-bold font-mono text-foreground mt-1 block tabular-nums">
+                <span className="text-lg sm:text-2xl font-bold font-mono text-foreground mt-1 block tabular-nums truncate">
                   {formatCurrency(salary.minSalary)} – {formatCurrency(salary.maxSalary)}
                 </span>
               </div>
             </div>
 
             {salary.topSalaryFormatted && (
-              <div className="p-3 rounded-lg border border-border/30 bg-background/40 flex items-center justify-between text-xs">
-                <div>
+              <div className="p-3 rounded-lg border border-border/30 bg-background/40 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">
+                <div className="min-w-0 flex-1">
                   <div className="text-[11px] text-muted-foreground">Highest Stated Compensation</div>
-                  <div className="font-semibold text-foreground truncate max-w-[200px]">
+                  <div className="font-semibold text-foreground truncate max-w-full sm:max-w-[240px]">
                     {salary.topRole || "Position"} {salary.topCompany ? `· ${salary.topCompany}` : ""}
                   </div>
                 </div>
-                <span className="font-mono font-bold text-foreground text-sm">
+                <span className="font-mono font-bold text-foreground text-sm self-start sm:self-auto">
                   {salary.topSalaryFormatted}
                 </span>
               </div>

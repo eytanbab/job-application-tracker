@@ -7,7 +7,7 @@ export default function PagesLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <main className="flex flex-col w-full h-full gap-4">
+    <div className="flex flex-col w-full h-full gap-4 min-w-0">
       <Suspense
         fallback={
           <div className="h-9 w-48 bg-muted/40 rounded-xl animate-pulse" />
@@ -16,6 +16,6 @@ export default function PagesLayout({
         <Tabs />
       </Suspense>
       {children}
-    </main>
+    </div>
   );
 }

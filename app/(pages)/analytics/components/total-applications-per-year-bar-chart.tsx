@@ -75,7 +75,7 @@ export function TotalApplicationsPerYearBarChart({
   }, [data, selectedYear]);
 
   const content = (
-    <div className="w-full">
+    <div className="w-full min-w-0 overflow-hidden">
       {!hideCardWrapper && !effectiveGlobalYear && years.length > 1 && (
         <div className="flex justify-end pb-2">
           <Select value={selectedYear} onValueChange={setUserSelectedYear}>
@@ -94,8 +94,15 @@ export function TotalApplicationsPerYearBarChart({
           </Select>
         </div>
       )}
-      <ChartContainer config={chartConfig} className="h-[230px] w-full">
-        <BarChart accessibilityLayer data={filteredData}>
+      <ChartContainer
+        config={chartConfig}
+        className="h-[230px] w-full aspect-auto min-w-0 max-w-full"
+      >
+        <BarChart
+          accessibilityLayer
+          data={filteredData}
+          margin={{ left: -15, right: 8, top: 10, bottom: 0 }}
+        >
           <CartesianGrid
             vertical={false}
             strokeDasharray="3 3"
@@ -106,14 +113,18 @@ export function TotalApplicationsPerYearBarChart({
             tickLine={false}
             tickMargin={10}
             axisLine={false}
-            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+            tickFormatter={(value) =>
+              typeof value === "string" ? value.slice(0, 3) : value
+            }
+            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
           />
           <YAxis
             allowDecimals={false}
+            width={30}
             tickLine={false}
-            tickMargin={10}
+            tickMargin={6}
             axisLine={false}
-            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
           />
           <ChartTooltip content={<ChartTooltipContent />} />
           <Bar

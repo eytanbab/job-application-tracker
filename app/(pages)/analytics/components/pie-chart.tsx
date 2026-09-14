@@ -82,14 +82,14 @@ export function PieChartComponent({ title, data, total }: Props) {
   }));
 
   return (
-    <Card className="w-full bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow flex flex-col justify-between">
-      <CardHeader className="pb-2">
+    <Card className="w-full min-w-0 bg-card shadow-2xs border border-border/30 rounded-xl hover:shadow-xs transition-shadow flex flex-col justify-between p-0 overflow-hidden">
+      <CardHeader className="w-full p-4 sm:p-5 pb-2 border-b border-border/20">
         <CardTitle className="text-base font-bold text-foreground">
           {title}
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="flex-1 w-full flex flex-col items-center justify-center p-3">
+      <CardContent className="flex-1 w-full min-w-0 flex flex-col items-center justify-center p-3 sm:p-4">
         {grandTotal === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 px-4 text-center my-auto">
             <div className="h-10 w-10 rounded-full bg-muted/60 flex items-center justify-center text-muted-foreground mb-3">
@@ -152,7 +152,7 @@ export function PieChartComponent({ title, data, total }: Props) {
               </div>
             </div>
 
-            <CardFooter className="w-full pt-3 px-1 pb-1">
+            <CardFooter className="w-full pt-3 px-3 pb-3">
               <ul
                 className="flex flex-col gap-1.5 text-xs w-full"
                 aria-label={`${title} legend`}
@@ -167,15 +167,15 @@ export function PieChartComponent({ title, data, total }: Props) {
                       key={item.name}
                       tabIndex={0}
                       aria-label={`${item.name}: ${item.freq} applications, ${percentage} percent of total`}
-                      className="flex items-center justify-between capitalize text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md p-1 -mx-1 transition-colors"
+                      className="flex items-center justify-between gap-2 capitalize text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md p-1 -mx-1 transition-colors"
                     >
-                      <div className="flex items-center gap-2 overflow-hidden">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
                         <span
                           className="h-2.5 w-2.5 rounded-full shrink-0"
                           style={{ backgroundColor: item.fill }}
                           aria-hidden="true"
                         />
-                        <span className="font-medium text-foreground truncate max-w-[150px]">
+                        <span className="font-medium text-foreground truncate min-w-0">
                           {item.name}
                         </span>
                       </div>

@@ -11,8 +11,8 @@ export default function Tabs() {
   );
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border/20">
-      <div>
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border/20 w-full min-w-0">
+      <div className="min-w-0">
         <h1 className="text-xl font-bold tracking-tight text-foreground">
           Analytics & Pipeline Intelligence
         </h1>

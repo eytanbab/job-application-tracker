@@ -26,10 +26,10 @@ export function ExecutivePulseStrip({
   averageResponseDays,
 }: ExecutivePulseStripProps) {
   return (
-    <div className="w-full rounded-xl border border-border/40 bg-card/60 shadow-2xs backdrop-blur-sm overflow-hidden">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border/30">
+    <div className="w-full min-w-0 rounded-xl border border-border/40 overflow-hidden shadow-2xs backdrop-blur-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border/30 w-full min-w-0">
         {/* 1. Active Pipeline */}
-        <div className="p-4 sm:p-5 flex flex-col justify-between gap-2">
+        <div className="bg-card/70 p-4 sm:p-5 flex flex-col justify-between gap-2 min-w-0">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Active Pipeline
@@ -55,7 +55,7 @@ export function ExecutivePulseStrip({
         </div>
 
         {/* 2. Screening Yield */}
-        <div className="p-4 sm:p-5 flex flex-col justify-between gap-2">
+        <div className="bg-card/70 p-4 sm:p-5 flex flex-col justify-between gap-2 min-w-0">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Screening Yield
@@ -75,7 +75,7 @@ export function ExecutivePulseStrip({
         </div>
 
         {/* 3. Interview-to-Offer */}
-        <div className="p-4 sm:p-5 flex flex-col justify-between gap-2">
+        <div className="bg-card/70 p-4 sm:p-5 flex flex-col justify-between gap-2 min-w-0">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Interview to Offer
@@ -95,7 +95,7 @@ export function ExecutivePulseStrip({
         </div>
 
         {/* 4. Response Velocity */}
-        <div className="p-4 sm:p-5 flex flex-col justify-between gap-2">
+        <div className="bg-card/70 p-4 sm:p-5 flex flex-col justify-between gap-2 min-w-0">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Response Velocity

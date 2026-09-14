@@ -76,8 +76,8 @@ export function YearlyTrendsCard({
   };
 
   return (
-    <Card className="w-full bg-card shadow-2xs border border-border/30 rounded-xl overflow-hidden flex flex-col justify-between">
-      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-2 border-b border-border/30">
+    <Card className="w-full min-w-0 bg-card shadow-2xs border border-border/30 rounded-xl overflow-hidden flex flex-col justify-between p-0">
+      <CardHeader className="w-full p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-border/30">
         <div>
           <CardTitle className="text-base font-bold text-foreground">
             Yearly Application Trends
@@ -87,11 +87,11 @@ export function YearlyTrendsCard({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           {!effectiveGlobalYear && years.length > 1 && (
             <Select value={selectedYear} onValueChange={setInternalYear}>
               <SelectTrigger
-                className="w-28 h-7 text-xs"
+                className="w-full sm:w-28 h-8 sm:h-7 text-xs"
                 aria-label="Select year for trends chart"
               >
                 <SelectValue placeholder="Select year" />
@@ -113,7 +113,7 @@ export function YearlyTrendsCard({
             role="tablist"
             aria-label="Yearly trends view options"
             onKeyDown={handleKeyDown}
-            className="inline-flex items-center rounded-md bg-muted/60 p-1 gap-1 border border-border/20"
+            className="grid grid-cols-2 sm:inline-flex items-center rounded-md bg-muted/60 p-1 gap-1 border border-border/20 w-full sm:w-auto"
           >
             <button
               ref={statusTabRef}
@@ -124,14 +124,14 @@ export function YearlyTrendsCard({
               tabIndex={activeTab === "status" ? 0 : -1}
               onClick={() => setActiveTab("status")}
               className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                "inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 text-center",
                 activeTab === "status"
                   ? "bg-background text-foreground shadow-2xs"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <Layers className="h-3.5 w-3.5" />
-              <span>Status Breakdown</span>
+              <Layers className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Status Breakdown</span>
             </button>
 
             <button
@@ -143,14 +143,14 @@ export function YearlyTrendsCard({
               tabIndex={activeTab === "volume" ? 0 : -1}
               onClick={() => setActiveTab("volume")}
               className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                "inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 text-center",
                 activeTab === "volume"
                   ? "bg-background text-foreground shadow-2xs"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <BarChart3 className="h-3.5 w-3.5" />
-              <span>Total Volume</span>
+              <BarChart3 className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Total Volume</span>
             </button>
           </div>
         </div>
@@ -159,7 +159,7 @@ export function YearlyTrendsCard({
       <CardContent
         id="yearly-trends-tabpanel"
         role="tabpanel"
-        className="p-4 pt-6 flex-1"
+        className="p-3 sm:p-4 pt-4 sm:pt-6 flex-1 min-w-0 w-full overflow-hidden"
       >
         {activeTab === "status" ? (
           <StatusesPerYearBarChart
