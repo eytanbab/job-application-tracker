@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import dynamicImport from "next/dynamic";
 import {
   getApplicationsPerYear,
   getStasusesPerYear,
@@ -16,30 +15,10 @@ import {
 } from "../insights/actions";
 
 import { AnalyticsFilter } from "../components/analytics-filter";
-import { ExecutivePulseStrip } from "../components/executive-pulse-strip";
 import { ActionCenterTray } from "../components/action-center-tray";
-import { PipelineFlowRibbon } from "../components/pipeline-flow-ribbon";
+import { PipelineHealthHero } from "../components/pipeline-health-hero";
 import { ChannelMarketTabs } from "../components/channel-market-tabs";
 import AnalyticsOverviewLoading from "./loading";
-
-const PieChartComponent = dynamicImport(
-  () => import("../components/pie-chart").then((m) => m.PieChartComponent),
-  {
-    loading: () => (
-      <div className="min-h-[320px] bg-card/40 rounded-xl border border-border/30 animate-pulse" />
-    ),
-  },
-);
-
-const YearlyTrendsCard = dynamicImport(
-  () =>
-    import("../components/yearly-trends-card").then((m) => m.YearlyTrendsCard),
-  {
-    loading: () => (
-      <div className="min-h-[320px] bg-card/40 rounded-xl border border-border/30 animate-pulse" />
-    ),
-  },
-);
 
 export const dynamic = "force-dynamic";
 
@@ -82,8 +61,8 @@ async function AnalyticsDashboardContent({
 
   const totalApplications = breakdownData.total;
 
-  const interviewRate = breakdownData.total
-    ? breakdownData.stages.interview / breakdownData.total
+  const interviewRate = totalApplications
+    ? breakdownData.stages.interview / totalApplications
     : 0;
 
   const interviewConversionRate = breakdownData.stages.interview
@@ -92,20 +71,8 @@ async function AnalyticsDashboardContent({
 
   return (
     <>
-      {/* 2. Executive Pulse Strip */}
-      <section aria-label="Executive Pipeline Summary">
-        <ExecutivePulseStrip
-          totalApplications={totalApplications}
-          activeCount={breakdownData.breakdown.active}
-          activeStages={breakdownData.breakdown.activeStages}
-          interviewRate={interviewRate}
-          interviewConversionRate={interviewConversionRate}
-          averageResponseDays={breakdownData.averageResponseDays}
-        />
-      </section>
-
-      {/* 3. Tactical Action Center */}
-      <section aria-label="Follow-Up Queue">
+      {/* 1. Tactical Action Pulse (Daily Follow-Ups & Ghosting Radar) */}
+      <section aria-label="Action Center and Follow-Up Queue">
         <ActionCenterTray
           count={ghostedData.count}
           oldestDays={ghostedData.oldestDays}
@@ -114,11 +81,12 @@ async function AnalyticsDashboardContent({
         />
       </section>
 
-      {/* 4. Stepped Pipeline Conversion Ribbon */}
-      <section aria-label="Pipeline Progression and Outcomes">
-        <PipelineFlowRibbon
+      {/* 2. Unified Pipeline Conversion & Health Hero */}
+      <section aria-label="Pipeline Health and Stage Conversions">
+        <PipelineHealthHero
           total={totalApplications}
           activeCount={breakdownData.breakdown.active}
+          activeStages={breakdownData.breakdown.activeStages}
           interviewCount={breakdownData.stages.interview}
           offerCount={breakdownData.stages.accepted}
           ghostedCount={
@@ -129,42 +97,26 @@ async function AnalyticsDashboardContent({
             breakdownData.breakdown.rejectedResume +
             breakdownData.breakdown.rejectedInterview
           }
+          interviewRate={interviewRate}
+          interviewConversionRate={interviewConversionRate}
+          averageResponseDays={breakdownData.averageResponseDays}
         />
       </section>
 
-      {/* 5. Channel & Market Intelligence */}
-      <section aria-label="Channel and Market Intelligence">
+      {/* 3. Strategic Intelligence Workspace (Channels, Workplace/Salary, Trends) */}
+      <section aria-label="Strategic Intelligence Workspace">
         <ChannelMarketTabs
           platforms={statusPerPlatform}
           domains={domainLeaderboard}
           modes={workModes}
           salary={salaryInsights}
+          top5Statuses={top5Statuses}
+          totalApplications={totalApplications}
+          availableYears={availableYears}
+          statusesPerYear={statusesPerYear}
+          applicationsPerYear={applicationsPerYear}
+          globalYear={year}
         />
-      </section>
-
-      {/* 6. Historical Volume Trends & Status Breakdown */}
-      <section aria-label="Historical Volume Trends" className="space-y-3 pt-1">
-        <div className="border-b border-border/20 pb-2">
-          <h2 className="text-sm font-bold tracking-tight text-foreground">
-            Volume Trends & Status Distribution
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            Historical trajectory across active and completed pipeline stages over time.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full min-w-0">
-          <PieChartComponent
-            title="Status Distribution"
-            data={top5Statuses}
-            total={totalApplications}
-          />
-          <YearlyTrendsCard
-            years={availableYears}
-            statusesPerYear={statusesPerYear}
-            applicationsPerYear={applicationsPerYear}
-            globalYear={year}
-          />
-        </div>
       </section>
     </>
   );
@@ -184,7 +136,7 @@ export default async function Overview(props: {
   const availableYears = years.length > 0 ? years : [currentYear];
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto opacity-100 transition-opacity duration-500 pb-12 min-w-0">
+    <div className="flex flex-col gap-5 w-full max-w-7xl mx-auto opacity-100 transition-opacity duration-500 pb-12 min-w-0">
       {/* 1. Timeframe Filter Toolbar */}
       <Suspense
         fallback={
@@ -194,7 +146,7 @@ export default async function Overview(props: {
         <AnalyticsFilter years={availableYears} />
       </Suspense>
 
-      {/* 2-6. Reactive Suspense Data Content with Key */}
+      {/* 2-4. Reactive Suspense Data Content with Key */}
       <Suspense
         key={`${month || "all"}-${year || "all"}`}
         fallback={<AnalyticsOverviewLoading hideFilter />}
