@@ -91,7 +91,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
       <div
         className={cn(
           "w-full",
-          viewMode === "kanban" && "hidden md:block",
+          viewMode === "kanban" && "hidden",
         )}
       >
         <StatusFilterPills
