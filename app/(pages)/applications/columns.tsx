@@ -218,10 +218,16 @@ export const columns: ColumnDef<FormValues>[] = [
     header: ({ column }) => renderSortHeader(column, "Platform"),
     cell: ({ row }) => {
       const platform = row.getValue<string>("platform");
+      if (!platform) return <span className="text-muted-foreground">-</span>;
       return (
-        <Badge variant="secondary" className="capitalize text-xs font-normal">
-          {platform}
-        </Badge>
+        <div className="flex items-center min-w-0 max-w-[130px]" title={platform}>
+          <Badge
+            variant="secondary"
+            className="capitalize text-xs font-normal whitespace-nowrap truncate block"
+          >
+            {platform}
+          </Badge>
+        </div>
       );
     },
   },
