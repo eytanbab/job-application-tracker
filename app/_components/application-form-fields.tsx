@@ -531,13 +531,13 @@ export function ApplicationFormFields({
       </div>
 
       {/* 3. Submit / Cancel Action Buttons (Sticky footer in modal) */}
-      <div className="sticky bottom-0 bg-card/95 backdrop-blur-sm mt-3 pt-3 pb-1 border-t border-border/40 flex flex-col sm:flex-row gap-2 w-full col-span-full -mx-4 -mb-4 sm:-mx-6 sm:-mb-6 px-4 sm:px-6 rounded-b-2xl z-10">
+      <div className="sticky bottom-0 bg-card/95 backdrop-blur-sm mt-3 pt-3 pb-1 border-t border-border/40 flex flex-col sm:flex-row gap-2 w-full col-span-full z-10">
         <Button
           type="button"
           variant="outline"
           onClick={onCancel}
           disabled={isPending}
-          className="h-10 text-xs rounded-xl cursor-pointer order-2 sm:order-1 sm:w-1/3"
+          className="h-10 text-xs rounded-xl cursor-pointer order-2 sm:order-1 w-full sm:w-1/3"
         >
           Cancel
         </Button>
@@ -550,7 +550,7 @@ export function ApplicationFormFields({
             <Button
               type="submit"
               disabled={isSaveDisabled}
-              className="h-10 text-xs font-semibold rounded-xl shadow-xs cursor-pointer order-1 sm:order-2 sm:flex-1"
+              className="h-10 text-xs font-semibold rounded-xl shadow-xs cursor-pointer order-1 sm:order-2 w-full sm:flex-1"
               title={
                 isEditingApp && !isDirty ? "No changes to save" : undefined
               }
