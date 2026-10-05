@@ -181,18 +181,7 @@ export const ApplicationForm = ({
   return (
     <div className="w-full flex flex-col gap-3 items-center">
       {!isEditing && (
-        <>
-          <AiExtractForm isPending={isPending} onAutoFill={handleAutoFill} />
-
-          {/* Divider */}
-          <div className="w-full flex items-center justify-center max-w-lg my-1">
-            <div className="h-px flex-1 bg-border/60"></div>
-            <span className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Or Enter Manually
-            </span>
-            <div className="h-px flex-1 bg-border/60"></div>
-          </div>
-        </>
+        <AiExtractForm isPending={isPending} onAutoFill={handleAutoFill} />
       )}
 
       <Form {...form}>

@@ -13,12 +13,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, Sparkles, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { format } from "date-fns";
 import { FormValues } from "./application-form";
 import { AiData } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 const aiFormSchema = z.object({
   url: z
@@ -38,6 +39,7 @@ interface AiExtractFormProps {
 
 export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
   const { toast } = useToast();
+  const [isOpen, setIsOpen] = useState(false);
   const [extractError, setExtractError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isExtracted, setIsExtracted] = useState(false);
@@ -118,64 +120,89 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
   };
 
   return (
-    <Form {...aiForm}>
-      <form
-        onSubmit={aiForm.handleSubmit(handleAiSubmit)}
-        className="flex flex-col w-full gap-2.5 max-w-lg bg-primary/5 p-4 rounded-xl border border-primary/15"
+    <div className="w-full max-w-lg rounded-xl border border-primary/20 bg-primary/5 p-3 transition-all">
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="w-full flex items-center justify-between text-xs font-semibold text-primary hover:text-primary/80 cursor-pointer"
+        aria-expanded={isOpen}
       >
-        <FormField
-          control={aiForm.control}
-          name="url"
-          render={({ field }) => (
-            <FormItem className="space-y-1">
-              <FormLabel className="text-xs font-semibold">
-                Job Posting URL for AI Auto-Fill
-              </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Paste LinkedIn, Indeed, or job URL..."
-                  {...field}
-                  onChange={(e) => {
-                    field.onChange(e);
-                    if (extractError) setExtractError(null);
-                    if (isExtracted) setIsExtracted(false);
-                  }}
-                  className="h-9 text-xs"
-                />
-              </FormControl>
-              {extractError && (
-                <p className="text-xs font-medium text-destructive pt-0.5">
-                  {extractError} You can enter details manually below.
-                </p>
+        <span className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary shrink-0" />
+          <span>Auto-fill details from job URL</span>
+        </span>
+        <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
+          {isOpen ? "Hide" : "Try AI"}
+          <ChevronDown
+            className={cn(
+              "h-3.5 w-3.5 transition-transform duration-200",
+              isOpen && "rotate-180",
+            )}
+          />
+        </span>
+      </button>
+
+      {isOpen && (
+        <Form {...aiForm}>
+          <form
+            onSubmit={aiForm.handleSubmit(handleAiSubmit)}
+            className="flex flex-col w-full gap-2.5 pt-3 mt-2.5 border-t border-primary/10"
+          >
+            <FormField
+              control={aiForm.control}
+              name="url"
+              render={({ field }) => (
+                <FormItem className="space-y-1">
+                  <FormLabel className="text-xs font-semibold">
+                    Job Posting URL for AI Auto-Fill
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Paste LinkedIn, Indeed, or job URL..."
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        if (extractError) setExtractError(null);
+                        if (isExtracted) setIsExtracted(false);
+                      }}
+                      className="h-9 text-xs bg-background/80"
+                    />
+                  </FormControl>
+                  {extractError && (
+                    <p className="text-xs font-medium text-destructive pt-0.5">
+                      {extractError} You can enter details manually below.
+                    </p>
+                  )}
+                  {isExtracted && (
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                      <span>Job details extracted! Form populated below.</span>
+                    </div>
+                  )}
+                  <FormMessage />
+                </FormItem>
               )}
-              {isExtracted && (
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
-                  <span>Job details extracted! Form populated below.</span>
-                </div>
+            />
+            <Button
+              type="submit"
+              disabled={isPending || isLoading}
+              className="h-9 text-xs font-semibold cursor-pointer"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Extracting details...
+                </>
+              ) : (
+                "✨ Auto-Extract Details with AI"
               )}
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button
-          type="submit"
-          disabled={isPending || isLoading}
-          className="h-9 text-xs font-semibold"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              Extracting details...
-            </>
-          ) : (
-            "✨ Auto-Extract Details with AI"
-          )}
-        </Button>
-        <p className="text-[11px] text-muted-foreground text-center">
-          Pastes job title, company, description & location automatically.
-        </p>
-      </form>
-    </Form>
+            </Button>
+            <p className="text-[11px] text-muted-foreground text-center">
+              Pastes job title, company, description & location automatically.
+            </p>
+          </form>
+        </Form>
+      )}
+    </div>
   );
 }
