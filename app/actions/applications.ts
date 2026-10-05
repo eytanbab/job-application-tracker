@@ -368,6 +368,7 @@ export async function deleteStatusHistoryEntry(historyId: string) {
   const entry = await db
     .select({
       id: applicationStatusHistory.id,
+      applicationId: applicationStatusHistory.applicationId,
     })
     .from(applicationStatusHistory)
     .innerJoin(
@@ -386,11 +387,38 @@ export async function deleteStatusHistoryEntry(historyId: string) {
     throw new Error("Timeline entry not found or unauthorized");
   }
 
+  const { applicationId } = entry[0];
+
   await db
     .delete(applicationStatusHistory)
     .where(eq(applicationStatusHistory.id, historyId));
 
+  const remainingHistory = await db
+    .select()
+    .from(applicationStatusHistory)
+    .where(eq(applicationStatusHistory.applicationId, applicationId))
+    .orderBy(desc(applicationStatusHistory.createdAt))
+    .limit(1);
+
+  let newStatus = "Applied";
+  let newCategory = "applied";
+
+  if (remainingHistory.length > 0) {
+    newStatus = remainingHistory[0].status;
+    newCategory = remainingHistory[0].statusCategory;
+  }
+
+  await db
+    .update(jobApplications)
+    .set({
+      status: newStatus,
+      statusCategory: newCategory,
+    })
+    .where(eq(jobApplications.id, applicationId));
+
   purgeCaches(userId);
+
+  return { status: newStatus, statusCategory: newCategory };
 }
 
 // Get status history for a single application

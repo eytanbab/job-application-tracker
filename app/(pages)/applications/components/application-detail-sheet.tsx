@@ -199,8 +199,17 @@ export function ApplicationDetailSheet({
 
   const handleDeleteTimelineEntry = async (entryId: string) => {
     try {
-      await deleteStatusHistoryEntry(entryId);
+      const updated = await deleteStatusHistoryEntry(entryId);
       setHistory((prev) => prev.filter((h) => h.id !== entryId));
+      if (updated && activeApp) {
+        setCurrentApp({
+          ...activeApp,
+          status: updated.status,
+          statusCategory: updated.statusCategory,
+        });
+        const isStandard = isStandardStatus(updated.status);
+        setQuickStatusText(isStandard ? "" : updated.status);
+      }
       toast({ description: "Timeline entry removed" });
     } catch {
       toast({
