@@ -149,7 +149,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
         type="button"
         onClick={() => setIsCreateOpen(true)}
         className={cn(
-          "fixed right-5 z-40 md:hidden h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer ring-4 ring-background/50 bottom-[calc(1.5rem+env(safe-area-inset-bottom))]",
+          "fixed right-5 z-40 lg:hidden h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer ring-4 ring-background/50 bottom-[calc(1.5rem+env(safe-area-inset-bottom))]",
           selectedCount > 0 && "hidden",
         )}
         aria-label="Add Application"
@@ -174,11 +174,12 @@ export function DataTable<TData extends ApplicationRow, TValue>({
                   await createApplication(values);
                   toast({ description: "Application created successfully!" });
                   setIsCreateOpen(false);
-                } catch {
+                } catch (err) {
                   toast({
                     description: "Failed to create application",
                     variant: "destructive",
                   });
+                  throw err;
                 }
               }}
             />
@@ -207,11 +208,12 @@ export function DataTable<TData extends ApplicationRow, TValue>({
               await updateApplication(values);
               toast({ description: "Application updated successfully!" });
               setEditingApp(null);
-            } catch {
+            } catch (err) {
               toast({
                 description: "Failed to update application",
                 variant: "destructive",
               });
+              throw err;
             }
           }}
         />

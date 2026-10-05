@@ -312,11 +312,12 @@ export function ApplicationDetailSheet({
                     const updatedHistory = await getApplicationHistory(activeApp.id);
                     setHistory(updatedHistory);
                   }
-                } catch {
+                } catch (err) {
                   toast({
                     description: "Failed to update application",
                     variant: "destructive",
                   });
+                  throw err;
                 }
               }}
             />

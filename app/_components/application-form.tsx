@@ -170,11 +170,8 @@ export const ApplicationForm = ({
         if (!defaultValues?.id) {
           router.push("/applications");
         }
-      } catch {
-        toast({
-          description: "Failed to save application.",
-          variant: "destructive",
-        });
+      } catch (err) {
+        console.error("Failed to save application:", err);
       }
     });
   };
