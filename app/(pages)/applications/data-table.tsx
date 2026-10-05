@@ -161,13 +161,13 @@ export function DataTable<TData extends ApplicationRow, TValue>({
       </button>
 
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-md md:max-w-lg overflow-y-auto max-h-[85dvh] sm:max-h-[90vh] p-4 sm:p-6 rounded-2xl">
-          <DialogHeader className="pb-3 border-b">
+        <DialogContent className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-md md:max-w-lg p-0 overflow-hidden flex flex-col max-h-[85dvh] sm:max-h-[90vh] rounded-2xl border border-border/40 bg-card shadow-2xl">
+          <DialogHeader className="px-4 sm:px-6 pt-5 pb-3 border-b border-border/30 shrink-0">
             <DialogTitle className="text-xl font-bold">
               New Job Application
             </DialogTitle>
           </DialogHeader>
-          <div className="py-2">
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             <ApplicationForm
               defaultValues={defaultCreateValues}
               onClose={() => setIsCreateOpen(false)}

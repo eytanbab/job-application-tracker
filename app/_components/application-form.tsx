@@ -30,6 +30,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const createApplicationSchema = insertApplicationSchema.omit({
@@ -177,25 +178,58 @@ export const ApplicationForm = ({
   };
 
   const isEditing = Boolean(defaultValues?.id);
+  const { isDirty } = form.formState;
+  const isSaveDisabled = isPending || (isEditing && !isDirty);
 
   return (
-    <div className="w-full flex flex-col gap-3 items-center">
-      {!isEditing && (
-        <AiExtractForm isPending={isPending} onAutoFill={handleAutoFill} />
-      )}
-
+    <div className="flex-1 flex flex-col min-h-0 w-full overflow-hidden">
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
-          className="grid grid-cols-2 w-full gap-3 max-w-lg"
+          className="flex-1 flex flex-col min-h-0 w-full justify-between"
         >
-          <ApplicationFormFields
-            form={form}
-            isPending={isPending}
-            onCancel={onCancel}
-            userLocations={userOptions.userLocations}
-            userPlatforms={userOptions.userPlatforms}
-          />
+          {/* Scrollable form body */}
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-3.5 min-h-0 [scrollbar-width:thin]">
+            {!isEditing && (
+              <AiExtractForm isPending={isPending} onAutoFill={handleAutoFill} />
+            )}
+
+            <div className="grid grid-cols-2 w-full gap-3">
+              <ApplicationFormFields
+                form={form}
+                isPending={isPending}
+                userLocations={userOptions.userLocations}
+                userPlatforms={userOptions.userPlatforms}
+              />
+            </div>
+          </div>
+
+          {/* Grounded bottom action bar */}
+          <div className="px-4 sm:px-6 py-3 border-t border-border/30 bg-card shrink-0 flex flex-col sm:flex-row gap-2 w-full z-10">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isPending}
+              className="h-10 text-xs rounded-xl cursor-pointer order-2 sm:order-1 w-full sm:w-1/3"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSaveDisabled}
+              className="h-10 text-xs font-semibold rounded-xl shadow-xs cursor-pointer order-1 sm:order-2 w-full sm:flex-1"
+              title={isEditing && !isDirty ? "No changes to save" : undefined}
+            >
+              {isPending ? (
+                <Loader2 className="size-5 animate-spin" />
+              ) : isEditing ? (
+                "Save Changes"
+              ) : (
+                "Add Application"
+              )}
+            </Button>
+          </div>
         </form>
       </Form>
 

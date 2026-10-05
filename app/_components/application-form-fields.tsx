@@ -47,7 +47,6 @@ const DEFAULT_EMPTY_ARRAY: string[] = [];
 interface ApplicationFormFieldsProps {
   form: UseFormReturn<FormValues>;
   isPending: boolean;
-  onCancel: () => void;
   userLocations?: string[];
   userPlatforms?: string[];
 }
@@ -299,7 +298,6 @@ function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
 export function ApplicationFormFields({
   form,
   isPending,
-  onCancel,
   userLocations = DEFAULT_EMPTY_ARRAY,
   userPlatforms = DEFAULT_EMPTY_ARRAY,
 }: ApplicationFormFieldsProps) {
@@ -530,42 +528,6 @@ export function ApplicationFormFields({
         )}
       </div>
 
-      {/* 3. Submit / Cancel Action Buttons (Sticky footer in modal) */}
-      <div className="sticky bottom-0 bg-card/95 backdrop-blur-sm mt-3 pt-3 pb-1 border-t border-border/40 flex flex-col sm:flex-row gap-2 w-full col-span-full z-10">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={isPending}
-          className="h-10 text-xs rounded-xl cursor-pointer order-2 sm:order-1 w-full sm:w-1/3"
-        >
-          Cancel
-        </Button>
-        {(() => {
-          const { isDirty } = form.formState;
-          const isEditingApp = Boolean(form.getValues("id" as any));
-          const isSaveDisabled = isPending || (isEditingApp && !isDirty);
-
-          return (
-            <Button
-              type="submit"
-              disabled={isSaveDisabled}
-              className="h-10 text-xs font-semibold rounded-xl shadow-xs cursor-pointer order-1 sm:order-2 w-full sm:flex-1"
-              title={
-                isEditingApp && !isDirty ? "No changes to save" : undefined
-              }
-            >
-              {isPending ? (
-                <Loader2 className="size-5 animate-spin" />
-              ) : isEditingApp ? (
-                "Save Changes"
-              ) : (
-                "Add Application"
-              )}
-            </Button>
-          );
-        })()}
-      </div>
     </>
   );
 }
