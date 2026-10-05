@@ -90,7 +90,7 @@ export function StatusFilterPills({
             <span>{pill.label}</span>
             <span
               className={cn(
-                "px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums",
+                "inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full text-[10px] font-bold tabular-nums leading-none",
                 isActive
                   ? "bg-primary-foreground/20 text-primary-foreground"
                   : "bg-muted text-muted-foreground",
@@ -102,7 +102,7 @@ export function StatusFilterPills({
         );
       })}
       </div>
-      <div className="absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none sm:hidden" />
+      <div className="absolute right-0 top-0 bottom-1 w-10 bg-gradient-to-l from-background to-transparent pointer-events-none xl:hidden" />
     </div>
   );
 }

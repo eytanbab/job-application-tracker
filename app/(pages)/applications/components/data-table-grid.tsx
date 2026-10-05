@@ -1,6 +1,7 @@
 "use client";
 
 import { Table as TanstackTable, flexRender } from "@tanstack/react-table";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -53,7 +54,7 @@ export function DataTableGrid<
   return (
     <div className="space-y-4 pb-24 lg:pb-4">
       {/* Desktop Table View */}
-      <div className="hidden lg:block rounded-xl border border-border/40 bg-card overflow-x-auto shadow-2xs [scrollbar-width:thin]">
+      <div className="hidden lg:block rounded-xl border border-border/40 bg-card overflow-hidden shadow-2xs">
         <Table>
           <TableHeader className="bg-muted/30">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -61,19 +62,25 @@ export function DataTableGrid<
                 key={headerGroup.id}
                 className="border-b border-border/30"
               >
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="px-4 py-3 font-bold text-foreground text-xs uppercase tracking-wider"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHead>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  const isActions = header.column.id === "actions";
+                  return (
+                    <TableHead
+                      key={header.id}
+                      className={cn(
+                        "px-2 xl:px-3 py-2.5 font-bold text-foreground text-xs uppercase tracking-wider whitespace-nowrap",
+                        isActions && "text-right",
+                      )}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
@@ -102,16 +109,25 @@ export function DataTableGrid<
                       onSelectRow(row.original);
                     }
                   }}
-                  className="cursor-pointer border-b border-border/30 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
+                  className="group/row cursor-pointer border-b border-border/30 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-4 py-3 text-sm">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const isActions = cell.column.id === "actions";
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        className={cn(
+                          "px-2 xl:px-3 py-2 text-sm",
+                          isActions && "text-right",
+                        )}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             ) : (

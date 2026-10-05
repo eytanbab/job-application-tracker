@@ -27,6 +27,7 @@ import {
   getStatusKind,
   statusLabels,
   StatusKind,
+  cn,
 } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -86,18 +87,20 @@ function renderSortHeader<TData, TValue>(column: Column<TData, TValue>, label: s
   return (
     <Button
       variant="ghost"
-      className={`font-semibold p-0 hover:bg-transparent transition-colors ${
-        isSorted ? "text-primary font-bold" : ""
-      }`}
+      size="sm"
+      className={cn(
+        "h-auto p-0 font-bold hover:bg-transparent transition-colors justify-start text-left text-xs uppercase tracking-wider text-foreground select-none",
+        isSorted && "text-primary font-extrabold",
+      )}
       onClick={() => column.toggleSorting(isSorted === "asc")}
     >
       <span>{label}</span>
       {isSorted === "asc" ? (
-        <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
+        <ArrowUp className="ml-1 h-3.5 w-3.5 text-primary" />
       ) : isSorted === "desc" ? (
-        <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
+        <ArrowDown className="ml-1 h-3.5 w-3.5 text-primary" />
       ) : (
-        <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 text-muted-foreground/70" />
+        <ArrowUpDown className="ml-1 h-3.5 w-3.5 text-muted-foreground/60" />
       )}
     </Button>
   );
@@ -152,12 +155,33 @@ export const columns: ColumnDef<FormValues>[] = [
     cell: ({ row }) => {
       const role = row.original.role_name;
       const company = row.original.company_name;
+      const link = row.original.link;
+      const href =
+        link &&
+        (link.startsWith("http://") || link.startsWith("https://")
+          ? link
+          : `https://${link}`);
+
       return (
-        <div className="space-y-0.5 max-w-[220px]">
+        <div className="space-y-0.5 max-w-[170px] xl:max-w-[230px]">
           <div className="font-semibold text-foreground truncate">{role}</div>
-          <div className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+          <div className="text-xs text-muted-foreground flex items-center gap-1.5 truncate">
             <Building2 className="h-3 w-3 shrink-0" />
-            {company}
+            <span className="truncate">{company}</span>
+            {href && (
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+                className="inline-flex items-center justify-center h-5 w-5 rounded text-muted-foreground/70 hover:text-primary hover:bg-primary/10 transition-colors shrink-0 cursor-pointer"
+                title="Open job link (opens in new tab)"
+                aria-label={`Open job posting for ${role} at ${company}`}
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            )}
           </div>
         </div>
       );
@@ -171,7 +195,7 @@ export const columns: ColumnDef<FormValues>[] = [
       if (!rawDate) return <span className="text-muted-foreground">-</span>;
       const formattedDate = formatDate(parseISO(rawDate), "MMM d, yyyy");
       return (
-        <div className="text-sm font-medium text-foreground">
+        <div className="text-xs xl:text-sm font-medium text-foreground whitespace-nowrap">
           {formattedDate}
         </div>
       );
@@ -193,7 +217,7 @@ export const columns: ColumnDef<FormValues>[] = [
       return (
         <Badge
           variant="outline"
-          className={`capitalize font-medium border ${statusBadgeClasses[kind]}`}
+          className={`capitalize font-medium border whitespace-nowrap text-[11px] xl:text-xs px-2 py-0.5 ${statusBadgeClasses[kind]}`}
         >
           <span className="sr-only">{statusLabels[kind]}: </span>
           {displayText}
@@ -207,7 +231,7 @@ export const columns: ColumnDef<FormValues>[] = [
     cell: ({ row }) => {
       const location = row.getValue<string>("location");
       return (
-        <div className="text-sm truncate max-w-[140px] text-muted-foreground">
+        <div className="text-xs xl:text-sm truncate max-w-[110px] xl:max-w-[140px] text-muted-foreground">
           {location || "-"}
         </div>
       );
@@ -220,10 +244,10 @@ export const columns: ColumnDef<FormValues>[] = [
       const platform = row.getValue<string>("platform");
       if (!platform) return <span className="text-muted-foreground">-</span>;
       return (
-        <div className="flex items-center min-w-0 max-w-[130px]" title={platform}>
+        <div className="flex items-center min-w-0 max-w-[100px] xl:max-w-[125px]" title={platform}>
           <Badge
             variant="secondary"
-            className="capitalize text-xs font-normal whitespace-nowrap truncate block"
+            className="capitalize text-[11px] xl:text-xs font-normal whitespace-nowrap truncate block px-2 py-0.5"
           >
             {platform}
           </Badge>
@@ -237,35 +261,9 @@ export const columns: ColumnDef<FormValues>[] = [
     cell: ({ row }) => {
       const salary = row.getValue<string>("salary");
       return (
-        <div className="text-sm font-medium text-muted-foreground truncate max-w-[170px] lg:max-w-none whitespace-nowrap">
+        <div className="text-xs xl:text-sm font-medium text-muted-foreground whitespace-nowrap">
           {salary || "-"}
         </div>
-      );
-    },
-  },
-  {
-    accessorKey: "link",
-    header: () => <span className="font-semibold text-xs">Link</span>,
-    cell: ({ row }) => {
-      const url = row.getValue<string>("link");
-      if (!url) return null;
-      const href =
-        url.startsWith("http://") || url.startsWith("https://")
-          ? url
-          : `https://${url}`;
-      return (
-        <a
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary hover:bg-accent/60 cursor-pointer"
-          title="Open application link"
-          aria-label="Open application link (opens in new tab)"
-        >
-          <ExternalLink className="h-4 w-4" />
-        </a>
       );
     },
   },
@@ -297,7 +295,7 @@ export const columns: ColumnDef<FormValues>[] = [
 
       return (
         <div
-          className="flex items-center gap-1 justify-end"
+          className="flex items-center gap-0.5 xl:gap-1 justify-end"
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
         >
@@ -306,7 +304,7 @@ export const columns: ColumnDef<FormValues>[] = [
               variant="ghost"
               size="icon"
               data-testid="view-details-button"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              className="h-7 w-7 xl:h-8 xl:w-8 text-muted-foreground hover:text-foreground"
               title="View details"
               onClick={(e) => {
                 e.stopPropagation();
@@ -320,7 +318,7 @@ export const columns: ColumnDef<FormValues>[] = [
                 }
               }}
             >
-              <Eye className="h-4 w-4" />
+              <Eye className="h-3.5 w-3.5 xl:h-4 xl:w-4" />
             </Button>
           )}
 
@@ -335,12 +333,12 @@ export const columns: ColumnDef<FormValues>[] = [
                 variant="ghost"
                 size="icon"
                 data-testid="delete-application-button"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                className="h-7 w-7 xl:h-8 xl:w-8 text-muted-foreground hover:text-destructive"
                 title="Delete application"
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e) => e.stopPropagation()}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3.5 w-3.5 xl:h-4 xl:w-4" />
               </Button>
             </DialogTrigger>
             <DialogContent>
