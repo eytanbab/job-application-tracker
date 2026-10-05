@@ -1,18 +1,8 @@
 "use client";
 
-import { History, X } from "lucide-react";
+import { useState } from "react";
+import { History, X, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { formatDate } from "date-fns";
 import { getStatusDisplay, getStatusKind, statusLabels } from "@/lib/utils";
 
@@ -34,6 +24,8 @@ export function ApplicationTimeline({
   isLoadingHistory,
   onDeleteEntry,
 }: ApplicationTimelineProps) {
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
   return (
     <div className="space-y-3 pt-2">
       <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
@@ -88,50 +80,49 @@ export function ApplicationTimeline({
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground text-[11px]">
-                      {formattedTime}
-                    </span>
-                    {item.id && (
-                      <Dialog>
-                        <DialogTrigger asChild>
+                    {confirmDeleteId === item.id ? (
+                      <div className="flex items-center gap-1.5 animate-in fade-in duration-150">
+                        <span className="text-[11px] text-destructive font-medium">Delete?</span>
+                        <button
+                          type="button"
+                          className="h-5 px-1.5 rounded bg-destructive text-destructive-foreground hover:bg-destructive/90 text-[10px] font-semibold cursor-pointer flex items-center gap-0.5"
+                          onClick={() => {
+                            onDeleteEntry(item.id);
+                            setConfirmDeleteId(null);
+                          }}
+                          title="Confirm delete"
+                          aria-label="Confirm delete timeline entry"
+                        >
+                          <Check className="h-3 w-3" />
+                          <span>Yes</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="h-5 px-1.5 rounded border border-border bg-background hover:bg-muted text-muted-foreground text-[10px] cursor-pointer flex items-center"
+                          onClick={() => setConfirmDeleteId(null)}
+                          title="Cancel"
+                          aria-label="Cancel delete"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="text-muted-foreground text-[11px]">
+                          {formattedTime}
+                        </span>
+                        {item.id && (
                           <button
                             type="button"
                             className="text-muted-foreground hover:text-destructive opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-0.5 cursor-pointer"
                             title="Delete this timeline entry"
                             aria-label="Delete this timeline entry"
+                            onClick={() => setConfirmDeleteId(item.id)}
                           >
                             <X className="h-3 w-3" />
                           </button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Delete Timeline Entry</DialogTitle>
-                            <DialogDescription>
-                              Are you sure you want to delete the status entry{" "}
-                              <strong className="text-foreground">
-                                {displayTitle}
-                              </strong>{" "}
-                              from your application timeline? This action cannot be undone.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <DialogFooter className="gap-2 sm:gap-0">
-                            <DialogClose asChild>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => onDeleteEntry(item.id)}
-                              >
-                                Delete Entry
-                              </Button>
-                            </DialogClose>
-                            <DialogClose asChild>
-                              <Button type="button" variant="outline" size="sm">
-                                Cancel
-                              </Button>
-                            </DialogClose>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

@@ -361,16 +361,17 @@ export const columns: ColumnDef<FormValues>[] = [
               </DialogHeader>
               <DialogFooter className="gap-2 sm:gap-0">
                 <DialogClose asChild>
-                  <Button
-                    variant="destructive"
-                    onClick={() => handleApplicationDelete(row.original.id!)}
-                  >
-                    Delete Application
+                  <Button type="button" variant="outline" className="cursor-pointer">
+                    Cancel
                   </Button>
                 </DialogClose>
                 <DialogClose asChild>
-                  <Button type="button" variant="outline">
-                    Cancel
+                  <Button
+                    variant="destructive"
+                    className="cursor-pointer"
+                    onClick={() => handleApplicationDelete(row.original.id!)}
+                  >
+                    Delete Application
                   </Button>
                 </DialogClose>
               </DialogFooter>

@@ -97,7 +97,7 @@ export function ApplicationDetailSheet({
     initialApp?.status || "",
   );
   const [isEditing, setIsEditing] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [history, setHistory] = useState<TimelineEntry[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isSaving, startSaveTransition] = useTransition();
@@ -112,6 +112,7 @@ export function ApplicationDetailSheet({
 
       if (open && initialApp.id) {
         setIsEditing(false);
+        setIsConfirmingDelete(false);
         setIsLoadingHistory(true);
         getApplicationHistory(initialApp.id as string)
           .then((res) => {
@@ -348,70 +349,60 @@ export function ApplicationDetailSheet({
         {/* Footer Actions */}
         {!isEditing && (
           <div className="p-4 sm:p-6 py-3 border-t border-border/40 bg-card/95 backdrop-blur-sm flex items-center justify-between gap-3 shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              data-testid="edit-details-button"
-              className="flex-1 gap-2 h-9 font-medium rounded-md"
-              onClick={() => setIsEditing(true)}
-            >
-              <Pencil className="h-4 w-4" /> Edit Details
-            </Button>
-
-            {onDeleteClick && currentApp?.id && (
+            {isConfirmingDelete ? (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-2 p-2.5 bg-destructive/10 border border-destructive/20 rounded-xl animate-in fade-in duration-150">
+                <span className="text-xs text-destructive font-medium">
+                  Permanently delete this application?
+                </span>
+                <div className="flex items-center gap-2 self-end sm:self-auto">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs cursor-pointer"
+                    onClick={() => setIsConfirmingDelete(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="h-8 text-xs cursor-pointer"
+                    onClick={() => {
+                      if (currentApp?.id && onDeleteClick) {
+                        onDeleteClick(currentApp.id);
+                        setIsConfirmingDelete(false);
+                        onOpenChange(false);
+                      }
+                    }}
+                  >
+                    Delete Application
+                  </Button>
+                </div>
+              </div>
+            ) : (
               <>
                 <Button
-                  variant="destructive"
+                  variant="outline"
                   size="sm"
-                  className="gap-2 h-9 font-medium rounded-md"
-                  onClick={() => setIsDeleteDialogOpen(true)}
+                  data-testid="edit-details-button"
+                  className="flex-1 gap-2 h-9 font-medium rounded-md cursor-pointer"
+                  onClick={() => setIsEditing(true)}
                 >
-                  <Trash2 className="h-4 w-4" /> Delete
+                  <Pencil className="h-4 w-4" /> Edit Details
                 </Button>
 
-                <Dialog
-                  open={isDeleteDialogOpen}
-                  onOpenChange={setIsDeleteDialogOpen}
-                >
-                  <DialogContent onClick={(e) => e.stopPropagation()}>
-                    <DialogHeader>
-                      <DialogTitle>Are you absolutely sure?</DialogTitle>
-                      <DialogDescription>
-                        This action cannot be undone. This will permanently delete
-                        your application for{" "}
-                        <strong className="text-foreground">
-                          {activeApp.role_name}
-                        </strong>{" "}
-                        at{" "}
-                        <strong className="text-foreground">
-                          {activeApp.company_name}
-                        </strong>
-                        .
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter className="gap-2 sm:gap-0">
-                      <Button
-                        variant="destructive"
-                        onClick={() => {
-                          if (currentApp?.id) {
-                            onDeleteClick(currentApp.id);
-                            setIsDeleteDialogOpen(false);
-                            onOpenChange(false);
-                          }
-                        }}
-                      >
-                        Delete Application
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setIsDeleteDialogOpen(false)}
-                      >
-                        Cancel
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                {onDeleteClick && currentApp?.id && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="gap-2 h-9 font-medium rounded-md cursor-pointer"
+                    onClick={() => setIsConfirmingDelete(true)}
+                  >
+                    <Trash2 className="h-4 w-4" /> Delete
+                  </Button>
+                )}
               </>
             )}
           </div>
