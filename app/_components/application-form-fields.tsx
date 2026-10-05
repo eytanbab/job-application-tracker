@@ -25,7 +25,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { CalendarIcon, Loader2 } from "lucide-react";
-import { format, endOfDay } from "date-fns";
+import { format, endOfDay, subDays } from "date-fns";
 import {
   cn,
   getStatusKind,
@@ -247,10 +247,39 @@ function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
                   </Button>
                 </FormControl>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-2" align="start">
+                <div className="flex items-center gap-1.5 pb-2 mb-1 border-b border-border/50">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs px-2.5 rounded-lg cursor-pointer"
+                    onClick={() => field.onChange(new Date())}
+                  >
+                    Today
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs px-2.5 rounded-lg cursor-pointer"
+                    onClick={() => field.onChange(subDays(new Date(), 1))}
+                  >
+                    Yesterday
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs px-2.5 rounded-lg cursor-pointer"
+                    onClick={() => field.onChange(subDays(new Date(), 7))}
+                  >
+                    1 week ago
+                  </Button>
+                </div>
                 <Calendar
                   mode="single"
-                  showYearSwitcher={false}
+                  showYearSwitcher={true}
                   selected={selectedDate}
                   onSelect={field.onChange}
                   disabled={(date: Date) =>
