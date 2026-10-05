@@ -40,6 +40,7 @@ export function DataTableGrid<
     status: string;
     statusCategory?: string | null;
     location: string;
+    platform?: string;
   },
 >({
   table,

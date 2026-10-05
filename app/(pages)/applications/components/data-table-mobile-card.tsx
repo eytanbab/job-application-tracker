@@ -34,6 +34,7 @@ interface MobileCardItem {
   status: string;
   statusCategory?: string | null;
   location: string;
+  platform?: string;
 }
 
 interface DataTableMobileCardProps {
@@ -136,10 +137,20 @@ export function DataTableMobileCard({
           </p>
 
           <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1">
-            <span className="flex items-center gap-1 font-normal">
-              <Calendar className="h-3 w-3 text-muted-foreground/70" />
-              {formattedDate}
-            </span>
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="flex items-center gap-1 font-normal shrink-0">
+                <Calendar className="h-3 w-3 text-muted-foreground/70" />
+                {formattedDate}
+              </span>
+              {item.platform && (
+                <Badge
+                  variant="secondary"
+                  className="capitalize text-[10px] py-0 px-1.5 h-4 font-normal truncate max-w-[110px]"
+                >
+                  {item.platform}
+                </Badge>
+              )}
+            </div>
 
             {item.link && (
               <a
