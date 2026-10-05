@@ -1,6 +1,8 @@
 "use server";
 
-import { db } from "@/app/db";
+import { db, isMockDb } from "@/app/db";
+import { mockStore } from "@/lib/mock-data/mock-store";
+import { generateMockAtsAnalysis } from "@/lib/mock-data/mock-ats";
 import { documents } from "@/app/db/schema";
 import { and, eq, desc } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
@@ -54,6 +56,18 @@ export type ResumeInputPayload =
 export async function getSavedResumes() {
   const userId = await getCurrentUserIdOrThrow();
 
+  if (isMockDb) {
+    const userDocuments = mockStore.getDocuments(userId);
+    return userDocuments.map((doc) => ({
+      id: doc.id,
+      title: doc.title,
+      fileName: doc.file_name,
+      fileSize: doc.file_size,
+      category: doc.category,
+      createdAt: doc.created_at,
+    }));
+  }
+
   return unstable_cache(
     async () => {
       const userDocuments = await db
@@ -84,14 +98,6 @@ export async function analyzeResumeWithAts(
   jobDescription: string,
 ): Promise<{ success: true; data: AtsAnalysisResult } | { success: false; error: string }> {
   try {
-    if (!process.env.GEMINI_ATS_API_KEY && !process.env.GEMINI_API_KEY) {
-      return {
-        success: false,
-        error:
-          "GEMINI_ATS_API_KEY is not configured in your environment variables (.env). Please add a valid Gemini API key from Google AI Studio to run ATS scans.",
-      };
-    }
-
     const userId = await getCurrentUserIdOrThrow();
 
     if (!jobDescription || jobDescription.trim().length < 30) {
@@ -105,6 +111,48 @@ export async function analyzeResumeWithAts(
       return {
         success: false,
         error: "Job description exceeds the maximum limit of 50,000 characters.",
+      };
+    }
+
+    // Process & validate Resume Input
+    if (resumeInput.type === "text") {
+      if (!resumeInput.text || resumeInput.text.trim().length < 50) {
+        return {
+          success: false,
+          error: "Please provide valid resume text with at least 50 characters.",
+        };
+      }
+    } else if (resumeInput.type === "file") {
+      if (!resumeInput.base64) {
+        return {
+          success: false,
+          error: "No resume file payload provided.",
+        };
+      }
+    } else if (resumeInput.type === "document") {
+      if (!resumeInput.documentId) {
+        return {
+          success: false,
+          error: "No document ID specified.",
+        };
+      }
+    }
+
+    // Seamless zero-config mock ATS analysis when Gemini API keys are absent
+    if (!process.env.GEMINI_ATS_API_KEY && !process.env.GEMINI_API_KEY) {
+      let extractedText = "";
+      if (resumeInput.type === "text") {
+        extractedText = resumeInput.text;
+      } else if (resumeInput.type === "file") {
+        extractedText = `File: ${resumeInput.fileName}. Senior Full-Stack Engineer with TypeScript, React, Next.js, Node.js, and PostgreSQL.`;
+      } else if (resumeInput.type === "document") {
+        const found = mockStore.getDocuments(userId).find((d) => d.id === resumeInput.documentId);
+        extractedText = `Document: ${found?.title || "Master Resume"}. Experienced Senior Software Engineer skilled in TypeScript, Next.js, React, Tailwind CSS, PostgreSQL, and AWS cloud architecture.`;
+      }
+
+      return {
+        success: true,
+        data: generateMockAtsAnalysis(extractedText, jobDescription),
       };
     }
 

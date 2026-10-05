@@ -1,4 +1,5 @@
-import { db } from "@/app/db";
+import { db, isMockDb } from "@/app/db";
+import { mockStore } from "@/lib/mock-data/mock-store";
 import { jobApplications } from "@/app/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
@@ -12,6 +13,11 @@ import { buildMonthCondition } from "@/app/actions/_utils/filter-utils";
 
 export async function getPlatformRoi(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    return mockStore.getPlatformRoi(month, year);
+  }
+
   const whereClause = [eq(jobApplications.userId, userId)];
   const monthCondition = buildMonthCondition(month);
   if (monthCondition) whereClause.push(monthCondition);
@@ -65,6 +71,10 @@ export async function getPlatformRoi(month?: string, year?: string) {
 export async function getBlackHoleBreakdown(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
 
+  if (isMockDb) {
+    return mockStore.getBlackHoleBreakdown(month, year);
+  }
+
   const whereClause = [eq(jobApplications.userId, userId)];
   const monthCondition = buildMonthCondition(month);
   if (monthCondition) whereClause.push(monthCondition);
@@ -104,6 +114,11 @@ export async function getBlackHoleBreakdown(month?: string, year?: string) {
 
 export async function getRoleTargetingAnalysis(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    return mockStore.getRoleTargetingAnalysis(month, year);
+  }
+
   const whereClause = [eq(jobApplications.userId, userId)];
   const monthCondition = buildMonthCondition(month);
   if (monthCondition) whereClause.push(monthCondition);
@@ -164,6 +179,11 @@ export async function getWorkModeAnalysis(
   year?: string,
 ): Promise<WorkModeData[]> {
   const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    return mockStore.getWorkModeAnalysis(month, year);
+  }
+
   const whereClause = [eq(jobApplications.userId, userId)];
   const monthCondition = buildMonthCondition(month);
   if (monthCondition) whereClause.push(monthCondition);
@@ -237,6 +257,11 @@ export async function getSalaryInsights(
   year?: string,
 ): Promise<SalaryInsightsData> {
   const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    return mockStore.getSalaryInsights(month, year);
+  }
+
   const whereClause = [eq(jobApplications.userId, userId)];
   const monthCondition = buildMonthCondition(month);
   if (monthCondition) whereClause.push(monthCondition);

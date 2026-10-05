@@ -3,7 +3,8 @@ import { addDays, differenceInDays, format, subDays, parseISO } from "date-fns";
 import { and, count, desc, eq, gte, lt, inArray } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 
-import { db } from "@/app/db";
+import { db, isMockDb } from "@/app/db";
+import { mockStore } from "@/lib/mock-data/mock-store";
 import { jobApplications, applicationStatusHistory } from "@/app/db/schema";
 
 import {
@@ -19,6 +20,10 @@ import { buildMonthCondition } from "./_utils/filter-utils";
 
 export async function getDomainLeaderboard(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    return mockStore.getDomainLeaderboard(month, year);
+  }
 
   const whereClause = [eq(jobApplications.userId, userId)];
   const monthCondition = buildMonthCondition(month);
@@ -83,6 +88,10 @@ export async function getDomainLeaderboard(month?: string, year?: string) {
 export async function getTop5Statuses(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
 
+  if (isMockDb) {
+    return mockStore.getTop5Statuses(month, year);
+  }
+
   const whereClause = [eq(jobApplications.userId, userId)];
   const monthCondition = buildMonthCondition(month);
   if (monthCondition) whereClause.push(monthCondition);
@@ -120,6 +129,10 @@ export async function getTop5Statuses(month?: string, year?: string) {
 
 export async function getGhostedApplications(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    return mockStore.getGhostedApplications(month, year);
+  }
 
   const whereClause = [eq(jobApplications.userId, userId)];
   const monthCondition = buildMonthCondition(month);
@@ -249,6 +262,10 @@ export async function getGhostedApplications(month?: string, year?: string) {
 export async function getApplicationsPerYear(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
 
+  if (isMockDb) {
+    return mockStore.getApplicationsPerYear(month, year);
+  }
+
   const whereClause = [eq(jobApplications.userId, userId)];
   const monthCondition = buildMonthCondition(month);
   if (monthCondition) whereClause.push(monthCondition);
@@ -285,6 +302,10 @@ export async function getApplicationsPerYear(month?: string, year?: string) {
 // Statuses per year
 export async function getStasusesPerYear(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    return mockStore.getStasusesPerYear(month, year);
+  }
 
   const whereClause = [eq(jobApplications.userId, userId)];
   const monthCondition = buildMonthCondition(month);
@@ -324,6 +345,10 @@ export async function getStasusesPerYear(month?: string, year?: string) {
 export async function getYears() {
   const userId = await getCurrentUserIdOrThrow();
 
+  if (isMockDb) {
+    return mockStore.getYears();
+  }
+
   return unstable_cache(
     async () => {
       const years = await db
@@ -351,6 +376,10 @@ export async function getYears() {
 
 export async function getStatusPerPlatform(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    return mockStore.getStatusPerPlatform(month, year);
+  }
 
   const whereClause = [eq(jobApplications.userId, userId)];
   const monthCondition = buildMonthCondition(month);
@@ -467,6 +496,10 @@ export async function getDetailedApplicationBreakdown(
   year?: string,
 ) {
   const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    return mockStore.getDetailedApplicationBreakdown(month, year);
+  }
 
   const whereClause = [eq(jobApplications.userId, userId)];
   const monthCondition = buildMonthCondition(month);
@@ -768,6 +801,10 @@ export async function getFunnelBottleneckInsight(
 
 export async function getBestPlatformInsight(month?: string, year?: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    return mockStore.getBestPlatformInsight(month, year);
+  }
 
   const whereClause = [eq(jobApplications.userId, userId)];
   const monthCondition = buildMonthCondition(month);

@@ -72,12 +72,13 @@ export const Document = ({ file, view = "table" }: Props) => {
   const handleViewOnline = async () => {
     setIsViewing(true);
     try {
-      const { url, error } = await getViewUrl(file.id);
-      if (url) {
-        window.open(url, "_blank", "noopener,noreferrer");
+      const res = await getViewUrl(file.id);
+      if ("url" in res && res.url) {
+        window.open(res.url, "_blank", "noopener,noreferrer");
       } else {
         toast({
-          description: error || "Failed to generate view link.",
+          description:
+            ("error" in res && res.error) || "Failed to generate view link.",
           variant: "destructive",
         });
       }
@@ -95,17 +96,18 @@ export const Document = ({ file, view = "table" }: Props) => {
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
-      const { url, error } = await getDownloadUrl(file.id);
-      if (url) {
+      const res = await getDownloadUrl(file.id);
+      if ("url" in res && res.url) {
         const link = document.createElement("a");
-        link.href = url;
+        link.href = res.url;
         link.download = file.file_name;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
       } else {
         toast({
-          description: error || "Failed to generate download link.",
+          description:
+            ("error" in res && res.error) || "Failed to generate download link.",
           variant: "destructive",
         });
       }

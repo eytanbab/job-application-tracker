@@ -2,7 +2,8 @@
 
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
-import { db } from "@/app/db";
+import { db, isMockDb } from "@/app/db";
+import { mockStore } from "@/lib/mock-data/mock-store";
 import { documents } from "@/app/db/schema";
 import { and, desc, eq } from "drizzle-orm";
 
@@ -39,6 +40,13 @@ export async function generatePresignedUrl(
     // Generate a unique filename for the file in the S3 bucket
     const fileKey = `${userId}/${Date.now().toString()}-${sanitizedFileName}`;
 
+    if (isMockDb || !process.env.NEXT_AWS_S3_BUCKET_NAME) {
+      return {
+        fileKey,
+        signedUrl: `https://mock-s3-upload.local/${fileKey}`,
+      };
+    }
+
     const uploadParams = {
       Bucket: process.env.NEXT_AWS_S3_BUCKET_NAME || "", // Get the bucket name from env variable
       Key: fileKey,
@@ -71,6 +79,22 @@ export async function createFile(
 ) {
   const userId = await getCurrentUserIdOrThrow();
 
+  if (isMockDb) {
+    mockStore.createDocument(userId, {
+      title,
+      doc_url,
+      file_name,
+      file_key,
+      category,
+      file_size: file_size || null,
+    });
+    try {
+      revalidateTag(documentsTag(userId), "max");
+      revalidatePath("/documents");
+    } catch {}
+    return;
+  }
+
   await db
     .insert(documents)
     .values({
@@ -83,12 +107,18 @@ export async function createFile(
       file_size,
     })
     .returning({ insertedId: documents.id });
-  revalidateTag(documentsTag(userId), "max");
-  revalidatePath("/documents");
+  try {
+    revalidateTag(documentsTag(userId), "max");
+    revalidatePath("/documents");
+  } catch {}
 }
 
 export async function getFiles() {
   const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    return mockStore.getDocuments(userId);
+  }
 
   return unstable_cache(
     async () => {
@@ -108,6 +138,15 @@ export async function getFiles() {
 
 export async function deleteFile(id: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    mockStore.deleteDocument(userId, id);
+    try {
+      revalidateTag(documentsTag(userId), "max");
+      revalidatePath("/documents");
+    } catch {}
+    return;
+  }
 
   try {
     const deletedDocument = await db
@@ -134,13 +173,19 @@ export async function deleteFile(id: string) {
     console.error("Delete document error:", err);
     throw err;
   } finally {
-    revalidateTag(documentsTag(userId), "max");
-    revalidatePath("/documents");
+    try {
+      revalidateTag(documentsTag(userId), "max");
+      revalidatePath("/documents");
+    } catch {}
   }
 }
 
 export async function getViewUrl(id: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    return mockStore.getViewUrl(userId, id);
+  }
 
   try {
     const document = await db
@@ -175,6 +220,10 @@ export async function getViewUrl(id: string) {
 
 export async function getDownloadUrl(id: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    return mockStore.getDownloadUrl(userId, id);
+  }
 
   try {
     const document = await db

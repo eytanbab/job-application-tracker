@@ -2,7 +2,8 @@
 
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
-import { db } from "@/app/db";
+import { db, isMockDb } from "@/app/db";
+import { mockStore } from "@/lib/mock-data/mock-store";
 import {
   insertApplicationSchema,
   jobApplications,
@@ -22,7 +23,9 @@ import {
 } from "@/lib/utils";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const formSchema = insertApplicationSchema.omit({ userId: true });
+const formSchema = insertApplicationSchema
+  .omit({ userId: true })
+  .partial({ month: true, year: true });
 
 type FormValues = z.input<typeof formSchema>;
 
@@ -63,14 +66,22 @@ function extractCleanApplicationFields(values: FormValues) {
 }
 
 function purgeCaches(userId: string) {
-  revalidateTag(applicationsTag(userId), "max");
-  revalidatePath("/applications");
-  revalidatePath("/analytics/overview");
-  revalidatePath("/analytics/insights");
+  try {
+    revalidateTag(applicationsTag(userId), "max");
+    revalidatePath("/applications");
+    revalidatePath("/analytics/overview");
+    revalidatePath("/analytics/insights");
+  } catch {
+    // Gracefully ignore when invoked outside Next.js request context (e.g. testing scripts)
+  }
 }
 
 // Automatically transition applications older than 30 days without rejection or acceptance to Ghosted
 export async function syncGhostedApplications(userId?: string) {
+  if (isMockDb) {
+    return mockStore.syncGhostedApplications(userId);
+  }
+
   const thirtyDaysAgo = subDays(new Date(), 30);
   const thresholdDateStr = format(thirtyDaysAgo, "yyyy-MM-dd");
 
@@ -203,6 +214,10 @@ export async function syncGhostedApplications(userId?: string) {
 export async function getApplications() {
   const userId = await getCurrentUserIdOrThrow();
 
+  if (isMockDb) {
+    return mockStore.getApplications(userId);
+  }
+
   const rows = await db
     .select()
     .from(jobApplications)
@@ -235,6 +250,13 @@ export async function getApplications() {
 export async function createApplication(values: FormValues) {
   const userId = await getCurrentUserIdOrThrow();
   const fields = extractCleanApplicationFields(values);
+
+  if (isMockDb) {
+    const newApp = mockStore.createApplication(userId, fields as any);
+    purgeCaches(userId);
+    return [{ insertedId: newApp.id }];
+  }
+
   const applicationId = crypto.randomUUID();
 
   // Atomically insert the application and its initial status history in a single batch
@@ -263,6 +285,12 @@ export async function createApplication(values: FormValues) {
 export async function deleteApplication(id: string) {
   const userId = await getCurrentUserIdOrThrow();
 
+  if (isMockDb) {
+    mockStore.deleteApplication(userId, id);
+    purgeCaches(userId);
+    return;
+  }
+
   await db
     .delete(jobApplications)
     .where(and(eq(jobApplications.userId, userId), eq(jobApplications.id, id)));
@@ -278,6 +306,12 @@ export async function updateApplication(values: FormValues) {
   const userId = await getCurrentUserIdOrThrow();
   const applicationId = values.id;
   const fields = extractCleanApplicationFields(values);
+
+  if (isMockDb) {
+    mockStore.updateApplication(userId, applicationId, fields as any);
+    purgeCaches(userId);
+    return;
+  }
 
   const currentApp = await db
     .select({
@@ -365,6 +399,12 @@ export async function updateApplication(values: FormValues) {
 export async function deleteStatusHistoryEntry(historyId: string) {
   const userId = await getCurrentUserIdOrThrow();
 
+  if (isMockDb) {
+    const res = mockStore.deleteStatusHistoryEntry(userId, historyId);
+    purgeCaches(userId);
+    return res;
+  }
+
   const entry = await db
     .select({
       id: applicationStatusHistory.id,
@@ -424,6 +464,10 @@ export async function deleteStatusHistoryEntry(historyId: string) {
 // Get status history for a single application
 export async function getApplicationHistory(applicationId: string) {
   const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    return mockStore.getApplicationHistory(userId, applicationId);
+  }
 
   const app = await db
     .select({
@@ -505,6 +549,11 @@ export async function getApplicationHistory(applicationId: string) {
 // Get unique locations and platforms previously used by the user
 export async function getDistinctLocationsAndPlatforms() {
   const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    return mockStore.getDistinctLocationsAndPlatforms(userId);
+  }
+
   const apps = await db
     .select({
       location: jobApplications.location,
