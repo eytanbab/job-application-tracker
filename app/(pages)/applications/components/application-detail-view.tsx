@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Calendar,
   Globe,
@@ -11,6 +12,8 @@ import {
   MessageSquare,
   Copy,
   Check,
+  Pencil,
+  Loader2,
 } from "lucide-react";
 import {
   Select,
@@ -22,7 +25,7 @@ import {
 import { formatDate, parseISO } from "date-fns";
 import { statusOptions, statusLabels, StatusKind } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ApplicationTimeline, TimelineEntry } from "./application-timeline";
 
 export interface ApplicationDetailViewProps {
@@ -48,6 +51,7 @@ export interface ApplicationDetailViewProps {
   history: TimelineEntry[];
   isLoadingHistory: boolean;
   onDeleteTimelineEntry: (id: string) => void;
+  onUpdateNotes?: (notes: string) => Promise<void>;
 }
 
 export function ApplicationDetailView({
@@ -60,8 +64,15 @@ export function ApplicationDetailView({
   history,
   isLoadingHistory,
   onDeleteTimelineEntry,
+  onUpdateNotes,
 }: ApplicationDetailViewProps) {
   const [copiedJd, setCopiedJd] = useState(false);
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [notesValue, setNotesValue] = useState(currentApp.notes || "");
+
+  useEffect(() => {
+    setNotesValue(currentApp.notes || "");
+  }, [currentApp.notes]);
 
   const handleCopyJd = () => {
     if (!currentApp.description) return;
@@ -248,15 +259,88 @@ export function ApplicationDetailView({
         </div>
 
         <div className="space-y-2">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-            <MessageSquare className="h-3.5 w-3.5 text-primary" /> Personal
-            Candidate Notes
-          </h4>
-          <div className="rounded-md border border-border/30 bg-card p-3 text-xs text-foreground leading-relaxed whitespace-pre-wrap min-h-[90px] max-h-64 sm:max-h-72 overflow-y-auto">
-            {currentApp.notes?.trim()
-              ? currentApp.notes
-              : "No personal notes added yet."}
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <MessageSquare className="h-3.5 w-3.5 text-primary" /> Personal Candidate Notes
+            </h4>
+            {onUpdateNotes && !isEditingNotes && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setNotesValue(currentApp.notes || "");
+                  setIsEditingNotes(true);
+                }}
+                className="h-6 text-[11px] px-2 gap-1 font-semibold text-primary hover:bg-primary/10 cursor-pointer"
+              >
+                <Pencil className="h-3 w-3" />
+                <span>{currentApp.notes?.trim() ? "Edit" : "Add"}</span>
+              </Button>
+            )}
           </div>
+          {isEditingNotes ? (
+            <div className="space-y-2 animate-in fade-in duration-150">
+              <Textarea
+                value={notesValue}
+                onChange={(e) => setNotesValue(e.target.value)}
+                placeholder="Add referral contacts, interview notes, questions to ask..."
+                className="text-xs min-h-[90px] max-h-60 resize-y"
+              />
+              <div className="flex items-center gap-2 justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isSaving}
+                  onClick={() => {
+                    setNotesValue(currentApp.notes || "");
+                    setIsEditingNotes(false);
+                  }}
+                  className="h-7 text-xs px-2.5 cursor-pointer"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={isSaving}
+                  onClick={async () => {
+                    if (onUpdateNotes) {
+                      await onUpdateNotes(notesValue);
+                      setIsEditingNotes(false);
+                    }
+                  }}
+                  className="h-7 text-xs px-2.5 font-semibold cursor-pointer"
+                >
+                  {isSaving ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    "Save Notes"
+                  )}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div
+              onClick={() => {
+                if (onUpdateNotes) {
+                  setNotesValue(currentApp.notes || "");
+                  setIsEditingNotes(true);
+                }
+              }}
+              className="rounded-md border border-border/30 bg-card p-3 text-xs text-foreground leading-relaxed whitespace-pre-wrap min-h-[90px] max-h-64 sm:max-h-72 overflow-y-auto cursor-pointer hover:border-primary/40 transition-colors"
+              title="Click to edit notes"
+            >
+              {currentApp.notes?.trim() ? (
+                currentApp.notes
+              ) : (
+                <span className="text-muted-foreground italic">
+                  No personal notes added yet. Click to add notes.
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

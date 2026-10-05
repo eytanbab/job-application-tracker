@@ -220,6 +220,27 @@ export function ApplicationDetailSheet({
     }
   };
 
+  const handleUpdateNotes = async (newNotes: string) => {
+    if (!activeApp?.id) return;
+    const payload: ApplicationDetail = {
+      ...activeApp,
+      notes: newNotes,
+    };
+    setCurrentApp(payload);
+    startSaveTransition(async () => {
+      try {
+        await updateApplication(payload as unknown as FormValues);
+        toast({ description: "Notes saved successfully" });
+      } catch (err) {
+        console.error(err);
+        toast({
+          description: "Failed to save notes",
+          variant: "destructive",
+        });
+      }
+    });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-2xl md:max-w-3xl flex flex-col max-h-[88dvh] sm:max-h-[85vh] p-0 rounded-2xl sm:rounded-xl shadow-2xl border border-border/40 overflow-hidden bg-card">
@@ -342,6 +363,7 @@ export function ApplicationDetailSheet({
               history={history}
               isLoadingHistory={isLoadingHistory}
               onDeleteTimelineEntry={handleDeleteTimelineEntry}
+              onUpdateNotes={handleUpdateNotes}
             />
           )}
         </div>
