@@ -508,7 +508,7 @@ export function ApplicationFormFields({
           variant="outline"
           onClick={onCancel}
           disabled={isPending}
-          className="h-10 text-xs rounded-xl cursor-pointer sm:order-1 sm:w-1/3"
+          className="h-10 text-xs rounded-xl cursor-pointer order-2 sm:order-1 sm:w-1/3"
         >
           Cancel
         </Button>
@@ -521,7 +521,7 @@ export function ApplicationFormFields({
             <Button
               type="submit"
               disabled={isSaveDisabled}
-              className="h-10 text-xs font-semibold rounded-xl shadow-xs cursor-pointer sm:order-2 sm:flex-1"
+              className="h-10 text-xs font-semibold rounded-xl shadow-xs cursor-pointer order-1 sm:order-2 sm:flex-1"
               title={
                 isEditingApp && !isDirty ? "No changes have been made" : undefined
               }
