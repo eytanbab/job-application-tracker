@@ -58,6 +58,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
     table,
     uniquePlatforms,
     selectedCount,
+    isBulkPending,
     handleBulkDelete,
     handleBulkStatusChange,
     hasActiveFilters,
@@ -140,6 +141,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
 
       <DataTableBulkActions
         selectedCount={selectedCount}
+        isPending={isBulkPending}
         onDeselectAll={() => setRowSelection({})}
         onBulkStatusChange={handleBulkStatusChange}
         onBulkDelete={handleBulkDelete}

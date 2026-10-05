@@ -98,7 +98,7 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
   }, [createParam, setCreateParam]);
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [, startBulkTransition] = useTransition();
+  const [isBulkPending, startBulkTransition] = useTransition();
 
   const [globalFilter, setGlobalFilter] = useQueryState(
     "q",
@@ -442,6 +442,7 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     table,
     uniquePlatforms,
     selectedCount,
+    isBulkPending,
     handleBulkDelete,
     handleBulkStatusChange,
     hasActiveFilters,

@@ -17,11 +17,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CheckCircle2, Trash2, X, ChevronDown } from "lucide-react";
+import { CheckCircle2, Trash2, X, ChevronDown, Loader2 } from "lucide-react";
 import { statusOptions, statusLabels, StatusKind } from "@/lib/utils";
 
 interface DataTableBulkActionsProps {
   selectedCount: number;
+  isPending?: boolean;
   onDeselectAll: () => void;
   onBulkStatusChange: (category: string) => void;
   onBulkDelete: () => void;
@@ -29,6 +30,7 @@ interface DataTableBulkActionsProps {
 
 export function DataTableBulkActions({
   selectedCount,
+  isPending = false,
   onDeselectAll,
   onBulkStatusChange,
   onBulkDelete,
@@ -56,6 +58,7 @@ export function DataTableBulkActions({
             variant="ghost"
             size="sm"
             onClick={onDeselectAll}
+            disabled={isPending}
             className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground gap-1 cursor-pointer"
             title="Deselect all"
           >
@@ -72,6 +75,7 @@ export function DataTableBulkActions({
               <Button
                 variant="outline"
                 size="sm"
+                disabled={isPending}
                 className="h-9 md:h-8 text-xs flex-1 md:w-[140px] justify-between font-medium cursor-pointer"
               >
                 <span>Mark Status</span>
@@ -97,11 +101,16 @@ export function DataTableBulkActions({
             data-testid="bulk-delete-button"
             variant="destructive"
             size="sm"
+            disabled={isPending}
             onClick={() => setIsConfirmOpen(true)}
             className="h-9 md:h-8 text-xs gap-1.5 font-semibold shrink-0 cursor-pointer"
           >
-            <Trash2 className="h-3.5 w-3.5" />
-            <span>Delete</span>
+            {isPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Trash2 className="h-3.5 w-3.5" />
+            )}
+            <span>{isPending ? "Deleting..." : "Delete"}</span>
           </Button>
         </div>
       </div>
@@ -125,6 +134,7 @@ export function DataTableBulkActions({
               data-testid="bulk-delete-cancel-button"
               type="button"
               variant="outline"
+              disabled={isPending}
               onClick={() => setIsConfirmOpen(false)}
               className="cursor-pointer"
             >
@@ -133,13 +143,21 @@ export function DataTableBulkActions({
             <Button
               data-testid="bulk-delete-confirm-button"
               variant="destructive"
+              disabled={isPending}
               onClick={() => {
                 onBulkDelete();
                 setIsConfirmOpen(false);
               }}
               className="cursor-pointer"
             >
-              Delete {selectedCount} Applications
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                `Delete ${selectedCount} Applications`
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -165,6 +183,7 @@ export function DataTableBulkActions({
             <Button
               type="button"
               variant="outline"
+              disabled={isPending}
               onClick={() => setPendingStatusCategory(null)}
               className="cursor-pointer"
             >
@@ -172,6 +191,7 @@ export function DataTableBulkActions({
             </Button>
             <Button
               type="button"
+              disabled={isPending}
               onClick={() => {
                 if (pendingStatusCategory) {
                   onBulkStatusChange(pendingStatusCategory);
@@ -180,7 +200,14 @@ export function DataTableBulkActions({
               }}
               className="cursor-pointer"
             >
-              Update Status
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                "Update Status"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
