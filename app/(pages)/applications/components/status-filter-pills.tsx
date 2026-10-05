@@ -57,7 +57,8 @@ export function StatusFilterPills({
   }, [data]);
 
   return (
-    <div className="w-full flex items-center gap-1.5 overflow-x-auto pb-1 pr-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+    <div className="relative w-full">
+      <div className="w-full flex items-center gap-1.5 overflow-x-auto pb-1 pr-8 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       {PILL_OPTIONS.map((pill) => {
         const isActive =
           pill.id === "all"
@@ -100,6 +101,8 @@ export function StatusFilterPills({
           </button>
         );
       })}
+      </div>
+      <div className="absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none sm:hidden" />
     </div>
   );
 }
