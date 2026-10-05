@@ -523,13 +523,11 @@ export function ApplicationFormFields({
               disabled={isSaveDisabled}
               className="h-10 text-xs font-semibold rounded-xl shadow-xs cursor-pointer order-1 sm:order-2 sm:flex-1"
               title={
-                isEditingApp && !isDirty ? "No changes have been made" : undefined
+                isEditingApp && !isDirty ? "No changes to save" : undefined
               }
             >
               {isPending ? (
                 <Loader2 className="size-5 animate-spin" />
-              ) : isEditingApp && !isDirty ? (
-                "No Changes"
               ) : isEditingApp ? (
                 "Save Changes"
               ) : (
