@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Filter } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableMobileCard } from "./data-table-mobile-card";
 
 const TABLE_ROWS = [5, 10, 15, 20, 25];
@@ -150,9 +151,32 @@ export function DataTableGrid<
       {/* Mobile Card View */}
       <div className="lg:hidden space-y-3">
         {table.getRowModel().rows?.length ? (
-          table
-            .getRowModel()
-            .rows.map((row) => (
+          <>
+            <div className="flex items-center justify-between px-3 py-2 bg-muted/40 border border-border/50 rounded-xl text-xs">
+              <label className="flex items-center gap-2 cursor-pointer select-none font-medium text-foreground">
+                <Checkbox
+                  checked={
+                    table.getIsAllPageRowsSelected()
+                      ? true
+                      : table.getIsSomePageRowsSelected()
+                      ? "indeterminate"
+                      : false
+                  }
+                  onCheckedChange={(checked) =>
+                    table.toggleAllPageRowsSelected(!!checked)
+                  }
+                  aria-label="Select all applications"
+                />
+                <span>Select all ({table.getRowModel().rows.length})</span>
+              </label>
+              {table.getSelectedRowModel().rows.length > 0 && (
+                <span className="text-muted-foreground font-normal">
+                  {table.getSelectedRowModel().rows.length} selected
+                </span>
+              )}
+            </div>
+
+            {table.getRowModel().rows.map((row) => (
               <DataTableMobileCard
                 key={row.id}
                 item={row.original}
@@ -160,7 +184,8 @@ export function DataTableGrid<
                 onSelectRow={(item) => onSelectRow(item as TData)}
                 onToggleSelected={(val) => row.toggleSelected(val)}
               />
-            ))
+            ))}
+          </>
         ) : (
           <div className="text-center p-6 sm:p-8 border border-border/40 rounded-xl bg-card text-muted-foreground text-xs sm:text-sm space-y-3 shadow-2xs">
             <Filter className="h-7 w-7 mx-auto text-muted-foreground/50" />
