@@ -164,8 +164,8 @@ export function DataTableToolbar({
               )}
             >
               <LayoutList className="h-3.5 w-3.5" />
-              <span className="sm:hidden">Cards</span>
-              <span className="hidden sm:inline">Table</span>
+              <span className="lg:hidden">Cards</span>
+              <span className="hidden lg:inline">Table</span>
             </button>
             <button
               type="button"
