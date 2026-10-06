@@ -163,7 +163,7 @@ export const columns: ColumnDef<FormValues>[] = [
           : `https://${link}`);
 
       return (
-        <div className="space-y-0.5 max-w-[170px] xl:max-w-[230px]">
+        <div className="space-y-0.5 min-w-0 w-full">
           <div className="font-semibold text-foreground truncate">{role}</div>
           <div className="text-xs text-muted-foreground flex items-center gap-1.5 truncate">
             <Building2 className="h-3 w-3 shrink-0" />
@@ -231,7 +231,7 @@ export const columns: ColumnDef<FormValues>[] = [
     cell: ({ row }) => {
       const location = row.getValue<string>("location");
       return (
-        <div className="text-xs xl:text-sm truncate max-w-[110px] xl:max-w-[140px] text-muted-foreground">
+        <div className="text-xs xl:text-sm truncate text-muted-foreground" title={location || undefined}>
           {location || "-"}
         </div>
       );
@@ -244,7 +244,7 @@ export const columns: ColumnDef<FormValues>[] = [
       const platform = row.getValue<string>("platform");
       if (!platform) return <span className="text-muted-foreground">-</span>;
       return (
-        <div className="flex items-center min-w-0 max-w-[100px] xl:max-w-[125px]" title={platform}>
+        <div className="flex items-center min-w-0" title={platform}>
           <Badge
             variant="secondary"
             className="capitalize text-[11px] xl:text-xs font-normal whitespace-nowrap truncate block px-2 py-0.5"

@@ -55,7 +55,17 @@ export function DataTableGrid<
     <div className="space-y-4 pb-24 lg:pb-4">
       {/* Desktop Table View */}
       <div className="hidden lg:block rounded-xl border border-border/40 bg-card overflow-hidden shadow-2xs">
-        <Table>
+        <Table className="table-fixed w-full">
+          <colgroup>
+            <col className="w-10" />
+            <col className="w-auto" />
+            <col className="w-[130px]" />
+            <col className="w-[105px]" />
+            <col className="w-[115px]" />
+            <col className="w-[95px]" />
+            <col className="w-[160px]" />
+            <col className="w-[100px]" />
+          </colgroup>
           <TableHeader className="bg-muted/30">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow

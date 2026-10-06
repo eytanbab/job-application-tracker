@@ -90,7 +90,7 @@ export function StatusFilterPills({
             <span>{pill.label}</span>
             <span
               className={cn(
-                "inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full text-[10px] font-bold tabular-nums leading-none",
+                "inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-semibold tabular-nums leading-none",
                 isActive
                   ? "bg-primary-foreground/20 text-primary-foreground"
                   : "bg-muted text-muted-foreground",
