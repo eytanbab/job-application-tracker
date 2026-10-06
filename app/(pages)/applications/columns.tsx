@@ -91,18 +91,18 @@ function renderSortHeader<TData, TValue>(column: Column<TData, TValue>, label: s
       variant="ghost"
       size="sm"
       className={cn(
-        "h-auto p-0 font-bold hover:bg-transparent transition-colors justify-start text-left text-xs uppercase tracking-wider text-foreground select-none",
+        "h-auto p-0 font-bold hover:bg-transparent transition-colors justify-start text-left text-xs uppercase tracking-wider text-foreground select-none inline-flex items-center gap-1.5",
         isSorted && "text-primary font-extrabold",
       )}
       onClick={() => column.toggleSorting(isSorted === "asc")}
     >
       <span>{label}</span>
       {isSorted === "asc" ? (
-        <ArrowUp className="ml-1 h-3.5 w-3.5 text-primary" />
+        <ArrowUp className="h-3.5 w-3.5 text-primary shrink-0" />
       ) : isSorted === "desc" ? (
-        <ArrowDown className="ml-1 h-3.5 w-3.5 text-primary" />
+        <ArrowDown className="h-3.5 w-3.5 text-primary shrink-0" />
       ) : (
-        <ArrowUpDown className="ml-1 h-3.5 w-3.5 text-muted-foreground/60" />
+        <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
       )}
     </Button>
   );
@@ -132,6 +132,7 @@ function SelectAllCheckbox({ table }: { table: Table<FormValues> }) {
 export const columns: ColumnDef<FormValues>[] = [
   {
     id: "select",
+    size: 40,
     header: ({ table }) => <SelectAllCheckbox table={table} />,
     cell: ({ row }) => (
       <div
@@ -154,7 +155,7 @@ export const columns: ColumnDef<FormValues>[] = [
     id: "role_name",
     accessorFn: (row) => `${row.role_name} ${row.company_name}`,
     header: ({ column }) => renderSortHeader(column, "Role & Company"),
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const role = row.original.role_name;
       const company = row.original.company_name;
       const link = row.original.link;
@@ -163,13 +164,25 @@ export const columns: ColumnDef<FormValues>[] = [
         (link.startsWith("http://") || link.startsWith("https://")
           ? link
           : `https://${link}`);
+      const meta = table.options.meta as CustomColumnMeta | undefined;
 
       return (
-        <div className="space-y-0.5 min-w-0 w-full">
-          <div className="font-semibold text-foreground truncate">{role}</div>
-          <div className="text-xs text-muted-foreground flex items-center gap-1.5 truncate">
-            <Building2 className="h-3 w-3 shrink-0" />
-            <span className="truncate">{company}</span>
+        <div className="space-y-0.5 min-w-0 max-w-[170px] xl:max-w-[220px]">
+          <button
+            type="button"
+            data-testid="view-details-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              meta?.onSelectApplication?.(row.original);
+            }}
+            className="font-semibold text-foreground hover:text-primary transition-colors text-left truncate block w-full cursor-pointer focus-visible:outline-none focus-visible:underline"
+            title={role}
+          >
+            {role}
+          </button>
+          <div className="text-xs text-muted-foreground flex items-center gap-1.5 min-w-0">
+            <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
+            <span className="truncate" title={company}>{company}</span>
             {href && (
               <a
                 href={href}
@@ -226,7 +239,7 @@ export const columns: ColumnDef<FormValues>[] = [
       if (!rawDate) return <span className="text-muted-foreground">-</span>;
       const formattedDate = formatDate(parseISO(rawDate), "MMM d, yyyy");
       return (
-        <div className="text-xs xl:text-sm font-medium text-foreground whitespace-nowrap">
+        <div className="text-xs font-medium text-foreground whitespace-nowrap">
           {formattedDate}
         </div>
       );
@@ -246,13 +259,19 @@ export const columns: ColumnDef<FormValues>[] = [
         row.original.statusCategory,
       );
       return (
-        <Badge
-          variant="outline"
-          className={`capitalize font-medium border whitespace-nowrap text-[11px] xl:text-xs px-2 py-0.5 ${statusBadgeClasses[kind]}`}
-        >
-          <span className="sr-only">{statusLabels[kind]}: </span>
-          {displayText}
-        </Badge>
+        <div className="min-w-0">
+          <Badge
+            variant="outline"
+            className={cn(
+              "capitalize font-medium border truncate max-w-[115px] xl:max-w-[125px] text-[11px] px-2 py-0.5 inline-block leading-normal",
+              statusBadgeClasses[kind],
+            )}
+            title={displayText}
+          >
+            <span className="sr-only">{statusLabels[kind]}: </span>
+            {displayText}
+          </Badge>
+        </div>
       );
     },
   },
@@ -262,7 +281,7 @@ export const columns: ColumnDef<FormValues>[] = [
     cell: ({ row }) => {
       const location = row.getValue<string>("location");
       return (
-        <div className="text-xs xl:text-sm truncate text-muted-foreground" title={location || undefined}>
+        <div className="text-xs text-muted-foreground truncate max-w-[110px] xl:max-w-[130px]" title={location || undefined}>
           {location || "-"}
         </div>
       );
@@ -275,10 +294,11 @@ export const columns: ColumnDef<FormValues>[] = [
       const platform = row.getValue<string>("platform");
       if (!platform) return <span className="text-muted-foreground">-</span>;
       return (
-        <div className="flex items-center min-w-0" title={platform}>
+        <div className="min-w-0">
           <Badge
             variant="secondary"
-            className="capitalize text-[11px] xl:text-xs font-normal whitespace-nowrap truncate block px-2 py-0.5"
+            className="capitalize text-[11px] font-normal truncate max-w-[85px] xl:max-w-[95px] px-2 py-0.5 inline-block leading-normal"
+            title={platform}
           >
             {platform}
           </Badge>
@@ -292,7 +312,7 @@ export const columns: ColumnDef<FormValues>[] = [
     cell: ({ row }) => {
       const salary = row.getValue<string>("salary");
       return (
-        <div className="text-xs xl:text-sm font-medium text-muted-foreground whitespace-nowrap">
+        <div className="text-xs font-medium text-muted-foreground whitespace-nowrap tabular-nums">
           {salary || "-"}
         </div>
       );
@@ -301,12 +321,10 @@ export const columns: ColumnDef<FormValues>[] = [
   {
     id: "actions",
     header: () => <span className="sr-only">Actions</span>,
-    cell: ({ row, table }) => {
+    cell: ({ row }) => {
       const editDefaults = {
         ...row.original,
       } as FormValues;
-
-      const meta = table.options.meta as CustomColumnMeta | undefined;
 
       const onSubmit = async (values: FormValues) => {
         try {
@@ -326,36 +344,14 @@ export const columns: ColumnDef<FormValues>[] = [
 
       return (
         <div
-          className="flex items-center gap-0.5 xl:gap-1 justify-end"
+          className="flex items-center gap-1 justify-end"
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
         >
-          {meta?.onSelectApplication && (
-            <Button
-              variant="ghost"
-              size="icon"
-              data-testid="view-details-button"
-              className="h-7 w-7 xl:h-8 xl:w-8 text-muted-foreground hover:text-foreground"
-              title="View details"
-              onClick={(e) => {
-                e.stopPropagation();
-                meta.onSelectApplication!(row.original);
-              }}
-              onKeyDown={(e) => {
-                e.stopPropagation();
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  meta.onSelectApplication!(row.original);
-                }
-              }}
-            >
-              <Eye className="h-3.5 w-3.5 xl:h-4 xl:w-4" />
-            </Button>
-          )}
-
           <EditApplicationSheet
             row={{ original: editDefaults }}
             onSubmit={onSubmit}
+            triggerClassName="cursor-pointer"
           />
 
           <Dialog>
@@ -364,7 +360,7 @@ export const columns: ColumnDef<FormValues>[] = [
                 variant="ghost"
                 size="icon"
                 data-testid="delete-application-button"
-                className="h-7 w-7 xl:h-8 xl:w-8 text-muted-foreground hover:text-destructive"
+                className="h-7 w-7 xl:h-8 xl:w-8 text-muted-foreground hover:text-destructive cursor-pointer"
                 title="Delete application"
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e) => e.stopPropagation()}

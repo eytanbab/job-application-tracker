@@ -55,17 +55,7 @@ export function DataTableGrid<
     <div className="space-y-4 pb-24 lg:pb-4">
       {/* Desktop Table View */}
       <div className="hidden lg:block rounded-xl border border-border/40 bg-card overflow-hidden shadow-2xs">
-        <Table className="table-fixed w-full">
-          <colgroup>
-            <col className="w-10" />
-            <col className="w-auto" />
-            <col className="w-[130px]" />
-            <col className="w-[105px]" />
-            <col className="w-[115px]" />
-            <col className="w-[95px]" />
-            <col className="w-[160px]" />
-            <col className="w-[100px]" />
-          </colgroup>
+        <Table className="w-full">
           <TableHeader className="bg-muted/30">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
@@ -74,12 +64,24 @@ export function DataTableGrid<
               >
                 {headerGroup.headers.map((header) => {
                   const isActions = header.column.id === "actions";
+                  const isSelect = header.column.id === "select";
+                  const isDate = header.column.id === "date_applied";
+                  const isSalary = header.column.id === "salary";
+
                   return (
                     <TableHead
                       key={header.id}
                       className={cn(
-                        "px-2 xl:px-3 py-2.5 font-bold text-foreground text-xs uppercase tracking-wider whitespace-nowrap",
-                        isActions && "text-right",
+                        "px-2.5 xl:px-3 py-3 font-bold text-foreground text-xs uppercase tracking-wider",
+                        isSelect && "w-10 px-2 text-center",
+                        header.column.id === "role_name" && "min-w-[160px]",
+                        isDate && "w-[110px] whitespace-nowrap",
+                        header.column.id === "status" && "w-[125px]",
+                        header.column.id === "location" && "w-[125px]",
+                        header.column.id === "platform" && "w-[100px]",
+                        isSalary && "w-[130px] whitespace-nowrap",
+                        isActions &&
+                          "w-[76px] sticky right-0 z-20 bg-card/95 backdrop-blur-xs text-right pr-3 border-l border-border/30 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.3)]",
                       )}
                     >
                       {header.isPlaceholder
@@ -123,12 +125,24 @@ export function DataTableGrid<
                 >
                   {row.getVisibleCells().map((cell) => {
                     const isActions = cell.column.id === "actions";
+                    const isSelect = cell.column.id === "select";
+                    const isDate = cell.column.id === "date_applied";
+                    const isSalary = cell.column.id === "salary";
+
                     return (
                       <TableCell
                         key={cell.id}
                         className={cn(
-                          "px-2 xl:px-3 py-2 text-sm",
-                          isActions && "text-right",
+                          "px-2.5 xl:px-3 py-3 text-sm",
+                          isSelect && "w-10 px-2 text-center",
+                          cell.column.id === "role_name" && "min-w-[160px]",
+                          isDate && "w-[110px] whitespace-nowrap",
+                          cell.column.id === "status" && "w-[125px]",
+                          cell.column.id === "location" && "w-[125px]",
+                          cell.column.id === "platform" && "w-[100px]",
+                          isSalary && "w-[130px] whitespace-nowrap",
+                          isActions &&
+                            "w-[76px] sticky right-0 z-10 bg-card group-hover/row:bg-accent/40 group-data-[state=selected]/row:bg-muted text-right pr-3 border-l border-border/30 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.3)]",
                         )}
                       >
                         {flexRender(
