@@ -144,10 +144,7 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
 
       {isOpen && (
         <Form {...aiForm}>
-          <form
-            onSubmit={aiForm.handleSubmit(handleAiSubmit)}
-            className="flex flex-col w-full gap-2.5 pt-3 mt-2.5 border-t border-primary/10"
-          >
+          <div className="flex flex-col w-full gap-2.5 pt-3 mt-2.5 border-t border-primary/10">
             <FormField
               control={aiForm.control}
               name="url"
@@ -160,6 +157,13 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
                     <Input
                       placeholder="Paste LinkedIn, Indeed, or job URL..."
                       {...field}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          aiForm.handleSubmit(handleAiSubmit)();
+                        }
+                      }}
                       onChange={(e) => {
                         field.onChange(e);
                         if (extractError) setExtractError(null);
@@ -184,7 +188,8 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
               )}
             />
             <Button
-              type="submit"
+              type="button"
+              onClick={aiForm.handleSubmit(handleAiSubmit)}
               disabled={isPending || isLoading}
               className="h-9 text-xs font-semibold cursor-pointer"
             >
@@ -200,7 +205,7 @@ export function AiExtractForm({ isPending, onAutoFill }: AiExtractFormProps) {
             <p className="text-[11px] text-muted-foreground text-center">
               Pastes job title, company, description & location automatically.
             </p>
-          </form>
+          </div>
         </Form>
       )}
     </div>

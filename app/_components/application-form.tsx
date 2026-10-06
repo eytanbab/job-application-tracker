@@ -138,7 +138,11 @@ export const ApplicationForm = ({
 
   const handleAutoFill = (autoFillValues: FormValues) => {
     Object.entries(autoFillValues).forEach(([key, value]) => {
-      form.setValue(key as keyof FormValues, value);
+      form.setValue(key as keyof FormValues, value, {
+        shouldValidate: true,
+        shouldDirty: true,
+        shouldTouch: true,
+      });
     });
   };
 

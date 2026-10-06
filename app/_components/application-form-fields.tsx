@@ -38,7 +38,7 @@ import {
   isStandardStatus,
   StatusKind,
 } from "@/lib/utils";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { FormValues } from "./application-form";
 import { ComboboxInput } from "@/components/ui/combobox-input";
 import { ResumePicker } from "./resume-picker";
@@ -323,6 +323,12 @@ export function ApplicationFormFields({
   const [showMoreDetails, setShowMoreDetails] = useState(
     isEditing || hasOptionalData,
   );
+
+  useEffect(() => {
+    if (hasOptionalData) {
+      setShowMoreDetails(true);
+    }
+  }, [hasOptionalData]);
 
   return (
     <>
