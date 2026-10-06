@@ -17,6 +17,7 @@ export interface MockApplication {
   location: string;
   createdAt: Date;
   salary: string | null;
+  resumeId?: string | null;
 }
 
 export interface MockStatusHistory {
@@ -60,6 +61,7 @@ export const SEED_APPLICATIONS: MockApplication[] = [
       "Vercel is looking for a Senior Frontend Engineer to build world-class developer experiences for Next.js, Turbopack, and the Vercel Dashboard.\n\nResponsibilities:\n- Architect high-performance React and Next.js applications.\n- Optimize core Web Vitals, SSR latency, and client-side hydration.\n- Collaborate closely with product design and open-source engineers.\n\nRequirements:\n- 5+ years of production experience with TypeScript, React, and Next.js.\n- Deep understanding of modern browser APIs and rendering pipelines.\n- Passion for developer velocity and clean ergonomics.",
     notes:
       "Referred by Sarah Jenkins from the Next.js team. Completed initial recruiter chat on Monday; technical screening with Staff Engineer scheduled for Thursday 2 PM EST.",
+    resumeId: "doc-mock-001",
   },
   {
     id: "app-mock-002",
@@ -98,6 +100,7 @@ export const SEED_APPLICATIONS: MockApplication[] = [
     description:
       "Figma is looking for a Product Engineer to craft component architecture, design token synchronization, and canvas UI primitives.\n\nRequirements:\n- Mastery of WebGL/Canvas and DOM composition.\n- Extensive experience building accessible design systems.\n- Strong eye for micro-interactions and motion design.",
     notes: "Confirmation email received from Figma Greenhouse. Application under active recruiter review.",
+    resumeId: "doc-mock-002",
   },
   {
     id: "app-mock-004",
@@ -118,6 +121,7 @@ export const SEED_APPLICATIONS: MockApplication[] = [
       "Build the web interfaces, developer toolchains, and real-time streaming architectures powering ChatGPT and the OpenAI API.\n\nSkills:\n- React, TypeScript, Python, FastAPI, WebSockets.\n- Experience designing resilient streaming state management.",
     notes:
       "Passed HackerRank coding assessment with 100% score. System design interview scheduled with Tech Lead next Tuesday.",
+    resumeId: "doc-mock-001",
   },
   {
     id: "app-mock-005",

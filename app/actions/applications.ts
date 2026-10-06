@@ -8,9 +8,19 @@ import {
   insertApplicationSchema,
   jobApplications,
   applicationStatusHistory,
+  documents,
 } from "@/app/db/schema";
 import { z } from "zod";
-import { and, desc, eq, gte, inArray, lte, notInArray } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  getTableColumns,
+  gte,
+  inArray,
+  lte,
+  notInArray,
+} from "drizzle-orm";
 
 import { addDays, format, isBefore, parseISO, subDays } from "date-fns";
 import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
@@ -60,6 +70,7 @@ function extractCleanApplicationFields(values: FormValues) {
     status: normalized.status,
     statusCategory: normalized.statusCategory ?? "applied",
     salary: normalized.salary ? normalized.salary.trim() : null,
+    resumeId: normalized.resumeId || null,
     month,
     year,
   };
@@ -219,8 +230,14 @@ export async function getApplications() {
   }
 
   const rows = await db
-    .select()
+    .select({
+      ...getTableColumns(jobApplications),
+      resumeTitle: documents.title,
+      resumeFileName: documents.file_name,
+      resumeFileSize: documents.file_size,
+    })
     .from(jobApplications)
+    .leftJoin(documents, eq(jobApplications.resumeId, documents.id))
     .where(eq(jobApplications.userId, userId))
     .orderBy(
       desc(jobApplications.date_applied),

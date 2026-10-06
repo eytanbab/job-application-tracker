@@ -80,7 +80,7 @@ export async function createFile(
   const userId = await getCurrentUserIdOrThrow();
 
   if (isMockDb) {
-    mockStore.createDocument(userId, {
+    const newDoc = mockStore.createDocument(userId, {
       title,
       doc_url,
       file_name,
@@ -92,10 +92,10 @@ export async function createFile(
       revalidateTag(documentsTag(userId), "max");
       revalidatePath("/documents");
     } catch {}
-    return;
+    return { id: newDoc.id };
   }
 
-  await db
+  const result = await db
     .insert(documents)
     .values({
       title,
@@ -111,6 +111,12 @@ export async function createFile(
     revalidateTag(documentsTag(userId), "max");
     revalidatePath("/documents");
   } catch {}
+  return { id: result[0]?.insertedId };
+}
+
+export async function getResumes() {
+  const allFiles = await getFiles();
+  return allFiles.filter((f) => f.category === "resume");
 }
 
 export async function getFiles() {
@@ -134,6 +140,23 @@ export async function getFiles() {
       tags: [documentsTag(userId)],
     },
   )();
+}
+
+export async function getDocument(id: string) {
+  const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    const doc = mockStore.getDocuments(userId).find((d) => d.id === id);
+    return doc || null;
+  }
+
+  const result = await db
+    .select()
+    .from(documents)
+    .where(and(eq(documents.userId, userId), eq(documents.id, id)))
+    .limit(1);
+
+  return result[0] || null;
 }
 
 export async function deleteFile(id: string) {

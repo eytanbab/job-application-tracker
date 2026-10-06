@@ -34,13 +34,29 @@ class MockStore {
 
   // --- APPLICATIONS ---
 
-  public getApplications(userId?: string): MockApplication[] {
-    return [...this.applications].sort((a, b) => {
-      const dateA = new Date(a.date_applied).getTime();
-      const dateB = new Date(b.date_applied).getTime();
-      if (dateB !== dateA) return dateB - dateA;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
+  public getApplications(userId?: string): (MockApplication & {
+    resumeTitle?: string | null;
+    resumeFileName?: string | null;
+    resumeFileSize?: string | null;
+  })[] {
+    return [...this.applications]
+      .sort((a, b) => {
+        const dateA = new Date(a.date_applied).getTime();
+        const dateB = new Date(b.date_applied).getTime();
+        if (dateB !== dateA) return dateB - dateA;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      })
+      .map((app) => {
+        const doc = app.resumeId
+          ? this.documents.find((d) => d.id === app.resumeId)
+          : null;
+        return {
+          ...app,
+          resumeTitle: doc?.title ?? null,
+          resumeFileName: doc?.file_name ?? null,
+          resumeFileSize: doc?.file_size ?? null,
+        };
+      });
   }
 
   public createApplication(
