@@ -87,6 +87,7 @@ const formSchema = z.object({
   month: z.string().optional(),
   year: z.string().optional(),
   salary: z.string().nullable().optional(),
+  resumeId: z.string().nullable().optional(),
 });
 
 export const ApplicationForm = ({
@@ -162,6 +163,7 @@ export const ApplicationForm = ({
       statusCategory: cat,
       status: resolvedStatus,
       salary: values.salary?.trim() || "",
+      resumeId: values.resumeId || null,
     };
 
     startTransition(async () => {

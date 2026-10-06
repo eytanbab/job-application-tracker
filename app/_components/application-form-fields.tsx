@@ -41,6 +41,7 @@ import {
 import { useMemo, useState } from "react";
 import { FormValues } from "./application-form";
 import { ComboboxInput } from "@/components/ui/combobox-input";
+import { ResumePicker } from "./resume-picker";
 
 const DEFAULT_EMPTY_ARRAY: string[] = [];
 
@@ -315,7 +316,8 @@ export function ApplicationFormFields({
     form.watch("salary") ||
       form.watch("link") ||
       form.watch("description") ||
-      form.watch("notes"),
+      form.watch("notes") ||
+      form.watch("resumeId"),
   );
 
   const [showMoreDetails, setShowMoreDetails] = useState(
@@ -430,7 +432,7 @@ export function ApplicationFormFields({
             onClick={() => setShowMoreDetails(true)}
             className="text-xs font-semibold text-primary hover:underline flex items-center gap-1.5 py-1 cursor-pointer"
           >
-            <span>+ Add More Details (Salary, URL, Description, Notes)</span>
+            <span>+ Add More Details (Resume, Salary, URL, Description, Notes)</span>
           </button>
         ) : (
           <div className="space-y-3 pt-2 border-t border-border/40">
@@ -448,6 +450,8 @@ export function ApplicationFormFields({
                 </button>
               )}
             </div>
+
+            <ResumePicker form={form} disabled={isPending} />
 
             <FormField
               control={form.control}
