@@ -323,8 +323,10 @@ export function ApplicationDetailSheet({
 
         <div
           className={cn(
-            "flex-1 min-w-0 flex flex-col",
-            !isEditing && "overflow-y-auto p-4 sm:p-6 py-4 space-y-5",
+            "flex-1 min-w-0 flex flex-col min-h-0",
+            isEditing
+              ? "overflow-hidden"
+              : "overflow-y-auto p-4 sm:p-6 py-4 space-y-5",
           )}
         >
           {isEditing ? (
