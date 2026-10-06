@@ -10,6 +10,24 @@ import {
 
 import { createInsertSchema } from "drizzle-zod";
 
+export const documents = pgTable(
+  "documents",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: varchar("user_id", { length: 255 }).notNull(),
+    title: varchar("title").notNull(),
+    category: varchar("category", { length: 32 }).default("resume").notNull(),
+    file_size: text("file_size"),
+    doc_url: varchar("doc_url").notNull(),
+    created_at: timestamp("created_at").defaultNow().notNull(),
+    file_name: varchar("file_name").notNull(),
+    file_key: varchar("file_key").notNull(),
+  },
+  (table) => [
+    index("documents_user_id_idx").on(table.userId),
+  ],
+);
+
 export const jobApplications = pgTable(
   "job_applications",
   {
@@ -31,34 +49,20 @@ export const jobApplications = pgTable(
     location: text("location").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     salary: text("salary"),
+    resumeId: uuid("resume_id").references(() => documents.id, {
+      onDelete: "set null",
+    }),
   },
   (table) => [
     index("job_apps_user_id_idx").on(table.userId),
     index("job_apps_user_date_idx").on(table.userId, table.date_applied),
     index("job_apps_user_period_idx").on(table.userId, table.year, table.month),
     index("job_apps_user_status_cat_idx").on(table.userId, table.statusCategory),
+    index("job_apps_resume_id_idx").on(table.resumeId),
   ],
 );
 
 export const insertApplicationSchema = createInsertSchema(jobApplications);
-
-export const documents = pgTable(
-  "documents",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    userId: varchar("user_id", { length: 255 }).notNull(),
-    title: varchar("title").notNull(),
-    category: varchar("category", { length: 32 }).default("resume").notNull(),
-    file_size: text("file_size"),
-    doc_url: varchar("doc_url").notNull(),
-    created_at: timestamp("created_at").defaultNow().notNull(),
-    file_name: varchar("file_name").notNull(),
-    file_key: varchar("file_key").notNull(),
-  },
-  (table) => [
-    index("documents_user_id_idx").on(table.userId),
-  ],
-);
 
 export const applicationStatusHistory = pgTable(
   "application_status_history",
