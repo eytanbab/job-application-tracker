@@ -370,6 +370,7 @@ export function ApplicationDetailSheet({
               isLoadingHistory={isLoadingHistory}
               onDeleteTimelineEntry={handleDeleteTimelineEntry}
               onUpdateNotes={handleUpdateNotes}
+              onEdit={() => setIsEditing(true)}
             />
           )}
         </div>

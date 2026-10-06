@@ -10,6 +10,7 @@ import {
   ExternalLink,
   Eye,
   Building2,
+  FileText,
 } from "lucide-react";
 
 import { EditApplicationSheet } from "@/app/_components/edit-application-sheet";
@@ -17,6 +18,7 @@ import {
   deleteApplication,
   updateApplication,
 } from "@/app/actions/applications";
+import { getViewUrl } from "@/app/actions/documents";
 import { formatDate, parseISO } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 
@@ -181,6 +183,35 @@ export const columns: ColumnDef<FormValues>[] = [
               >
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
+            )}
+            {row.original.resumeId && (
+              <button
+                type="button"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  try {
+                    const res = await getViewUrl(row.original.resumeId as string);
+                    if (res?.url) {
+                      window.open(res.url, "_blank", "noopener,noreferrer");
+                    }
+                  } catch (err) {
+                    console.error("Failed to preview resume:", err);
+                  }
+                }}
+                className="inline-flex items-center justify-center h-5 w-5 rounded text-primary/80 hover:text-primary hover:bg-primary/10 transition-colors shrink-0 cursor-pointer"
+                title={
+                  (row.original as any).resumeTitle
+                    ? `Applied with: ${(row.original as any).resumeTitle} (Click to preview)`
+                    : "Applied with resume (Click to preview)"
+                }
+                aria-label={
+                  (row.original as any).resumeTitle
+                    ? `Resume: ${(row.original as any).resumeTitle}`
+                    : "Resume attached"
+                }
+              >
+                <FileText className="h-3.5 w-3.5" />
+              </button>
             )}
           </div>
         </div>

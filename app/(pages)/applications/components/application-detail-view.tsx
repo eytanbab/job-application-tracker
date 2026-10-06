@@ -14,6 +14,9 @@ import {
   Check,
   Pencil,
   Loader2,
+  Download,
+  Eye,
+  Paperclip,
 } from "lucide-react";
 import {
   Select,
@@ -27,6 +30,11 @@ import { statusOptions, statusLabels, StatusKind } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { ApplicationTimeline, TimelineEntry } from "./application-timeline";
+import {
+  getDocument,
+  getViewUrl,
+  getDownloadUrl,
+} from "@/app/actions/documents";
 
 export interface ApplicationDetailViewProps {
   currentApp: {
@@ -42,6 +50,10 @@ export interface ApplicationDetailViewProps {
     notes?: string | null;
     location: string;
     salary?: string | null;
+    resumeId?: string | null;
+    resumeTitle?: string | null;
+    resumeFileName?: string | null;
+    resumeFileSize?: string | null;
   };
   currentKind: StatusKind;
   quickStatusText: string;
@@ -52,6 +64,7 @@ export interface ApplicationDetailViewProps {
   isLoadingHistory: boolean;
   onDeleteTimelineEntry: (id: string) => void;
   onUpdateNotes?: (notes: string) => Promise<void>;
+  onEdit?: () => void;
 }
 
 export function ApplicationDetailView({
@@ -65,14 +78,127 @@ export function ApplicationDetailView({
   isLoadingHistory,
   onDeleteTimelineEntry,
   onUpdateNotes,
+  onEdit,
 }: ApplicationDetailViewProps) {
   const [copiedJd, setCopiedJd] = useState(false);
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notesValue, setNotesValue] = useState(currentApp.notes || "");
+  const [resumeInfo, setResumeInfo] = useState<{
+    id: string;
+    title: string;
+    fileName?: string | null;
+    fileSize?: string | null;
+  } | null>(() => {
+    if (currentApp.resumeId) {
+      return {
+        id: currentApp.resumeId,
+        title: currentApp.resumeTitle || "Applied Resume",
+        fileName: currentApp.resumeFileName || null,
+        fileSize: currentApp.resumeFileSize || null,
+      };
+    }
+    return null;
+  });
+  const [isPreviewingResume, setIsPreviewingResume] = useState(false);
+  const [isDownloadingResume, setIsDownloadingResume] = useState(false);
 
   useEffect(() => {
     setNotesValue(currentApp.notes || "");
   }, [currentApp.notes]);
+
+  useEffect(() => {
+    if (currentApp.resumeId) {
+      if (currentApp.resumeTitle) {
+        setResumeInfo({
+          id: currentApp.resumeId,
+          title: currentApp.resumeTitle,
+          fileName: currentApp.resumeFileName || null,
+          fileSize: currentApp.resumeFileSize || null,
+        });
+      } else {
+        getDocument(currentApp.resumeId)
+          .then((doc) => {
+            if (doc) {
+              setResumeInfo({
+                id: doc.id,
+                title: doc.title,
+                fileName: doc.file_name,
+                fileSize: doc.file_size,
+              });
+            }
+          })
+          .catch(console.error);
+      }
+    } else {
+      setResumeInfo(null);
+    }
+  }, [
+    currentApp.resumeId,
+    currentApp.resumeTitle,
+    currentApp.resumeFileName,
+    currentApp.resumeFileSize,
+  ]);
+
+  const handlePreviewResume = async () => {
+    if (!currentApp.resumeId) return;
+    setIsPreviewingResume(true);
+    try {
+      const res = await getViewUrl(currentApp.resumeId);
+      if (res.error || !res.url) {
+        toast({
+          title: "Preview unavailable",
+          description:
+            res.error || "Could not generate view URL for this resume.",
+          variant: "destructive",
+        });
+        return;
+      }
+      window.open(res.url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      console.error("Preview error:", err);
+      toast({
+        title: "Preview error",
+        description: "Could not open resume preview.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPreviewingResume(false);
+    }
+  };
+
+  const handleDownloadResume = async () => {
+    if (!currentApp.resumeId) return;
+    setIsDownloadingResume(true);
+    try {
+      const res = await getDownloadUrl(currentApp.resumeId);
+      if (res.error || !res.url) {
+        toast({
+          title: "Download unavailable",
+          description:
+            res.error || "Could not generate download URL for this resume.",
+          variant: "destructive",
+        });
+        return;
+      }
+      const link = document.createElement("a");
+      link.href = res.url;
+      link.download = resumeInfo?.fileName || "resume.pdf";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Download error:", err);
+      toast({
+        title: "Download error",
+        description: "Could not download resume.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloadingResume(false);
+    }
+  };
 
   const handleCopyJd = () => {
     if (!currentApp.description) return;
@@ -219,6 +345,87 @@ export function ApplicationDetailView({
             {currentApp.salary || "-"}
           </p>
         </div>
+      </div>
+
+      {/* Applied Resume Section */}
+      <div className="space-y-2">
+        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+          <Paperclip className="h-3.5 w-3.5 text-primary" /> Applied Resume
+        </h4>
+
+        {resumeInfo ? (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-border/60 bg-card p-3 shadow-xs hover:border-primary/40 transition-colors">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <FileText className="h-5 w-5 text-primary" />
+              </div>
+              <div className="min-w-0 space-y-0.5">
+                <p className="text-xs sm:text-sm font-semibold text-foreground truncate">
+                  {resumeInfo.title}
+                </p>
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground truncate">
+                  <span className="truncate">
+                    {resumeInfo.fileName || "resume.pdf"}
+                  </span>
+                  {resumeInfo.fileSize && (
+                    <>
+                      <span>•</span>
+                      <span>{resumeInfo.fileSize}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handlePreviewResume}
+                disabled={isPreviewingResume}
+                className="h-8 text-xs px-2.5 gap-1.5 cursor-pointer font-medium"
+              >
+                {isPreviewingResume ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Eye className="h-3.5 w-3.5 text-primary" />
+                )}
+                <span>Preview</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadResume}
+                disabled={isDownloadingResume}
+                className="h-8 text-xs px-2.5 gap-1.5 cursor-pointer font-medium"
+              >
+                {isDownloadingResume ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Download className="h-3.5 w-3.5 text-primary" />
+                )}
+                <span>Download</span>
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between rounded-lg border border-dashed border-border/60 bg-muted/20 px-3.5 py-2.5 text-xs text-muted-foreground">
+            <span className="italic">No resume attached to this application.</span>
+            {onEdit && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={onEdit}
+                className="h-6 text-[11px] px-2 text-primary hover:bg-primary/10 cursor-pointer font-medium"
+              >
+                + Attach Resume
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Separated Job Description & Personal Notes */}
