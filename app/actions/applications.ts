@@ -2,7 +2,7 @@
 
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
-import { db, isMockDb, ensureResumeColumn } from "@/app/db";
+import { db, isMockDb } from "@/app/db";
 import { mockStore } from "@/lib/mock-data/mock-store";
 import {
   insertApplicationSchema,
@@ -221,15 +221,6 @@ export async function syncGhostedApplications(userId?: string) {
   return qualifyingApps.length;
 }
 
-function isMissingResumeColumnError(err: unknown): boolean {
-  if (!err || typeof err !== "object") return false;
-  const anyErr = err as Record<string, unknown>;
-  const cause = anyErr.cause as Record<string, unknown> | undefined;
-  if (anyErr.code === "42703" || cause?.code === "42703") return true;
-  const msg = `${String(anyErr.message || "")} ${String(cause?.message || "")}`.toLowerCase();
-  return msg.includes("resume_id") && msg.includes("does not exist");
-}
-
 // Get all applications of current user
 export async function getApplications() {
   const userId = await getCurrentUserIdOrThrow();
@@ -238,71 +229,20 @@ export async function getApplications() {
     return mockStore.getApplications(userId);
   }
 
-  const queryWithResume = () =>
-    db
-      .select({
-        ...getTableColumns(jobApplications),
-        resumeTitle: documents.title,
-        resumeFileName: documents.file_name,
-        resumeFileSize: documents.file_size,
-      })
-      .from(jobApplications)
-      .leftJoin(documents, eq(jobApplications.resumeId, documents.id))
-      .where(eq(jobApplications.userId, userId))
-      .orderBy(
-        desc(jobApplications.date_applied),
-        desc(jobApplications.createdAt),
-      );
-
-  let rows;
-  try {
-    rows = await queryWithResume();
-  } catch (err) {
-    if (isMissingResumeColumnError(err)) {
-      console.warn("Detected missing resume_id column in database. Attempting self-healing migration...");
-      try {
-        await ensureResumeColumn();
-        rows = await queryWithResume();
-      } catch (retryErr) {
-        console.warn("Self-healing retry failed. Falling back to legacy query:", retryErr);
-        const legacyRows = await db
-          .select({
-            id: jobApplications.id,
-            userId: jobApplications.userId,
-            role_name: jobApplications.role_name,
-            company_name: jobApplications.company_name,
-            date_applied: jobApplications.date_applied,
-            link: jobApplications.link,
-            platform: jobApplications.platform,
-            status: jobApplications.status,
-            statusCategory: jobApplications.statusCategory,
-            month: jobApplications.month,
-            year: jobApplications.year,
-            description: jobApplications.description,
-            notes: jobApplications.notes,
-            location: jobApplications.location,
-            createdAt: jobApplications.createdAt,
-            salary: jobApplications.salary,
-          })
-          .from(jobApplications)
-          .where(eq(jobApplications.userId, userId))
-          .orderBy(
-            desc(jobApplications.date_applied),
-            desc(jobApplications.createdAt),
-          );
-
-        rows = legacyRows.map((app) => ({
-          ...app,
-          resumeId: null,
-          resumeTitle: null,
-          resumeFileName: null,
-          resumeFileSize: null,
-        }));
-      }
-    } else {
-      throw err;
-    }
-  }
+  const rows = await db
+    .select({
+      ...getTableColumns(jobApplications),
+      resumeTitle: documents.title,
+      resumeFileName: documents.file_name,
+      resumeFileSize: documents.file_size,
+    })
+    .from(jobApplications)
+    .leftJoin(documents, eq(jobApplications.resumeId, documents.id))
+    .where(eq(jobApplications.userId, userId))
+    .orderBy(
+      desc(jobApplications.date_applied),
+      desc(jobApplications.createdAt),
+    );
 
   return rows.map((app) => {
     if (app.statusCategory === "ghosted") {
@@ -336,38 +276,20 @@ export async function createApplication(values: FormValues) {
 
   const applicationId = crypto.randomUUID();
 
-  const performInsert = (insertFields: typeof fields) =>
-    db.batch([
-      db.insert(jobApplications).values({
-        id: applicationId,
-        ...insertFields,
-        userId,
-      }),
-      db.insert(applicationStatusHistory).values({
-        applicationId,
-        status: insertFields.status,
-        statusCategory: insertFields.statusCategory ?? "applied",
-        createdAt: new Date(),
-      }),
-    ]);
-
-  try {
-    await performInsert(fields);
-  } catch (err) {
-    if (isMissingResumeColumnError(err)) {
-      console.warn("Detected missing resume_id column on insert. Attempting self-healing migration...");
-      try {
-        await ensureResumeColumn();
-        await performInsert(fields);
-      } catch (retryErr) {
-        console.warn("Self-healing failed on insert. Inserting without resumeId:", retryErr);
-        const { resumeId: _, ...legacyFields } = fields;
-        await performInsert(legacyFields as any);
-      }
-    } else {
-      throw err;
-    }
-  }
+  // Atomically insert the application and its initial status history in a single batch
+  await db.batch([
+    db.insert(jobApplications).values({
+      id: applicationId,
+      ...fields,
+      userId,
+    }),
+    db.insert(applicationStatusHistory).values({
+      applicationId,
+      status: fields.status,
+      statusCategory: fields.statusCategory ?? "applied",
+      createdAt: new Date(),
+    }),
+  ]);
 
   // Sync ghosted applications during mutation in the background
   syncGhostedApplications(userId).catch(console.error);
@@ -427,7 +349,6 @@ export async function updateApplication(values: FormValues) {
     currentApp[0].status !== fields.status ||
     currentApp[0].statusCategory !== fields.statusCategory;
 
-  let historyOperation: any = null;
   if (statusChanged) {
     const latestHistory = await db
       .select({
@@ -448,7 +369,7 @@ export async function updateApplication(values: FormValues) {
       now.getTime() - new Date(latestHistory[0].createdAt).getTime() <
         15 * 60 * 1000;
 
-    historyOperation = isRecentSameCategoryUpdate
+    const historyOperation = isRecentSameCategoryUpdate
       ? db
           .update(applicationStatusHistory)
           .set({
@@ -462,51 +383,30 @@ export async function updateApplication(values: FormValues) {
           statusCategory: fields.statusCategory ?? "applied",
           createdAt: now,
         });
-  }
 
-  const executeUpdate = (fieldsToUpdate: typeof fields) => {
-    if (statusChanged && historyOperation) {
-      return db.batch([
-        db
-          .update(jobApplications)
-          .set(fieldsToUpdate)
-          .where(
-            and(
-              eq(jobApplications.userId, userId),
-              eq(jobApplications.id, applicationId),
-            ),
-          ),
-        historyOperation,
-      ]);
-    } else {
-      return db
+    // Execute both the application update and the status history entry atomically in a single batch
+    await db.batch([
+      db
         .update(jobApplications)
-        .set(fieldsToUpdate)
+        .set(fields)
         .where(
           and(
             eq(jobApplications.userId, userId),
             eq(jobApplications.id, applicationId),
           ),
-        );
-    }
-  };
-
-  try {
-    await executeUpdate(fields);
-  } catch (err) {
-    if (isMissingResumeColumnError(err)) {
-      console.warn("Detected missing resume_id column on update. Attempting self-healing migration...");
-      try {
-        await ensureResumeColumn();
-        await executeUpdate(fields);
-      } catch (retryErr) {
-        console.warn("Self-healing failed on update. Updating without resumeId:", retryErr);
-        const { resumeId: _, ...legacyFields } = fields;
-        await executeUpdate(legacyFields as any);
-      }
-    } else {
-      throw err;
-    }
+        ),
+      historyOperation as any,
+    ]);
+  } else {
+    await db
+      .update(jobApplications)
+      .set(fields)
+      .where(
+        and(
+          eq(jobApplications.userId, userId),
+          eq(jobApplications.id, applicationId),
+        ),
+      );
   }
 
   purgeCaches(userId);
