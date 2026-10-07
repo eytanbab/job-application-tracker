@@ -65,25 +65,53 @@ export async function parseGreenhouse(url: string): Promise<ParseResult> {
         return jsonLdResult;
       }
 
-      // Check DOM selectors in HTML
-      const titleMatch = html.match(/<h1[^>]*class=["'][^"']*app-title[^"']*["'][^>]*>([^<]+)<\/h1>/i) ||
-                         html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-      const companyMatch = html.match(/<span[^>]*class=["'][^"']*company-name[^"']*["'][^>]*>(?:at\s+)?([^<]+)<\/span>/i);
-      const locationMatch = html.match(/<div[^>]*class=["'][^"']*location[^"']*["'][^>]*>([^<]+)<\/div>/i);
-      const contentMatch = html.match(/<div[^>]*id=["']content["'][^>]*>([\s\S]*?)<\/div>\s*<div[^>]*id=["']app_form/i);
+      // Check DOM and meta selectors in HTML (supports both modern job-boards.greenhouse.io and legacy embeds)
+      const titleTagMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+      let titleRole = "";
+      let titleCompany = "";
+      if (titleTagMatch?.[1]) {
+        const t = titleTagMatch[1].trim();
+        const ghMatch = t.match(/Job Application for (.+?) at (.+)/i);
+        if (ghMatch) {
+          titleRole = ghMatch[1].trim();
+          titleCompany = ghMatch[2].trim();
+        }
+      }
 
-      if (titleMatch?.[1]) {
+      const ogTitle = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i)?.[1]?.trim();
+      const ogDesc = html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["']/i)?.[1]?.trim();
+
+      const h1Match = html.match(/<h1[^>]*class=["'][^"']*(?:section-header|app-title)[^"']*["'][^>]*>([\s\S]*?)<\/h1>/i) ||
+                      html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+
+      const logoMatch = html.match(/<img[^>]*alt=["']([^"']+)\s+Logo["']/i);
+      const companySpan = html.match(/<span[^>]*class=["'][^"']*company-name[^"']*["'][^>]*>(?:at\s+)?([^<]+)<\/span>/i);
+
+      const modernLocMatch = html.match(/class=["'][^"']*job__location[^"']*["'][^>]*>[\s\S]*?<div>([^<]+)<\/div>/i);
+      const legacyLocMatch = html.match(/<div[^>]*class=["'][^"']*location[^"']*["'][^>]*>([^<]+)<\/div>/i);
+
+      const roleName = titleRole || ogTitle || h1Match?.[1]?.trim() || "";
+      const companyName = titleCompany || logoMatch?.[1]?.trim() || companySpan?.[1]?.trim() || (boardToken ? formatCompanyName(boardToken) : "Company");
+      const location = modernLocMatch?.[1]?.trim() || legacyLocMatch?.[1]?.trim() || (ogDesc && ogDesc.length < 80 ? ogDesc : "Remote");
+
+      const modernDescMatch = html.match(/class=["'][^"']*job__description[^"']*["'][^>]*>([\s\S]*?)<\/div>\s*<div[^>]*class=["'][^"']*job__application/i) ||
+                              html.match(/class=["'][^"']*job__description[^"']*["'][^>]*>([\s\S]*?)<\/div>/i);
+      const legacyDescMatch = html.match(/<div[^>]*id=["']content["'][^>]*>([\s\S]*?)<\/div>\s*<div[^>]*id=["']app_form/i);
+
+      const rawDesc = modernDescMatch?.[1] || legacyDescMatch?.[1] || html;
+
+      if (roleName) {
         return {
           success: true,
           source: "dom",
           data: {
-            role_name: titleMatch[1].trim(),
-            company_name: companyMatch?.[1]?.trim() || (boardToken ? formatCompanyName(boardToken) : "Company"),
+            role_name: roleName,
+            company_name: companyName,
             link: url,
             platform: "Greenhouse",
             status: "Applied",
-            description: htmlToPlainText(contentMatch?.[1] || html).slice(0, 15000),
-            location: locationMatch?.[1]?.trim() || "Remote",
+            description: htmlToPlainText(rawDesc).slice(0, 15000),
+            location,
           },
         };
       }

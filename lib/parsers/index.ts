@@ -7,6 +7,7 @@ import { parseWorkday } from "./workday";
 import { parseWorkable } from "./workable";
 import { parseLinkedIn } from "./linkedin";
 import { parseIndeed } from "./indeed";
+import { parseComeet } from "./comeet";
 import { parseJsonLdJob } from "./jsonld";
 import { fetchWithTimeout, formatCompanyName, htmlToPlainText } from "./utils";
 
@@ -19,6 +20,7 @@ function detectPlatform(hostname: string): string {
   if (host.includes("greenhouse.io")) return "Greenhouse";
   if (host.includes("lever.co")) return "Lever";
   if (host.includes("ashbyhq.com")) return "Ashby";
+  if (host.includes("comeet.com") || host.includes("comeet.co")) return "Comeet";
   if (host.includes("smartrecruiters.com")) return "SmartRecruiters";
   if (host.includes("myworkdayjobs.com") || host.includes("myworkdaysite.com")) return "Workday";
   if (host.includes("workable.com")) return "Workable";
@@ -56,6 +58,8 @@ export async function tryDeterministicExtraction(url: string): Promise<ParsedJob
       result = await parseLever(url);
     } else if (platform === "Ashby") {
       result = await parseAshby(url);
+    } else if (platform === "Comeet") {
+      result = await parseComeet(url);
     } else if (platform === "SmartRecruiters") {
       result = await parseSmartRecruiters(url);
     } else if (platform === "Workday") {

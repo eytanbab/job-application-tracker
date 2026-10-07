@@ -327,6 +327,10 @@ export function detectPlatformFromUrl(url: string): string {
   if (domain.includes("indeed")) return "Indeed";
   if (domain.includes("greenhouse")) return "Greenhouse";
   if (domain.includes("lever")) return "Lever";
+  if (domain.includes("ashby")) return "Ashby";
+  if (domain.includes("comeet")) return "Comeet";
+  if (domain.includes("smartrecruiters")) return "SmartRecruiters";
+  if (domain.includes("workable")) return "Workable";
   if (domain.includes("workday")) return "Workday";
   if (domain.includes("glassdoor")) return "Glassdoor";
   if (domain.includes("wellfound") || domain.includes("angellist")) return "Wellfound";
