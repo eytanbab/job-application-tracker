@@ -44,11 +44,11 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           checked={isChecked}
           disabled={disabled}
           onChange={(e) => onCheckedChange?.(e.target.checked)}
-          className="sr-only"
+          className="peer absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0 m-0 p-0"
           {...props}
         />
-        {isChecked && <Check className="h-3 w-3 stroke-[3]" />}
-        {isIndeterminate && <Minus className="h-3 w-3 stroke-[3]" />}
+        {isChecked && <Check className="h-3 w-3 stroke-[3] pointer-events-none" />}
+        {isIndeterminate && <Minus className="h-3 w-3 stroke-[3] pointer-events-none" />}
       </label>
     );
   },
