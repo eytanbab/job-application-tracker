@@ -182,16 +182,19 @@ export async function deleteFile(id: string) {
     }
 
     const fileKey = deletedDocument[0].file_key;
-    if (!fileKey.startsWith(`${userId}/`)) {
-      throw new Error("Unauthorized S3 key access");
+    if (fileKey && process.env.NEXT_AWS_S3_BUCKET_NAME) {
+      try {
+        if (fileKey.startsWith(`${userId}/`)) {
+          const deleteParams = {
+            Bucket: process.env.NEXT_AWS_S3_BUCKET_NAME,
+            Key: fileKey,
+          };
+          await s3Client.send(new DeleteObjectCommand(deleteParams));
+        }
+      } catch (s3Err) {
+        console.warn("Could not delete S3 object (orphaned file):", s3Err);
+      }
     }
-
-    const deleteParams = {
-      Bucket: process.env.NEXT_AWS_S3_BUCKET_NAME || "",
-      Key: fileKey,
-    };
-
-    await s3Client.send(new DeleteObjectCommand(deleteParams));
   } catch (err) {
     console.error("Delete document error:", err);
     throw err;

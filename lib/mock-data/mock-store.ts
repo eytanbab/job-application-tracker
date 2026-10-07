@@ -213,6 +213,9 @@ class MockStore {
   public deleteDocument(userId: string, id: string): boolean {
     const prev = this.documents.length;
     this.documents = this.documents.filter((d) => d.id !== id);
+    this.applications = this.applications.map((app) =>
+      app.resumeId === id ? { ...app, resumeId: null } : app,
+    );
     return this.documents.length < prev;
   }
 
