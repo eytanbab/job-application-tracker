@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 import { useTransition, useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { AiExtractForm } from "./ai-extract-form";
+import { LinkAutofillBar } from "./link-autofill-bar";
 import { ApplicationFormFields } from "./application-form-fields";
 import { getDistinctLocationsAndPlatforms } from "@/app/actions/applications";
 import {
@@ -30,7 +30,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const createApplicationSchema = insertApplicationSchema.omit({
@@ -136,7 +136,18 @@ export const ApplicationForm = ({
     handleCloseForm();
   };
 
-  const handleAutoFill = (autoFillValues: FormValues) => {
+  const isEditing = Boolean(defaultValues?.id);
+  const [entryMode, setEntryMode] = useState<"link" | "manual">(
+    isEditing ? "manual" : "link",
+  );
+  const [extractedFromDomain, setExtractedFromDomain] = useState<string | null>(
+    null,
+  );
+
+  const handleAutoFill = (
+    autoFillValues: Partial<FormValues>,
+    domain: string,
+  ) => {
     Object.entries(autoFillValues).forEach(([key, value]) => {
       form.setValue(key as keyof FormValues, value, {
         shouldValidate: true,
@@ -144,6 +155,30 @@ export const ApplicationForm = ({
         shouldTouch: true,
       });
     });
+    setExtractedFromDomain(domain);
+    setEntryMode("manual");
+  };
+
+  const handleEnterManually = (initialUrl?: string) => {
+    if (initialUrl) {
+      form.setValue("link", initialUrl, {
+        shouldValidate: true,
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+    }
+    setEntryMode("manual");
+  };
+
+  const handleExtractionFailed = (url: string) => {
+    if (url) {
+      form.setValue("link", url, {
+        shouldValidate: true,
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+    }
+    setEntryMode("manual");
   };
 
   const handleSubmit = (values: FormValues) => {
@@ -160,7 +195,7 @@ export const ApplicationForm = ({
       date_applied: formattedDate,
       role_name: values.role_name.trim(),
       company_name: values.company_name.trim(),
-      link: values.link.trim(),
+      link: values.link?.trim() || "",
       description: values.description,
       location: values.location.trim(),
       platform: values.platform.toLowerCase().trim(),
@@ -183,9 +218,22 @@ export const ApplicationForm = ({
     });
   };
 
-  const isEditing = Boolean(defaultValues?.id);
   const { isDirty } = form.formState;
   const isSaveDisabled = isPending || (isEditing && !isDirty);
+
+  if (entryMode === "link") {
+    return (
+      <div className="flex-1 flex flex-col min-h-0 w-full">
+        <LinkAutofillBar
+          onAutoFill={handleAutoFill}
+          onEnterManually={handleEnterManually}
+          onCancel={handleCloseForm}
+          onExtractionFailed={handleExtractionFailed}
+          isPending={isPending}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col min-h-0 w-full overflow-hidden">
@@ -198,16 +246,37 @@ export const ApplicationForm = ({
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-3.5 min-h-0 [scrollbar-width:thin]">
             {!isEditing && (
               <>
-                <AiExtractForm isPending={isPending} onAutoFill={handleAutoFill} />
-
-                {/* Divider between AI Fast-Fill and Manual Entry */}
-                <div className="relative flex py-1 items-center">
-                  <div className="flex-grow border-t border-border/50"></div>
-                  <span className="flex-shrink mx-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Or enter manually below
-                  </span>
-                  <div className="flex-grow border-t border-border/50"></div>
-                </div>
+                {extractedFromDomain ? (
+                  <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs animate-in fade-in duration-200">
+                    <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 font-medium truncate">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                      <span className="truncate">
+                        Autofilled from{" "}
+                        <strong className="font-semibold text-emerald-800 dark:text-emerald-200">
+                          {extractedFromDomain}
+                        </strong>
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEntryMode("link")}
+                      className="text-[11px] font-medium text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer shrink-0 ml-2"
+                    >
+                      Paste different link
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between pb-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setEntryMode("link")}
+                      className="text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5" />
+                      <span>Back to link autofill</span>
+                    </button>
+                  </div>
+                )}
               </>
             )}
 

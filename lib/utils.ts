@@ -304,6 +304,39 @@ export function extractRootDomain(hostname: string): string {
 }
 
 /**
+ * Safely extracts the root domain from a given URL string.
+ */
+export function extractDomainFromUrl(url: string): string | null {
+  try {
+    const trimmed = url.trim();
+    if (!trimmed) return null;
+    const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    const parsed = new URL(withProtocol);
+    return extractRootDomain(parsed.hostname);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Infers a clean platform name from a URL or domain.
+ */
+export function detectPlatformFromUrl(url: string): string {
+  const domain = extractDomainFromUrl(url)?.toLowerCase() || "";
+  if (domain.includes("linkedin")) return "LinkedIn";
+  if (domain.includes("indeed")) return "Indeed";
+  if (domain.includes("greenhouse")) return "Greenhouse";
+  if (domain.includes("lever")) return "Lever";
+  if (domain.includes("workday")) return "Workday";
+  if (domain.includes("glassdoor")) return "Glassdoor";
+  if (domain.includes("wellfound") || domain.includes("angellist")) return "Wellfound";
+  if (domain.includes("ziprecruiter")) return "ZipRecruiter";
+  if (domain.includes("dice")) return "Dice";
+  if (domain.includes("monster")) return "Monster";
+  return domain ? domain.split(".")[0].charAt(0).toUpperCase() + domain.split(".")[0].slice(1) : "Company Website";
+}
+
+/**
  * Safely formats dates (strings, Date objects, or numbers) without throwing RangeError: Invalid time value.
  */
 export function safeFormatDate(

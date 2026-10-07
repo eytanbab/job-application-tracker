@@ -14,6 +14,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { type FormValues } from "./columns";
 import {
@@ -170,6 +171,9 @@ export function DataTable<TData extends ApplicationRow, TValue>({
             <DialogTitle className="text-xl font-bold">
               New Job Application
             </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+              Paste a job link to autofill, or enter details manually.
+            </DialogDescription>
           </DialogHeader>
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             <ApplicationForm

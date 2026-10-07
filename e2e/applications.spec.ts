@@ -27,6 +27,10 @@ test.describe("Applications Page E2E Suite", () => {
     if (count === 0) {
       const addBtn = page.getByTestId("add-application-button").first();
       await addBtn.click();
+      const enterManuallyBtn = page.getByTestId("enter-manually-button");
+      if (await enterManuallyBtn.isVisible().catch(() => false)) {
+        await enterManuallyBtn.click();
+      }
       await page.fill("input[name='role_name']", "__E2E_TEST__ Software Engineer");
       await page.fill("input[name='company_name']", "__E2E_TEST__ Company");
       await page.fill("input[name='location']", "Remote");
@@ -49,6 +53,11 @@ test.describe("Applications Page E2E Suite", () => {
 
     // Expect form dialog to be open
     await expect(page.locator("text=New Job Application")).toBeVisible();
+
+    const enterManuallyBtn = page.getByTestId("enter-manually-button");
+    if (await enterManuallyBtn.isVisible().catch(() => false)) {
+      await enterManuallyBtn.click();
+    }
 
     // Fill essential form fields
     await page.fill("input[name='role_name']", testApp.role);
@@ -252,6 +261,11 @@ test.describe("Applications Page E2E Suite", () => {
     await addBtn.click();
     await expect(page.locator("text=New Job Application")).toBeVisible();
 
+    const enterManuallyBtn = page.getByTestId("enter-manually-button");
+    if (await enterManuallyBtn.isVisible().catch(() => false)) {
+      await enterManuallyBtn.click();
+    }
+
     // Type 1-character role title
     await page.fill("input[name='role_name']", "A");
     await page.click("button[type='submit']:has-text('Add Application')");
@@ -282,6 +296,10 @@ test.describe("Applications Page E2E Suite", () => {
   test("12. Error Handling - Short Company Name Validation", async ({ page }) => {
     const addBtn = page.getByTestId("add-application-button").first();
     await addBtn.click();
+    const enterManuallyBtn = page.getByTestId("enter-manually-button");
+    if (await enterManuallyBtn.isVisible().catch(() => false)) {
+      await enterManuallyBtn.click();
+    }
     await page.fill("input[name='role_name']", "Valid Role");
     await page.fill("input[name='company_name']", "X");
 
@@ -509,5 +527,47 @@ test.describe("Applications Page E2E Suite", () => {
     await page.getByTestId("bulk-delete-confirm-button").click();
     
     await expect(page.locator("text=/Successfully deleted/").first()).toBeVisible();
+  });
+
+  test("22. Link-First Autofill Flow - Navigation & Extraction Transition", async ({ page }) => {
+    const addBtn = page.getByTestId("add-application-button").first();
+    await addBtn.click();
+
+    // Verify modal is in Link Autofill state
+    await expect(page.locator("text=New Job Application")).toBeVisible();
+    await expect(page.locator("label:has-text('Job Posting Link')")).toBeVisible();
+    const enterManuallyBtn = page.getByTestId("enter-manually-button");
+    await expect(enterManuallyBtn).toBeVisible();
+
+    // Verify Autofill button is disabled initially
+    const autofillBtn = page.getByTestId("autofill-button");
+    await expect(autofillBtn).toBeDisabled();
+
+    // Switch to manual mode
+    await enterManuallyBtn.click();
+    await expect(page.locator("input[name='role_name']")).toBeVisible();
+    const backToLinkBtn = page.locator("button:has-text('Back to link autofill')");
+    await expect(backToLinkBtn).toBeVisible();
+
+    // Switch back to link autofill
+    await backToLinkBtn.click();
+    await expect(page.locator("label:has-text('Job Posting Link')")).toBeVisible();
+
+    // Fill job link
+    const urlInput = page.locator("#job-posting-url");
+    await urlInput.fill("https://jobs.lever.co/company/frontend-engineer");
+
+    // Verify platform detected pill
+    await expect(page.locator("text=Platform detected: Lever")).toBeVisible();
+    await expect(autofillBtn).toBeEnabled();
+
+    // Trigger Autofill
+    await autofillBtn.click();
+
+    // Verify transition to manual form
+    await expect(page.locator("input[name='role_name']")).toBeVisible({ timeout: 10000 });
+
+    // Close dialog
+    await page.keyboard.press("Escape");
   });
 });

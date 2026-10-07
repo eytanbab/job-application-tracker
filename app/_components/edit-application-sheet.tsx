@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Pencil } from "lucide-react";
@@ -83,6 +84,9 @@ export const EditApplicationSheet = ({
           <DialogTitle className="text-xl font-bold">
             Edit Job Application
           </DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+            Update role details, notes, and application status.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           <ApplicationForm
