@@ -18,6 +18,8 @@
 - [x] The "Job Description" text area expands the whole width of the text, pushing "Application Timeline" to the buttom. If the job description is long the user needs to scroll heavily to see the application timeline (FIXED: Implemented collapsible Job Description container with max-height clamp, gradient fade-out, and "Show full description / Show less" toggle so timeline stays easily accessible).
 - [x] The job link button looks disconnected and broken from the layout (FIXED: Relocated job link from top utility row into application header metadata directly below company name with domain preview, external link icon, and inline URL editor).
 - [x] In the application table, the external link is near the company name, making it look like it redirects to the company website and not the application itself (FIXED: Moved external link icon from the company subtitle to the Role Title line, clearly indicating it links to the job posting).
+- [x] When viewing an application and clicking on add reusme to it, it opens the edit application view and the user then needs to click again on the add resume (FIXED: Replaced edit-modal redirection with direct `AttachResumeDialog` modal allowing instant 1-click selection from saved resumes or direct PDF upload without navigating away).
+- [x] A user cannot delete the attached resume from the application he added it to (FIXED: Added direct "Detach" button to the Applied Resume card with atomic DB dissociation and immediate toast confirmation, plus "Change" button for instant switching).
 
 ## Analytics Overview (`/analytics/overview`)
 
@@ -60,7 +62,7 @@
 ## Documents (`/documents`)
 
 - [x] In the Upload Document form, in Document Category, the dropdown is not a shadcn/ui component (FIXED: Replaced native HTML select with shadcn/ui Select, SelectTrigger, SelectValue, SelectContent, and SelectItem components).
-- [x] After a document is added / deleted, the user needs to manually refresh to update his view (FIXED: Added `revalidatePath("/documents")` to `createFile` and `deleteFile` server actions and added `router.refresh()` in client components on successful upload and deletion transitions).
+- [x] Deleting a document gives an error message but deletes the document from the UI (FIXED: Wrapped S3 object deletion in safe error-catching so missing or unconfigured S3 storage keys do not throw an unhandled error after the database document record has already been successfully deleted, and synchronized mock store deletion).
 
 ## Navigation & Layout
 
