@@ -51,6 +51,7 @@ import { toast } from "@/hooks/use-toast";
 import { TimelineEntry } from "./application-timeline";
 import { ApplicationDetailView } from "./application-detail-view";
 import { ApplicationForm, FormValues } from "@/app/_components/application-form";
+import { ResumeMeta } from "./attach-resume-dialog";
 
 export interface ApplicationDetail {
   id?: string;
@@ -164,7 +165,8 @@ export function ApplicationDetailSheet({
         (draft.date_applied || "") !== (original.date_applied || "") ||
         (draft.link || "") !== (original.link || "") ||
         (draft.description || "") !== (original.description || "") ||
-        (draft.notes || "") !== (original.notes || "")
+        (draft.notes || "") !== (original.notes || "") ||
+        (draft.resumeId ?? null) !== (original.resumeId ?? null)
       );
     },
     [],
@@ -260,6 +262,42 @@ export function ApplicationDetailSheet({
       toast({ description: "Unsaved changes discarded." });
     }
   }, [currentApp]);
+
+  // Handle direct resume attachment & detachment from detail view
+  const handleAttachResume = useCallback(
+    async (resumeId: string, meta: ResumeMeta) => {
+      if (!currentApp?.id) return;
+      const updatedFields: ApplicationDetail = {
+        ...(draftApp || currentApp),
+        resumeId,
+        resumeTitle: meta.title,
+        resumeFileName: meta.fileName,
+        resumeFileSize: meta.fileSize,
+      };
+      await updateApplication(updatedFields as unknown as FormValues);
+      setCurrentApp(updatedFields);
+      setDraftApp(updatedFields);
+      setIsDirty(false);
+      toast({ description: "Resume attached successfully." });
+    },
+    [currentApp, draftApp],
+  );
+
+  const handleDetachResume = useCallback(async () => {
+    if (!currentApp?.id) return;
+    const updatedFields: ApplicationDetail = {
+      ...(draftApp || currentApp),
+      resumeId: null,
+      resumeTitle: null,
+      resumeFileName: null,
+      resumeFileSize: null,
+    };
+    await updateApplication(updatedFields as unknown as FormValues);
+    setCurrentApp(updatedFields);
+    setDraftApp(updatedFields);
+    setIsDirty(false);
+    toast({ description: "Resume removed from application." });
+  }, [currentApp, draftApp]);
 
   // Navigation requests intercepted when dirty
   const requestClose = useCallback(() => {
@@ -768,6 +806,8 @@ export function ApplicationDetailSheet({
                 onUpdateNotes={handleUpdateNotes}
                 onUpdateDraftField={handleUpdateDraftField}
                 onEdit={() => setIsEditing(true)}
+                onAttachResume={handleAttachResume}
+                onDetachResume={handleDetachResume}
               />
             )}
           </div>

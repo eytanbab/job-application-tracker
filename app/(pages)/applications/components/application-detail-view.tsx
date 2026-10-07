@@ -19,6 +19,9 @@ import {
   Paperclip,
   ChevronDown,
   ChevronUp,
+  Trash2,
+  Plus,
+  RefreshCw,
 } from "lucide-react";
 import {
   Select,
@@ -37,6 +40,10 @@ import {
   getViewUrl,
   getDownloadUrl,
 } from "@/app/actions/documents";
+import {
+  AttachResumeDialog,
+  ResumeMeta,
+} from "./attach-resume-dialog";
 
 export interface ApplicationDetailViewProps {
   currentApp: {
@@ -69,6 +76,8 @@ export interface ApplicationDetailViewProps {
   onUpdateNotes?: (notes: string) => Promise<void>;
   onUpdateDraftField?: (field: string, value: unknown) => void;
   onEdit?: () => void;
+  onAttachResume?: (resumeId: string, meta: ResumeMeta) => Promise<void>;
+  onDetachResume?: () => Promise<void>;
 }
 
 export function ApplicationDetailView({
@@ -84,6 +93,8 @@ export function ApplicationDetailView({
   onUpdateNotes,
   onUpdateDraftField,
   onEdit,
+  onAttachResume,
+  onDetachResume,
 }: ApplicationDetailViewProps) {
   const [copiedJd, setCopiedJd] = useState(false);
   const [isJdExpanded, setIsJdExpanded] = useState(false);
@@ -119,6 +130,8 @@ export function ApplicationDetailView({
   });
   const [isPreviewingResume, setIsPreviewingResume] = useState(false);
   const [isDownloadingResume, setIsDownloadingResume] = useState(false);
+  const [isAttachDialogOpen, setIsAttachDialogOpen] = useState(false);
+  const [isDetachingResume, setIsDetachingResume] = useState(false);
 
   useEffect(() => {
     setDateValue(currentApp.date_applied || "");
@@ -227,6 +240,56 @@ export function ApplicationDetailView({
       });
     } finally {
       setIsDownloadingResume(false);
+    }
+  };
+
+  const handleSelectResume = async (resumeId: string, meta: ResumeMeta) => {
+    try {
+      if (onAttachResume) {
+        await onAttachResume(resumeId, meta);
+      } else if (onUpdateDraftField) {
+        onUpdateDraftField("resumeId", resumeId);
+        onUpdateDraftField("resumeTitle", meta.title);
+        onUpdateDraftField("resumeFileName", meta.fileName);
+        onUpdateDraftField("resumeFileSize", meta.fileSize);
+      }
+      setResumeInfo({
+        id: resumeId,
+        title: meta.title,
+        fileName: meta.fileName,
+        fileSize: meta.fileSize,
+      });
+    } catch (err) {
+      console.error("Select resume error:", err);
+      toast({
+        title: "Error",
+        description: "Failed to attach resume.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDetachResume = async () => {
+    setIsDetachingResume(true);
+    try {
+      if (onDetachResume) {
+        await onDetachResume();
+      } else if (onUpdateDraftField) {
+        onUpdateDraftField("resumeId", null);
+        onUpdateDraftField("resumeTitle", null);
+        onUpdateDraftField("resumeFileName", null);
+        onUpdateDraftField("resumeFileSize", null);
+      }
+      setResumeInfo(null);
+    } catch (err) {
+      console.error("Detach resume error:", err);
+      toast({
+        title: "Error",
+        description: "Failed to remove resume from application.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDetachingResume(false);
     }
   };
 
@@ -574,7 +637,7 @@ export function ApplicationDetailView({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 self-end sm:self-auto flex-wrap">
               <Button
                 type="button"
                 variant="outline"
@@ -605,22 +668,48 @@ export function ApplicationDetailView({
                 )}
                 <span>Download</span>
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsAttachDialogOpen(true)}
+                className="h-8 text-xs px-2.5 gap-1.5 cursor-pointer font-medium text-foreground hover:bg-muted"
+                title="Select a different resume"
+              >
+                <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>Change</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleDetachResume}
+                disabled={isDetachingResume}
+                className="h-8 text-xs px-2.5 gap-1.5 cursor-pointer font-medium text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/30"
+                title="Remove resume from this application"
+              >
+                {isDetachingResume ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5" />
+                )}
+                <span>Detach</span>
+              </Button>
             </div>
           </div>
         ) : (
           <div className="flex items-center justify-between rounded-xl border border-dashed border-border/60 bg-muted/20 px-3.5 py-2.5 text-xs text-muted-foreground">
             <span className="italic">No resume attached to this application.</span>
-            {onEdit && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={onEdit}
-                className="h-6 text-[11px] px-2 text-primary hover:bg-primary/10 cursor-pointer font-medium"
-              >
-                + Attach Resume
-              </Button>
-            )}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsAttachDialogOpen(true)}
+              className="h-6 text-[11px] px-2 text-primary hover:bg-primary/10 cursor-pointer font-medium gap-1"
+            >
+              <Plus className="h-3 w-3" />
+              <span>Attach Resume</span>
+            </Button>
           </div>
         )}
       </div>
@@ -830,6 +919,14 @@ export function ApplicationDetailView({
         history={history}
         isLoadingHistory={isLoadingHistory}
         onDeleteEntry={onDeleteTimelineEntry}
+      />
+
+      {/* Attach Resume Dialog */}
+      <AttachResumeDialog
+        open={isAttachDialogOpen}
+        onOpenChange={setIsAttachDialogOpen}
+        currentResumeId={resumeInfo?.id}
+        onSelectResume={handleSelectResume}
       />
     </>
   );
