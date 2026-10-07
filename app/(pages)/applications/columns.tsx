@@ -168,21 +168,19 @@ export const columns: ColumnDef<FormValues>[] = [
 
       return (
         <div className="space-y-0.5 min-w-0 max-w-[170px] xl:max-w-[220px]">
-          <button
-            type="button"
-            data-testid="view-details-button"
-            onClick={(e) => {
-              e.stopPropagation();
-              meta?.onSelectApplication?.(row.original);
-            }}
-            className="font-semibold text-foreground hover:text-primary transition-colors text-left truncate block w-full cursor-pointer focus-visible:outline-none focus-visible:underline"
-            title={role}
-          >
-            {role}
-          </button>
-          <div className="text-xs text-muted-foreground flex items-center gap-1.5 min-w-0">
-            <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
-            <span className="truncate" title={company}>{company}</span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <button
+              type="button"
+              data-testid="view-details-button"
+              onClick={(e) => {
+                e.stopPropagation();
+                meta?.onSelectApplication?.(row.original);
+              }}
+              className="font-semibold text-foreground hover:text-primary transition-colors text-left truncate cursor-pointer focus-visible:outline-none focus-visible:underline min-w-0"
+              title={role}
+            >
+              {role}
+            </button>
             {href && (
               <a
                 href={href}
@@ -190,13 +188,17 @@ export const columns: ColumnDef<FormValues>[] = [
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e) => e.stopPropagation()}
-                className="inline-flex items-center justify-center h-5 w-5 rounded text-muted-foreground/70 hover:text-primary hover:bg-primary/10 transition-colors shrink-0 cursor-pointer"
-                title="Open job link (opens in new tab)"
-                aria-label={`Open job posting for ${role} at ${company}`}
+                className="inline-flex items-center justify-center h-4 w-4 rounded text-muted-foreground/60 hover:text-primary transition-colors shrink-0 cursor-pointer"
+                title="Open job posting"
+                aria-label={`Open job posting for ${role}`}
               >
-                <ExternalLink className="h-3.5 w-3.5" />
+                <ExternalLink className="h-3 w-3" />
               </a>
             )}
+          </div>
+          <div className="text-xs text-muted-foreground flex items-center gap-1.5 min-w-0">
+            <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
+            <span className="truncate" title={company}>{company}</span>
             {row.original.resumeId && (
               <button
                 type="button"
