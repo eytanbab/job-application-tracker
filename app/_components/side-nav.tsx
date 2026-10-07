@@ -73,13 +73,6 @@ const SideNav = () => {
           })}
         </div>
       </div>
-
-      {/* Footer Info */}
-      <div className="hidden lg:block border-t border-border/40 pt-4 px-2">
-        <p className="text-[11px] text-muted-foreground text-center">
-          Job Application Tracker v2.0
-        </p>
-      </div>
     </aside>
   );
 };

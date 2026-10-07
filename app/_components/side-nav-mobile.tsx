@@ -87,12 +87,6 @@ export function MobileSideNav() {
             })}
           </nav>
         </div>
-
-        <div className="border-t border-border/40 pt-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-          <p className="text-[11px] text-muted-foreground text-center">
-            Job Application Tracker v2.0
-          </p>
-        </div>
       </SheetContent>
     </Sheet>
   );
