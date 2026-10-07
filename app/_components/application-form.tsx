@@ -230,7 +230,7 @@ export const ApplicationForm = ({
               {isPending ? (
                 <Loader2 className="size-5 animate-spin" />
               ) : isEditing ? (
-                "Save Changes"
+                isDirty ? "Save Changes" : "No Changes"
               ) : (
                 "Add Application"
               )}

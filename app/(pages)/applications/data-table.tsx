@@ -65,8 +65,15 @@ export function DataTable<TData extends ApplicationRow, TValue>({
     clearFilters,
     defaultCreateValues,
     handleSelectRow,
+    handleCloseDetail,
     handleDelete,
     setRowSelection,
+    hasPreviousApp,
+    hasNextApp,
+    goToPreviousApp,
+    goToNextApp,
+    currentIndex,
+    totalApps,
   } = useDataTable({ columns, data });
 
   return (
@@ -89,18 +96,15 @@ export function DataTable<TData extends ApplicationRow, TValue>({
         </div>
       )}
 
-      <div
-        className={cn(
-          "w-full",
-          viewMode === "kanban" && "hidden",
-        )}
-      >
-        <StatusFilterPills
-          data={data}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-        />
-      </div>
+      {viewMode !== "kanban" && (
+        <div className="w-full">
+          <StatusFilterPills
+            data={data}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+          />
+        </div>
+      )}
 
       <DataTableToolbar
         globalFilter={globalFilter}
@@ -192,9 +196,21 @@ export function DataTable<TData extends ApplicationRow, TValue>({
       <ApplicationDetailSheet
         application={selectedApp}
         open={isDetailOpen}
-        onOpenChange={setIsDetailOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCloseDetail();
+          } else {
+            setIsDetailOpen(true);
+          }
+        }}
         onEditClick={(app) => setEditingApp(app as TData)}
         onDeleteClick={handleDelete}
+        hasPrevious={hasPreviousApp}
+        hasNext={hasNextApp}
+        onPrevious={goToPreviousApp}
+        onNext={goToNextApp}
+        currentIndex={currentIndex}
+        totalApps={totalApps}
       />
 
       {editingApp && (

@@ -12,7 +12,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import {
   getStatusDisplay,
   statusLabels,
@@ -69,6 +69,28 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingApp, setEditingApp] = useState<TData | null>(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+
+  const [appIdParam, setAppIdParam] = useQueryState(
+    "appId",
+    parseAsString.withDefault("").withOptions({ shallow: true }),
+  );
+
+  // Synchronize appIdParam with selectedApp
+  useEffect(() => {
+    if (appIdParam) {
+      const match = data.find((item) => item.id === appIdParam);
+      if (match) {
+        setSelectedApp(match);
+        setIsDetailOpen(true);
+      } else {
+        setSelectedApp(null);
+        setIsDetailOpen(false);
+      }
+    } else {
+      setSelectedApp(null);
+      setIsDetailOpen(false);
+    }
+  }, [appIdParam, data]);
 
   const [createParam, setCreateParam] = useQueryState(
     "create",
@@ -181,17 +203,29 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     });
   }, [page, pageSizeParam]);
 
-  const handleSelectRow = (app: TData) => {
-    setSelectedApp(app);
-    setIsDetailOpen(true);
-  };
+  const handleSelectRow = useCallback(
+    (app: TData) => {
+      setSelectedApp(app);
+      setIsDetailOpen(true);
+      if (app.id) {
+        setAppIdParam(app.id);
+      }
+    },
+    [setAppIdParam],
+  );
+
+  const handleCloseDetail = useCallback(() => {
+    setIsDetailOpen(false);
+    setSelectedApp(null);
+    setAppIdParam("");
+  }, [setAppIdParam]);
 
   const handleDelete = async (id: string) => {
     try {
       await deleteApplication(id);
       toast({ description: "Application deleted successfully." });
-      if (selectedApp?.id === id) {
-        setIsDetailOpen(false);
+      if (selectedApp?.id === id || appIdParam === id) {
+        handleCloseDetail();
       }
     } catch {
       toast({
@@ -421,12 +455,54 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     salary: "",
   };
 
+  const filteredApps = useMemo(() => {
+    const rows = table.getFilteredRowModel().rows;
+    return rows.map((r) => r.original);
+  }, [table]);
+
+  const activeAppIndex = useMemo(() => {
+    if (!selectedApp?.id) return -1;
+    const idx = filteredApps.findIndex((item) => item.id === selectedApp.id);
+    if (idx !== -1) return idx;
+    return data.findIndex((item) => item.id === selectedApp.id);
+  }, [selectedApp?.id, filteredApps, data]);
+
+  const currentList = useMemo(() => {
+    const inFiltered = filteredApps.some((item) => item.id === selectedApp?.id);
+    return inFiltered ? filteredApps : data;
+  }, [filteredApps, data, selectedApp?.id]);
+
+  const hasPreviousApp = activeAppIndex > 0;
+  const hasNextApp =
+    activeAppIndex >= 0 && activeAppIndex < currentList.length - 1;
+
+  const goToPreviousApp = useCallback(() => {
+    if (activeAppIndex > 0) {
+      const prev = currentList[activeAppIndex - 1];
+      if (prev?.id) {
+        setSelectedApp(prev);
+        setAppIdParam(prev.id);
+      }
+    }
+  }, [activeAppIndex, currentList, setAppIdParam]);
+
+  const goToNextApp = useCallback(() => {
+    if (activeAppIndex >= 0 && activeAppIndex < currentList.length - 1) {
+      const next = currentList[activeAppIndex + 1];
+      if (next?.id) {
+        setSelectedApp(next);
+        setAppIdParam(next.id);
+      }
+    }
+  }, [activeAppIndex, currentList, setAppIdParam]);
+
   return {
     viewMode,
     setViewMode,
     selectedApp,
     isDetailOpen,
     setIsDetailOpen,
+    handleCloseDetail,
     isCreateOpen,
     setIsCreateOpen,
     editingApp,
@@ -451,5 +527,11 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     handleSelectRow,
     handleDelete,
     setRowSelection,
+    hasPreviousApp,
+    hasNextApp,
+    goToPreviousApp,
+    goToNextApp,
+    currentIndex: activeAppIndex >= 0 ? activeAppIndex + 1 : 0,
+    totalApps: currentList.length,
   };
 }
