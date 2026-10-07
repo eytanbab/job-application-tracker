@@ -38,7 +38,7 @@ setup("authenticate as test user", async ({ page }) => {
   if (!page.url().includes("/applications")) {
     await page.goto("/applications");
   }
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("domcontentloaded");
 
   // Verify we are authenticated on /applications
   await expect(page.locator("text=Job Applications").first()).toBeVisible({ timeout: 10000 });

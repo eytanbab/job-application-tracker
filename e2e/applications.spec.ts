@@ -209,7 +209,7 @@ test.describe("Applications Page E2E Suite", () => {
     expect(page.url()).toContain("view=kanban");
 
     // Verify Kanban status headers
-    await expect(page.locator("text=Applied").first()).toBeVisible();
+    await expect(page.locator("[data-testid='kanban-column-applied']:visible")).toBeVisible();
   });
 
   test("8. Happy Path - Kanban Platform Filter Synchronization", async ({ page }) => {
@@ -477,6 +477,11 @@ test.describe("Applications Page E2E Suite", () => {
     await expect(bulkStatusSelect).toBeVisible();
     await bulkStatusSelect.click();
     await page.click("[role='menuitemradio']:has-text('Offer'), [role='option']:has-text('Offer')");
+    
+    const confirmStatusBtn = page.locator("button:has-text('Update Status')");
+    if (await confirmStatusBtn.isVisible()) {
+      await confirmStatusBtn.click();
+    }
     
     await expect(page.locator("text=/Updated status for/").first()).toBeVisible();
     await page.waitForTimeout(500);

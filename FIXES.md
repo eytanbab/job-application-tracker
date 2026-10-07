@@ -56,3 +56,13 @@
 
 - [x] In the Upload Document form, in Document Category, the dropdown is not a shadcn/ui component (FIXED: Replaced native HTML select with shadcn/ui Select, SelectTrigger, SelectValue, SelectContent, and SelectItem components).
 - [x] After a document is added / deleted, the user needs to manually refresh to update his view (FIXED: Added `revalidatePath("/documents")` to `createFile` and `deleteFile` server actions and added `router.refresh()` in client components on successful upload and deletion transitions).
+
+--- New Bugs Found ---
+
+- [x] The "Update Status & Stage" section still shows "Auto-saves on change". Does it actually auto saves on change or its a leftover (FIXED: Removed misleading "Auto-saves on change" label; now cleanly displays live saving feedback when mutating).
+- [x] Some fields are editable when viewing an application and some arent (FIXED: Standardized in-place click-to-edit across all fields: Role Name, Company Name, Date Applied, Platform, Location, Salary, Job Link, Job Description, and Notes all uniformly support click-to-edit with dirty-state tracking and docked Unsaved Changes bar).
+- [x] The "Job Description" text area expands the whole width of the text, pushing "Application Timeline" to the buttom. If the job description is long the user needs to scroll heavily to see the application timeline (FIXED: Implemented collapsible Job Description container with max-height clamp, gradient fade-out, and "Show full description / Show less" toggle so timeline stays easily accessible).
+- [x] The job link button looks disconnected and broken from the layout (FIXED: Relocated job link from top utility row into application header metadata directly below company name with domain preview, external link icon, and inline URL editor).
+- [x] In the application table, the external link is near the company name, making it look like it redirects to the company website and not the application itself (FIXED: Moved external link icon from the company subtitle to the Role Title line, clearly indicating it links to the job posting).
+- [x] The sidenav at the bottom contains "Job Application Tracker v2.0" which is unnecessary (FIXED: Removed redundant static version footer from both desktop and mobile sidebars).
+- [x] The breadcrumbs always show "Dashboard / " and then the page name (FIXED: Replaced hardcoded "Dashboard / " prefix with dynamic route-aware hierarchical breadcrumbs that accurately reflect current section and subsections).
