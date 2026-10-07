@@ -197,7 +197,18 @@ export const ApplicationForm = ({
           {/* Scrollable form body */}
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-3.5 min-h-0 [scrollbar-width:thin]">
             {!isEditing && (
-              <AiExtractForm isPending={isPending} onAutoFill={handleAutoFill} />
+              <>
+                <AiExtractForm isPending={isPending} onAutoFill={handleAutoFill} />
+
+                {/* Divider between AI Fast-Fill and Manual Entry */}
+                <div className="relative flex py-1 items-center">
+                  <div className="flex-grow border-t border-border/50"></div>
+                  <span className="flex-shrink mx-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Or enter manually below
+                  </span>
+                  <div className="flex-grow border-t border-border/50"></div>
+                </div>
+              </>
             )}
 
             <div className="grid grid-cols-2 w-full gap-3">
