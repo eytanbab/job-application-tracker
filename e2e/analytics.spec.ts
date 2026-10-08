@@ -54,7 +54,7 @@ test.describe("Analytics Page Overhaul & Usability", () => {
     await expect(page.locator("text=Avg. Response Time").first()).toBeVisible();
   });
 
-  test("renders empty state or corrected 4-stage application funnel with consistent outcome stats", async ({ page }) => {
+  test("renders empty state or corrected 3-stage application funnel with consistent outcome stats", async ({ page }) => {
     await ensureApplicationExists(page);
 
     await page.goto("/analytics/overview");
@@ -64,30 +64,46 @@ test.describe("Analytics Page Overhaul & Usability", () => {
     await expect(funnelHeading).toBeVisible();
 
     await expect(page.locator("text=1. Applied").first()).toBeVisible();
-    await expect(page.locator("text=2. Under Review").first()).toBeVisible();
-    await expect(page.locator("text=3. Interview").first()).toBeVisible();
-    await expect(page.locator("text=4. Offer").first()).toBeVisible();
+    await expect(page.locator("text=2. Interview").first()).toBeVisible();
+    await expect(page.locator("text=3. Offer").first()).toBeVisible();
 
-    // Ensure Active Pipeline is NOT present as a funnel stage
+    // Ensure Under Review and Active Pipeline are NOT present as funnel stages
+    await expect(page.locator("text=2. Under Review")).not.toBeVisible();
     await expect(page.locator("text=2. Active Pipeline")).not.toBeVisible();
 
     // Outcomes row with consistent count formatting
-    await expect(page.locator("text=Interview-to-Offer Conversion").first()).toBeVisible();
+    await expect(page.locator("text=Offers Received").first()).toBeVisible();
     await expect(page.locator("text=No Response (30+ Days)").first()).toBeVisible();
     await expect(page.locator("text=Rejections").first()).toBeVisible();
   });
 
-  test("renders unified platform breakdown without direct portals sub-toggle", async ({ page }) => {
+  test("renders unified platform breakdown with sort controls, top 5 default limit, and no sample label", async ({ page }) => {
     await page.goto("/analytics/overview");
     await page.waitForLoadState("domcontentloaded");
 
     // Platforms & Sources section is visible directly on page
     await expect(page.locator("h2", { hasText: "Platforms & Sources" }).first()).toBeVisible();
 
+    // Ensure awkward 'Sample: ... apps' text is gone
+    await expect(page.locator("text=/Sample:/")).not.toBeVisible();
+
+    // Ensure sort controls toolbar is visible
+    await expect(page.locator("button:has-text('Volume')").first()).toBeVisible();
+    await expect(page.locator("button:has-text('Interview Rate')").first()).toBeVisible();
+
     // Ensure artificial "Direct Portals" and "Job Boards" toggle buttons are gone
     await expect(page.locator("button:has-text('Direct Portals')")).not.toBeVisible();
     await expect(page.locator("button:has-text('Job Boards')")).not.toBeVisible();
     await expect(page.locator("text=ATS Domain")).not.toBeVisible();
+  });
+
+  test("renders application activity trends with By Status and Total Volume view toggle", async ({ page }) => {
+    await page.goto("/analytics/overview");
+    await page.waitForLoadState("domcontentloaded");
+
+    await expect(page.locator("text=Application Activity").first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "By Status" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Total Volume" })).toBeVisible();
   });
 
   test("renders work model and salary benchmarks without redundant status donut", async ({ page }) => {
@@ -99,6 +115,6 @@ test.describe("Analytics Page Overhaul & Usability", () => {
     await expect(page.locator("text=Salary & Compensation").first()).toBeVisible();
 
     // Redundant status breakdown donut chart is gone
-    await expect(page.locator("text=Status Breakdown")).not.toBeVisible();
+    await expect(page.locator("h2:has-text('Status Breakdown'), h3:has-text('Status Breakdown')")).not.toBeVisible();
   });
 });
