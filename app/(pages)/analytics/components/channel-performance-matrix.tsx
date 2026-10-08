@@ -6,11 +6,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   ArrowRight,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
   Search,
+  X,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -148,21 +156,41 @@ export function ChannelPerformanceMatrix({
     return filteredPlatforms.slice(0, 5);
   }, [filteredPlatforms, isExpanded, searchQuery]);
 
-  const renderSortIcon = (field: SortField) => {
-    if (sortField !== field) {
-      return <ArrowUpDown className="h-3 w-3 opacity-30 ml-1 inline" />;
-    }
-    return sortDirection === "desc" ? (
-      <ArrowDown className="h-3 w-3 text-primary ml-1 inline" />
-    ) : (
-      <ArrowUp className="h-3 w-3 text-primary ml-1 inline" />
+  const renderSortHeader = (
+    field: SortField,
+    label: string,
+    align: "left" | "center" = "left",
+  ) => {
+    const isSorted = sortField === field;
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        className={cn(
+          "h-8 px-2 font-semibold hover:bg-muted/60 transition-colors text-xs text-muted-foreground hover:text-foreground select-none inline-flex items-center gap-1.5",
+          align === "center" ? "mx-auto justify-center" : "justify-start -ml-2",
+          isSorted && "text-foreground font-bold",
+        )}
+        onClick={() => handleSort(field)}
+      >
+        <span>{label}</span>
+        {isSorted ? (
+          sortDirection === "asc" ? (
+            <ArrowUp className="h-3.5 w-3.5 text-primary shrink-0" />
+          ) : (
+            <ArrowDown className="h-3.5 w-3.5 text-primary shrink-0" />
+          )
+        ) : (
+          <ArrowUpDown className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+        )}
+      </Button>
     );
   };
 
   return (
     <div className="w-full rounded-xl border border-border/40 bg-card/60 shadow-2xs backdrop-blur-sm p-4 sm:p-5 flex flex-col gap-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-border/20">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-border/20">
         <div>
           <h2 className="text-sm sm:text-base font-semibold tracking-tight text-foreground">
             Platforms & Sources
@@ -172,9 +200,35 @@ export function ChannelPerformanceMatrix({
           </p>
         </div>
 
-        <Badge variant="outline" className="text-xs font-mono w-fit self-start sm:self-auto border-border/40">
-          {platforms.length} {platforms.length === 1 ? "Platform" : "Platforms"}
-        </Badge>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {platforms.length > 5 && (
+            <div className="relative w-44 sm:w-52">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder="Search platforms..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-8 pl-8 pr-7 text-xs bg-background/60 rounded-lg"
+              />
+              {searchQuery.length > 0 && (
+                <button
+                  type="button"
+                  aria-label="Clear filter"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 cursor-pointer"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          )}
+          <Badge
+            variant="outline"
+            className="text-xs font-mono w-fit border-border/40 shrink-0"
+          >
+            {platforms.length} {platforms.length === 1 ? "Platform" : "Platforms"}
+          </Badge>
+        </div>
       </div>
 
       {/* Content */}
@@ -184,9 +238,9 @@ export function ChannelPerformanceMatrix({
         </p>
       ) : (
         <div className="space-y-3">
-          {/* Top platform highlight banner */}
+          {/* Top platform highlight banner (clean single sentence without redundant badge) */}
           {topPlatform && (
-            <div className="p-3 rounded-lg bg-background/50 border border-border/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+            <div className="p-3 rounded-lg bg-background/50 border border-border/30 text-xs text-muted-foreground">
               <span className="text-foreground">
                 <strong className="font-semibold capitalize text-primary">{topPlatform.platformName}</strong> is
                 your top-performing source with an{" "}
@@ -195,60 +249,33 @@ export function ChannelPerformanceMatrix({
                 </strong>{" "}
                 ({topPlatform.interviewCount} of {topPlatform.total} applications led to interviews).
               </span>
-              <Badge variant="outline" className="text-[10px] font-mono shrink-0 border-border/40 self-start sm:self-auto">
-                {topPlatform.total} applications logged
-              </Badge>
             </div>
           )}
 
-          {/* Interactive Sort Controls & Filter Toolbar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 py-1 text-xs">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-muted-foreground text-[11px] font-medium mr-0.5">
-                Sort by:
-              </span>
-              {[
-                { field: "total" as const, label: "Volume" },
-                { field: "interviewRate" as const, label: "Interview Rate" },
-                { field: "responseRate" as const, label: "Response Rate" },
-                { field: "channel" as const, label: "Platform Name" },
-              ].map((item) => {
-                const isActive = sortField === item.field;
-                return (
-                  <button
-                    key={item.field}
-                    type="button"
-                    onClick={() => handleSort(item.field)}
-                    className={cn(
-                      "h-7 px-2.5 rounded-lg text-xs font-medium inline-flex items-center gap-1 transition-colors cursor-pointer",
-                      isActive
-                        ? "bg-primary text-primary-foreground font-semibold shadow-2xs"
-                        : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted",
-                    )}
-                  >
-                    <span>{item.label}</span>
-                    {isActive &&
-                      (sortDirection === "desc" ? (
-                        <ArrowDown className="h-3 w-3" />
-                      ) : (
-                        <ArrowUp className="h-3 w-3" />
-                      ))}
-                  </button>
-                );
-              })}
-            </div>
-
-            {platforms.length > 5 && (
-              <div className="relative w-full sm:w-48">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  placeholder="Filter platforms..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-7 text-xs pl-8 bg-background/60"
-                />
-              </div>
-            )}
+          {/* Mobile Sort Select (< md only, since table headers handle desktop) */}
+          <div className="md:hidden flex items-center justify-between gap-2 pt-1 pb-1">
+            <span className="text-xs text-muted-foreground font-medium">Sort by</span>
+            <Select
+              value={sortField}
+              onValueChange={(val) => {
+                if (val === sortField) {
+                  setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+                } else {
+                  setSortField(val as SortField);
+                  setSortDirection(val === "channel" ? "asc" : "desc");
+                }
+              }}
+            >
+              <SelectTrigger className="h-8 w-44 text-xs bg-background/60">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="total">Volume</SelectItem>
+                <SelectItem value="interviewRate">Interview Rate</SelectItem>
+                <SelectItem value="responseRate">Response Rate</SelectItem>
+                <SelectItem value="channel">Platform Name</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Mobile Platform Cards (< md) */}
@@ -268,18 +295,12 @@ export function ChannelPerformanceMatrix({
                       {platform.platformName}
                     </span>
                     <div className="flex items-center gap-2 shrink-0">
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "text-[10px] font-mono font-medium border-border/30",
-                          sortField === "total" && "border-primary/40 text-primary font-bold bg-primary/5",
-                        )}
-                      >
-                        {platform.total} {platform.total === 1 ? "app" : "apps"}
-                      </Badge>
+                      <span className="font-mono text-xs text-muted-foreground">
+                        {platform.total} apps
+                      </span>
                       <Link
                         href={`/applications?platform=${encodeURIComponent(platform.platformName)}`}
-                        className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                        className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-0.5"
                       >
                         View
                         <ArrowRight className="h-3 w-3" />
@@ -287,13 +308,13 @@ export function ChannelPerformanceMatrix({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-xs py-1 border-y border-border/20">
-                    <div className={cn(sortField === "interviewRate" && "bg-primary/5 p-1 rounded-md")}>
+                  <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-border/20">
+                    <div>
                       <span className="text-[10px] text-muted-foreground block">
                         Interview Rate
                       </span>
                       {platform.total < 3 && platform.interviewCount > 0 ? (
-                        <span className="font-mono text-xs text-muted-foreground">
+                        <span className="font-mono text-muted-foreground">
                           {platform.interviewCount}/{platform.total}{" "}
                           <span className="text-[10px] opacity-75">(early)</span>
                         </span>
@@ -303,7 +324,7 @@ export function ChannelPerformanceMatrix({
                         </span>
                       )}
                     </div>
-                    <div className={cn(sortField === "responseRate" && "bg-primary/5 p-1 rounded-md")}>
+                    <div>
                       <span className="text-[10px] text-muted-foreground block">
                         Response Rate
                       </span>
@@ -353,60 +374,32 @@ export function ChannelPerformanceMatrix({
           {/* Desktop & Tablet Platform Table (>= md) */}
           <div className="hidden md:block w-full overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="text-muted-foreground font-medium border-b border-border/20">
+              <thead className="border-b border-border/20">
                 <tr>
-                  <th
-                    className={cn(
-                      "py-2.5 pr-4 cursor-pointer select-none transition-colors",
-                      sortField === "channel"
-                        ? "text-primary font-bold bg-primary/10 rounded-md pl-2"
-                        : "hover:text-foreground font-normal",
-                    )}
-                    onClick={() => handleSort("channel")}
-                  >
-                    Channel {renderSortIcon("channel")}
+                  <th className="py-2 pr-4 text-left font-medium">
+                    {renderSortHeader("channel", "Channel", "left")}
                   </th>
-                  <th
-                    className={cn(
-                      "py-2.5 px-4 text-center cursor-pointer select-none transition-colors",
-                      sortField === "total"
-                        ? "text-primary font-bold bg-primary/10 rounded-md"
-                        : "hover:text-foreground font-normal",
-                    )}
-                    onClick={() => handleSort("total")}
-                  >
-                    Volume {renderSortIcon("total")}
+                  <th className="py-2 px-4 text-center font-medium">
+                    {renderSortHeader("total", "Volume", "center")}
                   </th>
-                  <th
-                    className={cn(
-                      "py-2.5 px-4 text-center cursor-pointer select-none transition-colors",
-                      sortField === "interviewRate"
-                        ? "text-primary font-bold bg-primary/10 rounded-md"
-                        : "hover:text-foreground font-normal",
-                    )}
-                    onClick={() => handleSort("interviewRate")}
-                  >
-                    Interview Rate {renderSortIcon("interviewRate")}
+                  <th className="py-2 px-4 text-center font-medium">
+                    {renderSortHeader("interviewRate", "Interview Rate", "center")}
                   </th>
-                  <th
-                    className={cn(
-                      "py-2.5 px-4 text-center cursor-pointer select-none transition-colors",
-                      sortField === "responseRate"
-                        ? "text-primary font-bold bg-primary/10 rounded-md"
-                        : "hover:text-foreground font-normal",
-                    )}
-                    onClick={() => handleSort("responseRate")}
-                  >
-                    Response Rate {renderSortIcon("responseRate")}
+                  <th className="py-2 px-4 text-center font-medium">
+                    {renderSortHeader("responseRate", "Response Rate", "center")}
                   </th>
-                  <th className="py-2.5 px-4 font-normal">Pipeline Distribution</th>
-                  <th className="py-2.5 pl-4 text-right font-normal">Action</th>
+                  <th className="py-2 px-4 text-left font-semibold text-xs text-muted-foreground">
+                    Pipeline Distribution
+                  </th>
+                  <th className="py-2 pl-4 text-right font-semibold text-xs text-muted-foreground">
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/20">
                 {displayedPlatforms.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-6 text-center text-muted-foreground">
+                    <td colSpan={6} className="py-8 text-center text-xs text-muted-foreground">
                       No platforms matching &quot;{searchQuery}&quot;
                     </td>
                   </tr>
@@ -414,58 +407,30 @@ export function ChannelPerformanceMatrix({
                   displayedPlatforms.map((platform) => (
                     <tr
                       key={platform.platformName}
-                      className="hover:bg-muted/20 transition-colors"
+                      className="hover:bg-muted/30 transition-colors"
                     >
-                      <td
-                        className={cn(
-                          "py-3 pr-4 font-semibold capitalize text-foreground",
-                          sortField === "channel" && "pl-2 bg-primary/[0.03]",
-                        )}
-                      >
+                      <td className="py-3 pr-4 font-semibold capitalize text-foreground">
                         {platform.platformName}
                       </td>
-                      <td
-                        className={cn(
-                          "py-3 px-4 text-center font-mono text-foreground",
-                          sortField === "total"
-                            ? "font-bold bg-primary/[0.04]"
-                            : "font-semibold",
-                        )}
-                      >
+                      <td className="py-3 px-4 text-center font-mono font-semibold text-foreground">
                         {platform.total}
                       </td>
-                      <td
-                        className={cn(
-                          "py-3 px-4 text-center",
-                          sortField === "interviewRate" && "bg-primary/[0.04]",
-                        )}
-                      >
+                      <td className="py-3 px-4 text-center">
                         {platform.total < 3 && platform.interviewCount > 0 ? (
                           <span className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground">
                             {platform.interviewCount}/{platform.total}{" "}
                             <span className="text-[10px] opacity-75">(early)</span>
                           </span>
                         ) : (
-                          <span
-                            className={cn(
-                              "font-mono",
-                              sortField === "interviewRate"
-                                ? "font-bold text-foreground"
-                                : "font-semibold text-foreground",
-                            )}
-                          >
-                            {platform.interviewRate.toFixed(1)}% ({platform.interviewCount})
+                          <span className="font-mono font-semibold text-foreground">
+                            {platform.interviewRate.toFixed(1)}%{" "}
+                            <span className="text-muted-foreground font-normal text-[11px]">
+                              ({platform.interviewCount})
+                            </span>
                           </span>
                         )}
                       </td>
-                      <td
-                        className={cn(
-                          "py-3 px-4 text-center font-mono",
-                          sortField === "responseRate"
-                            ? "font-bold text-foreground bg-primary/[0.04]"
-                            : "text-muted-foreground",
-                        )}
-                      >
+                      <td className="py-3 px-4 text-center font-mono text-muted-foreground">
                         {platform.responseRate.toFixed(1)}%
                       </td>
                       <td className="py-3 px-4 min-w-[200px]">
@@ -488,7 +453,7 @@ export function ChannelPerformanceMatrix({
                               );
                             })}
                           </div>
-                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
+                          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10px] text-muted-foreground">
                             {platform.statuses.map((s) => {
                               const kind = getStatusKind(s.status);
                               return (
