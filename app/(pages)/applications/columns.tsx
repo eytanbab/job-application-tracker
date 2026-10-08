@@ -167,7 +167,7 @@ export const columns: ColumnDef<FormValues>[] = [
       const meta = table.options.meta as CustomColumnMeta | undefined;
 
       return (
-        <div className="space-y-0.5 min-w-0 max-w-[170px] xl:max-w-[220px]">
+        <div className="space-y-0.5 min-w-0 w-full">
           <div className="flex items-center gap-1.5 min-w-0">
             <button
               type="button"
