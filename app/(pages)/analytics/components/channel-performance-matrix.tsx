@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Globe, Layers } from "lucide-react";
+import { ArrowRight, Globe, Layers, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { getStatusKind, statusLabels, StatusKind } from "@/lib/utils";
 
 interface PlatformData {
@@ -44,11 +44,22 @@ const getStatusBgColor = (kind: StatusKind) => {
   }
 };
 
+const formatStatusText = (status: string) => {
+  const kind = getStatusKind(status);
+  if (statusLabels[kind]) return statusLabels[kind];
+  return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
+type SortField = "channel" | "total" | "interviewRate" | "responseRate";
+type SortDirection = "asc" | "desc";
+
 export function ChannelPerformanceMatrix({
   platforms,
   domains,
 }: ChannelPerformanceMatrixProps) {
   const [activeTab, setActiveTab] = useState<"platforms" | "ats">("platforms");
+  const [sortField, setSortField] = useState<SortField>("total");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   // Enrich platform data with calculated stats
   const enrichedPlatforms = platforms.map((item) => {
@@ -89,23 +100,64 @@ export function ChannelPerformanceMatrix({
       (a, b) => b.interviewRate - a.interviewRate || b.total - a.total,
     )[0] || null;
 
+  // Handle column sorting
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDirection(field === "channel" ? "asc" : "desc");
+    }
+  };
+
+  const sortedPlatforms = [...enrichedPlatforms].sort((a, b) => {
+    let comparison = 0;
+    if (sortField === "channel") {
+      comparison = a.platformName.localeCompare(b.platformName);
+    } else if (sortField === "total") {
+      comparison = a.total - b.total;
+    } else if (sortField === "interviewRate") {
+      comparison = a.interviewRate - b.interviewRate;
+    } else if (sortField === "responseRate") {
+      comparison = a.responseRate - b.responseRate;
+    }
+    return sortDirection === "desc" ? -comparison : comparison;
+  });
+
+  const renderSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-3 w-3 opacity-40 ml-1 inline" />;
+    }
+    return sortDirection === "desc" ? (
+      <ArrowDown className="h-3 w-3 text-primary ml-1 inline" />
+    ) : (
+      <ArrowUp className="h-3 w-3 text-primary ml-1 inline" />
+    );
+  };
+
   return (
     <div className="w-full rounded-xl border border-border/40 bg-card/60 shadow-2xs backdrop-blur-sm p-4 sm:p-5 flex flex-col gap-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-border/20">
         <div>
-          <h2 className="text-sm font-bold tracking-tight text-foreground">
-            Channel & Platform Performance
+          <h2 className="text-sm font-semibold tracking-tight text-foreground">
+            Platforms & Job Boards
           </h2>
           <p className="text-xs text-muted-foreground">
-            Interview yield and response velocity across application channels and direct employer portals.
+            Compare application volume, interview rates, and response rates across job platforms and portals.
           </p>
         </div>
 
         {/* View Toggle */}
-        <div className="grid grid-cols-2 sm:flex items-center gap-1 p-0.5 rounded-lg bg-muted/40 border border-border/30 w-full sm:w-fit shrink-0">
+        <div
+          role="tablist"
+          aria-label="Platform view options"
+          className="grid grid-cols-2 sm:flex items-center gap-1 p-0.5 rounded-lg bg-muted/40 border border-border/30 w-full sm:w-fit shrink-0"
+        >
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "platforms"}
             onClick={() => setActiveTab("platforms")}
             className={`inline-flex min-w-0 items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
               activeTab === "platforms"
@@ -118,6 +170,8 @@ export function ChannelPerformanceMatrix({
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "ats"}
             onClick={() => setActiveTab("ats")}
             className={`inline-flex min-w-0 items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
               activeTab === "ats"
@@ -126,7 +180,7 @@ export function ChannelPerformanceMatrix({
             }`}
           >
             <Layers className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate min-w-0">ATS Portals ({domains.length})</span>
+            <span className="truncate min-w-0">Direct Portals ({domains.length})</span>
           </button>
         </div>
       </div>
@@ -134,21 +188,21 @@ export function ChannelPerformanceMatrix({
       {/* Content */}
       {activeTab === "platforms" ? (
         platforms.length === 0 ? (
-          <p className="text-xs text-muted-foreground py-4 text-center">
+          <p className="text-xs text-muted-foreground py-6 text-center">
             No platform application data recorded for this timeframe.
           </p>
         ) : (
           <div className="space-y-3">
-            {/* Top platform highlight banner if qualified */}
+            {/* Top platform highlight banner */}
             {topPlatform && (
               <div className="p-3 rounded-lg bg-background/50 border border-border/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
                 <span className="text-foreground">
                   <strong className="font-semibold capitalize text-primary">{topPlatform.platformName}</strong> is
-                  your highest-yielding channel with a{" "}
+                  your top-performing source with an{" "}
                   <strong className="font-semibold font-mono text-emerald-600 dark:text-emerald-400">
-                    {topPlatform.interviewRate.toFixed(1)}% interview yield
+                    {topPlatform.interviewRate.toFixed(1)}% interview rate
                   </strong>{" "}
-                  ({topPlatform.interviewCount} of {topPlatform.total} applications).
+                  ({topPlatform.interviewCount} of {topPlatform.total} applications led to interviews).
                 </span>
                 <Badge variant="outline" className="text-[10px] font-mono shrink-0 border-border/40 self-start sm:self-auto">
                   Sample: {topPlatform.total} apps
@@ -158,7 +212,7 @@ export function ChannelPerformanceMatrix({
 
             {/* Mobile Platform Cards (< md) */}
             <div className="md:hidden flex flex-col gap-2.5">
-              {enrichedPlatforms.map((platform) => (
+              {sortedPlatforms.map((platform) => (
                 <div
                   key={platform.platformName}
                   className="p-3 rounded-lg border border-border/30 bg-background/50 flex flex-col gap-2.5 text-xs"
@@ -183,7 +237,7 @@ export function ChannelPerformanceMatrix({
 
                   <div className="grid grid-cols-2 gap-2 text-xs py-1 border-y border-border/20">
                     <div>
-                      <span className="text-[10px] text-muted-foreground block">Interview Yield</span>
+                      <span className="text-[10px] text-muted-foreground block">Interview Rate</span>
                       {platform.total < 3 && platform.interviewCount > 0 ? (
                         <span className="font-mono text-xs text-muted-foreground">
                           {platform.interviewCount}/{platform.total} <span className="text-[10px] opacity-75">(early)</span>
@@ -214,17 +268,21 @@ export function ChannelPerformanceMatrix({
                             key={s.status}
                             className={`h-full ${getStatusBgColor(kind)}`}
                             style={{ width: `${width}%` }}
-                            title={`${s.status}: ${s.value}`}
+                            title={`${formatStatusText(s.status)}: ${s.value}`}
                           />
                         );
                       })}
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
-                      {platform.statuses.map((s) => (
-                        <span key={s.status}>
-                          {s.value} {statusLabels[getStatusKind(s.status)] || s.status}
-                        </span>
-                      ))}
+                    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] text-muted-foreground pt-0.5">
+                      {platform.statuses.map((s) => {
+                        const kind = getStatusKind(s.status);
+                        return (
+                          <span key={s.status} className="inline-flex items-center gap-1">
+                            <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${getStatusBgColor(kind)}`} />
+                            {s.value} {formatStatusText(s.status)}
+                          </span>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -236,16 +294,36 @@ export function ChannelPerformanceMatrix({
               <table className="w-full text-left text-xs">
                 <thead className="text-muted-foreground font-medium border-b border-border/20">
                   <tr>
-                    <th className="py-2.5 pr-4 font-normal">Channel</th>
-                    <th className="py-2.5 px-4 font-normal text-center">Volume</th>
-                    <th className="py-2.5 px-4 font-normal text-center">Interview Yield</th>
-                    <th className="py-2.5 px-4 font-normal text-center">Response Rate</th>
+                    <th
+                      className="py-2.5 pr-4 font-normal cursor-pointer hover:text-foreground transition-colors select-none"
+                      onClick={() => handleSort("channel")}
+                    >
+                      Channel {renderSortIcon("channel")}
+                    </th>
+                    <th
+                      className="py-2.5 px-4 font-normal text-center cursor-pointer hover:text-foreground transition-colors select-none"
+                      onClick={() => handleSort("total")}
+                    >
+                      Volume {renderSortIcon("total")}
+                    </th>
+                    <th
+                      className="py-2.5 px-4 font-normal text-center cursor-pointer hover:text-foreground transition-colors select-none"
+                      onClick={() => handleSort("interviewRate")}
+                    >
+                      Interview Rate {renderSortIcon("interviewRate")}
+                    </th>
+                    <th
+                      className="py-2.5 px-4 font-normal text-center cursor-pointer hover:text-foreground transition-colors select-none"
+                      onClick={() => handleSort("responseRate")}
+                    >
+                      Response Rate {renderSortIcon("responseRate")}
+                    </th>
                     <th className="py-2.5 px-4 font-normal">Pipeline Distribution</th>
                     <th className="py-2.5 pl-4 text-right font-normal">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/20">
-                  {enrichedPlatforms.map((platform) => (
+                  {sortedPlatforms.map((platform) => (
                     <tr key={platform.platformName} className="hover:bg-muted/20 transition-colors">
                       <td className="py-3 pr-4 font-semibold capitalize text-foreground">
                         {platform.platformName}
@@ -267,7 +345,7 @@ export function ChannelPerformanceMatrix({
                       <td className="py-3 px-4 text-center font-mono text-muted-foreground">
                         {platform.responseRate.toFixed(1)}%
                       </td>
-                      <td className="py-3 px-4 min-w-[180px]">
+                      <td className="py-3 px-4 min-w-[200px]">
                         <div className="flex flex-col gap-1">
                           <div className="h-1.5 w-full rounded-full bg-muted/60 flex overflow-hidden">
                             {platform.statuses.map((s) => {
@@ -279,17 +357,21 @@ export function ChannelPerformanceMatrix({
                                   key={s.status}
                                   className={`h-full ${getStatusBgColor(kind)}`}
                                   style={{ width: `${width}%` }}
-                                  title={`${s.status}: ${s.value}`}
+                                  title={`${formatStatusText(s.status)}: ${s.value}`}
                                 />
                               );
                             })}
                           </div>
-                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground truncate">
-                            {platform.statuses.map((s) => (
-                              <span key={s.status}>
-                                {s.value} {statusLabels[getStatusKind(s.status)] || s.status}
-                              </span>
-                            ))}
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
+                            {platform.statuses.map((s) => {
+                              const kind = getStatusKind(s.status);
+                              return (
+                                <span key={s.status} className="inline-flex items-center gap-1">
+                                  <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${getStatusBgColor(kind)}`} />
+                                  {s.value} {formatStatusText(s.status)}
+                                </span>
+                              );
+                            })}
                           </div>
                         </div>
                       </td>
@@ -310,14 +392,14 @@ export function ChannelPerformanceMatrix({
           </div>
         )
       ) : (
-        /* Direct ATS Domains Tab */
+        /* Direct Portals Tab */
         domains.length === 0 ? (
-          <p className="text-xs text-muted-foreground py-4 text-center">
-            No direct ATS portal links recorded. Direct employer links (Greenhouse, Lever, Ashby) will appear here.
+          <p className="text-xs text-muted-foreground py-6 text-center">
+            No direct company portal links recorded. Direct employer links (Greenhouse, Lever, Ashby, etc.) will appear here.
           </p>
         ) : (
           <>
-            {/* Mobile ATS Cards (< md) */}
+            {/* Mobile Cards (< md) */}
             <div className="md:hidden flex flex-col gap-2">
               {domains.map((item) => (
                 <div
@@ -335,7 +417,7 @@ export function ChannelPerformanceMatrix({
                   <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                     <span>{item.interviews} interviews</span>
                     <span className="font-mono font-semibold text-foreground">
-                      {item.successRate.toFixed(1)}% yield
+                      {item.successRate.toFixed(1)}% interview rate
                     </span>
                   </div>
                   <div className="h-1.5 w-full rounded-full bg-muted/60 overflow-hidden">
@@ -348,16 +430,16 @@ export function ChannelPerformanceMatrix({
               ))}
             </div>
 
-            {/* Desktop & Tablet ATS Table (>= md) */}
+            {/* Desktop Table (>= md) */}
             <div className="hidden md:block w-full overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="text-muted-foreground font-medium border-b border-border/20">
                   <tr>
-                    <th className="py-2.5 pr-4 font-normal">ATS Domain</th>
+                    <th className="py-2.5 pr-4 font-normal">Employer Portal</th>
                     <th className="py-2.5 px-4 font-normal text-center">Volume</th>
                     <th className="py-2.5 px-4 font-normal text-center">Interviews</th>
-                    <th className="py-2.5 px-4 font-normal text-center">Conversion Rate</th>
-                    <th className="py-2.5 pl-4 font-normal">Progress Bar</th>
+                    <th className="py-2.5 px-4 font-normal text-center">Interview Rate</th>
+                    <th className="py-2.5 pl-4 font-normal">Progress</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/20">

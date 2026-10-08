@@ -16,6 +16,7 @@ import {
 
 import { AnalyticsFilter } from "../components/analytics-filter";
 import { ActionCenterTray } from "../components/action-center-tray";
+import { KpiSummaryStrip } from "../components/kpi-summary-strip";
 import { PipelineHealthHero } from "../components/pipeline-health-hero";
 import { ChannelMarketTabs } from "../components/channel-market-tabs";
 import AnalyticsOverviewLoading from "./loading";
@@ -24,7 +25,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   return {
-    title: "JAT | Analytics & Intelligence",
+    title: "JobTracker | Analytics",
   };
 }
 
@@ -71,8 +72,8 @@ async function AnalyticsDashboardContent({
 
   return (
     <>
-      {/* 1. Tactical Action Pulse (Daily Follow-Ups & Ghosting Radar) */}
-      <section aria-label="Action Center and Follow-Up Queue">
+      {/* 1. Contextual Follow-Up Reminders */}
+      <section aria-label="Follow-Up Reminders">
         <ActionCenterTray
           count={ghostedData.count}
           oldestDays={ghostedData.oldestDays}
@@ -81,8 +82,22 @@ async function AnalyticsDashboardContent({
         />
       </section>
 
-      {/* 2. Unified Pipeline Conversion & Health Hero */}
-      <section aria-label="Pipeline Health and Stage Conversions">
+      {/* 2. Key Metrics Summary Strip */}
+      <section aria-label="Key Performance Indicators">
+        <KpiSummaryStrip
+          total={totalApplications}
+          activeCount={breakdownData.breakdown.active}
+          activeStages={breakdownData.breakdown.activeStages}
+          interviewCount={breakdownData.stages.interview}
+          offerCount={breakdownData.stages.accepted}
+          interviewRate={interviewRate}
+          interviewConversionRate={interviewConversionRate}
+          averageResponseDays={breakdownData.averageResponseDays}
+        />
+      </section>
+
+      {/* 3. Application Funnel & Outcomes */}
+      <section aria-label="Application Funnel and Outcomes">
         <PipelineHealthHero
           total={totalApplications}
           activeCount={breakdownData.breakdown.active}
@@ -97,14 +112,16 @@ async function AnalyticsDashboardContent({
             breakdownData.breakdown.rejectedResume +
             breakdownData.breakdown.rejectedInterview
           }
+          rejectedResumeCount={breakdownData.breakdown.rejectedResume}
+          rejectedInterviewCount={breakdownData.breakdown.rejectedInterview}
           interviewRate={interviewRate}
           interviewConversionRate={interviewConversionRate}
           averageResponseDays={breakdownData.averageResponseDays}
         />
       </section>
 
-      {/* 3. Strategic Intelligence Workspace (Channels, Workplace/Salary, Trends) */}
-      <section aria-label="Strategic Intelligence Workspace">
+      {/* 4. Detailed Breakdowns (Platforms, Trends & Status, Work & Salary) */}
+      <section aria-label="Detailed Analytics Breakdowns">
         <ChannelMarketTabs
           platforms={statusPerPlatform}
           domains={domainLeaderboard}

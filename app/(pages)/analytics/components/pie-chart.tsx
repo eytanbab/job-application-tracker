@@ -74,11 +74,9 @@ export function PieChartComponent({ title, data, total }: Props) {
   const chartData = baseData.map((item, i) => ({
     ...item,
     fill:
-      title === "Top 5 Applications status" || title === "Status Breakdown"
-        ? getColor(item.name)
-        : item.name === "Other"
-          ? "hsl(var(--muted-foreground) / 0.4)"
-          : PIE_COLORS[i % PIE_COLORS.length],
+      item.name === "Other"
+        ? "hsl(var(--muted-foreground) / 0.4)"
+        : getColor(item.name) || PIE_COLORS[i % PIE_COLORS.length],
   }));
 
   return (

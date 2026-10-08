@@ -1,6 +1,8 @@
 "use client";
 
-import { Building, Compass, DollarSign, Laptop } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Building, Compass, DollarSign, Laptop, ArrowUpRight } from "lucide-react";
 import type { WorkModeData, SalaryInsightsData } from "../insights/actions";
 
 interface MarketRealityMatrixProps {
@@ -38,20 +40,20 @@ export function MarketRealityMatrix({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full">
-      {/* 1. Workplace Setup Yield */}
+      {/* 1. Work Model Distribution */}
       <div className="rounded-xl border border-border/40 bg-card/60 shadow-2xs backdrop-blur-sm p-4 sm:p-5 flex flex-col justify-between gap-3">
         <div className="border-b border-border/20 pb-2">
-          <h3 className="text-sm font-bold tracking-tight text-foreground">
-            Workplace Setup & Yield
+          <h3 className="text-sm font-semibold tracking-tight text-foreground">
+            Work Model Breakdown
           </h3>
           <p className="text-xs text-muted-foreground">
-            Distribution and interview conversion across Remote, Hybrid, and On-Site roles.
+            Distribution and interview rate across Remote, Hybrid, and On-Site roles.
           </p>
         </div>
 
         {modes.length === 0 || modes.every((m) => m.total === 0) ? (
           <p className="text-xs text-muted-foreground py-6 text-center">
-            No workplace location data recorded for this timeframe.
+            No work model data recorded for this timeframe.
           </p>
         ) : (
           <div className="space-y-2.5">
@@ -76,7 +78,7 @@ export function MarketRealityMatrix({
 
                   <div className="text-right shrink-0">
                     <div className="font-mono font-bold text-foreground">
-                      {mode.yieldRate.toFixed(1)}% yield
+                      {mode.yieldRate.toFixed(1)}% interview rate
                     </div>
                     <div className="text-[10px] text-muted-foreground font-mono">
                       {mode.interviews} interviewed
@@ -93,23 +95,23 @@ export function MarketRealityMatrix({
       <div className="rounded-xl border border-border/40 bg-card/60 shadow-2xs backdrop-blur-sm p-4 sm:p-5 flex flex-col justify-between gap-3">
         <div className="border-b border-border/20 pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
           <div>
-            <h3 className="text-sm font-bold tracking-tight text-foreground">
-              Compensation Data
+            <h3 className="text-sm font-semibold tracking-tight text-foreground">
+              Salary & Compensation
             </h3>
             <p className="text-xs text-muted-foreground">
-              Stated compensation benchmarks and pipeline salary coverage.
+              Salary benchmarks across applications with stated compensation.
             </p>
           </div>
           {salary.statedCount > 0 && (
             <span className="text-[11px] font-mono text-muted-foreground self-start sm:self-auto">
-              {salary.statedCount}/{salary.totalCount} stated ({coveragePct}%)
+              {salary.statedCount} of {salary.totalCount} stated ({coveragePct}%)
             </span>
           )}
         </div>
 
         {salary.statedCount === 0 ? (
           <p className="text-xs text-muted-foreground py-6 text-center">
-            No compensation numbers recorded on applications for this timeframe.
+            No salary figures recorded on applications for this timeframe.
           </p>
         ) : (
           <div className="space-y-3">
@@ -135,22 +137,39 @@ export function MarketRealityMatrix({
             </div>
 
             {salary.topSalaryFormatted && (
-              <div className="p-3 rounded-lg border border-border/30 bg-background/40 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">
+              <div className="p-3 rounded-lg border border-border/30 bg-background/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                 <div className="min-w-0 flex-1">
                   <div className="text-[11px] text-muted-foreground">Highest Stated Compensation</div>
                   <div className="font-semibold text-foreground truncate max-w-full sm:max-w-[240px]">
                     {salary.topRole || "Position"} {salary.topCompany ? `· ${salary.topCompany}` : ""}
                   </div>
                 </div>
-                <span className="font-mono font-bold text-foreground text-sm self-start sm:self-auto">
-                  {salary.topSalaryFormatted}
-                </span>
+                <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                  <span className="font-mono font-bold text-foreground text-sm">
+                    {salary.topSalaryFormatted}
+                  </span>
+                  {salary.topCompany && (
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 cursor-pointer text-muted-foreground hover:text-foreground"
+                    >
+                      <Link
+                        href={`/applications?q=${encodeURIComponent(salary.topCompany)}`}
+                        title="View in tracker"
+                      >
+                        <ArrowUpRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </Button>
+                  )}
+                </div>
               </div>
             )}
 
             {coveragePct < 40 && salary.totalCount > 3 && (
               <p className="text-[10px] text-muted-foreground/80 italic text-center pt-0.5">
-                Preliminary benchmark based on {coveragePct}% stated salary coverage.
+                Note: Based on {coveragePct}% of applications with salary stated.
               </p>
             )}
           </div>

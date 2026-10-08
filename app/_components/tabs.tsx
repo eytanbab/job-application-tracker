@@ -14,10 +14,10 @@ export default function Tabs() {
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border/20 w-full min-w-0">
       <div className="min-w-0">
         <h1 className="text-xl font-bold tracking-tight text-foreground">
-          Analytics & Pipeline Intelligence
+          Analytics
         </h1>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Comprehensive performance metrics, follow-up queue, and channel conversion analysis.
+          Track your job search progress, interview rates, and platform performance.
         </p>
       </div>
       {isFiltered && (
