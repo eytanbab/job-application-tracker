@@ -6,6 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -167,8 +175,8 @@ export function ChannelPerformanceMatrix({
         variant="ghost"
         size="sm"
         className={cn(
-          "h-8 px-2 font-semibold hover:bg-muted/60 transition-colors text-xs text-muted-foreground hover:text-foreground select-none inline-flex items-center gap-1.5",
-          align === "center" ? "mx-auto justify-center" : "justify-start -ml-2",
+          "h-7 px-1.5 font-semibold hover:bg-muted/60 transition-colors text-xs text-muted-foreground hover:text-foreground select-none inline-flex items-center gap-1",
+          align === "center" ? "mx-auto justify-center" : "justify-start -ml-1.5",
           isSorted && "text-foreground font-bold",
         )}
         onClick={() => handleSort(field)}
@@ -181,7 +189,7 @@ export function ChannelPerformanceMatrix({
             <ArrowDown className="h-3.5 w-3.5 text-primary shrink-0" />
           )
         ) : (
-          <ArrowUpDown className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+          <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
         )}
       </Button>
     );
@@ -238,7 +246,7 @@ export function ChannelPerformanceMatrix({
         </p>
       ) : (
         <div className="space-y-3">
-          {/* Top platform highlight banner (clean single sentence without redundant badge) */}
+          {/* Top platform highlight banner */}
           {topPlatform && (
             <div className="p-3 rounded-lg bg-background/50 border border-border/30 text-xs text-muted-foreground">
               <span className="text-foreground">
@@ -252,7 +260,7 @@ export function ChannelPerformanceMatrix({
             </div>
           )}
 
-          {/* Mobile Sort Select (< md only, since table headers handle desktop) */}
+          {/* Mobile Sort Select (< md only, table headers handle desktop) */}
           <div className="md:hidden flex items-center justify-between gap-2 pt-1 pb-1">
             <span className="text-xs text-muted-foreground font-medium">Sort by</span>
             <Select
@@ -371,51 +379,54 @@ export function ChannelPerformanceMatrix({
             )}
           </div>
 
-          {/* Desktop & Tablet Platform Table (>= md) */}
-          <div className="hidden md:block w-full overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="border-b border-border/20">
-                <tr>
-                  <th className="py-2 pr-4 text-left font-medium">
+          {/* Desktop & Tablet Platform Table (>= md) with Rigid Fixed Layout */}
+          <div className="hidden md:block w-full rounded-xl border border-border/30 overflow-hidden bg-background/40">
+            <Table className="w-full text-xs table-fixed">
+              <TableHeader className="bg-muted/30">
+                <TableRow className="border-b border-border/30 hover:bg-transparent">
+                  <TableHead className="w-[22%] py-2.5 px-3 text-left">
                     {renderSortHeader("channel", "Channel", "left")}
-                  </th>
-                  <th className="py-2 px-4 text-center font-medium">
+                  </TableHead>
+                  <TableHead className="w-[12%] py-2.5 px-3 text-center">
                     {renderSortHeader("total", "Volume", "center")}
-                  </th>
-                  <th className="py-2 px-4 text-center font-medium">
+                  </TableHead>
+                  <TableHead className="w-[18%] py-2.5 px-3 text-center">
                     {renderSortHeader("interviewRate", "Interview Rate", "center")}
-                  </th>
-                  <th className="py-2 px-4 text-center font-medium">
+                  </TableHead>
+                  <TableHead className="w-[15%] py-2.5 px-3 text-center">
                     {renderSortHeader("responseRate", "Response Rate", "center")}
-                  </th>
-                  <th className="py-2 px-4 text-left font-semibold text-xs text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="w-[23%] py-2.5 px-3 text-left font-semibold text-xs text-muted-foreground">
                     Pipeline Distribution
-                  </th>
-                  <th className="py-2 pl-4 text-right font-semibold text-xs text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="w-[10%] py-2.5 px-3 text-right font-semibold text-xs text-muted-foreground">
                     Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/20">
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/20">
                 {displayedPlatforms.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-8 text-center text-xs text-muted-foreground">
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-8 text-center text-xs text-muted-foreground">
                       No platforms matching &quot;{searchQuery}&quot;
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   displayedPlatforms.map((platform) => (
-                    <tr
+                    <TableRow
                       key={platform.platformName}
                       className="hover:bg-muted/30 transition-colors"
                     >
-                      <td className="py-3 pr-4 font-semibold capitalize text-foreground">
+                      <TableCell
+                        className="py-3 px-3 font-semibold capitalize text-foreground truncate min-w-0"
+                        title={platform.platformName}
+                      >
                         {platform.platformName}
-                      </td>
-                      <td className="py-3 px-4 text-center font-mono font-semibold text-foreground">
+                      </TableCell>
+                      <TableCell className="py-3 px-3 text-center font-mono font-semibold text-foreground">
                         {platform.total}
-                      </td>
-                      <td className="py-3 px-4 text-center">
+                      </TableCell>
+                      <TableCell className="py-3 px-3 text-center">
                         {platform.total < 3 && platform.interviewCount > 0 ? (
                           <span className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground">
                             {platform.interviewCount}/{platform.total}{" "}
@@ -429,12 +440,12 @@ export function ChannelPerformanceMatrix({
                             </span>
                           </span>
                         )}
-                      </td>
-                      <td className="py-3 px-4 text-center font-mono text-muted-foreground">
+                      </TableCell>
+                      <TableCell className="py-3 px-3 text-center font-mono text-muted-foreground">
                         {platform.responseRate.toFixed(1)}%
-                      </td>
-                      <td className="py-3 px-4 min-w-[200px]">
-                        <div className="flex flex-col gap-1">
+                      </TableCell>
+                      <TableCell className="py-3 px-3">
+                        <div className="flex flex-col gap-1 w-full">
                           <div className="h-1.5 w-full rounded-full bg-muted/60 flex overflow-hidden">
                             {platform.statuses.map((s) => {
                               const kind = getStatusKind(s.status);
@@ -453,13 +464,13 @@ export function ChannelPerformanceMatrix({
                               );
                             })}
                           </div>
-                          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10px] text-muted-foreground">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
                             {platform.statuses.map((s) => {
                               const kind = getStatusKind(s.status);
                               return (
                                 <span
                                   key={s.status}
-                                  className="inline-flex items-center gap-1"
+                                  className="inline-flex items-center gap-1 shrink-0"
                                 >
                                   <span
                                     className={`h-1.5 w-1.5 rounded-full shrink-0 ${getStatusBgColor(kind)}`}
@@ -470,8 +481,8 @@ export function ChannelPerformanceMatrix({
                             })}
                           </div>
                         </div>
-                      </td>
-                      <td className="py-3 pl-4 text-right">
+                      </TableCell>
+                      <TableCell className="py-3 px-3 text-right">
                         <Link
                           href={`/applications?platform=${encodeURIComponent(platform.platformName)}`}
                           className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1 cursor-pointer"
@@ -479,12 +490,12 @@ export function ChannelPerformanceMatrix({
                           View
                           <ArrowRight className="h-3 w-3" />
                         </Link>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
           {/* Show More / Show Less Toggle (Guards against 66+ rows) */}
