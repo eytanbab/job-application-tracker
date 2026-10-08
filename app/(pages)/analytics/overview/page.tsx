@@ -1,13 +1,10 @@
 import { Suspense } from "react";
+import dynamicImport from "next/dynamic";
 import {
   getApplicationsPerYear,
-  getStasusesPerYear,
-  getTop5Statuses,
   getYears,
   getDetailedApplicationBreakdown,
-  getGhostedApplications,
   getStatusPerPlatform,
-  getDomainLeaderboard,
 } from "@/app/actions/analytics";
 import {
   getWorkModeAnalysis,
@@ -15,11 +12,23 @@ import {
 } from "../insights/actions";
 
 import { AnalyticsFilter } from "../components/analytics-filter";
-import { ActionCenterTray } from "../components/action-center-tray";
 import { KpiSummaryStrip } from "../components/kpi-summary-strip";
 import { PipelineHealthHero } from "../components/pipeline-health-hero";
-import { ChannelMarketTabs } from "../components/channel-market-tabs";
+import { ChannelPerformanceMatrix } from "../components/channel-performance-matrix";
+import { MarketRealityMatrix } from "../components/market-reality-matrix";
 import AnalyticsOverviewLoading from "./loading";
+
+const YearlyTrendsCard = dynamicImport(
+  () =>
+    import("../components/yearly-trends-card").then(
+      (m) => m.YearlyTrendsCard,
+    ),
+  {
+    loading: () => (
+      <div className="min-h-[320px] bg-card/40 rounded-xl border border-border/30 animate-pulse" />
+    ),
+  },
+);
 
 export const dynamic = "force-dynamic";
 
@@ -38,26 +47,21 @@ async function AnalyticsDashboardContent({
   year?: string;
   availableYears: string[];
 }) {
+  const isAllMonths = !month || month === "all";
+
+  // Fetch only the analytics datasets needed
   const [
     breakdownData,
-    ghostedData,
     statusPerPlatform,
-    domainLeaderboard,
     workModes,
     salaryInsights,
-    top5Statuses,
     applicationsPerYear,
-    statusesPerYear,
   ] = await Promise.all([
     getDetailedApplicationBreakdown(month, year),
-    getGhostedApplications(month, year),
     getStatusPerPlatform(month, year),
-    getDomainLeaderboard(month, year),
     getWorkModeAnalysis(month, year),
     getSalaryInsights(month, year),
-    getTop5Statuses(month, year),
-    getApplicationsPerYear(undefined, year),
-    getStasusesPerYear(undefined, year),
+    isAllMonths ? getApplicationsPerYear(undefined, year) : Promise.resolve([]),
   ]);
 
   const totalApplications = breakdownData.total;
@@ -70,19 +74,17 @@ async function AnalyticsDashboardContent({
     ? breakdownData.stages.accepted / breakdownData.stages.interview
     : 0;
 
-  return (
-    <>
-      {/* 1. Contextual Follow-Up Reminders */}
-      <section aria-label="Follow-Up Reminders">
-        <ActionCenterTray
-          count={ghostedData.count}
-          oldestDays={ghostedData.oldestDays}
-          followUpCount={ghostedData.followUpCount}
-          followUpQueue={ghostedData.followUpQueue}
-        />
-      </section>
+  const ghostedCount =
+    breakdownData.breakdown.ghostedResume +
+    breakdownData.breakdown.ghostedInterview;
 
-      {/* 2. Key Metrics Summary Strip */}
+  const rejectedCount =
+    breakdownData.breakdown.rejectedResume +
+    breakdownData.breakdown.rejectedInterview;
+
+  return (
+    <div className="flex flex-col gap-6 w-full min-w-0">
+      {/* 1. Key Metrics Summary Strip */}
       <section aria-label="Key Performance Indicators">
         <KpiSummaryStrip
           total={totalApplications}
@@ -96,7 +98,7 @@ async function AnalyticsDashboardContent({
         />
       </section>
 
-      {/* 3. Application Funnel & Outcomes */}
+      {/* 2. Application Funnel & Outcomes */}
       <section aria-label="Application Funnel and Outcomes">
         <PipelineHealthHero
           total={totalApplications}
@@ -104,14 +106,8 @@ async function AnalyticsDashboardContent({
           activeStages={breakdownData.breakdown.activeStages}
           interviewCount={breakdownData.stages.interview}
           offerCount={breakdownData.stages.accepted}
-          ghostedCount={
-            breakdownData.breakdown.ghostedResume +
-            breakdownData.breakdown.ghostedInterview
-          }
-          rejectedCount={
-            breakdownData.breakdown.rejectedResume +
-            breakdownData.breakdown.rejectedInterview
-          }
+          ghostedCount={ghostedCount}
+          rejectedCount={rejectedCount}
           rejectedResumeCount={breakdownData.breakdown.rejectedResume}
           rejectedInterviewCount={breakdownData.breakdown.rejectedInterview}
           interviewRate={interviewRate}
@@ -120,22 +116,27 @@ async function AnalyticsDashboardContent({
         />
       </section>
 
-      {/* 4. Detailed Breakdowns (Platforms, Trends & Status, Work & Salary) */}
-      <section aria-label="Detailed Analytics Breakdowns">
-        <ChannelMarketTabs
-          platforms={statusPerPlatform}
-          domains={domainLeaderboard}
-          modes={workModes}
-          salary={salaryInsights}
-          top5Statuses={top5Statuses}
-          totalApplications={totalApplications}
-          availableYears={availableYears}
-          statusesPerYear={statusesPerYear}
-          applicationsPerYear={applicationsPerYear}
-          globalYear={year}
-        />
+      {/* 3. Platform Breakdown */}
+      <section aria-label="Platforms and Application Sources">
+        <ChannelPerformanceMatrix platforms={statusPerPlatform} />
       </section>
-    </>
+
+      {/* 4. Work Model & Compensation */}
+      <section aria-label="Work Model and Salary Benchmarks">
+        <MarketRealityMatrix modes={workModes} salary={salaryInsights} />
+      </section>
+
+      {/* 5. Activity Over Time (Displayed when viewing all months) */}
+      {isAllMonths && (
+        <section aria-label="Application Activity Over Time">
+          <YearlyTrendsCard
+            years={availableYears}
+            applicationsPerYear={applicationsPerYear}
+            globalYear={year}
+          />
+        </section>
+      )}
+    </div>
   );
 }
 
@@ -163,7 +164,7 @@ export default async function Overview(props: {
         <AnalyticsFilter years={availableYears} />
       </Suspense>
 
-      {/* 2-4. Reactive Suspense Data Content with Key */}
+      {/* 2. Reactive Suspense Data Content with Key */}
       <Suspense
         key={`${month || "all"}-${year || "all"}`}
         fallback={<AnalyticsOverviewLoading hideFilter />}

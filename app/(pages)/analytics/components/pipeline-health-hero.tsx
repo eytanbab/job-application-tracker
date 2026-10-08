@@ -224,10 +224,10 @@ export function PipelineHealthHero({
           </span>
           <div className="flex items-baseline justify-between gap-1 flex-wrap">
             <span className="text-lg font-bold font-mono text-foreground">
-              {unansweredRate.toFixed(1)}%
+              {ghostedCount}
             </span>
             <span className="text-[11px] text-muted-foreground">
-              {ghostedCount} unresponsive
+              {unansweredRate.toFixed(1)}% of applications
             </span>
           </div>
           <p className="text-[10px] text-muted-foreground mt-0.5">
@@ -245,7 +245,7 @@ export function PipelineHealthHero({
               {rejectedCount}
             </span>
             <span className="text-[11px] text-muted-foreground">
-              {rejectedPct.toFixed(1)}% of submissions
+              {rejectedPct.toFixed(1)}% of applications
             </span>
           </div>
           <p className="text-[10px] text-muted-foreground mt-0.5">

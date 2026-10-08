@@ -6,16 +6,13 @@ export default function AnalyticsOverviewLoading({
   hideFilter?: boolean;
 } = {}) {
   return (
-    <div className="flex flex-col gap-5 w-full max-w-7xl mx-auto pb-12 min-w-0 animate-in fade-in duration-300">
+    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto pb-12 min-w-0 animate-in fade-in duration-300">
       {/* 1. Timeframe Filter Toolbar Skeleton */}
       {!hideFilter && (
         <div className="h-14 w-full bg-card/40 rounded-xl border border-border/30 animate-pulse" />
       )}
 
-      {/* 2. Follow-Up Reminders Bar Skeleton */}
-      <div className="h-11 w-full rounded-xl border border-border/30 bg-card/40 animate-pulse flex items-center justify-between px-4" />
-
-      {/* 3. 5 KPI Cards Strip Skeleton */}
+      {/* 2. 5 KPI Cards Strip Skeleton */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 w-full min-w-0">
         {Array.from({ length: 5 }).map((_, i) => (
           <div
@@ -34,7 +31,7 @@ export default function AnalyticsOverviewLoading({
         ))}
       </div>
 
-      {/* 4. Application Funnel & Outcomes Skeleton */}
+      {/* 3. Application Funnel & Outcomes Skeleton */}
       <div className="w-full min-w-0 rounded-xl border border-border/40 bg-card/60 shadow-2xs p-4 sm:p-5 space-y-5">
         <div className="flex items-center justify-between border-b border-border/20 pb-2">
           <div className="space-y-1">
@@ -77,19 +74,36 @@ export default function AnalyticsOverviewLoading({
         </div>
       </div>
 
-      {/* 5. Detailed Breakdowns Tabs Skeleton */}
-      <div className="w-full space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/20 pb-3">
+      {/* 4. Platforms Table Skeleton */}
+      <div className="w-full rounded-xl border border-border/40 bg-card/60 shadow-2xs p-4 sm:p-5 space-y-4">
+        <div className="flex items-center justify-between border-b border-border/20 pb-2">
           <div className="space-y-1">
             <Skeleton className="h-4 w-44" />
             <Skeleton className="h-3 w-64" />
           </div>
-          <Skeleton className="h-8 w-64 rounded-lg" />
+          <Skeleton className="h-5 w-20 rounded-md" />
         </div>
+        <div className="h-48 rounded-lg bg-background/40 border border-border/20 animate-pulse" />
+      </div>
 
-        <div className="h-64 rounded-xl border border-border/30 bg-card/40 p-4 space-y-3">
+      {/* 5. Work Model & Salary Skeleton */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full">
+        <div className="rounded-xl border border-border/40 bg-card/60 p-4 sm:p-5 space-y-3">
           <Skeleton className="h-4 w-36" />
-          <Skeleton className="h-full w-full rounded-lg" />
+          <Skeleton className="h-3 w-56" />
+          <div className="space-y-2 pt-2">
+            <Skeleton className="h-12 w-full rounded-lg" />
+            <Skeleton className="h-12 w-full rounded-lg" />
+            <Skeleton className="h-12 w-full rounded-lg" />
+          </div>
+        </div>
+        <div className="rounded-xl border border-border/40 bg-card/60 p-4 sm:p-5 space-y-3">
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-3 w-56" />
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <Skeleton className="h-20 w-full rounded-lg" />
+            <Skeleton className="h-20 w-full rounded-lg" />
+          </div>
         </div>
       </div>
     </div>
