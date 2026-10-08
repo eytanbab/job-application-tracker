@@ -237,7 +237,13 @@ export async function getApplications() {
       resumeFileSize: documents.file_size,
     })
     .from(jobApplications)
-    .leftJoin(documents, eq(jobApplications.resumeId, documents.id))
+    .leftJoin(
+      documents,
+      and(
+        eq(jobApplications.resumeId, documents.id),
+        eq(documents.userId, userId),
+      ),
+    )
     .where(eq(jobApplications.userId, userId))
     .orderBy(
       desc(jobApplications.date_applied),
@@ -267,6 +273,32 @@ export async function getApplications() {
 export async function createApplication(values: FormValues) {
   const userId = await getCurrentUserIdOrThrow();
   const fields = extractCleanApplicationFields(values);
+
+  // Validate resume ownership if resumeId is provided
+  if (fields.resumeId) {
+    if (isMockDb) {
+      const isValid = mockStore
+        .getDocuments(userId)
+        .some((d) => d.id === fields.resumeId);
+      if (!isValid) {
+        fields.resumeId = null;
+      }
+    } else {
+      const doc = await db
+        .select({ id: documents.id })
+        .from(documents)
+        .where(
+          and(
+            eq(documents.id, fields.resumeId),
+            eq(documents.userId, userId),
+          ),
+        )
+        .limit(1);
+      if (doc.length === 0) {
+        fields.resumeId = null;
+      }
+    }
+  }
 
   if (isMockDb) {
     const newApp = mockStore.createApplication(userId, fields as any);
@@ -323,6 +355,32 @@ export async function updateApplication(values: FormValues) {
   const userId = await getCurrentUserIdOrThrow();
   const applicationId = values.id;
   const fields = extractCleanApplicationFields(values);
+
+  // Validate resume ownership if resumeId is provided
+  if (fields.resumeId) {
+    if (isMockDb) {
+      const isValid = mockStore
+        .getDocuments(userId)
+        .some((d) => d.id === fields.resumeId);
+      if (!isValid) {
+        fields.resumeId = null;
+      }
+    } else {
+      const doc = await db
+        .select({ id: documents.id })
+        .from(documents)
+        .where(
+          and(
+            eq(documents.id, fields.resumeId),
+            eq(documents.userId, userId),
+          ),
+        )
+        .limit(1);
+      if (doc.length === 0) {
+        fields.resumeId = null;
+      }
+    }
+  }
 
   if (isMockDb) {
     mockStore.updateApplication(userId, applicationId, fields as any);
@@ -408,6 +466,53 @@ export async function updateApplication(values: FormValues) {
         ),
       );
   }
+
+  purgeCaches(userId);
+}
+
+// Update only the attached resume of an application without altering other fields
+export async function updateApplicationResume(
+  applicationId: string,
+  resumeId: string | null,
+) {
+  const userId = await getCurrentUserIdOrThrow();
+
+  if (resumeId) {
+    if (isMockDb) {
+      const isValid = mockStore
+        .getDocuments(userId)
+        .some((d) => d.id === resumeId);
+      if (!isValid) {
+        throw new Error("Invalid or unauthorized resume ID");
+      }
+    } else {
+      const doc = await db
+        .select({ id: documents.id })
+        .from(documents)
+        .where(and(eq(documents.id, resumeId), eq(documents.userId, userId)))
+        .limit(1);
+
+      if (doc.length === 0) {
+        throw new Error("Invalid or unauthorized resume ID");
+      }
+    }
+  }
+
+  if (isMockDb) {
+    mockStore.updateApplication(userId, applicationId, { resumeId });
+    purgeCaches(userId);
+    return;
+  }
+
+  await db
+    .update(jobApplications)
+    .set({ resumeId })
+    .where(
+      and(
+        eq(jobApplications.userId, userId),
+        eq(jobApplications.id, applicationId),
+      ),
+    );
 
   purgeCaches(userId);
 }
