@@ -22,7 +22,7 @@ test.describe("Analytics Page Overhaul & Usability", () => {
     }
   }
 
-  test("renders clean, human page header without AI-slop jargon", async ({ page }) => {
+  test("renders clean, human page header without AI-slop or follow-up reminders", async ({ page }) => {
     await page.goto("/analytics/overview");
     await page.waitForLoadState("domcontentloaded");
 
@@ -33,10 +33,11 @@ test.describe("Analytics Page Overhaul & Usability", () => {
     const subtitle = page.locator("text=Track your job search progress, interview rates, and platform performance.").first();
     await expect(subtitle).toBeVisible();
 
-    // 2. Ensure obsolete buzzword titles are completely gone
+    // 2. Ensure obsolete buzzword titles and follow-up reminders are completely gone
     await expect(page.locator("text=Pipeline Health & Conversion Velocity")).not.toBeVisible();
     await expect(page.locator("text=Strategic Intelligence & Analytics")).not.toBeVisible();
     await expect(page.locator("text=Action Pulse")).not.toBeVisible();
+    await expect(page.locator("text=Follow-Up Reminders")).not.toBeVisible();
     await expect(page.locator("text=Screening Yield")).not.toBeVisible();
     await expect(page.locator("text=Response Velocity")).not.toBeVisible();
     await expect(page.locator("text=Market Reality Matrix")).not.toBeVisible();
@@ -53,8 +54,7 @@ test.describe("Analytics Page Overhaul & Usability", () => {
     await expect(page.locator("text=Avg. Response Time").first()).toBeVisible();
   });
 
-  test("renders empty state or corrected 4-stage application funnel", async ({ page }) => {
-    // Ensure an application exists so funnel renders
+  test("renders empty state or corrected 4-stage application funnel with consistent outcome stats", async ({ page }) => {
     await ensureApplicationExists(page);
 
     await page.goto("/analytics/overview");
@@ -71,36 +71,34 @@ test.describe("Analytics Page Overhaul & Usability", () => {
     // Ensure Active Pipeline is NOT present as a funnel stage
     await expect(page.locator("text=2. Active Pipeline")).not.toBeVisible();
 
-    // Outcomes row
+    // Outcomes row with consistent count formatting
     await expect(page.locator("text=Interview-to-Offer Conversion").first()).toBeVisible();
     await expect(page.locator("text=No Response (30+ Days)").first()).toBeVisible();
     await expect(page.locator("text=Rejections").first()).toBeVisible();
   });
 
-  test("persists tab navigation in URL search params", async ({ page }) => {
+  test("renders unified platform breakdown without direct portals sub-toggle", async ({ page }) => {
     await page.goto("/analytics/overview");
     await page.waitForLoadState("domcontentloaded");
 
-    // Check initial tab: Platforms
-    const platformsTab = page.locator("#tab-platforms");
-    await expect(platformsTab).toHaveAttribute("aria-selected", "true");
+    // Platforms & Sources section is visible directly on page
+    await expect(page.locator("h2", { hasText: "Platforms & Sources" }).first()).toBeVisible();
 
-    // Click Trends & Status tab
-    const trendsTab = page.locator("#tab-trends");
-    await trendsTab.click();
-    await expect(trendsTab).toHaveAttribute("aria-selected", "true");
-    await expect(page).toHaveURL(/tab=trends/);
+    // Ensure artificial "Direct Portals" and "Job Boards" toggle buttons are gone
+    await expect(page.locator("button:has-text('Direct Portals')")).not.toBeVisible();
+    await expect(page.locator("button:has-text('Job Boards')")).not.toBeVisible();
+    await expect(page.locator("text=ATS Domain")).not.toBeVisible();
+  });
 
-    // Verify trends content is displayed
-    await expect(page.locator("#panel-trends")).toBeVisible();
+  test("renders work model and salary benchmarks without redundant status donut", async ({ page }) => {
+    await page.goto("/analytics/overview");
+    await page.waitForLoadState("domcontentloaded");
 
-    // Click Work & Salary tab
-    const workTab = page.locator("#tab-workplace");
-    await workTab.click();
-    await expect(workTab).toHaveAttribute("aria-selected", "true");
-    await expect(page).toHaveURL(/tab=workplace/);
+    // Work Model and Salary sections are visible on the dashboard
+    await expect(page.locator("text=Work Model Breakdown").first()).toBeVisible();
+    await expect(page.locator("text=Salary & Compensation").first()).toBeVisible();
 
-    // Verify workplace content is displayed
-    await expect(page.locator("#panel-workplace")).toBeVisible();
+    // Redundant status breakdown donut chart is gone
+    await expect(page.locator("text=Status Breakdown")).not.toBeVisible();
   });
 });
