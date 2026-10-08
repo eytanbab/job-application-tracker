@@ -7,7 +7,6 @@ import {
   Trophy,
   ArrowUpRight,
   Briefcase,
-  FileSearch,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -70,18 +69,9 @@ export function PipelineHealthHero({
     );
   }
 
-  // Calculate funnel counts for sequential milestones
-  // Stage 1: Applied (100%)
-  // Stage 2: Under Review (applications that advanced past initial submission into review, interview, offer, or were reviewed & rejected)
-  const reviewedCount = Math.min(
-    total,
-    activeStages.review + interviewCount + offerCount + rejectedResumeCount,
-  );
-  const reviewedPct = total > 0 ? (reviewedCount / total) * 100 : 0;
   const interviewPct = total > 0 ? (interviewCount / total) * 100 : 0;
   const offerPct = total > 0 ? (offerCount / total) * 100 : 0;
 
-  const activePct = total > 0 ? (activeCount / total) * 100 : 0;
   const rejectedPct = total > 0 ? (rejectedCount / total) * 100 : 0;
   const unansweredRate = total > 0 ? (ghostedCount / total) * 100 : 0;
 
@@ -92,35 +82,30 @@ export function PipelineHealthHero({
       count: total,
       pct: 100,
       icon: Send,
-      color: "bg-primary",
+      color: "text-primary bg-primary/10 border-primary/20",
       detail: "Total applications submitted",
     },
     {
-      id: "review",
-      label: "2. Under Review",
-      count: reviewedCount,
-      pct: reviewedPct,
-      icon: FileSearch,
-      color: "bg-blue-600 dark:bg-blue-500",
-      detail: `${activeStages.review} currently under review`,
-    },
-    {
       id: "interview",
-      label: "3. Interview",
+      label: "2. Interview",
       count: interviewCount,
       pct: interviewPct,
       icon: Users,
-      color: "bg-amber-600 dark:bg-amber-500",
+      color: "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20",
       detail: `${interviewCount} reached recruiter or team rounds`,
+      conversionBadge: total > 0 ? `${formatPercent(interviewRate)} yield` : null,
+      conversionDetail: `${interviewCount} of ${total} applied`,
     },
     {
       id: "offer",
-      label: "4. Offer",
+      label: "3. Offer",
       count: offerCount,
       pct: offerPct,
       icon: Trophy,
-      color: "bg-emerald-600 dark:bg-emerald-500",
-      detail: `${offerCount} converted to offer`,
+      color: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+      detail: `${offerCount} converted to formal offer`,
+      conversionBadge: interviewCount > 0 ? `${formatPercent(interviewConversionRate)} yield` : null,
+      conversionDetail: `${offerCount} of ${interviewCount || 0} interviews`,
     },
   ];
 
@@ -141,7 +126,7 @@ export function PipelineHealthHero({
             </Badge>
           </div>
           <p className="text-xs text-muted-foreground">
-            How your applications convert through screening, interviews, and offers.
+            Stage-by-stage conversion from initial application through interviews and final offers.
           </p>
         </div>
 
@@ -154,40 +139,49 @@ export function PipelineHealthHero({
         </Link>
       </div>
 
-      {/* Stepped Conversion Flow Visualization */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full min-w-0">
-        {funnelStages.map((stage) => {
+      {/* Connected 3-Stage Milestone Conversion Flow */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full min-w-0 relative">
+        {funnelStages.map((stage, idx) => {
           const Icon = stage.icon;
           return (
             <div
               key={stage.id}
-              className="p-3.5 rounded-xl border border-border/30 bg-background/50 flex flex-col justify-between gap-2.5 min-w-0"
+              className="p-4 rounded-xl border border-border/30 bg-background/50 flex flex-col justify-between gap-3 min-w-0 relative"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                  <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-semibold text-foreground flex items-center gap-2">
+                  <span className={`p-1.5 rounded-lg border ${stage.color}`}>
+                    <Icon className="h-4 w-4" />
+                  </span>
                   {stage.label}
                 </span>
                 <span className="text-xs font-mono text-muted-foreground font-semibold">
-                  {stage.pct.toFixed(0)}%
+                  {stage.pct.toFixed(0)}% of total
                 </span>
               </div>
 
               <div>
-                <div className="text-2xl font-bold font-mono tabular-nums text-foreground tracking-tight">
+                <div className="text-3xl font-bold font-mono tabular-nums text-foreground tracking-tight">
                   {stage.count}
                 </div>
-                <div className="h-1.5 w-full bg-muted/60 rounded-full overflow-hidden mt-1.5">
-                  <div
-                    className={`h-full ${stage.color} rounded-full transition-all duration-500`}
-                    style={{
-                      width: `${Math.max(stage.pct, stage.count > 0 ? 5 : 0)}%`,
-                    }}
-                  />
-                </div>
+                {stage.conversionBadge ? (
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                      <span>↳</span>
+                      {stage.conversionBadge}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground font-mono">
+                      ({stage.conversionDetail})
+                    </span>
+                  </div>
+                ) : (
+                  <div className="text-[11px] text-muted-foreground mt-1.5 font-mono">
+                    100% baseline submissions
+                  </div>
+                )}
               </div>
 
-              <span className="text-[11px] text-muted-foreground truncate">
+              <span className="text-[11px] text-muted-foreground border-t border-border/20 pt-2 truncate">
                 {stage.detail}
               </span>
             </div>
@@ -195,38 +189,38 @@ export function PipelineHealthHero({
         })}
       </div>
 
-      {/* Step Conversion Rates & Outcomes */}
+      {/* Outcome Cards: Integer Count Primary, Percentage Secondary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 text-xs w-full min-w-0">
-        {/* 1. Interview to Offer Conversion */}
-        <div className="p-3 rounded-lg bg-background/40 border border-border/25 flex flex-col justify-between gap-1.5 min-w-0">
+        {/* 1. Offers Received */}
+        <div className="p-3.5 rounded-xl bg-background/40 border border-border/25 flex flex-col justify-between gap-1.5 min-w-0">
           <span className="text-muted-foreground font-medium text-[11px] uppercase tracking-wider">
-            Interview-to-Offer Conversion
+            Offers Received
           </span>
           <div className="flex items-baseline justify-between gap-1 flex-wrap">
-            <span className="text-lg font-bold font-mono text-foreground">
-              {formatPercent(interviewConversionRate)}
+            <span className="text-2xl font-bold font-mono text-foreground">
+              {offerCount}
             </span>
-            <span className="text-[11px] text-muted-foreground">
-              {offerCount} of {interviewCount || 0} converted
+            <span className="text-[11px] text-muted-foreground font-mono">
+              {formatPercent(interviewConversionRate)} of interviews
             </span>
           </div>
           <p className="text-[10px] text-muted-foreground mt-0.5">
-            {interviewRate > 0
-              ? `${formatPercent(interviewRate)} of total applications reached interview`
+            {interviewCount > 0
+              ? `${offerCount} of ${interviewCount} interview rounds converted`
               : "No interviews in this timeframe"}
           </p>
         </div>
 
         {/* 2. Unresponsive / No Response */}
-        <div className="p-3 rounded-lg bg-background/40 border border-border/25 flex flex-col justify-between gap-1.5 min-w-0">
+        <div className="p-3.5 rounded-xl bg-background/40 border border-border/25 flex flex-col justify-between gap-1.5 min-w-0">
           <span className="text-muted-foreground font-medium text-[11px] uppercase tracking-wider">
             No Response (30+ Days)
           </span>
           <div className="flex items-baseline justify-between gap-1 flex-wrap">
-            <span className="text-lg font-bold font-mono text-foreground">
+            <span className="text-2xl font-bold font-mono text-foreground">
               {ghostedCount}
             </span>
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-[11px] text-muted-foreground font-mono">
               {unansweredRate.toFixed(1)}% of applications
             </span>
           </div>
@@ -236,15 +230,15 @@ export function PipelineHealthHero({
         </div>
 
         {/* 3. Rejections */}
-        <div className="p-3 rounded-lg bg-background/40 border border-border/25 flex flex-col justify-between gap-1.5 min-w-0">
+        <div className="p-3.5 rounded-xl bg-background/40 border border-border/25 flex flex-col justify-between gap-1.5 min-w-0">
           <span className="text-muted-foreground font-medium text-[11px] uppercase tracking-wider">
             Rejections
           </span>
           <div className="flex items-baseline justify-between gap-1 flex-wrap">
-            <span className="text-lg font-bold font-mono text-foreground">
+            <span className="text-2xl font-bold font-mono text-foreground">
               {rejectedCount}
             </span>
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-[11px] text-muted-foreground font-mono">
               {rejectedPct.toFixed(1)}% of applications
             </span>
           </div>
