@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import dynamicImport from "next/dynamic";
 import {
   getApplicationsPerYear,
+  getStasusesPerYear,
   getYears,
   getDetailedApplicationBreakdown,
   getStatusPerPlatform,
@@ -56,12 +57,14 @@ async function AnalyticsDashboardContent({
     workModes,
     salaryInsights,
     applicationsPerYear,
+    statusesPerYear,
   ] = await Promise.all([
     getDetailedApplicationBreakdown(month, year),
     getStatusPerPlatform(month, year),
     getWorkModeAnalysis(month, year),
     getSalaryInsights(month, year),
     isAllMonths ? getApplicationsPerYear(undefined, year) : Promise.resolve([]),
+    isAllMonths ? getStasusesPerYear(undefined, year) : Promise.resolve([]),
   ]);
 
   const totalApplications = breakdownData.total;
@@ -132,6 +135,7 @@ async function AnalyticsDashboardContent({
           <YearlyTrendsCard
             years={availableYears}
             applicationsPerYear={applicationsPerYear}
+            statusesPerYear={statusesPerYear}
             globalYear={year}
           />
         </section>

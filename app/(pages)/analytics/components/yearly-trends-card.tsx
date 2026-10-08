@@ -24,6 +24,7 @@ interface YearlyTrendsCardProps {
 
 export function YearlyTrendsCard({
   years,
+  statusesPerYear,
   applicationsPerYear,
   globalYear,
 }: YearlyTrendsCardProps) {
@@ -35,7 +36,7 @@ export function YearlyTrendsCard({
             Application Activity
           </CardTitle>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Monthly application submission volume over time.
+            Monthly submission volume and status distribution over time.
           </p>
         </div>
       </CardHeader>
@@ -44,6 +45,7 @@ export function YearlyTrendsCard({
         <TotalApplicationsPerYearBarChart
           years={years}
           data={applicationsPerYear}
+          statusesPerYear={statusesPerYear}
           globalYear={globalYear}
           hideCardWrapper
         />
