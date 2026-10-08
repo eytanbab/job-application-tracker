@@ -20,7 +20,7 @@
 - [x] In the application table, the external link is near the company name, making it look like it redirects to the company website and not the application itself (FIXED: Moved external link icon from the company subtitle to the Role Title line, clearly indicating it links to the job posting).
 - [x] When viewing an application and clicking on add reusme to it, it opens the edit application view and the user then needs to click again on the add resume (FIXED: Replaced edit-modal redirection with direct `AttachResumeDialog` modal allowing instant 1-click selection from saved resumes or direct PDF upload without navigating away).
 - [x] A user cannot delete the attached resume from the application he added it to (FIXED: Added direct "Detach" button to the Applied Resume card with atomic DB dissociation and immediate toast confirmation, plus "Change" button for instant switching).
-- [ ] On laptops (for example 1440px width), the role & company column's width is wide, and the text trucates at the middle of the column (using half the space it has). I think about either making the role & copany name take the whole available width of this column, or make this column take less space.
+- [x] On laptops (for example 1440px width), the role & company column's width is wide, and the text trucates at the middle of the column (using half the space it has). I think about either making the role & copany name take the whole available width of this column, or make this column take less space (FIXED: Removed restrictive `max-w-[170px] xl:max-w-[220px]` container constraints in `columns.tsx`, setting `w-full min-w-0` so the role and company text utilize the entire available column width before truncating).
 
 ## Analytics Overview (`/analytics/overview`)
 
