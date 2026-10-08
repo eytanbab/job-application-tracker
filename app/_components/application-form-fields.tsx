@@ -50,6 +50,8 @@ interface ApplicationFormFieldsProps {
   isPending: boolean;
   userLocations?: string[];
   userPlatforms?: string[];
+  onUploadingResumeChange?: (isUploading: boolean) => void;
+  onDocumentUploaded?: (docId: string) => void;
 }
 
 function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
@@ -301,6 +303,8 @@ export function ApplicationFormFields({
   isPending,
   userLocations = DEFAULT_EMPTY_ARRAY,
   userPlatforms = DEFAULT_EMPTY_ARRAY,
+  onUploadingResumeChange,
+  onDocumentUploaded,
 }: ApplicationFormFieldsProps) {
   const mergedLocations = useMemo(
     () => mergeWithDefaultOptions(userLocations, locationOptions),
@@ -457,7 +461,12 @@ export function ApplicationFormFields({
               )}
             </div>
 
-            <ResumePicker form={form} disabled={isPending} />
+            <ResumePicker
+              form={form}
+              disabled={isPending}
+              onUploadingChange={onUploadingResumeChange}
+              onDocumentUploaded={onDocumentUploaded}
+            />
 
             <FormField
               control={form.control}

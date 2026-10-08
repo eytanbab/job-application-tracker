@@ -27,11 +27,16 @@ import {
   CheckCircle2,
   Paperclip,
   Plus,
+  Eye,
+  AlertCircle,
+  Check,
 } from "lucide-react";
 import {
   getResumes,
   generatePresignedUrl,
   createFile,
+  getViewUrl,
+  findExistingResume,
 } from "@/app/actions/documents";
 import { useToast } from "@/hooks/use-toast";
 
@@ -45,18 +50,28 @@ interface ResumeItem {
 interface ResumePickerProps {
   form: UseFormReturn<FormValues>;
   disabled?: boolean;
+  onUploadingChange?: (isUploading: boolean) => void;
+  onDocumentUploaded?: (docId: string) => void;
 }
 
 const FILE_SIZE_LIMIT = 10 * 1024 * 1024; // 10MB
 
-export function ResumePicker({ form, disabled }: ResumePickerProps) {
+export function ResumePicker({
+  form,
+  disabled,
+  onUploadingChange,
+  onDocumentUploaded,
+}: ResumePickerProps) {
   const { toast } = useToast();
   const [resumes, setResumes] = useState<ResumeItem[]>([]);
   const [isLoadingList, setIsLoadingList] = useState(true);
   const [isUploading, startUploadTransition] = useTransition();
+  const [isPreviewing, setIsPreviewing] = useState(false);
   const [showUploadMode, setShowUploadMode] = useState(false);
   const [uploadTitle, setUploadTitle] = useState("");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [existingDuplicate, setExistingDuplicate] =
+    useState<ResumeItem | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedResumeId = form.watch("resumeId");
@@ -112,13 +127,100 @@ export function ResumePicker({ form, disabled }: ResumePickerProps) {
     }
 
     setUploadFile(file);
+    const cleanName = file.name
+      .replace(/\.pdf$/i, "")
+      .replace(/[_-]/g, " ")
+      .trim();
+
     if (!uploadTitle.trim()) {
-      // Clean default title from filename
-      const cleanName = file.name
-        .replace(/\.pdf$/i, "")
-        .replace(/[_-]/g, " ")
-        .trim();
       setUploadTitle(cleanName);
+    }
+
+    // Check if user already has this exact resume in their library
+    const lowerFileName = file.name.toLowerCase().trim();
+    const existing = resumes.find(
+      (r) =>
+        r.file_name.toLowerCase().trim() === lowerFileName ||
+        r.title.toLowerCase().trim() === cleanName.toLowerCase(),
+    );
+    if (existing) {
+      setExistingDuplicate(existing);
+    } else {
+      findExistingResume(file.name)
+        .then((match) => {
+          if (match) {
+            setExistingDuplicate({
+              id: match.id,
+              title: match.title,
+              file_name: match.file_name,
+              file_size: match.file_size,
+            });
+          }
+        })
+        .catch(console.error);
+    }
+  };
+
+  useEffect(() => {
+    if (!uploadFile) {
+      setExistingDuplicate(null);
+      return;
+    }
+    const cleanName = uploadFile.name
+      .replace(/\.pdf$/i, "")
+      .replace(/[_-]/g, " ")
+      .trim();
+    const lowerFileName = uploadFile.name.toLowerCase().trim();
+    const existing = resumes.find(
+      (r) =>
+        r.file_name.toLowerCase().trim() === lowerFileName ||
+        r.title.toLowerCase().trim() === cleanName.toLowerCase(),
+    );
+    if (existing) {
+      setExistingDuplicate(existing);
+    }
+  }, [uploadFile, resumes]);
+
+  const handleUseExisting = (doc: ResumeItem) => {
+    form.setValue("resumeId", doc.id, { shouldDirty: true });
+    setShowUploadMode(false);
+    setUploadFile(null);
+    setUploadTitle("");
+    setExistingDuplicate(null);
+    toast({
+      description: (
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+          <span>Attached existing copy of &quot;{doc.title}&quot;</span>
+        </div>
+      ),
+    });
+  };
+
+  const handlePreviewSelectedResume = async () => {
+    if (!selectedResume?.id) return;
+    setIsPreviewing(true);
+    try {
+      const res = await getViewUrl(selectedResume.id);
+      if (res.error || !res.url) {
+        toast({
+          title: "Preview unavailable",
+          description:
+            res.error || "Could not generate view URL for this resume.",
+          variant: "destructive",
+        });
+        return;
+      }
+      window.open(res.url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      console.error("Preview error:", err);
+      toast({
+        title: "Preview error",
+        description: "Could not open resume preview.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPreviewing(false);
     }
   };
 
@@ -136,6 +238,7 @@ export function ResumePicker({ form, disabled }: ResumePickerProps) {
       uploadTitle.trim() || uploadFile.name.replace(/\.pdf$/i, "");
     const formattedSize = `${(uploadFile.size / (1024 * 1024)).toFixed(1)} MB`;
 
+    onUploadingChange?.(true);
     startUploadTransition(async () => {
       try {
         const { fileKey, signedUrl, error } = await generatePresignedUrl(
@@ -149,20 +252,24 @@ export function ResumePicker({ form, disabled }: ResumePickerProps) {
             description: error || "Could not generate upload URL.",
             variant: "destructive",
           });
+          onUploadingChange?.(false);
           return;
         }
 
         // Upload to S3 (or mock)
-        if (signedUrl) {
+        if (signedUrl && !signedUrl.includes("mock-s3-upload")) {
           const res = await fetch(signedUrl, {
             method: "PUT",
             body: uploadFile,
             headers: { "Content-Type": uploadFile.type },
           });
 
-          if (!res.ok && !signedUrl.includes("mock-s3-upload")) {
+          if (!res.ok) {
             throw new Error("Failed to upload file to cloud storage.");
           }
+        } else if (signedUrl?.includes("mock-s3-upload")) {
+          // Simulate instant local mock upload
+          await new Promise((r) => setTimeout(r, 150));
         }
 
         const fileUrl = signedUrl ? signedUrl.split("?")[0] : "";
@@ -185,9 +292,11 @@ export function ResumePicker({ form, disabled }: ResumePickerProps) {
 
         setResumes((prev) => [newResumeItem, ...prev]);
         form.setValue("resumeId", newId, { shouldDirty: true });
+        onDocumentUploaded?.(newId);
         setShowUploadMode(false);
         setUploadFile(null);
         setUploadTitle("");
+        setExistingDuplicate(null);
 
         toast({
           description: (
@@ -204,6 +313,8 @@ export function ResumePicker({ form, disabled }: ResumePickerProps) {
           description: "An unexpected error occurred while uploading resume.",
           variant: "destructive",
         });
+      } finally {
+        onUploadingChange?.(false);
       }
     });
   };
@@ -263,14 +374,24 @@ export function ResumePicker({ form, disabled }: ResumePickerProps) {
                   <input
                     type="file"
                     ref={fileInputRef}
-                    accept="application/pdf"
+                    accept="application/pdf,.pdf"
+                    data-testid="resume-file-input"
                     onChange={handleFileChange}
                     className="hidden"
                     disabled={isUploading}
                   />
                   <div
+                    tabIndex={0}
+                    role="button"
+                    aria-label="Click or press enter to select PDF resume"
                     onClick={() => fileInputRef.current?.click()}
-                    className="border border-dashed border-border/80 hover:border-primary/60 bg-background/50 rounded-md p-3 text-center cursor-pointer transition-colors"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        fileInputRef.current?.click();
+                      }
+                    }}
+                    className="border border-dashed border-border/80 hover:border-primary/60 bg-background/50 rounded-md p-3 text-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     {uploadFile ? (
                       <div className="flex items-center justify-center gap-2 text-xs font-medium text-foreground">
@@ -292,6 +413,44 @@ export function ResumePicker({ form, disabled }: ResumePickerProps) {
                     )}
                   </div>
                 </div>
+
+                {/* Intelligent Deduplication Detection Alert */}
+                {existingDuplicate && (
+                  <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-foreground space-y-2 animate-in fade-in duration-150">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                      <div className="space-y-0.5">
+                        <p className="font-semibold text-amber-900 dark:text-amber-200">
+                          Resume already in your library
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          &quot;{existingDuplicate.title}&quot; ({existingDuplicate.file_name}) is already saved.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 pt-0.5">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="default"
+                        onClick={() => handleUseExisting(existingDuplicate)}
+                        className="h-6 text-[11px] px-2.5 font-semibold cursor-pointer"
+                      >
+                        <Check className="h-3 w-3 mr-1" />
+                        Use Existing Copy (Recommended)
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setExistingDuplicate(null)}
+                        className="h-6 text-[11px] px-2 text-muted-foreground hover:text-foreground cursor-pointer"
+                      >
+                        Upload As New Copy
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
                 {uploadFile && (
                   <div className="space-y-1">
@@ -318,6 +477,7 @@ export function ResumePicker({ form, disabled }: ResumePickerProps) {
                     setShowUploadMode(false);
                     setUploadFile(null);
                     setUploadTitle("");
+                    setExistingDuplicate(null);
                   }}
                   disabled={isUploading}
                   className="h-7 text-xs px-2.5 cursor-pointer"
@@ -364,18 +524,36 @@ export function ResumePicker({ form, disabled }: ResumePickerProps) {
                   </p>
                 </div>
               </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => field.onChange(null)}
-                disabled={disabled}
-                className="h-7 px-2 text-[11px] text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer shrink-0"
-                title="Detach resume from this application"
-              >
-                <X className="h-3.5 w-3.5 mr-1" />
-                <span>Detach</span>
-              </Button>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handlePreviewSelectedResume}
+                  disabled={disabled || isPreviewing}
+                  className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
+                  title="Preview resume online"
+                >
+                  {isPreviewing ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Eye className="h-3.5 w-3.5 mr-1" />
+                  )}
+                  <span>Preview</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => field.onChange(null)}
+                  disabled={disabled}
+                  className="h-7 px-2 text-[11px] text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                  title="Detach resume from this application"
+                >
+                  <X className="h-3.5 w-3.5 mr-1" />
+                  <span>Detach</span>
+                </Button>
+              </div>
             </div>
           ) : (
             /* Select From Library Dropdown */

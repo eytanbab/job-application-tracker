@@ -21,6 +21,7 @@ import { format } from "date-fns";
 import { LinkAutofillBar } from "./link-autofill-bar";
 import { ApplicationFormFields } from "./application-form-fields";
 import { getDistinctLocationsAndPlatforms } from "@/app/actions/applications";
+import { deleteFile } from "@/app/actions/documents";
 import {
   Dialog,
   DialogContent,
@@ -120,8 +121,22 @@ export const ApplicationForm = ({
   });
 
   const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
+  const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const [sessionUploadedDocIds, setSessionUploadedDocIds] = useState<string[]>([]);
 
-  const handleCloseForm = () => {
+  const cleanupSessionUploads = () => {
+    if (sessionUploadedDocIds.length > 0) {
+      sessionUploadedDocIds.forEach((docId) => {
+        deleteFile(docId).catch(console.error);
+      });
+      setSessionUploadedDocIds([]);
+    }
+  };
+
+  const handleCloseForm = (discardUploads = false) => {
+    if (discardUploads) {
+      cleanupSessionUploads();
+    }
     onClose();
     if (!defaultValues?.id) {
       router.push("/applications");
@@ -129,11 +144,11 @@ export const ApplicationForm = ({
   };
 
   const onCancel = () => {
-    if (form.formState.isDirty) {
+    if (form.formState.isDirty || sessionUploadedDocIds.length > 0) {
       setIsDiscardDialogOpen(true);
       return;
     }
-    handleCloseForm();
+    handleCloseForm(false);
   };
 
   const isEditing = Boolean(defaultValues?.id);
@@ -219,7 +234,8 @@ export const ApplicationForm = ({
   };
 
   const { isDirty } = form.formState;
-  const isSaveDisabled = isPending || (isEditing && !isDirty);
+  const isSaveDisabled =
+    isPending || isUploadingResume || (isEditing && !isDirty);
 
   if (entryMode === "link") {
     return (
@@ -227,7 +243,7 @@ export const ApplicationForm = ({
         <LinkAutofillBar
           onAutoFill={handleAutoFill}
           onEnterManually={handleEnterManually}
-          onCancel={handleCloseForm}
+          onCancel={() => handleCloseForm(false)}
           onExtractionFailed={handleExtractionFailed}
           isPending={isPending}
         />
@@ -286,6 +302,10 @@ export const ApplicationForm = ({
                 isPending={isPending}
                 userLocations={userOptions.userLocations}
                 userPlatforms={userOptions.userPlatforms}
+                onUploadingResumeChange={setIsUploadingResume}
+                onDocumentUploaded={(id) =>
+                  setSessionUploadedDocIds((prev) => [...prev, id])
+                }
               />
             </div>
           </div>
@@ -296,7 +316,7 @@ export const ApplicationForm = ({
               type="button"
               variant="outline"
               onClick={onCancel}
-              disabled={isPending}
+              disabled={isPending || isUploadingResume}
               className="h-10 text-xs rounded-xl cursor-pointer order-2 sm:order-1 w-full sm:w-1/3"
             >
               Cancel
@@ -309,6 +329,11 @@ export const ApplicationForm = ({
             >
               {isPending ? (
                 <Loader2 className="size-5 animate-spin" />
+              ) : isUploadingResume ? (
+                <span className="flex items-center gap-1.5 justify-center">
+                  <Loader2 className="size-4 animate-spin" />
+                  Uploading Resume...
+                </span>
               ) : isEditing ? (
                 isDirty ? "Save Changes" : "No Changes"
               ) : (
@@ -325,7 +350,9 @@ export const ApplicationForm = ({
           <DialogHeader>
             <DialogTitle>Discard Unsaved Changes?</DialogTitle>
             <DialogDescription>
-              You have modified this job application. Are you sure you want to discard your changes?
+              {sessionUploadedDocIds.length > 0
+                ? "You have unsaved changes and an unattached uploaded resume. Discarding will also remove the uploaded file from your library."
+                : "You have modified this job application. Are you sure you want to discard your changes?"}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
@@ -342,7 +369,7 @@ export const ApplicationForm = ({
               variant="destructive"
               onClick={() => {
                 setIsDiscardDialogOpen(false);
-                handleCloseForm();
+                handleCloseForm(true);
               }}
               className="cursor-pointer"
             >

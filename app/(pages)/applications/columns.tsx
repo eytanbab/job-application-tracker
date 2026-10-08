@@ -208,9 +208,21 @@ export const columns: ColumnDef<FormValues>[] = [
                     const res = await getViewUrl(row.original.resumeId as string);
                     if (res?.url) {
                       window.open(res.url, "_blank", "noopener,noreferrer");
+                    } else {
+                      toast({
+                        title: "Preview unavailable",
+                        description:
+                          res?.error || "Could not generate preview link.",
+                        variant: "destructive",
+                      });
                     }
                   } catch (err) {
                     console.error("Failed to preview resume:", err);
+                    toast({
+                      title: "Preview error",
+                      description: "Failed to open resume preview.",
+                      variant: "destructive",
+                    });
                   }
                 }}
                 className="inline-flex items-center justify-center h-5 w-5 rounded text-primary/80 hover:text-primary hover:bg-primary/10 transition-colors shrink-0 cursor-pointer"

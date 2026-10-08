@@ -45,6 +45,7 @@ import {
 import {
   getApplicationHistory,
   updateApplication,
+  updateApplicationResume,
   deleteStatusHistoryEntry,
 } from "@/app/actions/applications";
 import { toast } from "@/hooks/use-toast";
@@ -267,17 +268,26 @@ export function ApplicationDetailSheet({
   const handleAttachResume = useCallback(
     async (resumeId: string, meta: ResumeMeta) => {
       if (!currentApp?.id) return;
-      const updatedFields: ApplicationDetail = {
-        ...(draftApp || currentApp),
+      await updateApplicationResume(currentApp.id, resumeId);
+      const updatedPersisted: ApplicationDetail = {
+        ...currentApp,
         resumeId,
         resumeTitle: meta.title,
         resumeFileName: meta.fileName,
         resumeFileSize: meta.fileSize,
       };
-      await updateApplication(updatedFields as unknown as FormValues);
-      setCurrentApp(updatedFields);
-      setDraftApp(updatedFields);
-      setIsDirty(false);
+      setCurrentApp(updatedPersisted);
+      if (draftApp) {
+        setDraftApp({
+          ...draftApp,
+          resumeId,
+          resumeTitle: meta.title,
+          resumeFileName: meta.fileName,
+          resumeFileSize: meta.fileSize,
+        });
+      } else {
+        setDraftApp(updatedPersisted);
+      }
       toast({ description: "Resume attached successfully." });
     },
     [currentApp, draftApp],
@@ -285,17 +295,26 @@ export function ApplicationDetailSheet({
 
   const handleDetachResume = useCallback(async () => {
     if (!currentApp?.id) return;
-    const updatedFields: ApplicationDetail = {
-      ...(draftApp || currentApp),
+    await updateApplicationResume(currentApp.id, null);
+    const updatedPersisted: ApplicationDetail = {
+      ...currentApp,
       resumeId: null,
       resumeTitle: null,
       resumeFileName: null,
       resumeFileSize: null,
     };
-    await updateApplication(updatedFields as unknown as FormValues);
-    setCurrentApp(updatedFields);
-    setDraftApp(updatedFields);
-    setIsDirty(false);
+    setCurrentApp(updatedPersisted);
+    if (draftApp) {
+      setDraftApp({
+        ...draftApp,
+        resumeId: null,
+        resumeTitle: null,
+        resumeFileName: null,
+        resumeFileSize: null,
+      });
+    } else {
+      setDraftApp(updatedPersisted);
+    }
     toast({ description: "Resume removed from application." });
   }, [currentApp, draftApp]);
 

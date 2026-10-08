@@ -150,6 +150,7 @@ export function ApplicationDetailView({
   ]);
 
   useEffect(() => {
+    let isMounted = true;
     if (currentApp.resumeId) {
       if (currentApp.resumeTitle) {
         setResumeInfo({
@@ -158,23 +159,31 @@ export function ApplicationDetailView({
           fileName: currentApp.resumeFileName || null,
           fileSize: currentApp.resumeFileSize || null,
         });
-      } else {
-        getDocument(currentApp.resumeId)
-          .then((doc) => {
-            if (doc) {
-              setResumeInfo({
-                id: doc.id,
-                title: doc.title,
-                fileName: doc.file_name,
-                fileSize: doc.file_size,
-              });
-            }
-          })
-          .catch(console.error);
       }
+      getDocument(currentApp.resumeId)
+        .then((doc) => {
+          if (!isMounted) return;
+          if (doc) {
+            setResumeInfo({
+              id: doc.id,
+              title: doc.title,
+              fileName: doc.file_name,
+              fileSize: doc.file_size,
+            });
+          } else {
+            setResumeInfo(null);
+          }
+        })
+        .catch(() => {
+          if (isMounted) setResumeInfo(null);
+        });
     } else {
       setResumeInfo(null);
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [
     currentApp.resumeId,
     currentApp.resumeTitle,

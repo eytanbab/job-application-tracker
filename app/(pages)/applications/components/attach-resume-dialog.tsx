@@ -19,11 +19,13 @@ import {
   Loader2,
   X,
   Paperclip,
+  AlertCircle,
 } from "lucide-react";
 import {
   getResumes,
   generatePresignedUrl,
   createFile,
+  findExistingResume,
 } from "@/app/actions/documents";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -68,6 +70,8 @@ export function AttachResumeDialog({
   const [showUploadMode, setShowUploadMode] = useState(false);
   const [uploadTitle, setUploadTitle] = useState("");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [existingDuplicate, setExistingDuplicate] =
+    useState<ResumeItem | null>(null);
   const [isUploading, startUploadTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -77,6 +81,7 @@ export function AttachResumeDialog({
     setShowUploadMode(false);
     setUploadFile(null);
     setUploadTitle("");
+    setExistingDuplicate(null);
     setIsLoadingList(true);
 
     getResumes()
@@ -121,12 +126,81 @@ export function AttachResumeDialog({
     }
 
     setUploadFile(file);
+    const cleanName = file.name
+      .replace(/\.pdf$/i, "")
+      .replace(/[_-]/g, " ")
+      .trim();
+
     if (!uploadTitle.trim()) {
-      const cleanName = file.name
-        .replace(/\.pdf$/i, "")
-        .replace(/[_-]/g, " ")
-        .trim();
       setUploadTitle(cleanName);
+    }
+
+    // Check if user already has this exact resume in their library
+    const lowerFileName = file.name.toLowerCase().trim();
+    const existing = resumes.find(
+      (r) =>
+        r.file_name.toLowerCase().trim() === lowerFileName ||
+        r.title.toLowerCase().trim() === cleanName.toLowerCase(),
+    );
+    if (existing) {
+      setExistingDuplicate(existing);
+    } else {
+      findExistingResume(file.name)
+        .then((match) => {
+          if (match) {
+            setExistingDuplicate({
+              id: match.id,
+              title: match.title,
+              file_name: match.file_name,
+              file_size: match.file_size,
+            });
+          }
+        })
+        .catch(console.error);
+    }
+  };
+
+  useEffect(() => {
+    if (!uploadFile) {
+      setExistingDuplicate(null);
+      return;
+    }
+    const cleanName = uploadFile.name
+      .replace(/\.pdf$/i, "")
+      .replace(/[_-]/g, " ")
+      .trim();
+    const lowerFileName = uploadFile.name.toLowerCase().trim();
+    const existing = resumes.find(
+      (r) =>
+        r.file_name.toLowerCase().trim() === lowerFileName ||
+        r.title.toLowerCase().trim() === cleanName.toLowerCase(),
+    );
+    if (existing) {
+      setExistingDuplicate(existing);
+    }
+  }, [uploadFile, resumes]);
+
+  const handleUseExisting = async (doc: ResumeItem) => {
+    setIsSubmitting(true);
+    try {
+      await onSelectResume(doc.id, {
+        title: doc.title,
+        fileName: doc.file_name,
+        fileSize: doc.file_size,
+      });
+      onOpenChange(false);
+      toast({
+        description: (
+          <div className="flex items-center gap-2">
+            <Check className="h-4 w-4 text-emerald-500" />
+            <span>Attached existing resume from your library.</span>
+          </div>
+        ),
+      });
+    } catch (err) {
+      console.error("Failed to attach existing resume:", err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -160,16 +234,19 @@ export function AttachResumeDialog({
           return;
         }
 
-        if (signedUrl) {
+        if (signedUrl && !signedUrl.includes("mock-s3-upload")) {
           const res = await fetch(signedUrl, {
             method: "PUT",
             body: uploadFile,
             headers: { "Content-Type": uploadFile.type },
           });
 
-          if (!res.ok && !signedUrl.includes("mock-s3-upload")) {
+          if (!res.ok) {
             throw new Error("Failed to upload file to storage.");
           }
+        } else if (signedUrl?.includes("mock-s3-upload")) {
+          // Simulate instant local mock upload
+          await new Promise((r) => setTimeout(r, 150));
         }
 
         const fileUrl = signedUrl ? signedUrl.split("?")[0] : "";
@@ -284,14 +361,24 @@ export function AttachResumeDialog({
                 <input
                   type="file"
                   ref={fileInputRef}
-                  accept="application/pdf"
+                  accept="application/pdf,.pdf"
+                  data-testid="attach-resume-file-input"
                   onChange={handleFileChange}
                   className="hidden"
                   disabled={isUploading}
                 />
                 <div
+                  tabIndex={0}
+                  role="button"
+                  aria-label="Click or press enter to select PDF resume"
                   onClick={() => fileInputRef.current?.click()}
-                  className="border border-dashed border-border/80 hover:border-primary/60 bg-background/50 rounded-xl p-4 text-center cursor-pointer transition-colors"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      fileInputRef.current?.click();
+                    }
+                  }}
+                  className="border border-dashed border-border/80 hover:border-primary/60 bg-background/50 rounded-xl p-4 text-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   {uploadFile ? (
                     <div className="flex items-center justify-center gap-2 text-xs font-medium text-foreground">
@@ -313,6 +400,44 @@ export function AttachResumeDialog({
                   )}
                 </div>
               </div>
+
+              {/* Intelligent Deduplication Detection Alert */}
+              {existingDuplicate && (
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-foreground space-y-2 animate-in fade-in duration-150">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                    <div className="space-y-0.5">
+                      <p className="font-semibold text-amber-900 dark:text-amber-200">
+                        Resume already in your library
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        &quot;{existingDuplicate.title}&quot; ({existingDuplicate.file_name}) is already saved.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="default"
+                      onClick={() => handleUseExisting(existingDuplicate)}
+                      className="h-7 text-xs px-2.5 font-semibold cursor-pointer rounded-lg shadow-xs"
+                    >
+                      <Check className="h-3.5 w-3.5 mr-1" />
+                      Use Existing Copy (Recommended)
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setExistingDuplicate(null)}
+                      className="h-7 text-xs px-2 text-muted-foreground hover:text-foreground cursor-pointer rounded-lg"
+                    >
+                      Upload As New Copy
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {uploadFile && (
                 <div className="space-y-1">
@@ -338,6 +463,7 @@ export function AttachResumeDialog({
                     setShowUploadMode(false);
                     setUploadFile(null);
                     setUploadTitle("");
+                    setExistingDuplicate(null);
                   }}
                   disabled={isUploading}
                   className="h-8 text-xs px-2.5 cursor-pointer rounded-lg"
@@ -393,9 +519,19 @@ export function AttachResumeDialog({
                     return (
                       <div
                         key={doc.id}
+                        tabIndex={0}
+                        role="button"
+                        aria-pressed={isSelected}
+                        aria-label={`Select resume ${doc.title}`}
                         onClick={() => setSelectedId(doc.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setSelectedId(doc.id);
+                          }
+                        }}
                         className={cn(
-                          "flex items-center justify-between p-3 rounded-xl border text-xs cursor-pointer transition-all",
+                          "flex items-center justify-between p-3 rounded-xl border text-xs cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                           isSelected
                             ? "border-primary bg-primary/10 shadow-2xs text-foreground"
                             : "border-border/60 bg-card hover:border-primary/40 text-muted-foreground hover:text-foreground",
