@@ -85,46 +85,49 @@ export function FileUpload() {
           file.type,
         );
 
-        if (error) {
-          toast({ description: error, variant: "destructive" });
+        if (error || !fileKey) {
+          toast({ description: error || "Failed to generate upload URL.", variant: "destructive" });
           return;
         }
 
-        if (signedUrl) {
+        if (signedUrl && !signedUrl.includes("mock-s3-upload")) {
           const res = await fetch(signedUrl, {
             method: "PUT",
             body: file,
             headers: { "Content-Type": file.type },
           });
 
-          if (res.ok) {
-            const fileUrl = signedUrl.split("?")[0];
-            await createFile(
-              title,
-              fileUrl,
-              file.name,
-              fileKey,
-              category,
-              formattedSize,
-            );
-            toast({
-              description: (
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  <span>Document uploaded successfully!</span>
-                </div>
-              ),
-            });
-            form.reset({ title: "", category: "resume" });
-            setIsOpen(false);
-            router.refresh();
-          } else {
+          if (!res.ok) {
             toast({
               description: "Failed to upload to storage.",
               variant: "destructive",
             });
+            return;
           }
+        } else if (signedUrl?.includes("mock-s3-upload")) {
+          await new Promise((r) => setTimeout(r, 150));
         }
+
+        const fileUrl = signedUrl ? signedUrl.split("?")[0] : "";
+        await createFile(
+          title,
+          fileUrl,
+          file.name,
+          fileKey,
+          category,
+          formattedSize,
+        );
+        toast({
+          description: (
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-green-500" />
+              <span>Document uploaded successfully!</span>
+            </div>
+          ),
+        });
+        form.reset({ title: "", category: "resume" });
+        setIsOpen(false);
+        router.refresh();
       } catch (error) {
         console.error("Upload error:", error);
         toast({

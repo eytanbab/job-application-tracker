@@ -11,12 +11,14 @@ import {
   Loader2,
   Calendar,
   Eye,
+  AlertTriangle,
 } from "lucide-react";
 
 import {
   deleteFile,
   getDownloadUrl,
   getViewUrl,
+  getDocumentUsage,
 } from "@/app/actions/documents";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,12 +54,27 @@ export const Document = ({ file, view = "table" }: Props) => {
   const [isDeleting, startDeleteTransition] = useTransition();
   const [isDownloading, setIsDownloading] = useState(false);
   const [isViewing, setIsViewing] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [usage, setUsage] = useState<{
+    count: number;
+    applications: { id: string; role_name: string; company_name: string }[];
+  } | null>(null);
+
+  const handleOpenDelete = (open: boolean) => {
+    setIsDeleteDialogOpen(open);
+    if (open) {
+      getDocumentUsage(file.id)
+        .then((res) => setUsage(res))
+        .catch(console.error);
+    }
+  };
 
   const handleDelete = async () => {
     startDeleteTransition(async () => {
       try {
         await deleteFile(file.id);
         toast({ description: "Document deleted successfully." });
+        setIsDeleteDialogOpen(false);
         router.refresh();
       } catch (err) {
         console.error(err);
@@ -157,7 +174,7 @@ export const Document = ({ file, view = "table" }: Props) => {
         <span className="sr-only">Download</span>
       </Button>
 
-      <Dialog>
+      <Dialog open={isDeleteDialogOpen} onOpenChange={handleOpenDelete}>
         <DialogTrigger asChild>
           <Button
             variant="ghost"
@@ -182,21 +199,44 @@ export const Document = ({ file, view = "table" }: Props) => {
               ? This cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="mt-6 gap-3">
-            <DialogClose asChild>
-              <Button
-                variant="destructive"
-                disabled={isDeleting}
-                onClick={handleDelete}
-              >
-                Delete
-              </Button>
-            </DialogClose>
-            <DialogClose asChild>
-              <Button variant="outline" disabled={isDeleting}>
-                Cancel
-              </Button>
-            </DialogClose>
+
+          {usage && usage.count > 0 && (
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-foreground space-y-1.5 my-1 animate-in fade-in duration-150">
+              <div className="flex items-center gap-1.5 font-semibold text-amber-900 dark:text-amber-200">
+                <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
+                <span>
+                  Attached to {usage.count} Job Application
+                  {usage.count === 1 ? "" : "s"}
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Deleting this file will remove the attached resume from:{" "}
+                <strong>
+                  {usage.applications
+                    .map((a) => a.company_name)
+                    .slice(0, 3)
+                    .join(", ")}
+                </strong>
+                {usage.count > 3 ? ` and ${usage.count - 3} more` : ""}.
+              </p>
+            </div>
+          )}
+
+          <DialogFooter className="mt-4 gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              disabled={isDeleting}
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={isDeleting}
+              onClick={handleDelete}
+            >
+              {isDeleting ? "Deleting..." : "Delete Document"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
