@@ -176,7 +176,9 @@ export function PipelineHealthHero({
                   </div>
                 ) : (
                   <div className="text-[11px] text-muted-foreground mt-1.5 font-mono">
-                    100% baseline submissions
+                    {stage.id === "applied"
+                      ? "100% baseline submissions"
+                      : "Awaiting interview conversions"}
                   </div>
                 )}
               </div>
