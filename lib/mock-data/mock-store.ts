@@ -219,6 +219,26 @@ class MockStore {
     return this.documents.length < prev;
   }
 
+  public getDocumentUsage(
+    userId: string,
+    id: string,
+  ): {
+    count: number;
+    applications: { id: string; role_name: string; company_name: string }[];
+  } {
+    const matches = this.applications.filter(
+      (a) => a.resumeId === id && (!userId || a.userId === userId),
+    );
+    return {
+      count: matches.length,
+      applications: matches.map((m) => ({
+        id: m.id,
+        role_name: m.role_name,
+        company_name: m.company_name,
+      })),
+    };
+  }
+
   public getViewUrl(userId: string, id: string): { url: string } {
     return {
       url: `data:application/pdf;base64,JVBERi0xLjQKJeLjz9MKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL01lZGlhQm94WzAgMCA2MTIgNzkyXS9QYXJlbnQgMiAwIFI+PmVuZG9iagp4cmVmCjAgNAowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1OCAwMDAwMCBuIAowMDAwMDAwMTE1IDAwMDAwIG4gCnRyYWlsZXIKPDwvU2l6ZSA0L1Jvb3QgMSAwIFI+PSpzdGFydHhyZWYKMTgzCiUlRU9G`,

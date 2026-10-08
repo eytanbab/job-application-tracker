@@ -4,13 +4,17 @@ import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 import { db, isMockDb } from "@/app/db";
 import { mockStore } from "@/lib/mock-data/mock-store";
-import { documents } from "@/app/db/schema";
+import { documents, jobApplications } from "@/app/db/schema";
 import { and, desc, eq } from "drizzle-orm";
 
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { s3Client } from "@/lib/s3-client";
-import { CACHE_REVALIDATE_SECONDS, documentsTag } from "./_utils/cache-tags";
+import {
+  CACHE_REVALIDATE_SECONDS,
+  documentsTag,
+  applicationsTag,
+} from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 
 export async function generatePresignedUrl(
@@ -159,6 +163,68 @@ export async function getDocument(id: string) {
   return result[0] || null;
 }
 
+export async function findExistingResume(
+  fileName: string,
+  fileSize?: string,
+) {
+  const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    const resumes = mockStore
+      .getDocuments(userId)
+      .filter((d) => d.category === "resume");
+    const lowerName = fileName.toLowerCase().trim();
+    const match = resumes.find(
+      (r) =>
+        r.file_name.toLowerCase().trim() === lowerName ||
+        (fileSize &&
+          r.file_size === fileSize &&
+          r.file_name.toLowerCase().replace(/[^a-z0-9]/g, "") ===
+            lowerName.replace(/[^a-z0-9]/g, "")),
+    );
+    return match || null;
+  }
+
+  const allResumes = await getResumes();
+  const lowerName = fileName.toLowerCase().trim();
+  const match = allResumes.find(
+    (r) =>
+      r.file_name.toLowerCase().trim() === lowerName ||
+      (fileSize &&
+        r.file_size === fileSize &&
+        r.file_name.toLowerCase().replace(/[^a-z0-9]/g, "") ===
+          lowerName.replace(/[^a-z0-9]/g, "")),
+  );
+  return match || null;
+}
+
+export async function getDocumentUsage(id: string) {
+  const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    return mockStore.getDocumentUsage(userId, id);
+  }
+
+  const rows = await db
+    .select({
+      id: jobApplications.id,
+      role_name: jobApplications.role_name,
+      company_name: jobApplications.company_name,
+    })
+    .from(jobApplications)
+    .where(
+      and(
+        eq(jobApplications.userId, userId),
+        eq(jobApplications.resumeId, id),
+      ),
+    );
+
+  return {
+    count: rows.length,
+    applications: rows,
+  };
+}
+
 export async function deleteFile(id: string) {
   const userId = await getCurrentUserIdOrThrow();
 
@@ -166,7 +232,10 @@ export async function deleteFile(id: string) {
     mockStore.deleteDocument(userId, id);
     try {
       revalidateTag(documentsTag(userId), "max");
+      revalidateTag(applicationsTag(userId), "max");
       revalidatePath("/documents");
+      revalidatePath("/applications");
+      revalidatePath("/analytics/overview");
     } catch {}
     return;
   }
@@ -201,7 +270,10 @@ export async function deleteFile(id: string) {
   } finally {
     try {
       revalidateTag(documentsTag(userId), "max");
+      revalidateTag(applicationsTag(userId), "max");
       revalidatePath("/documents");
+      revalidatePath("/applications");
+      revalidatePath("/analytics/overview");
     } catch {}
   }
 }
@@ -224,13 +296,17 @@ export async function getViewUrl(id: string) {
       throw new Error("Document not found");
     }
 
+    const safeFileName = (document[0].file_name || "resume.pdf")
+      .replace(/["\r\n\\]/g, "_")
+      .slice(0, 150);
+
     const getCommand = new (
       await import("@aws-sdk/client-s3")
     ).GetObjectCommand({
       Bucket: process.env.NEXT_AWS_S3_BUCKET_NAME || "",
       Key: document[0].file_key,
       ResponseContentType: "application/pdf",
-      ResponseContentDisposition: `inline; filename="${document[0].file_name}"`,
+      ResponseContentDisposition: `inline; filename="${safeFileName}"`,
     });
 
     const signedUrl = await getSignedUrl(s3Client, getCommand, {
@@ -262,12 +338,16 @@ export async function getDownloadUrl(id: string) {
       throw new Error("Document not found");
     }
 
+    const safeFileName = (document[0].file_name || "resume.pdf")
+      .replace(/["\r\n\\]/g, "_")
+      .slice(0, 150);
+
     const getCommand = new (
       await import("@aws-sdk/client-s3")
     ).GetObjectCommand({
       Bucket: process.env.NEXT_AWS_S3_BUCKET_NAME || "",
       Key: document[0].file_key,
-      ResponseContentDisposition: `attachment; filename="${document[0].file_name}"`,
+      ResponseContentDisposition: `attachment; filename="${safeFileName}"`,
     });
 
     const signedUrl = await getSignedUrl(s3Client, getCommand, {
