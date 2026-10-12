@@ -77,11 +77,13 @@ h6 {
     --accent: 255 80% 95%;
     --accent-foreground: 255 80% 30%;
 
-    --destructive: 0 84% 60%;
+    /* 5.75:1 as text on card; 5.5:1 under destructive-foreground (WCAG AA) */
+    --destructive: 0 74% 45%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 220 14% 90%;
-    --input: 220 14% 90%;
+    /* Field boundary: 3.17:1 on card (WCAG 1.4.11) */
+    --input: 220 9% 58%;
     --ring: 255 80% 60%;
 
     --chart-1: 255 80% 60%;
@@ -124,11 +126,14 @@ h6 {
     --accent: 255 30% 18%;
     --accent-foreground: 255 85% 92%;
 
-    --destructive: 0 72% 54%;
-    --destructive-foreground: 0 0% 98%;
+    /* Light red like --primary: 5.59:1 as text on card, 5.94:1 under the
+       dark destructive-foreground (WCAG AA) */
+    --destructive: 0 90% 66%;
+    --destructive-foreground: 224 25% 7%;
 
     --border: 224 16% 15%;
-    --input: 224 16% 15%;
+    /* Field boundary: 3.42:1 on card (WCAG 1.4.11) */
+    --input: 220 10% 44%;
     --ring: 255 85% 72%;
 
     --chart-1: 255 85% 72%;
