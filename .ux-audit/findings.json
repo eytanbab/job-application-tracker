@@ -27,17 +27,22 @@
       "severity": "high",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-12",
       "last_seen": "2026-10-12",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-12",
+      "status_note": "Resolved during analytics UX/UI audit remediation",
       "history": [
         {
           "date": "2026-10-12",
           "report": "reports/2026-10-12-analytics.md",
           "event": "new",
           "severity": "high"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -57,17 +62,22 @@
       "severity": "high",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-12",
       "last_seen": "2026-10-12",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-12",
+      "status_note": "Resolved during analytics UX/UI audit remediation",
       "history": [
         {
           "date": "2026-10-12",
           "report": "reports/2026-10-12-analytics.md",
           "event": "new",
           "severity": "high"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -87,17 +97,22 @@
       "severity": "high",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-12",
       "last_seen": "2026-10-12",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-12",
+      "status_note": "Resolved during analytics UX/UI audit remediation",
       "history": [
         {
           "date": "2026-10-12",
           "report": "reports/2026-10-12-analytics.md",
           "event": "new",
           "severity": "high"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -117,17 +132,22 @@
       "severity": "high",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-12",
       "last_seen": "2026-10-12",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-12",
+      "status_note": "Resolved during analytics UX/UI audit remediation",
       "history": [
         {
           "date": "2026-10-12",
           "report": "reports/2026-10-12-analytics.md",
           "event": "new",
           "severity": "high"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -147,17 +167,22 @@
       "severity": "medium",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-12",
       "last_seen": "2026-10-12",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-12",
+      "status_note": "Resolved during analytics UX/UI audit remediation",
       "history": [
         {
           "date": "2026-10-12",
           "report": "reports/2026-10-12-analytics.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -177,17 +202,22 @@
       "severity": "low",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-12",
       "last_seen": "2026-10-12",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-12",
+      "status_note": "Resolved during analytics UX/UI audit remediation",
       "history": [
         {
           "date": "2026-10-12",
           "report": "reports/2026-10-12-analytics.md",
           "event": "new",
           "severity": "low"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -207,17 +237,22 @@
       "severity": "high",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-12",
       "last_seen": "2026-10-12",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-12",
+      "status_note": "Resolved during analytics UX/UI audit remediation",
       "history": [
         {
           "date": "2026-10-12",
           "report": "reports/2026-10-12-analytics.md",
           "event": "new",
           "severity": "high"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -237,17 +272,22 @@
       "severity": "medium",
       "confidence": "code-confirmed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-12",
       "last_seen": "2026-10-12",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-12",
+      "status_note": "Resolved during analytics UX/UI audit remediation",
       "history": [
         {
           "date": "2026-10-12",
           "report": "reports/2026-10-12-analytics.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -267,17 +307,22 @@
       "severity": "medium",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-12",
       "last_seen": "2026-10-12",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-12",
+      "status_note": "Resolved during analytics UX/UI audit remediation",
       "history": [
         {
           "date": "2026-10-12",
           "report": "reports/2026-10-12-analytics.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -297,17 +342,22 @@
       "severity": "medium",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-12",
       "last_seen": "2026-10-12",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-12",
+      "status_note": "Resolved during analytics UX/UI audit remediation",
       "history": [
         {
           "date": "2026-10-12",
           "report": "reports/2026-10-12-analytics.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -327,17 +377,22 @@
       "severity": "low",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-12",
       "last_seen": "2026-10-12",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-12",
+      "status_note": "Resolved during analytics UX/UI audit remediation",
       "history": [
         {
           "date": "2026-10-12",
           "report": "reports/2026-10-12-analytics.md",
           "event": "new",
           "severity": "low"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -357,17 +412,22 @@
       "severity": "low",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-12",
       "last_seen": "2026-10-12",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-12",
+      "status_note": "Resolved during analytics UX/UI audit remediation",
       "history": [
         {
           "date": "2026-10-12",
           "report": "reports/2026-10-12-analytics.md",
           "event": "new",
           "severity": "low"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "resolved"
         }
       ]
     }

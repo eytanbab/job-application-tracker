@@ -158,6 +158,7 @@ export function MarketRealityMatrix({
                       <Link
                         href={`/applications?q=${encodeURIComponent(salary.topCompany)}`}
                         title="View in tracker"
+                        aria-label={`View ${salary.topCompany} applications in tracker`}
                       >
                         <ArrowUpRight className="h-3.5 w-3.5" />
                       </Link>

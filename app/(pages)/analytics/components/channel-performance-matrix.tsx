@@ -213,6 +213,7 @@ export function ChannelPerformanceMatrix({
             <div className="relative w-44 sm:w-52">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <Input
+                aria-label="Search platforms"
                 placeholder="Search platforms..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -221,7 +222,7 @@ export function ChannelPerformanceMatrix({
               {searchQuery.length > 0 && (
                 <button
                   type="button"
-                  aria-label="Clear filter"
+                  aria-label="Clear platform search"
                   onClick={() => setSearchQuery("")}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 cursor-pointer"
                 >
@@ -252,7 +253,7 @@ export function ChannelPerformanceMatrix({
               <span className="text-foreground">
                 <strong className="font-semibold capitalize text-primary">{topPlatform.platformName}</strong> is
                 your top-performing source with an{" "}
-                <strong className="font-semibold font-mono text-emerald-600 dark:text-emerald-400">
+                <strong className="font-semibold font-mono text-emerald-700 dark:text-emerald-400">
                   {topPlatform.interviewRate.toFixed(1)}% interview rate
                 </strong>{" "}
                 ({topPlatform.interviewCount} of {topPlatform.total} applications led to interviews).
@@ -274,7 +275,10 @@ export function ChannelPerformanceMatrix({
                 }
               }}
             >
-              <SelectTrigger className="h-8 w-44 text-xs bg-background/60">
+              <SelectTrigger
+                aria-label="Sort platforms by"
+                className="h-8 w-44 text-xs bg-background/60"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

@@ -78,7 +78,7 @@ export function KpiSummaryStrip({
       </div>
 
       {/* 3. Interview Rate */}
-      <div className="p-3.5 sm:p-4 rounded-xl border border-border/30 bg-card/60 shadow-2xl backdrop-blur-sm flex flex-col justify-between gap-2 min-w-0">
+      <div className="p-3.5 sm:p-4 rounded-xl border border-border/30 bg-card/60 shadow-2xs backdrop-blur-sm flex flex-col justify-between gap-2 min-w-0">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             Interview Rate
@@ -87,10 +87,12 @@ export function KpiSummaryStrip({
         </div>
         <div>
           <div className="text-2xl sm:text-3xl font-bold font-mono tabular-nums text-foreground tracking-tight">
-            {formatPercent(interviewRate)}
+            {total > 0 ? formatPercent(interviewRate) : "—"}
           </div>
           <p className="text-[11px] text-muted-foreground mt-1 truncate">
-            {interviewCount} of {total} led to interviews
+            {total > 0
+              ? `${interviewCount} of ${total} led to interviews`
+              : "No applications recorded"}
           </p>
         </div>
       </div>

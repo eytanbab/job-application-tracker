@@ -836,7 +836,7 @@ class MockStore {
         ...stats,
         yieldRate: stats.total > 0 ? (stats.interviews / stats.total) * 100 : 0,
       }))
-      .sort((a, b) => b.total - a.total)
+      .sort((a, b) => b.yieldRate - a.yieldRate || b.total - a.total)
       .slice(0, 5);
   }
 
@@ -844,11 +844,24 @@ class MockStore {
     const apps = this.filterApps(month, year);
     let ghosted = 0;
     let rejected = 0;
+    const now = new Date();
 
     apps.forEach((app) => {
       const kind = getStatusKind(app.status, app.statusCategory);
-      if (kind === "ghosted") ghosted++;
-      else if (kind === "rejected") rejected++;
+      let isGhosted = kind === "ghosted";
+
+      if (!isGhosted && (kind === "applied" || kind === "review") && app.date_applied) {
+        const appliedDate = parseISO(app.date_applied);
+        if (!isNaN(appliedDate.getTime()) && differenceInDays(now, appliedDate) >= 30) {
+          isGhosted = true;
+        }
+      }
+
+      if (kind === "rejected") {
+        rejected++;
+      } else if (isGhosted) {
+        ghosted++;
+      }
     });
 
     const totalLoss = ghosted + rejected;

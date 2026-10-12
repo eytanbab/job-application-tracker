@@ -3,6 +3,7 @@ import { mockStore } from "@/lib/mock-data/mock-store";
 import { jobApplications } from "@/app/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
+import { differenceInDays } from "date-fns";
 import {
   applicationsTag,
   CACHE_REVALIDATE_SECONDS,
@@ -54,7 +55,7 @@ export async function getPlatformRoi(month?: string, year?: string) {
           yieldRate:
             stats.total > 0 ? (stats.interviews / stats.total) * 100 : 0,
         }))
-        .sort((a, b) => b.total - a.total)
+        .sort((a, b) => b.yieldRate - a.yieldRate || b.total - a.total)
         .slice(0, 5);
     },
     [
@@ -86,17 +87,34 @@ export async function getBlackHoleBreakdown(month?: string, year?: string) {
         .select({
           status: jobApplications.status,
           statusCategory: jobApplications.statusCategory,
+          date_applied: jobApplications.date_applied,
         })
         .from(jobApplications)
         .where(and(...whereClause));
 
       let ghosted = 0;
       let rejected = 0;
+      const now = new Date();
 
       data.forEach((app) => {
         const kind = getStatusKind(app.status, app.statusCategory);
-        if (kind === "ghosted") ghosted++;
-        else if (kind === "rejected") rejected++;
+        let isGhosted = kind === "ghosted";
+
+        if (!isGhosted && (kind === "applied" || kind === "review") && app.date_applied) {
+          const dateStr = app.date_applied.includes("T")
+            ? app.date_applied
+            : `${app.date_applied}T12:00:00`;
+          const appliedDate = new Date(dateStr);
+          if (!isNaN(appliedDate.getTime()) && differenceInDays(now, appliedDate) >= 30) {
+            isGhosted = true;
+          }
+        }
+
+        if (kind === "rejected") {
+          rejected++;
+        } else if (isGhosted) {
+          ghosted++;
+        }
       });
 
       const totalLoss = ghosted + rejected;

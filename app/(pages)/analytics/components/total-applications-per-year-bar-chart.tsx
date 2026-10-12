@@ -167,7 +167,10 @@ export function TotalApplicationsPerYearBarChart({
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <span className="text-[11px] text-muted-foreground">Year:</span>
             <Select value={selectedYear} onValueChange={setUserSelectedYear}>
-              <SelectTrigger className="w-28 h-7 text-xs font-mono font-semibold bg-background">
+              <SelectTrigger
+                aria-label="Filter chart by year"
+                className="w-28 h-7 text-xs font-mono font-semibold bg-background"
+              >
                 <SelectValue placeholder="Year" />
               </SelectTrigger>
               <SelectContent>
