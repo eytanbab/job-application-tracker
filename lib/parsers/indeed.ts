@@ -56,7 +56,7 @@ export async function parseIndeed(url: string, rawHtml?: string): Promise<ParseR
             platform: "Indeed",
             status: "Applied",
             description: description.slice(0, 15000),
-            location: location || "Remote",
+            location: location || "",
           },
         };
       }

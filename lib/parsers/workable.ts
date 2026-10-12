@@ -24,7 +24,7 @@ export async function parseWorkable(url: string): Promise<ParseResult> {
             const companyName = data.company?.name || formatCompanyName(accountSlug);
             const location =
               [data.city, data.region, data.country].filter(Boolean).join(", ") ||
-              (data.telecommuting ? "Remote" : "Remote");
+              (data.telecommuting ? "Remote" : "");
             const description = htmlToPlainText(data.description || data.requirements || "");
 
             return {

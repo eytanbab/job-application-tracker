@@ -89,7 +89,9 @@ export function LinkAutofillBar({
         company_name: aiData.application.company_name || "",
         link: validUrl,
         platform: inferredPlatform,
-        location: aiData.application.location || "Remote",
+        // Leave unknown locations empty so the required-field check asks
+        // the user, rather than presenting a guess as extracted data.
+        location: aiData.application.location || "",
         description: aiData.application.description || "",
         status: "Applied",
         statusCategory: "applied",

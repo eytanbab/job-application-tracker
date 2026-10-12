@@ -17,7 +17,7 @@ export async function parseComeet(url: string): Promise<ParseResult> {
 
     let roleName = "";
     let companyName = "";
-    let location = "Remote";
+    let location = "";
     let description = "";
 
     if (posMatch?.[1]) {

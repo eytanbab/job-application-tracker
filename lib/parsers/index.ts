@@ -128,7 +128,7 @@ export async function tryDeterministicExtraction(url: string): Promise<ParsedJob
               platform,
               status: "Applied",
               description: htmlToPlainText(ogDesc || "").slice(0, 15000),
-              location: "Remote",
+              location: "",
             };
           }
         }

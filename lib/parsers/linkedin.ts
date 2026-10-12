@@ -55,7 +55,7 @@ export async function parseLinkedIn(url: string, rawHtml?: string): Promise<Pars
         locationFullMatch?.[1]?.replace(/[\r\n\s]+/g, " ").trim() ||
         locationWithCommasMatch?.[1]?.replace(/[\r\n\s]+/g, " ").trim() ||
         locTopcardMatch?.[1]?.replace(/[\r\n\s]+/g, " ").trim() ||
-        "Remote";
+        "";
 
       // Description
       let description = "";

@@ -111,7 +111,7 @@ export function parseJsonLdJob(html: string, url: string, platformHint?: string)
                 platform: platformHint || "Direct Apply",
                 status: "Applied",
                 description: description.slice(0, 15000),
-                location: location.trim() || "Remote",
+                location: location.trim(),
                 salary,
               },
             };

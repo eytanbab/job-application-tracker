@@ -182,17 +182,30 @@ export const ApplicationForm = ({
     null,
   );
 
+  // Fields autofilled while the link step is showing aren't mounted yet, so
+  // their validation is deferred until the manual form renders. This flags
+  // anything the extraction couldn't find (e.g. an empty location).
+  const pendingValidationRef = useRef<(keyof FormValues)[] | null>(null);
+  useEffect(() => {
+    if (entryMode === "manual" && pendingValidationRef.current) {
+      form.trigger(pendingValidationRef.current);
+      pendingValidationRef.current = null;
+    }
+  }, [entryMode, form]);
+
   const handleAutoFill = (
     autoFillValues: Partial<FormValues>,
     domain: string,
   ) => {
     Object.entries(autoFillValues).forEach(([key, value]) => {
       form.setValue(key as keyof FormValues, value, {
-        shouldValidate: true,
         shouldDirty: true,
         shouldTouch: true,
       });
     });
+    pendingValidationRef.current = Object.keys(
+      autoFillValues,
+    ) as (keyof FormValues)[];
     setExtractedFromDomain(domain);
     setEntryMode("manual");
   };

@@ -35,8 +35,7 @@ export async function parseAshby(url: string): Promise<ParseResult> {
             const roleName = jobPosting.title;
             const location =
               jobPosting.locationName ||
-              (jobPosting.isRemote ? "Remote" : "") ||
-              "Remote";
+              (jobPosting.isRemote ? "Remote" : "");
             const rawDesc = jobPosting.descriptionHtml || jobPosting.descriptionPlain || "";
             const description = htmlToPlainText(rawDesc);
 
@@ -97,9 +96,10 @@ export async function parseAshby(url: string): Promise<ParseResult> {
           parsedRole = parsedRole.slice(0, -(parsedCompany.length + 3)).trim();
         }
 
-        let locStr = locMatch?.[1]?.trim() || "Remote";
+        let locStr = locMatch?.[1]?.trim() || "";
         if (locTypeMatch?.[1] && !locStr.toLowerCase().includes(locTypeMatch[1].toLowerCase())) {
-          locStr += ` (${locTypeMatch[1].trim()})`;
+          const locType = locTypeMatch[1].trim();
+          locStr = locStr ? `${locStr} (${locType})` : locType;
         }
 
         const rawDesc = descMatch?.[1] || "";
@@ -148,7 +148,7 @@ export async function parseAshby(url: string): Promise<ParseResult> {
                 platform: "Ashby",
                 status: "Applied",
                 description: htmlToPlainText(data.descriptionHtml || "").slice(0, 15000),
-                location: data.locationName || "Remote",
+                location: data.locationName || "",
               },
             };
           }

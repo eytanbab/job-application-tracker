@@ -28,7 +28,7 @@ export async function parseSmartRecruiters(url: string): Promise<ParseResult> {
 
             const locParts = [data.location?.city, data.location?.region, data.location?.country]
               .filter(Boolean);
-            const location = locParts.length > 0 ? locParts.join(", ") : data.location?.remote ? "Remote" : "Remote";
+            const location = locParts.length > 0 ? locParts.join(", ") : data.location?.remote ? "Remote" : "";
 
             const sections = data.jobAd?.sections || {};
             const descParts: string[] = [];

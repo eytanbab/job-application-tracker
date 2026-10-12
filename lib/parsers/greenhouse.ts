@@ -27,7 +27,7 @@ export async function parseGreenhouse(url: string): Promise<ParseResult> {
           const data = await apiRes.json();
           if (data && data.title) {
             const roleName = data.title;
-            const location = data.location?.name || "Remote";
+            const location = data.location?.name || "";
             const description = htmlToPlainText(data.content || "");
             const companyName = formatCompanyName(boardToken);
 
@@ -92,7 +92,7 @@ export async function parseGreenhouse(url: string): Promise<ParseResult> {
 
       const roleName = titleRole || ogTitle || h1Match?.[1]?.trim() || "";
       const companyName = titleCompany || logoMatch?.[1]?.trim() || companySpan?.[1]?.trim() || (boardToken ? formatCompanyName(boardToken) : "Company");
-      const location = modernLocMatch?.[1]?.trim() || legacyLocMatch?.[1]?.trim() || (ogDesc && ogDesc.length < 80 ? ogDesc : "Remote");
+      const location = modernLocMatch?.[1]?.trim() || legacyLocMatch?.[1]?.trim() || (ogDesc && ogDesc.length < 80 ? ogDesc : "");
 
       const modernDescMatch = html.match(/class=["'][^"']*job__description[^"']*["'][^>]*>([\s\S]*?)<\/div>\s*<div[^>]*class=["'][^"']*job__application/i) ||
                               html.match(/class=["'][^"']*job__description[^"']*["'][^>]*>([\s\S]*?)<\/div>/i);

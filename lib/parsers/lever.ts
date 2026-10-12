@@ -25,8 +25,7 @@ export async function parseLever(url: string): Promise<ParseResult> {
               data.categories?.location ||
               (Array.isArray(data.categories?.allLocations)
                 ? data.categories.allLocations.join(", ")
-                : "") ||
-              "Remote";
+                : "");
             
             let description = data.descriptionPlain || "";
             if (!description && data.description) {
@@ -86,7 +85,7 @@ export async function parseLever(url: string): Promise<ParseResult> {
             platform: "Lever",
             status: "Applied",
             description: htmlToPlainText(descMatch?.[1] || html).slice(0, 15000),
-            location: locationMatch?.[1]?.trim() || "Remote",
+            location: locationMatch?.[1]?.trim() || "",
           },
         };
       }
