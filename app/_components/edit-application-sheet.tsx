@@ -102,7 +102,7 @@ export const EditApplicationSheet = ({
           titleRef.current?.focus();
         }}
       >
-        <DialogHeader className="px-4 sm:px-6 pt-5 pb-3 border-b border-border/30 shrink-0">
+        <DialogHeader className="text-left px-4 sm:px-6 pt-5 pb-3 border-b border-border/30 shrink-0">
           <DialogTitle
             ref={titleRef}
             tabIndex={-1}

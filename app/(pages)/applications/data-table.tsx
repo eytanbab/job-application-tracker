@@ -184,7 +184,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
         }}
       >
         <DialogContent className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-md md:max-w-lg p-0 overflow-hidden flex flex-col max-h-[85dvh] sm:max-h-[90vh] rounded-2xl border border-border/40 bg-card shadow-2xl">
-          <DialogHeader className="px-4 sm:px-6 pt-5 pb-3 border-b border-border/30 shrink-0">
+          <DialogHeader className="text-left px-4 sm:px-6 pt-5 pb-3 border-b border-border/30 shrink-0">
             <DialogTitle className="text-xl font-bold">
               New Job Application
             </DialogTitle>

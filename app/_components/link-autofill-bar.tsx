@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +34,18 @@ export function LinkAutofillBar({
   const [url, setUrl] = useState("");
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState<string | null>(null);
+  const [isSlow, setIsSlow] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Extraction can take up to the route's 30s limit; say so after a few seconds
+  useEffect(() => {
+    if (!isExtracting) return;
+    const timer = setTimeout(() => setIsSlow(true), 5000);
+    return () => clearTimeout(timer);
+  }, [isExtracting]);
+
+  // Abort an in-flight extraction when the user leaves this step
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const detectedDomain = extractDomainFromUrl(url);
   const detectedPlatform = url.trim() ? detectPlatformFromUrl(url) : null;
@@ -45,15 +57,19 @@ export function LinkAutofillBar({
     const validUrl = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 
     setIsExtracting(true);
+    setIsSlow(false);
     setExtractError(null);
 
     const domain = extractDomainFromUrl(validUrl);
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     try {
       const response = await fetch("/api/extract", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: validUrl }),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -103,6 +119,8 @@ export function LinkAutofillBar({
         description: `Autofilled from ${domainName}. Review and save your application.`,
       });
     } catch (err) {
+      // The user cancelled or switched to manual entry; nothing to report
+      if (controller.signal.aborted) return;
       console.error("Autofill extraction error:", err);
       toast({
         title: "Could not auto-extract details",
@@ -112,6 +130,7 @@ export function LinkAutofillBar({
       });
       onExtractionFailed(validUrl);
     } finally {
+      if (abortRef.current === controller) abortRef.current = null;
       setIsExtracting(false);
     }
   };
@@ -181,7 +200,7 @@ export function LinkAutofillBar({
                 }
               }
             }}
-            placeholder="https://linkedin.com/jobs/view/... or any job URL"
+            placeholder="Paste a job posting URL"
             className="pl-9 pr-20 h-10 bg-background shadow-2xs focus-visible:ring-primary/40 rounded-xl"
             disabled={isExtracting || isPending}
           />
@@ -220,35 +239,49 @@ export function LinkAutofillBar({
         )}
       </div>
 
-      <div className="flex items-center justify-between pt-2 border-t border-border/30">
-        <button
-          type="button"
-          data-testid="enter-manually-button"
-          onClick={() => onEnterManually(url.trim() ? url.trim() : undefined)}
-          className="text-xs text-muted-foreground hover:text-foreground font-medium cursor-pointer inline-flex items-center gap-1 transition-colors group"
-        >
-          <span>or enter details manually</span>
-          <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
-        </button>
+      {isExtracting && isSlow && (
+        <p role="status" className="text-[11px] text-muted-foreground">
+          Still working. This can take up to 30 seconds, or you can enter the
+          details manually.
+        </p>
+      )}
 
-        <div className="flex items-center gap-2">
+      {/* Phones: Autofill, Cancel, then manual entry, each full width.
+          Wider screens: manual entry left, actions right. */}
+      <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2 pt-3 border-t border-border/30">
+        <Button
+          type="button"
+          variant="ghost"
+          data-testid="enter-manually-button"
+          onClick={() => {
+            abortRef.current?.abort();
+            onEnterManually(url.trim() ? url.trim() : undefined);
+          }}
+          className="h-10 sm:h-9 w-full sm:w-auto sm:px-1 text-xs text-muted-foreground hover:text-foreground hover:bg-transparent font-medium cursor-pointer gap-1 group"
+        >
+          <span>Enter details manually</span>
+          <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+        </Button>
+
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-2">
           <Button
             type="button"
             variant="outline"
-            size="sm"
-            onClick={onCancel}
-            disabled={isExtracting || isPending}
-            className="h-9 px-3.5 text-xs rounded-xl cursor-pointer"
+            onClick={() => {
+              abortRef.current?.abort();
+              onCancel();
+            }}
+            disabled={isPending}
+            className="h-10 sm:h-9 w-full sm:w-auto px-3.5 text-xs rounded-xl cursor-pointer"
           >
             Cancel
           </Button>
           <Button
             type="button"
-            size="sm"
             onClick={handleExtract}
             disabled={!url.trim() || isExtracting || isPending}
             data-testid="autofill-button"
-            className="h-9 px-4 text-xs font-semibold rounded-xl cursor-pointer gap-1.5 shadow-xs"
+            className="h-10 sm:h-9 w-full sm:w-auto px-4 text-xs font-semibold rounded-xl cursor-pointer gap-1.5 shadow-xs"
           >
             {isExtracting ? (
               <>
