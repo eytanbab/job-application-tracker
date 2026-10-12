@@ -19,7 +19,7 @@ import {
   LayoutGrid,
   ChevronDown,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatPlatformLabel } from "@/lib/utils";
 
 interface DataTableToolbarProps {
   globalFilter: string;
@@ -88,12 +88,12 @@ export function DataTableToolbar({
                   variant="outline"
                   size="sm"
                   className={cn(
-                    "h-9 text-xs capitalize justify-between bg-background/60 px-2.5 sm:px-3 font-medium cursor-pointer border-border/50 shrink-0",
+                    "h-9 text-xs justify-between bg-background/60 px-2.5 sm:px-3 font-medium cursor-pointer border-border/50 shrink-0",
                     platformFilter && "border-primary/40 bg-primary/5 text-primary",
                   )}
                 >
                   <span className="truncate max-w-[100px] sm:max-w-[120px]">
-                    {platformFilter ? platformFilter : "Platform"}
+                    {platformFilter ? formatPlatformLabel(platformFilter) : "Platform"}
                   </span>
                   <ChevronDown className="h-3.5 w-3.5 opacity-50 shrink-0 ml-1" />
                 </Button>
@@ -111,7 +111,7 @@ export function DataTableToolbar({
                 >
                   <DropdownMenuRadioItem
                     value="all"
-                    className="text-xs capitalize cursor-pointer"
+                    className="text-xs cursor-pointer"
                   >
                     <span className="truncate">All Platforms</span>
                   </DropdownMenuRadioItem>
@@ -119,10 +119,10 @@ export function DataTableToolbar({
                     <DropdownMenuRadioItem
                       key={plat}
                       value={plat}
-                      title={plat}
-                      className="text-xs capitalize cursor-pointer"
+                      title={formatPlatformLabel(plat)}
+                      className="text-xs cursor-pointer"
                     >
-                      <span className="truncate">{plat}</span>
+                      <span className="truncate">{formatPlatformLabel(plat)}</span>
                     </DropdownMenuRadioItem>
                   ))}
                 </DropdownMenuRadioGroup>

@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Building2, Calendar, ExternalLink, MapPin } from "lucide-react";
 import { getStatusDisplay, getStatusKind, StatusKind } from "@/lib/utils";
 import { formatDate, parseISO } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, formatPlatformLabel } from "@/lib/utils";
 
 const statusBadgeClasses: Record<StatusKind, string> = {
   applied:
@@ -145,9 +145,9 @@ export function DataTableMobileCard({
               {item.platform && (
                 <Badge
                   variant="secondary"
-                  className="capitalize text-[10px] py-0 px-1.5 h-4 font-normal truncate max-w-[110px]"
+                  className="text-[10px] py-0 px-1.5 h-4 font-normal truncate max-w-[110px]"
                 >
-                  {item.platform}
+                  {formatPlatformLabel(item.platform)}
                 </Badge>
               )}
             </div>

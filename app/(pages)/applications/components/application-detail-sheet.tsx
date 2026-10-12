@@ -48,6 +48,7 @@ import {
   isStatusKind,
   isStandardStatus,
   cn,
+  formatPlatformLabel,
 } from "@/lib/utils";
 import {
   getApplicationHistory,
@@ -768,8 +769,8 @@ export function ApplicationDetailSheet({
                   {displayStatusText}
                 </Badge>
 
-                <Badge variant="secondary" className="capitalize">
-                  {activeApp.platform}
+                <Badge variant="secondary">
+                  {formatPlatformLabel(activeApp.platform)}
                 </Badge>
 
                 {activeApp.location && (

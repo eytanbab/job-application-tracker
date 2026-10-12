@@ -30,7 +30,13 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { getStatusKind, statusLabels, StatusKind, cn } from "@/lib/utils";
+import {
+  getStatusKind,
+  statusLabels,
+  StatusKind,
+  cn,
+  formatPlatformLabel,
+} from "@/lib/utils";
 
 interface PlatformData {
   platformName: string;
@@ -251,7 +257,7 @@ export function ChannelPerformanceMatrix({
           {topPlatform && (
             <div className="p-3 rounded-lg bg-background/50 border border-border/30 text-xs text-muted-foreground">
               <span className="text-foreground">
-                <strong className="font-semibold capitalize text-primary">{topPlatform.platformName}</strong> is
+                <strong className="font-semibold text-primary">{formatPlatformLabel(topPlatform.platformName)}</strong> is
                 your top-performing source with an{" "}
                 <strong className="font-semibold font-mono text-emerald-700 dark:text-emerald-400">
                   {topPlatform.interviewRate.toFixed(1)}% interview rate
@@ -303,8 +309,8 @@ export function ChannelPerformanceMatrix({
                   className="p-3 rounded-lg border border-border/30 bg-background/50 flex flex-col gap-2.5 text-xs"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold capitalize text-foreground text-sm truncate min-w-0">
-                      {platform.platformName}
+                    <span className="font-semibold text-foreground text-sm truncate min-w-0">
+                      {formatPlatformLabel(platform.platformName)}
                     </span>
                     <div className="flex items-center gap-2 shrink-0">
                       <span className="font-mono text-xs text-muted-foreground">
@@ -422,10 +428,10 @@ export function ChannelPerformanceMatrix({
                       className="hover:bg-muted/30 transition-colors"
                     >
                       <TableCell
-                        className="py-3 px-3 font-semibold capitalize text-foreground truncate min-w-0"
-                        title={platform.platformName}
+                        className="py-3 px-3 font-semibold text-foreground truncate min-w-0"
+                        title={formatPlatformLabel(platform.platformName)}
                       >
-                        {platform.platformName}
+                        {formatPlatformLabel(platform.platformName)}
                       </TableCell>
                       <TableCell className="py-3 px-3 text-center font-mono font-semibold text-foreground">
                         {platform.total}

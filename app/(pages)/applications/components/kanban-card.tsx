@@ -22,6 +22,7 @@ import {
   statusOptions,
   StatusKind,
   isStandardStatus,
+  formatPlatformLabel,
 } from "@/lib/utils";
 import { useState } from "react";
 import { formatDate, parseISO } from "date-fns";
@@ -204,9 +205,9 @@ export function KanbanCard({
           {item.platform && (
             <Badge
               variant="secondary"
-              className="text-[10px] font-medium capitalize px-1.5 py-0 rounded-sm bg-secondary/80 text-secondary-foreground"
+              className="text-[10px] font-medium px-1.5 py-0 rounded-sm bg-secondary/80 text-secondary-foreground"
             >
-              {item.platform}
+              {formatPlatformLabel(item.platform)}
             </Badge>
           )}
           {item.salary && (

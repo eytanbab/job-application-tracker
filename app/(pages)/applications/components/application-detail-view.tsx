@@ -31,7 +31,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDate, parseISO } from "date-fns";
-import { statusOptions, statusLabels, StatusKind, cn } from "@/lib/utils";
+import {
+  statusOptions,
+  statusLabels,
+  StatusKind,
+  cn,
+  formatPlatformLabel,
+} from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { ApplicationTimeline, TimelineEntry } from "./application-timeline";
@@ -506,13 +512,13 @@ export function ApplicationDetailView({
                 if (onUpdateDraftField) setIsEditingPlatform(true);
               }}
               className={cn(
-                "font-medium capitalize text-foreground text-xs sm:text-sm truncate",
+                "font-medium text-foreground text-xs sm:text-sm truncate",
                 onUpdateDraftField &&
                   "cursor-pointer hover:text-primary transition-colors",
               )}
               title={onUpdateDraftField ? "Click to edit platform" : undefined}
             >
-              {currentApp.platform || "-"}
+              {formatPlatformLabel(currentApp.platform) || "-"}
             </p>
           )}
         </div>
