@@ -36,7 +36,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      publishableKey={
+        process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+        "pk_test_bW9jay5jbGVyay5hY2NvdW50cy5kZXYk"
+      }
+    >
       <html lang="en" suppressHydrationWarning>
         <body
           suppressHydrationWarning
@@ -55,7 +60,7 @@ export default function RootLayout({
                 <div className="flex-1 flex flex-col min-w-0">
                   <Nav />
                   <GuestDataMigrator />
-                  <div className="flex-1">{children}</div>
+                  <div className="flex-1 min-w-0">{children}</div>
                 </div>
               </div>
             </NuqsAdapter>

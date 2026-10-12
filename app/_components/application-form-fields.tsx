@@ -25,7 +25,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { CalendarIcon, Loader2 } from "lucide-react";
-import { format, endOfDay } from "date-fns";
+import { format, endOfDay, subDays } from "date-fns";
 import {
   cn,
   getStatusKind,
@@ -36,19 +36,22 @@ import {
   platformOptions,
   mergeWithDefaultOptions,
   isStandardStatus,
+  StatusKind,
 } from "@/lib/utils";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { FormValues } from "./application-form";
 import { ComboboxInput } from "@/components/ui/combobox-input";
+import { ResumePicker } from "./resume-picker";
 
 const DEFAULT_EMPTY_ARRAY: string[] = [];
 
 interface ApplicationFormFieldsProps {
   form: UseFormReturn<FormValues>;
   isPending: boolean;
-  onCancel: () => void;
   userLocations?: string[];
   userPlatforms?: string[];
+  onUploadingResumeChange?: (isUploading: boolean) => void;
+  onDocumentUploaded?: (docId: string) => void;
 }
 
 function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
@@ -85,10 +88,14 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
                 value={field.value || getStatusKind(currentStatus)}
                 onValueChange={(value) => {
                   field.onChange(value);
+                  const nextCategory = value as StatusKind;
                   const defaultLabel =
-                    statusLabels[value as keyof typeof statusLabels] || "";
+                    statusLabels[nextCategory] || "";
                   const prevStatus = form.getValues("status");
+                  const prevCat = getStatusKind(prevStatus, field.value);
+
                   if (
+                    prevCat !== nextCategory ||
                     !showCustomStage ||
                     !prevStatus ||
                     isStandardStatus(prevStatus)
@@ -97,6 +104,9 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
                       shouldDirty: true,
                       shouldValidate: true,
                     });
+                    if (prevCat !== nextCategory) {
+                      setShowCustomStage(false);
+                    }
                   }
                 }}
               >
@@ -160,8 +170,14 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
                         ? `e.g. ${statusLabels[currentCategory as keyof typeof statusLabels]} - Round 2`
                         : "e.g. Round 2 Technical Interview"
                     }
-                    {...statusField}
-                    value={statusField.value || ""}
+                    value={
+                      statusField.value && !isStandardStatus(statusField.value)
+                        ? statusField.value
+                        : ""
+                    }
+                    onChange={(e) => {
+                      statusField.onChange(e.target.value);
+                    }}
                     className="h-9 text-xs"
                   />
                 </FormControl>
@@ -176,17 +192,9 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
       {!showCustomStage && (
         <button
           type="button"
+          aria-expanded={false}
           onClick={() => {
             setShowCustomStage(true);
-            const currentCat =
-              form.getValues("statusCategory") ||
-              getStatusKind(form.getValues("status"));
-            const currentVal = form.getValues("status");
-            if (!currentVal || isStandardStatus(currentVal)) {
-              const defaultLabel =
-                statusLabels[currentCat as keyof typeof statusLabels] || "";
-              form.setValue("status", defaultLabel, { shouldDirty: true });
-            }
           }}
           className="text-[11px] font-medium text-primary hover:underline inline-flex items-center gap-1 cursor-pointer pt-0.5"
         >
@@ -241,10 +249,39 @@ function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
                   </Button>
                 </FormControl>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-2" align="start">
+                <div className="flex items-center gap-1.5 pb-2 mb-1 border-b border-border/50">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs px-2.5 rounded-lg cursor-pointer"
+                    onClick={() => field.onChange(new Date())}
+                  >
+                    Today
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs px-2.5 rounded-lg cursor-pointer"
+                    onClick={() => field.onChange(subDays(new Date(), 1))}
+                  >
+                    Yesterday
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs px-2.5 rounded-lg cursor-pointer"
+                    onClick={() => field.onChange(subDays(new Date(), 7))}
+                  >
+                    1 week ago
+                  </Button>
+                </div>
                 <Calendar
                   mode="single"
-                  showYearSwitcher={false}
+                  showYearSwitcher={true}
                   selected={selectedDate}
                   onSelect={field.onChange}
                   disabled={(date: Date) =>
@@ -264,9 +301,10 @@ function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
 export function ApplicationFormFields({
   form,
   isPending,
-  onCancel,
   userLocations = DEFAULT_EMPTY_ARRAY,
   userPlatforms = DEFAULT_EMPTY_ARRAY,
+  onUploadingResumeChange,
+  onDocumentUploaded,
 }: ApplicationFormFieldsProps) {
   const mergedLocations = useMemo(
     () => mergeWithDefaultOptions(userLocations, locationOptions),
@@ -282,12 +320,19 @@ export function ApplicationFormFields({
     form.watch("salary") ||
       form.watch("link") ||
       form.watch("description") ||
-      form.watch("notes"),
+      form.watch("notes") ||
+      form.watch("resumeId"),
   );
 
   const [showMoreDetails, setShowMoreDetails] = useState(
     isEditing || hasOptionalData,
   );
+
+  useEffect(() => {
+    if (hasOptionalData) {
+      setShowMoreDetails(true);
+    }
+  }, [hasOptionalData]);
 
   return (
     <>
@@ -397,7 +442,7 @@ export function ApplicationFormFields({
             onClick={() => setShowMoreDetails(true)}
             className="text-xs font-semibold text-primary hover:underline flex items-center gap-1.5 py-1 cursor-pointer"
           >
-            <span>+ Add More Details (Salary, URL, Description, Notes)</span>
+            <span>+ Add More Details (Resume, Salary, URL, Description, Notes)</span>
           </button>
         ) : (
           <div className="space-y-3 pt-2 border-t border-border/40">
@@ -415,6 +460,13 @@ export function ApplicationFormFields({
                 </button>
               )}
             </div>
+
+            <ResumePicker
+              form={form}
+              disabled={isPending}
+              onUploadingChange={onUploadingResumeChange}
+              onDocumentUploaded={onDocumentUploaded}
+            />
 
             <FormField
               control={form.control}
@@ -495,44 +547,6 @@ export function ApplicationFormFields({
         )}
       </div>
 
-      {/* 3. Submit / Cancel Action Buttons */}
-      <div className="mt-3 flex flex-col gap-2 w-full col-span-full pt-2">
-        {(() => {
-          const { isDirty } = form.formState;
-          const isEditingApp = Boolean(form.getValues("id" as any));
-          const isSaveDisabled = isPending || (isEditingApp && !isDirty);
-
-          return (
-            <Button
-              type="submit"
-              disabled={isSaveDisabled}
-              className="h-10 text-xs font-semibold rounded-xl shadow-xs cursor-pointer"
-              title={
-                isEditingApp && !isDirty ? "No changes have been made" : undefined
-              }
-            >
-              {isPending ? (
-                <Loader2 className="size-5 animate-spin" />
-              ) : isEditingApp && !isDirty ? (
-                "No Changes"
-              ) : isEditingApp ? (
-                "Save Changes"
-              ) : (
-                "Add Application"
-              )}
-            </Button>
-          );
-        })()}
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={isPending}
-          className="h-10 text-xs rounded-xl cursor-pointer"
-        >
-          Cancel
-        </Button>
-      </div>
     </>
   );
 }

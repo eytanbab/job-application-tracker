@@ -18,24 +18,17 @@ test.describe("Applications Form Dirty State Guard E2E Suite", () => {
       await notesField.fill(`Modified notes ${Date.now()}`);
 
       // First Cancel attempt: dismiss dialog (Keep editing)
-      let dialogMessage = "";
-      page.once("dialog", async (dialog) => {
-        dialogMessage = dialog.message();
-        await dialog.dismiss();
-      });
-
       const cancelBtn = page.locator("button:has-text('Cancel')").first();
       await cancelBtn.click();
 
-      expect(dialogMessage).toContain("You have unsaved changes. Are you sure you want to discard them?");
+      await expect(page.locator("text=Discard Unsaved Changes?")).toBeVisible();
+      await page.locator("button:has-text('Keep Editing')").click();
       await expect(page.locator("text=Edit Job Application")).toBeVisible();
 
       // Second Cancel attempt: accept dialog (Discard changes)
-      page.once("dialog", async (dialog) => {
-        await dialog.accept();
-      });
-
       await cancelBtn.click();
+      await expect(page.locator("text=Discard Unsaved Changes?")).toBeVisible();
+      await page.locator("button:has-text('Discard Changes')").click();
       await expect(page.locator("text=Edit Job Application")).not.toBeVisible();
     }
   });

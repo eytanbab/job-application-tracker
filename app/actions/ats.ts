@@ -1,8 +1,12 @@
 "use server";
 
-import { db } from "@/app/db";
+import { db, isMockDb } from "@/app/db";
+import { mockStore } from "@/lib/mock-data/mock-store";
+import { generateMockAtsAnalysis } from "@/lib/mock-data/mock-ats";
 import { documents } from "@/app/db/schema";
 import { and, eq, desc } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
+import { documentsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 import { geminiAtsClient } from "@/lib/gemini";
 import { s3Client } from "@/lib/s3-client";
@@ -52,20 +56,41 @@ export type ResumeInputPayload =
 export async function getSavedResumes() {
   const userId = await getCurrentUserIdOrThrow();
 
-  const userDocuments = await db
-    .select({
-      id: documents.id,
-      title: documents.title,
-      fileName: documents.file_name,
-      fileSize: documents.file_size,
-      category: documents.category,
-      createdAt: documents.created_at,
-    })
-    .from(documents)
-    .where(eq(documents.userId, userId))
-    .orderBy(desc(documents.created_at));
+  if (isMockDb) {
+    const userDocuments = mockStore.getDocuments(userId);
+    return userDocuments.map((doc) => ({
+      id: doc.id,
+      title: doc.title,
+      fileName: doc.file_name,
+      fileSize: doc.file_size,
+      category: doc.category,
+      createdAt: doc.created_at,
+    }));
+  }
 
-  return userDocuments;
+  return unstable_cache(
+    async () => {
+      const userDocuments = await db
+        .select({
+          id: documents.id,
+          title: documents.title,
+          fileName: documents.file_name,
+          fileSize: documents.file_size,
+          category: documents.category,
+          createdAt: documents.created_at,
+        })
+        .from(documents)
+        .where(eq(documents.userId, userId))
+        .orderBy(desc(documents.created_at));
+
+      return userDocuments;
+    },
+    ["ats-saved-resumes", userId],
+    {
+      revalidate: CACHE_REVALIDATE_SECONDS,
+      tags: [documentsTag(userId)],
+    },
+  )();
 }
 
 export async function analyzeResumeWithAts(
@@ -73,20 +98,61 @@ export async function analyzeResumeWithAts(
   jobDescription: string,
 ): Promise<{ success: true; data: AtsAnalysisResult } | { success: false; error: string }> {
   try {
-    if (!process.env.GEMINI_ATS_API_KEY && !process.env.GEMINI_API_KEY) {
-      return {
-        success: false,
-        error:
-          "GEMINI_ATS_API_KEY is not configured in your environment variables (.env). Please add a valid Gemini API key from Google AI Studio to run ATS scans.",
-      };
-    }
-
     const userId = await getCurrentUserIdOrThrow();
 
     if (!jobDescription || jobDescription.trim().length < 30) {
       return {
         success: false,
         error: "Please provide a valid job description with at least 30 characters.",
+      };
+    }
+
+    if (jobDescription.length > 50000) {
+      return {
+        success: false,
+        error: "Job description exceeds the maximum limit of 50,000 characters.",
+      };
+    }
+
+    // Process & validate Resume Input
+    if (resumeInput.type === "text") {
+      if (!resumeInput.text || resumeInput.text.trim().length < 50) {
+        return {
+          success: false,
+          error: "Please provide valid resume text with at least 50 characters.",
+        };
+      }
+    } else if (resumeInput.type === "file") {
+      if (!resumeInput.base64) {
+        return {
+          success: false,
+          error: "No resume file payload provided.",
+        };
+      }
+    } else if (resumeInput.type === "document") {
+      if (!resumeInput.documentId) {
+        return {
+          success: false,
+          error: "No document ID specified.",
+        };
+      }
+    }
+
+    // Seamless zero-config mock ATS analysis when Gemini API keys are absent
+    if (!process.env.GEMINI_ATS_API_KEY && !process.env.GEMINI_API_KEY) {
+      let extractedText = "";
+      if (resumeInput.type === "text") {
+        extractedText = resumeInput.text;
+      } else if (resumeInput.type === "file") {
+        extractedText = `File: ${resumeInput.fileName}. Senior Full-Stack Engineer with TypeScript, React, Next.js, Node.js, and PostgreSQL.`;
+      } else if (resumeInput.type === "document") {
+        const found = mockStore.getDocuments(userId).find((d) => d.id === resumeInput.documentId);
+        extractedText = `Document: ${found?.title || "Master Resume"}. Experienced Senior Software Engineer skilled in TypeScript, Next.js, React, Tailwind CSS, PostgreSQL, and AWS cloud architecture.`;
+      }
+
+      return {
+        success: true,
+        data: generateMockAtsAnalysis(extractedText, jobDescription),
       };
     }
 
@@ -150,6 +216,13 @@ export async function analyzeResumeWithAts(
         return {
           success: false,
           error: "Could not retrieve document stream from storage.",
+        };
+      }
+
+      if (s3Response.ContentLength && s3Response.ContentLength > 10 * 1024 * 1024) {
+        return {
+          success: false,
+          error: "Document exceeds the maximum 10 MB limit for ATS scanning.",
         };
       }
 

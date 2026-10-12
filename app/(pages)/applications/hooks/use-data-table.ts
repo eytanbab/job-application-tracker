@@ -12,7 +12,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import {
   getStatusDisplay,
   statusLabels,
@@ -24,6 +24,7 @@ import {
   useQueryState,
   parseAsString,
   parseAsInteger,
+  parseAsBoolean,
   useQueryStates,
 } from "nuqs";
 import {
@@ -69,6 +70,33 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
   const [editingApp, setEditingApp] = useState<TData | null>(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
+  const [appIdParam, setAppIdParam] = useQueryState(
+    "appId",
+    parseAsString.withDefault("").withOptions({ shallow: true }),
+  );
+
+  // Synchronize appIdParam with selectedApp
+  useEffect(() => {
+    if (appIdParam) {
+      const match = data.find((item) => item.id === appIdParam);
+      if (match) {
+        setSelectedApp(match);
+        setIsDetailOpen(true);
+      } else {
+        setSelectedApp(null);
+        setIsDetailOpen(false);
+      }
+    } else {
+      setSelectedApp(null);
+      setIsDetailOpen(false);
+    }
+  }, [appIdParam, data]);
+
+  const [createParam, setCreateParam] = useQueryState(
+    "create",
+    parseAsBoolean.withDefault(false).withOptions({ shallow: false }),
+  );
+
   useEffect(() => {
     const handleOpen = () => setIsCreateOpen(true);
     window.addEventListener("open-create-application", handleOpen);
@@ -81,13 +109,18 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
       setIsCreateOpen(true);
     }
 
+    if (createParam) {
+      setIsCreateOpen(true);
+      setCreateParam(null);
+    }
+
     return () => {
       window.removeEventListener("open-create-application", handleOpen);
     };
-  }, []);
+  }, [createParam, setCreateParam]);
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [, startBulkTransition] = useTransition();
+  const [isBulkPending, startBulkTransition] = useTransition();
 
   const [globalFilter, setGlobalFilter] = useQueryState(
     "q",
@@ -170,17 +203,29 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     });
   }, [page, pageSizeParam]);
 
-  const handleSelectRow = (app: TData) => {
-    setSelectedApp(app);
-    setIsDetailOpen(true);
-  };
+  const handleSelectRow = useCallback(
+    (app: TData) => {
+      setSelectedApp(app);
+      setIsDetailOpen(true);
+      if (app.id) {
+        setAppIdParam(app.id);
+      }
+    },
+    [setAppIdParam],
+  );
+
+  const handleCloseDetail = useCallback(() => {
+    setIsDetailOpen(false);
+    setSelectedApp(null);
+    setAppIdParam("");
+  }, [setAppIdParam]);
 
   const handleDelete = async (id: string) => {
     try {
       await deleteApplication(id);
       toast({ description: "Application deleted successfully." });
-      if (selectedApp?.id === id) {
-        setIsDetailOpen(false);
+      if (selectedApp?.id === id || appIdParam === id) {
+        handleCloseDetail();
       }
     } catch {
       toast({
@@ -211,7 +256,30 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    globalFilterFn: "includesString",
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const search = String(filterValue ?? "").toLowerCase().trim();
+      if (!search) return true;
+      const app = row.original;
+      const company = String(app.company_name ?? "").toLowerCase();
+      const role = String(app.role_name ?? "").toLowerCase();
+      const location = String(app.location ?? "").toLowerCase();
+      const platform = String(app.platform ?? "").toLowerCase();
+      const status = String(app.status ?? "").toLowerCase();
+      const category = String(app.statusCategory ?? "").toLowerCase();
+      const salary = String(app.salary ?? "").toLowerCase();
+      const description = String(app.description ?? "").toLowerCase();
+
+      return (
+        company.includes(search) ||
+        role.includes(search) ||
+        location.includes(search) ||
+        platform.includes(search) ||
+        status.includes(search) ||
+        category.includes(search) ||
+        salary.includes(search) ||
+        description.includes(search)
+      );
+    },
     onGlobalFilterChange: setGlobalFilter,
     onColumnFiltersChange: setColumnFilters,
     onRowSelectionChange: setRowSelection,
@@ -257,23 +325,46 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
   const handleBulkDelete = () => {
     if (selectedCount === 0) return;
     startBulkTransition(async () => {
-      try {
-        await Promise.all(
-          selectedRows.map((row) => {
-            if (row.original.id) {
-              return deleteApplication(row.original.id);
-            }
-            return Promise.resolve();
-          }),
-        );
+      const results = await Promise.allSettled(
+        selectedRows.map(async (row) => {
+          if (row.original.id) {
+            await deleteApplication(row.original.id);
+            return row.id;
+          }
+          return row.id;
+        }),
+      );
+      const successfulIds = new Set(
+        results
+          .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
+          .map((r) => r.value),
+      );
+      const succeededCount = successfulIds.size;
+      const failedCount = selectedCount - succeededCount;
+
+      if (failedCount === 0) {
         toast({
-          description: `Successfully deleted ${selectedCount} application(s).`,
+          description: `Successfully deleted ${succeededCount} application(s).`,
         });
         setRowSelection({});
-      } catch {
+      } else if (succeededCount === 0) {
         toast({
           description: "Failed to delete applications.",
           variant: "destructive",
+        });
+      } else {
+        toast({
+          description: `Deleted ${succeededCount} of ${selectedCount} application(s). ${failedCount} failed.`,
+          variant: "destructive",
+        });
+        setRowSelection((prev) => {
+          const next: RowSelectionState = {};
+          Object.keys(prev).forEach((rowKey) => {
+            if (!successfulIds.has(rowKey)) {
+              next[rowKey] = true;
+            }
+          });
+          return next;
         });
       }
     });
@@ -283,32 +374,55 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     if (selectedCount === 0) return;
     const cat = (isStatusKind(newCategory) ? newCategory : "other") as StatusKind;
     startBulkTransition(async () => {
-      try {
-        await Promise.all(
-          selectedRows.map((row) => {
-            if (row.original.id) {
-              const updatedStatusText = resolveUpdatedStatus(
-                row.original.status,
-                cat,
-              );
-              return updateApplication({
-                ...row.original,
-                id: row.original.id,
-                statusCategory: cat,
-                status: updatedStatusText.trim(),
-              } as unknown as FormValues);
-            }
-            return Promise.resolve();
-          }),
-        );
+      const results = await Promise.allSettled(
+        selectedRows.map(async (row) => {
+          if (row.original.id) {
+            const updatedStatusText = resolveUpdatedStatus(
+              row.original.status,
+              cat,
+            );
+            await updateApplication({
+              ...row.original,
+              id: row.original.id,
+              statusCategory: cat,
+              status: updatedStatusText.trim(),
+            } as unknown as FormValues);
+            return row.id;
+          }
+          return row.id;
+        }),
+      );
+      const successfulIds = new Set(
+        results
+          .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
+          .map((r) => r.value),
+      );
+      const succeededCount = successfulIds.size;
+      const failedCount = selectedCount - succeededCount;
+
+      if (failedCount === 0) {
         toast({
-          description: `Updated status for ${selectedCount} application(s) to ${statusLabels[cat] || cat}.`,
+          description: `Updated status for ${succeededCount} application(s) to ${statusLabels[cat] || cat}.`,
         });
         setRowSelection({});
-      } catch {
+      } else if (succeededCount === 0) {
         toast({
           description: "Failed to update application statuses.",
           variant: "destructive",
+        });
+      } else {
+        toast({
+          description: `Updated ${succeededCount} of ${selectedCount} application(s). ${failedCount} failed.`,
+          variant: "destructive",
+        });
+        setRowSelection((prev) => {
+          const next: RowSelectionState = {};
+          Object.keys(prev).forEach((rowKey) => {
+            if (!successfulIds.has(rowKey)) {
+              next[rowKey] = true;
+            }
+          });
+          return next;
         });
       }
     });
@@ -341,12 +455,54 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     salary: "",
   };
 
+  const filteredApps = useMemo(() => {
+    const rows = table.getFilteredRowModel().rows;
+    return rows.map((r) => r.original);
+  }, [table]);
+
+  const activeAppIndex = useMemo(() => {
+    if (!selectedApp?.id) return -1;
+    const idx = filteredApps.findIndex((item) => item.id === selectedApp.id);
+    if (idx !== -1) return idx;
+    return data.findIndex((item) => item.id === selectedApp.id);
+  }, [selectedApp?.id, filteredApps, data]);
+
+  const currentList = useMemo(() => {
+    const inFiltered = filteredApps.some((item) => item.id === selectedApp?.id);
+    return inFiltered ? filteredApps : data;
+  }, [filteredApps, data, selectedApp?.id]);
+
+  const hasPreviousApp = activeAppIndex > 0;
+  const hasNextApp =
+    activeAppIndex >= 0 && activeAppIndex < currentList.length - 1;
+
+  const goToPreviousApp = useCallback(() => {
+    if (activeAppIndex > 0) {
+      const prev = currentList[activeAppIndex - 1];
+      if (prev?.id) {
+        setSelectedApp(prev);
+        setAppIdParam(prev.id);
+      }
+    }
+  }, [activeAppIndex, currentList, setAppIdParam]);
+
+  const goToNextApp = useCallback(() => {
+    if (activeAppIndex >= 0 && activeAppIndex < currentList.length - 1) {
+      const next = currentList[activeAppIndex + 1];
+      if (next?.id) {
+        setSelectedApp(next);
+        setAppIdParam(next.id);
+      }
+    }
+  }, [activeAppIndex, currentList, setAppIdParam]);
+
   return {
     viewMode,
     setViewMode,
     selectedApp,
     isDetailOpen,
     setIsDetailOpen,
+    handleCloseDetail,
     isCreateOpen,
     setIsCreateOpen,
     editingApp,
@@ -362,6 +518,7 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     table,
     uniquePlatforms,
     selectedCount,
+    isBulkPending,
     handleBulkDelete,
     handleBulkStatusChange,
     hasActiveFilters,
@@ -370,5 +527,11 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     handleSelectRow,
     handleDelete,
     setRowSelection,
+    hasPreviousApp,
+    hasNextApp,
+    goToPreviousApp,
+    goToNextApp,
+    currentIndex: activeAppIndex >= 0 ? activeAppIndex + 1 : 0,
+    totalApps: currentList.length,
   };
 }

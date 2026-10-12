@@ -2,10 +2,10 @@ import { redirect } from "next/navigation";
 
 export async function generateMetadata() {
   return {
-    title: "JAT | New Application",
+    title: "JobTracker | New Application",
   };
 }
 
 export default function NewApplicationPage() {
-  redirect("/applications");
+  redirect("/applications?create=true");
 }

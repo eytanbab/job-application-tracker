@@ -164,8 +164,8 @@ export function DataTableToolbar({
               )}
             >
               <LayoutList className="h-3.5 w-3.5" />
-              <span className="sm:hidden">Cards</span>
-              <span className="hidden sm:inline">Table</span>
+              <span className="lg:hidden">Cards</span>
+              <span className="hidden lg:inline">Table</span>
             </button>
             <button
               type="button"
@@ -188,7 +188,7 @@ export function DataTableToolbar({
           <NewApplicationButton
             onClick={onOpenCreate}
             label="Add Application"
-            className="hidden md:inline-flex px-3.5 font-semibold h-9"
+            className="hidden lg:inline-flex px-3.5 font-semibold h-9"
           />
         </div>
       </div>

@@ -9,17 +9,58 @@ import { MobileSideNav } from "./side-nav-mobile";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const pageTitles: Record<string, string> = {
-  applications: "Job Applications",
-  analytics: "Analytics & Performance",
-  "ats-checker": "ATS Resume Checker",
-  documents: "Career Documents",
-};
+
 
 const Nav = () => {
   const pathname = usePathname();
-  const rootSection = pathname.split("/")[1] || "applications";
-  const currentTitle = pageTitles[rootSection] || "Job Tracker";
+
+  const renderBreadcrumbs = () => {
+    if (pathname.startsWith("/analytics")) {
+      const sub = pathname.split("/")[2];
+      const subLabel =
+        sub === "overview"
+          ? "Overview"
+          : sub === "status-per-platform"
+            ? "Platform Performance"
+            : sub === "insights"
+              ? "Strategic Insights"
+              : "Overview";
+      return (
+        <div className="hidden md:flex items-center gap-1.5 text-sm">
+          <Link
+            href="/analytics/overview"
+            className="text-muted-foreground hover:text-foreground font-medium transition-colors cursor-pointer"
+          >
+            Analytics
+          </Link>
+          <span className="text-muted-foreground/40">/</span>
+          <span className="font-semibold text-foreground">{subLabel}</span>
+        </div>
+      );
+    }
+
+    if (pathname.startsWith("/documents")) {
+      return (
+        <div className="hidden md:flex items-center gap-1.5 text-sm">
+          <span className="font-semibold text-foreground">Career Documents</span>
+        </div>
+      );
+    }
+
+    if (pathname.startsWith("/ats-checker")) {
+      return (
+        <div className="hidden md:flex items-center gap-1.5 text-sm">
+          <span className="font-semibold text-foreground">ATS Resume Checker</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="hidden md:flex items-center gap-1.5 text-sm">
+        <span className="font-semibold text-foreground">Job Applications</span>
+      </div>
+    );
+  };
 
   return (
     <header className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-border/30 bg-background/80 px-4 sm:px-6 backdrop-blur-md">
@@ -39,11 +80,7 @@ const Nav = () => {
         </Link>
 
         {/* Desktop Breadcrumb/Page Title */}
-        <div className="hidden md:flex items-center gap-2 text-sm">
-          <span className="text-muted-foreground font-medium">Dashboard</span>
-          <span className="text-muted-foreground/60">/</span>
-          <span className="font-semibold text-foreground">{currentTitle}</span>
-        </div>
+        {renderBreadcrumbs()}
       </div>
 
       {/* Right Controls */}

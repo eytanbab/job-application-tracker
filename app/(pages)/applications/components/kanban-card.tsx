@@ -127,7 +127,7 @@ export function KanbanCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity"
+                className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 transition-opacity cursor-pointer"
                 title={`Move to ${prevCol.label}`}
                 onClick={() => onQuickStatusMove(item, prevCol.id)}
               >
@@ -138,7 +138,7 @@ export function KanbanCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity"
+                className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 transition-opacity cursor-pointer"
                 title={`Move to ${nextCol.label}`}
                 onClick={() => onQuickStatusMove(item, nextCol.id)}
               >

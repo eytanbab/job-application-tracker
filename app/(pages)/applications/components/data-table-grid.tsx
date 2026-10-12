@@ -1,6 +1,7 @@
 "use client";
 
 import { Table as TanstackTable, flexRender } from "@tanstack/react-table";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -18,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Filter } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableMobileCard } from "./data-table-mobile-card";
 
 const TABLE_ROWS = [5, 10, 15, 20, 25];
@@ -40,6 +42,7 @@ export function DataTableGrid<
     status: string;
     statusCategory?: string | null;
     location: string;
+    platform?: string;
   },
 >({
   table,
@@ -51,27 +54,45 @@ export function DataTableGrid<
   return (
     <div className="space-y-4 pb-24 lg:pb-4">
       {/* Desktop Table View */}
-      <div className="hidden lg:block rounded-xl border border-border/40 bg-card overflow-x-auto shadow-2xs [scrollbar-width:thin]">
-        <Table>
+      <div className="hidden lg:block rounded-xl border border-border/40 bg-card overflow-hidden shadow-2xs">
+        <Table className="w-full">
           <TableHeader className="bg-muted/30">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
                 className="border-b border-border/30"
               >
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="px-4 py-3 font-bold text-foreground text-xs uppercase tracking-wider"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHead>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  const isActions = header.column.id === "actions";
+                  const isSelect = header.column.id === "select";
+                  const isDate = header.column.id === "date_applied";
+                  const isSalary = header.column.id === "salary";
+
+                  return (
+                    <TableHead
+                      key={header.id}
+                      className={cn(
+                        "px-2.5 xl:px-3 py-3 font-bold text-foreground text-xs uppercase tracking-wider",
+                        isSelect && "w-10 px-2 text-center",
+                        header.column.id === "role_name" && "min-w-[160px]",
+                        isDate && "w-[110px] whitespace-nowrap",
+                        header.column.id === "status" && "w-[125px]",
+                        header.column.id === "location" && "w-[125px]",
+                        header.column.id === "platform" && "w-[100px]",
+                        isSalary && "w-[130px] whitespace-nowrap",
+                        isActions &&
+                          "w-[76px] sticky right-0 z-20 bg-card/95 backdrop-blur-xs text-right pr-3 border-l border-border/30 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.3)]",
+                      )}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
@@ -82,7 +103,6 @@ export function DataTableGrid<
                   key={row.id}
                   data-testid="table-row"
                   tabIndex={0}
-                  role="button"
                   data-state={row.getIsSelected() && "selected"}
                   onClick={() => onSelectRow(row.original)}
                   onKeyDown={(e) => {
@@ -101,16 +121,37 @@ export function DataTableGrid<
                       onSelectRow(row.original);
                     }
                   }}
-                  className="cursor-pointer border-b border-border/30 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
+                  className="group/row cursor-pointer border-b border-border/30 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-4 py-3 text-sm">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const isActions = cell.column.id === "actions";
+                    const isSelect = cell.column.id === "select";
+                    const isDate = cell.column.id === "date_applied";
+                    const isSalary = cell.column.id === "salary";
+
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        className={cn(
+                          "px-2.5 xl:px-3 py-3 text-sm",
+                          isSelect && "w-10 px-2 text-center",
+                          cell.column.id === "role_name" && "min-w-[160px]",
+                          isDate && "w-[110px] whitespace-nowrap",
+                          cell.column.id === "status" && "w-[125px]",
+                          cell.column.id === "location" && "w-[125px]",
+                          cell.column.id === "platform" && "w-[100px]",
+                          isSalary && "w-[130px] whitespace-nowrap",
+                          isActions &&
+                            "w-[76px] sticky right-0 z-10 bg-card group-hover/row:bg-accent/40 group-data-[state=selected]/row:bg-muted text-right pr-3 border-l border-border/30 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.3)]",
+                        )}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             ) : (
@@ -150,9 +191,32 @@ export function DataTableGrid<
       {/* Mobile Card View */}
       <div className="lg:hidden space-y-3">
         {table.getRowModel().rows?.length ? (
-          table
-            .getRowModel()
-            .rows.map((row) => (
+          <>
+            <div className="flex items-center justify-between px-3 py-2 bg-muted/40 border border-border/50 rounded-xl text-xs">
+              <label className="flex items-center gap-2 cursor-pointer select-none font-medium text-foreground">
+                <Checkbox
+                  checked={
+                    table.getIsAllPageRowsSelected()
+                      ? true
+                      : table.getIsSomePageRowsSelected()
+                      ? "indeterminate"
+                      : false
+                  }
+                  onCheckedChange={(checked) =>
+                    table.toggleAllPageRowsSelected(!!checked)
+                  }
+                  aria-label="Select all applications"
+                />
+                <span>Select all ({table.getRowModel().rows.length})</span>
+              </label>
+              {table.getSelectedRowModel().rows.length > 0 && (
+                <span className="text-muted-foreground font-normal">
+                  {table.getSelectedRowModel().rows.length} selected
+                </span>
+              )}
+            </div>
+
+            {table.getRowModel().rows.map((row) => (
               <DataTableMobileCard
                 key={row.id}
                 item={row.original}
@@ -160,7 +224,8 @@ export function DataTableGrid<
                 onSelectRow={(item) => onSelectRow(item as TData)}
                 onToggleSelected={(val) => row.toggleSelected(val)}
               />
-            ))
+            ))}
+          </>
         ) : (
           <div className="text-center p-6 sm:p-8 border border-border/40 rounded-xl bg-card text-muted-foreground text-xs sm:text-sm space-y-3 shadow-2xs">
             <Filter className="h-7 w-7 mx-auto text-muted-foreground/50" />
@@ -171,7 +236,7 @@ export function DataTableGrid<
               <p className="text-xs text-muted-foreground max-w-xs mx-auto">
                 {hasActiveFilters
                   ? "No job applications match your current filters. Try resetting your search."
-                  : 'You have not added any job applications yet. Click the "+" button below to get started.'}
+                  : "You have not added any job applications yet. Tap the + button to get started."}
               </p>
             </div>
             {hasActiveFilters && (
@@ -179,7 +244,7 @@ export function DataTableGrid<
                 variant="outline"
                 size="sm"
                 onClick={clearFilters}
-                className="text-xs h-8"
+                className="text-xs h-8 cursor-pointer"
               >
                 Reset Filters
               </Button>
@@ -189,7 +254,7 @@ export function DataTableGrid<
       </div>
 
       {/* Pagination Controls */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2 pb-1 px-1 text-xs text-muted-foreground border-t border-border/30">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-2 pb-1 px-1 text-xs text-muted-foreground border-t border-border/30">
         {/* Top/Left Row: Application count & Page size */}
         <div className="flex items-center justify-between sm:justify-start gap-4">
           <p className="font-medium text-xs">

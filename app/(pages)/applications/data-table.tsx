@@ -2,7 +2,8 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
-import { Plus } from "lucide-react";
+import { Plus, AlertCircle, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { StatusFilterPills } from "./components/status-filter-pills";
 import { ApplicationsKanban } from "./components/applications-kanban";
 import { ApplicationDetailSheet } from "./components/application-detail-sheet";
@@ -13,6 +14,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { type FormValues } from "./columns";
 import {
@@ -28,11 +30,13 @@ import { useDataTable, ApplicationRow } from "./hooks/use-data-table";
 interface DataTableProps<TData extends ApplicationRow, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  error?: string | null;
 }
 
 export function DataTable<TData extends ApplicationRow, TValue>({
   columns,
   data,
+  error,
 }: DataTableProps<TData, TValue>) {
   const {
     viewMode,
@@ -55,23 +59,53 @@ export function DataTable<TData extends ApplicationRow, TValue>({
     table,
     uniquePlatforms,
     selectedCount,
+    isBulkPending,
     handleBulkDelete,
     handleBulkStatusChange,
     hasActiveFilters,
     clearFilters,
     defaultCreateValues,
     handleSelectRow,
+    handleCloseDetail,
     handleDelete,
     setRowSelection,
+    hasPreviousApp,
+    hasNextApp,
+    goToPreviousApp,
+    goToNextApp,
+    currentIndex,
+    totalApps,
   } = useDataTable({ columns, data });
 
   return (
     <div className="w-full space-y-4">
-      <StatusFilterPills
-        data={data}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-      />
+      {error && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-destructive flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-2.5 text-sm font-medium">
+            <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
+            <span>{error}</span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.location.reload()}
+            className="border-destructive/30 hover:bg-destructive/20 text-destructive text-xs shrink-0 cursor-pointer"
+          >
+            <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+            Retry Connection
+          </Button>
+        </div>
+      )}
+
+      {viewMode !== "kanban" && (
+        <div className="w-full">
+          <StatusFilterPills
+            data={data}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+          />
+        </div>
+      )}
 
       <DataTableToolbar
         globalFilter={globalFilter}
@@ -112,6 +146,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
 
       <DataTableBulkActions
         selectedCount={selectedCount}
+        isPending={isBulkPending}
         onDeselectAll={() => setRowSelection({})}
         onBulkStatusChange={handleBulkStatusChange}
         onBulkDelete={handleBulkDelete}
@@ -121,7 +156,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
         type="button"
         onClick={() => setIsCreateOpen(true)}
         className={cn(
-          "fixed right-5 z-40 md:hidden h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer ring-4 ring-background/50 bottom-[calc(1.5rem+env(safe-area-inset-bottom))]",
+          "fixed right-5 z-40 lg:hidden h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer ring-4 ring-background/50 bottom-[calc(1.5rem+env(safe-area-inset-bottom))]",
           selectedCount > 0 && "hidden",
         )}
         aria-label="Add Application"
@@ -131,13 +166,16 @@ export function DataTable<TData extends ApplicationRow, TValue>({
       </button>
 
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-md md:max-w-lg overflow-y-auto max-h-[85dvh] sm:max-h-[90vh] p-4 sm:p-6 rounded-2xl">
-          <DialogHeader className="pb-3 border-b">
+        <DialogContent className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-md md:max-w-lg p-0 overflow-hidden flex flex-col max-h-[85dvh] sm:max-h-[90vh] rounded-2xl border border-border/40 bg-card shadow-2xl">
+          <DialogHeader className="px-4 sm:px-6 pt-5 pb-3 border-b border-border/30 shrink-0">
             <DialogTitle className="text-xl font-bold">
               New Job Application
             </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+              Paste a job link to autofill, or enter details manually.
+            </DialogDescription>
           </DialogHeader>
-          <div className="py-2">
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             <ApplicationForm
               defaultValues={defaultCreateValues}
               onClose={() => setIsCreateOpen(false)}
@@ -146,11 +184,12 @@ export function DataTable<TData extends ApplicationRow, TValue>({
                   await createApplication(values);
                   toast({ description: "Application created successfully!" });
                   setIsCreateOpen(false);
-                } catch {
+                } catch (err) {
                   toast({
                     description: "Failed to create application",
                     variant: "destructive",
                   });
+                  throw err;
                 }
               }}
             />
@@ -161,9 +200,21 @@ export function DataTable<TData extends ApplicationRow, TValue>({
       <ApplicationDetailSheet
         application={selectedApp}
         open={isDetailOpen}
-        onOpenChange={setIsDetailOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCloseDetail();
+          } else {
+            setIsDetailOpen(true);
+          }
+        }}
         onEditClick={(app) => setEditingApp(app as TData)}
         onDeleteClick={handleDelete}
+        hasPrevious={hasPreviousApp}
+        hasNext={hasNextApp}
+        onPrevious={goToPreviousApp}
+        onNext={goToNextApp}
+        currentIndex={currentIndex}
+        totalApps={totalApps}
       />
 
       {editingApp && (
@@ -179,11 +230,12 @@ export function DataTable<TData extends ApplicationRow, TValue>({
               await updateApplication(values);
               toast({ description: "Application updated successfully!" });
               setEditingApp(null);
-            } catch {
+            } catch (err) {
               toast({
                 description: "Failed to update application",
                 variant: "destructive",
               });
+              throw err;
             }
           }}
         />

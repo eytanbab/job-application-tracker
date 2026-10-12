@@ -16,6 +16,11 @@ test.describe("Applications Timeline & Status History E2E Suite", () => {
     await addBtn.click();
     await expect(page.locator("text=New Job Application")).toBeVisible();
 
+    const enterManuallyBtn = page.getByTestId("enter-manually-button");
+    if (await enterManuallyBtn.isVisible().catch(() => false)) {
+      await enterManuallyBtn.click();
+    }
+
     await page.fill("input[name='role_name']", testRole);
     await page.fill("input[name='company_name']", testCompany);
     await page.fill("input[name='location']", "Remote");

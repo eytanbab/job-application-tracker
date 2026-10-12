@@ -1,48 +1,147 @@
 import { Suspense } from "react";
+import dynamicImport from "next/dynamic";
 import {
   getApplicationsPerYear,
   getStasusesPerYear,
-  getTop5Statuses,
   getYears,
   getDetailedApplicationBreakdown,
-  getBestPlatformInsight,
-  getGhostedApplications,
-  getFunnelBottleneckInsight,
+  getStatusPerPlatform,
 } from "@/app/actions/analytics";
+import {
+  getWorkModeAnalysis,
+  getSalaryInsights,
+} from "../insights/actions";
 
-import dynamicImport from "next/dynamic";
+import { AnalyticsFilter } from "../components/analytics-filter";
+import { KpiSummaryStrip } from "../components/kpi-summary-strip";
+import { PipelineHealthHero } from "../components/pipeline-health-hero";
+import { ChannelPerformanceMatrix } from "../components/channel-performance-matrix";
+import { MarketRealityMatrix } from "../components/market-reality-matrix";
+import AnalyticsOverviewLoading from "./loading";
 
-const PieChartComponent = dynamicImport(
-  () => import("../components/pie-chart").then((m) => m.PieChartComponent),
-  {
-    loading: () => (
-      <div className="min-h-[360px] bg-card rounded-xl border border-border/30 animate-pulse" />
-    ),
-  },
-);
 const YearlyTrendsCard = dynamicImport(
   () =>
-    import("../components/yearly-trends-card").then((m) => m.YearlyTrendsCard),
+    import("../components/yearly-trends-card").then(
+      (m) => m.YearlyTrendsCard,
+    ),
   {
     loading: () => (
-      <div className="min-h-[360px] bg-card rounded-xl border border-border/30 animate-pulse" />
+      <div className="min-h-[320px] bg-card/40 rounded-xl border border-border/30 animate-pulse" />
     ),
   },
 );
-
-import { KpiSummary } from "../components/kpi-summary";
-import { AnalyticsFilter } from "../components/analytics-filter";
-import { BestPlatformsCard } from "../components/best-platforms-card";
-import { GhostingRiskCard } from "../components/ghosting-risk-card";
-import { FunnelBottleneckCard } from "../components/funnel-bottleneck-card";
-import { BarChart3, Lightbulb, TrendingUp } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   return {
-    title: "JAT | Overview",
+    title: "JobTracker | Analytics",
   };
+}
+
+async function AnalyticsDashboardContent({
+  month,
+  year,
+  availableYears,
+}: {
+  month?: string;
+  year?: string;
+  availableYears: string[];
+}) {
+  const isAllMonths = !month || month === "all";
+
+  // Fetch only the analytics datasets needed
+  const [
+    breakdownData,
+    statusPerPlatform,
+    workModes,
+    salaryInsights,
+    applicationsPerYear,
+    statusesPerYear,
+  ] = await Promise.all([
+    getDetailedApplicationBreakdown(month, year),
+    getStatusPerPlatform(month, year),
+    getWorkModeAnalysis(month, year),
+    getSalaryInsights(month, year),
+    isAllMonths ? getApplicationsPerYear(undefined, year) : Promise.resolve([]),
+    isAllMonths ? getStasusesPerYear(undefined, year) : Promise.resolve([]),
+  ]);
+
+  const totalApplications = breakdownData.total;
+
+  const interviewRate = totalApplications
+    ? breakdownData.stages.interview / totalApplications
+    : 0;
+
+  const interviewConversionRate = breakdownData.stages.interview
+    ? breakdownData.stages.accepted / breakdownData.stages.interview
+    : 0;
+
+  const ghostedCount =
+    breakdownData.breakdown.ghostedResume +
+    breakdownData.breakdown.ghostedInterview;
+
+  const rejectedCount =
+    breakdownData.breakdown.rejectedResume +
+    breakdownData.breakdown.rejectedInterview;
+
+  return (
+    <div className="flex flex-col gap-6 w-full min-w-0">
+      {/* 1. Key Metrics Summary Strip */}
+      <section aria-label="Key Performance Indicators">
+        <KpiSummaryStrip
+          total={totalApplications}
+          activeCount={breakdownData.breakdown.active}
+          activeStages={breakdownData.breakdown.activeStages}
+          interviewCount={breakdownData.stages.interview}
+          offerCount={breakdownData.stages.accepted}
+          interviewRate={interviewRate}
+          interviewConversionRate={interviewConversionRate}
+          averageResponseDays={breakdownData.averageResponseDays}
+        />
+      </section>
+
+      {/* 2. Application Funnel & Outcomes */}
+      <section aria-label="Application Funnel and Outcomes">
+        <PipelineHealthHero
+          total={totalApplications}
+          activeCount={breakdownData.breakdown.active}
+          activeStages={breakdownData.breakdown.activeStages}
+          interviewCount={breakdownData.stages.interview}
+          offerCount={breakdownData.stages.accepted}
+          ghostedCount={ghostedCount}
+          rejectedCount={rejectedCount}
+          rejectedResumeCount={breakdownData.breakdown.rejectedResume}
+          rejectedInterviewCount={breakdownData.breakdown.rejectedInterview}
+          interviewRate={interviewRate}
+          interviewConversionRate={interviewConversionRate}
+          averageResponseDays={breakdownData.averageResponseDays}
+        />
+      </section>
+
+      {/* 3. Platform Breakdown */}
+      <section aria-label="Platforms and Application Sources">
+        <ChannelPerformanceMatrix platforms={statusPerPlatform} />
+      </section>
+
+      {/* 4. Work Model & Compensation */}
+      <section aria-label="Work Model and Salary Benchmarks">
+        <MarketRealityMatrix modes={workModes} salary={salaryInsights} />
+      </section>
+
+      {/* 5. Activity Over Time (Displayed when viewing all months) */}
+      {isAllMonths && (
+        <section aria-label="Application Activity Over Time">
+          <YearlyTrendsCard
+            years={availableYears}
+            applicationsPerYear={applicationsPerYear}
+            statusesPerYear={statusesPerYear}
+            globalYear={year}
+          />
+        </section>
+      )}
+    </div>
+  );
 }
 
 export default async function Overview(props: {
@@ -55,113 +154,31 @@ export default async function Overview(props: {
     typeof searchParams.year === "string" ? searchParams.year : undefined;
 
   const currentYear = new Date().getFullYear().toString();
-
-  const [
-    top5Statuses,
-    applicationsPerYear,
-    years,
-    statusesPerYear,
-    breakdownData,
-    bestPlatformInsight,
-    ghostedApplications,
-    funnelBottleneck,
-  ] = await Promise.all([
-    getTop5Statuses(month, year),
-    getApplicationsPerYear(month, year),
-    getYears(),
-    getStasusesPerYear(month, year),
-    getDetailedApplicationBreakdown(month, year),
-    getBestPlatformInsight(month, year),
-    getGhostedApplications(month, year),
-    getFunnelBottleneckInsight(month, year),
-  ]);
-
-  const totalApplications = breakdownData.total;
-
-  const interviewRate = breakdownData.total
-    ? breakdownData.stages.interview / breakdownData.total
-    : 0;
-
-  const interviewConversionRate = breakdownData.stages.interview
-    ? breakdownData.stages.accepted / breakdownData.stages.interview
-    : 0;
-
+  const years = await getYears();
   const availableYears = years.length > 0 ? years : [currentYear];
 
   return (
-    <div className="flex flex-col gap-6 w-full opacity-100 transition-opacity duration-500">
-      <h1 className="sr-only">Analytics Overview</h1>
-
-      {/* 1. Header Filter Toolbar */}
+    <div className="flex flex-col gap-5 w-full max-w-7xl mx-auto opacity-100 transition-opacity duration-500 pb-12 min-w-0">
+      {/* 1. Timeframe Filter Toolbar */}
       <Suspense
         fallback={
-          <div className="h-14 w-full bg-card rounded-xl animate-pulse" />
+          <div className="h-14 w-full bg-card/40 rounded-xl border border-border/30 animate-pulse" />
         }
       >
         <AnalyticsFilter years={availableYears} />
       </Suspense>
 
-      {/* 2. Key Performance Rates */}
-      <section className="space-y-3">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-bold uppercase tracking-wider text-primary">
-            Key Performance Rates
-          </h2>
-        </div>
-        <KpiSummary
-          totalApplications={totalApplications}
-          activeCount={breakdownData.breakdown.active}
-          activeStages={breakdownData.breakdown.activeStages}
-          interviewRate={interviewRate}
-          interviewConversionRate={interviewConversionRate}
-          averageResponseDays={breakdownData.averageResponseDays}
+      {/* 2. Reactive Suspense Data Content with Key */}
+      <Suspense
+        key={`${month || "all"}-${year || "all"}`}
+        fallback={<AnalyticsOverviewLoading hideFilter />}
+      >
+        <AnalyticsDashboardContent
+          month={month}
+          year={year}
+          availableYears={availableYears}
         />
-      </section>
-
-      {/* 3. Strategy Coaching */}
-      <section className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Lightbulb className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-bold uppercase tracking-wider text-primary">
-            Strategy Coaching
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <BestPlatformsCard
-            {...bestPlatformInsight}
-            month={month}
-            year={year}
-          />
-          <GhostingRiskCard {...ghostedApplications} />
-          <div className="sm:col-span-2 lg:col-span-1">
-            <FunnelBottleneckCard {...funnelBottleneck} />
-          </div>
-        </div>
-      </section>
-
-      {/* 4. Charts */}
-      <section className="space-y-3 pt-1">
-        <div className="flex items-center gap-2">
-          <BarChart3 className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-bold uppercase tracking-wider text-primary">
-            Trends & Status
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <PieChartComponent
-            title="Status Breakdown"
-            data={top5Statuses}
-            total={totalApplications}
-          />
-          <YearlyTrendsCard
-            years={availableYears}
-            statusesPerYear={statusesPerYear}
-            applicationsPerYear={applicationsPerYear}
-            globalYear={year}
-          />
-        </div>
-      </section>
+      </Suspense>
     </div>
   );
 }
