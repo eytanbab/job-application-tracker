@@ -3,9 +3,11 @@
   "audience": "Active job seekers (software engineers, professionals) tracking job applications, analyzing funnel performance across platforms, and identifying response/interview bottlenecks.",
   "audience_is_generic_fallback": false,
   "business_model": "B2C",
-  "platform": ["web"],
+  "platform": [
+    "web"
+  ],
   "known_pain_points": "Chart legend clarity, responsive layout on mobile, filtering options context, visual hierarchy, navigation between analytics subpages.",
   "reference_product": "Huntr, Teal, LinkedIn Insights",
-  "last_flow": "analytics",
+  "last_flow": "add-edit-application",
   "last_updated": "2026-10-12"
 }

@@ -2,13 +2,19 @@
   "schema_version": 1,
   "counters": {
     "DATA": 2,
-    "COLOR": 1,
-    "A11Y": 3,
-    "TRUST": 2,
+    "COLOR": 3,
+    "A11Y": 5,
+    "TRUST": 5,
     "STATE": 1,
-    "AFFORD": 1,
+    "AFFORD": 2,
     "PERS": 1,
-    "HIER": 1
+    "HIER": 3,
+    "FLOW": 1,
+    "FORM": 3,
+    "PLAT": 1,
+    "COPY": 1,
+    "TYPO": 1,
+    "DSYS": 1
   },
   "findings": [
     {
@@ -430,6 +436,636 @@
           "event": "resolved"
         }
       ]
+    },
+    {
+      "id": "TRUST-03",
+      "category": "TRUST",
+      "rule": "dialog-dismiss-bypasses-discard-guard",
+      "title": "Create/edit dialogs close on Esc, outside click or X without discard guard",
+      "flows": [
+        "add-edit-application"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/data-table.tsx",
+        "line": 168,
+        "anchor": "Dialog onOpenChange=setIsCreateOpen"
+      },
+      "severity": "high",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "new",
+          "severity": "high"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "resolved"
+        }
+      ],
+      "resolved_on": "2026-10-12",
+      "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
+    },
+    {
+      "id": "TRUST-04",
+      "category": "TRUST",
+      "rule": "detail-sheet-inline-edit-unguarded",
+      "title": "Detail-sheet inline edit discards changes on close or J/K navigation",
+      "flows": [
+        "add-edit-application"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/application-detail-sheet.tsx",
+        "line": 318,
+        "anchor": "requestClose isDirty"
+      },
+      "severity": "high",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "new",
+          "severity": "high"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "resolved"
+        }
+      ],
+      "resolved_on": "2026-10-12",
+      "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
+    },
+    {
+      "id": "FLOW-01",
+      "category": "FLOW",
+      "rule": "create-close-resets-url-state",
+      "title": "Adding/cancelling a new application resets table filters and view",
+      "flows": [
+        "add-edit-application"
+      ],
+      "location": {
+        "file": "app/_components/application-form.tsx",
+        "line": 141,
+        "anchor": "router.push(\"/applications\")"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "resolved",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "new",
+          "severity": "medium"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "resolved"
+        }
+      ],
+      "resolved_on": "2026-10-12",
+      "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
+    },
+    {
+      "id": "FORM-01",
+      "category": "FORM",
+      "rule": "date-applied-not-validated",
+      "title": "Date Applied marked required but not validated; picker does not close",
+      "flows": [
+        "add-edit-application"
+      ],
+      "location": {
+        "file": "app/_components/application-form.tsx",
+        "line": 59,
+        "anchor": "date_applied: z.any()"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "new",
+          "severity": "medium"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "resolved"
+        }
+      ],
+      "resolved_on": "2026-10-12",
+      "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
+    },
+    {
+      "id": "TRUST-05",
+      "category": "TRUST",
+      "rule": "autofill-fabricates-remote-location",
+      "title": "Autofill invents Remote when posting has no location",
+      "flows": [
+        "add-edit-application"
+      ],
+      "location": {
+        "file": "app/_components/link-autofill-bar.tsx",
+        "line": 92,
+        "anchor": "location || \"Remote\""
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "resolved",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "new",
+          "severity": "medium"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "resolved"
+        }
+      ],
+      "resolved_on": "2026-10-12",
+      "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
+    },
+    {
+      "id": "COLOR-02",
+      "category": "COLOR",
+      "rule": "destructive-text-contrast",
+      "title": "Validation error text fails WCAG AA contrast in both themes",
+      "flows": [
+        "add-edit-application"
+      ],
+      "location": {
+        "file": "components/ui/form.tsx",
+        "line": 166,
+        "anchor": "FormMessage text-destructive"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "resolved",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "new",
+          "severity": "medium"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "resolved"
+        }
+      ],
+      "resolved_on": "2026-10-12",
+      "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
+    },
+    {
+      "id": "PLAT-01",
+      "category": "PLAT",
+      "rule": "ios-input-zoom-text-xs",
+      "title": "Form inputs 12px on mobile trigger iOS Safari focus zoom",
+      "flows": [
+        "add-edit-application"
+      ],
+      "location": {
+        "file": "app/_components/application-form-fields.tsx",
+        "line": 354,
+        "anchor": "className h-9 text-xs"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "new",
+          "severity": "medium"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "resolved"
+        }
+      ],
+      "resolved_on": "2026-10-12",
+      "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
+    },
+    {
+      "id": "FORM-02",
+      "category": "FORM",
+      "rule": "link-step-cancel-unguarded",
+      "title": "Cancel on link step bypasses discard guard",
+      "flows": [
+        "add-edit-application"
+      ],
+      "location": {
+        "file": "app/_components/application-form.tsx",
+        "line": 246,
+        "anchor": "onCancel={() => handleCloseForm(false)}"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "resolved",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "new",
+          "severity": "medium"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "resolved"
+        }
+      ],
+      "resolved_on": "2026-10-12",
+      "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
+    },
+    {
+      "id": "COPY-01",
+      "category": "COPY",
+      "rule": "label-error-term-mismatch",
+      "title": "Labels and validation messages use different terms; guard copy wrong for new app",
+      "flows": [
+        "add-edit-application"
+      ],
+      "location": {
+        "file": "app/_components/application-form.tsx",
+        "line": 53,
+        "anchor": "formSchema messages"
+      },
+      "severity": "low",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "resolved",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "new",
+          "severity": "low"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "resolved"
+        }
+      ],
+      "resolved_on": "2026-10-12",
+      "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
+    },
+    {
+      "id": "A11Y-04",
+      "category": "A11Y",
+      "rule": "save-pending-spinner-unlabeled",
+      "title": "Save button pending state is an unlabeled spinner",
+      "flows": [
+        "add-edit-application"
+      ],
+      "location": {
+        "file": "app/_components/application-form.tsx",
+        "line": 330,
+        "anchor": "Loader2 size-5"
+      },
+      "severity": "low",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "resolved",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "new",
+          "severity": "low"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "resolved"
+        }
+      ],
+      "resolved_on": "2026-10-12",
+      "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
+    },
+    {
+      "id": "AFFORD-02",
+      "category": "AFFORD",
+      "rule": "extraction-not-cancellable",
+      "title": "Autofill extraction cannot be cancelled",
+      "flows": [
+        "add-edit-application"
+      ],
+      "location": {
+        "file": "app/_components/link-autofill-bar.tsx",
+        "line": 238,
+        "anchor": "Cancel disabled isExtracting"
+      },
+      "severity": "low",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "new",
+          "severity": "low"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "resolved"
+        }
+      ],
+      "resolved_on": "2026-10-12",
+      "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
+    },
+    {
+      "id": "FORM-03",
+      "category": "FORM",
+      "rule": "platform-lowercased-on-save",
+      "title": "Platform name lowercased on save",
+      "flows": [
+        "add-edit-application"
+      ],
+      "location": {
+        "file": "app/_components/application-form.tsx",
+        "line": 216,
+        "anchor": "platform.toLowerCase()"
+      },
+      "severity": "low",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "new",
+          "severity": "low"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "resolved"
+        }
+      ],
+      "resolved_on": "2026-10-12",
+      "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
+    },
+    {
+      "id": "TYPO-01",
+      "category": "TYPO",
+      "rule": "error-text-outweighs-labels",
+      "title": "Error messages larger than labels and reflow the two-column grid",
+      "flows": [
+        "add-edit-application"
+      ],
+      "location": {
+        "file": "components/ui/form.tsx",
+        "line": 166,
+        "anchor": "FormMessage text-sm"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "quick-win",
+      "status": "resolved",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "new",
+          "severity": "medium"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "resolved"
+        }
+      ],
+      "resolved_on": "2026-10-12",
+      "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
+    },
+    {
+      "id": "COLOR-03",
+      "category": "COLOR",
+      "rule": "input-boundary-contrast",
+      "title": "Field boundaries nearly invisible (1.03:1 dark, 1.09:1 light)",
+      "flows": [
+        "add-edit-application"
+      ],
+      "location": {
+        "file": "components/ui/input.tsx",
+        "line": 11,
+        "anchor": "bg-slate-100/80 dark:bg-muted/30"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "new",
+          "severity": "medium"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "resolved"
+        }
+      ],
+      "resolved_on": "2026-10-12",
+      "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
+    },
+    {
+      "id": "DSYS-01",
+      "category": "DSYS",
+      "rule": "mixed-field-type-sizes",
+      "title": "Field text sizes, surfaces, and step footers inconsistent",
+      "flows": [
+        "add-edit-application"
+      ],
+      "location": {
+        "file": "app/_components/application-form-fields.tsx",
+        "line": 354,
+        "anchor": "h-9 text-xs vs SelectTrigger"
+      },
+      "severity": "low",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "new",
+          "severity": "low"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "resolved"
+        }
+      ],
+      "resolved_on": "2026-10-12",
+      "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
+    },
+    {
+      "id": "HIER-02",
+      "category": "HIER",
+      "rule": "mobile-link-step-manual-escape-cramped",
+      "title": "Mobile link step squeezes manual-entry escape and mixes alignment",
+      "flows": [
+        "add-edit-application"
+      ],
+      "location": {
+        "file": "app/_components/link-autofill-bar.tsx",
+        "line": 221,
+        "anchor": "footer flex justify-between"
+      },
+      "severity": "low",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "new",
+          "severity": "low"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "resolved"
+        }
+      ],
+      "resolved_on": "2026-10-12",
+      "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
+    },
+    {
+      "id": "A11Y-05",
+      "category": "A11Y",
+      "rule": "edit-autofocus-selects-title",
+      "title": "Edit dialog auto-selects Role Title text on open",
+      "flows": [
+        "add-edit-application"
+      ],
+      "location": {
+        "file": "app/_components/edit-application-sheet.tsx",
+        "line": 82,
+        "anchor": "DialogContent onOpenAutoFocus"
+      },
+      "severity": "low",
+      "confidence": "observed",
+      "effort": "quick-win",
+      "status": "resolved",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "new",
+          "severity": "low"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "resolved"
+        }
+      ],
+      "resolved_on": "2026-10-12",
+      "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
+    },
+    {
+      "id": "HIER-03",
+      "category": "HIER",
+      "rule": "edit-dialog-no-record-context",
+      "title": "Edit dialog header does not name the application being edited",
+      "flows": [
+        "add-edit-application"
+      ],
+      "location": {
+        "file": "app/_components/edit-application-sheet.tsx",
+        "line": 84,
+        "anchor": "DialogTitle Edit Job Application"
+      },
+      "severity": "low",
+      "confidence": "observed",
+      "effort": "quick-win",
+      "status": "resolved",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "new",
+          "severity": "low"
+        },
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-add-edit-application.md",
+          "event": "resolved"
+        }
+      ],
+      "resolved_on": "2026-10-12",
+      "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
     }
   ]
 }
