@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useState, useTransition, useMemo, useCallback } from "react";
+import {
+  useEffect,
+  useState,
+  useTransition,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import {
   Sheet,
   SheetContent,
@@ -51,7 +58,11 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { TimelineEntry } from "./application-timeline";
 import { ApplicationDetailView } from "./application-detail-view";
-import { ApplicationForm, FormValues } from "@/app/_components/application-form";
+import {
+  ApplicationForm,
+  FormValues,
+  type ApplicationFormHandle,
+} from "@/app/_components/application-form";
 import { ResumeMeta } from "./attach-resume-dialog";
 
 export interface ApplicationDetail {
@@ -146,6 +157,7 @@ export function ApplicationDetailSheet({
     initialApp?.status || "",
   );
   const [isEditing, setIsEditing] = useState(false);
+  const editFormRef = useRef<ApplicationFormHandle>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [history, setHistory] = useState<TimelineEntry[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -318,33 +330,51 @@ export function ApplicationDetailSheet({
     toast({ description: "Resume removed from application." });
   }, [currentApp, draftApp]);
 
+  // While the full edit form is open, run its own unsaved-changes guard first
+  const runAfterEditForm = useCallback(
+    (action: () => void) => {
+      if (isEditing && editFormRef.current) {
+        editFormRef.current.requestClose(action);
+      } else {
+        action();
+      }
+    },
+    [isEditing],
+  );
+
   // Navigation requests intercepted when dirty
   const requestClose = useCallback(() => {
-    if (isDirty) {
-      setPendingAction("close");
-      setShowGuardDialog(true);
-    } else {
-      onOpenChange(false);
-    }
-  }, [isDirty, onOpenChange]);
+    runAfterEditForm(() => {
+      if (isDirty) {
+        setPendingAction("close");
+        setShowGuardDialog(true);
+      } else {
+        onOpenChange(false);
+      }
+    });
+  }, [runAfterEditForm, isDirty, onOpenChange]);
 
   const requestPrevious = useCallback(() => {
-    if (isDirty) {
-      setPendingAction("prev");
-      setShowGuardDialog(true);
-    } else if (onPrevious) {
-      onPrevious();
-    }
-  }, [isDirty, onPrevious]);
+    runAfterEditForm(() => {
+      if (isDirty) {
+        setPendingAction("prev");
+        setShowGuardDialog(true);
+      } else if (onPrevious) {
+        onPrevious();
+      }
+    });
+  }, [runAfterEditForm, isDirty, onPrevious]);
 
   const requestNext = useCallback(() => {
-    if (isDirty) {
-      setPendingAction("next");
-      setShowGuardDialog(true);
-    } else if (onNext) {
-      onNext();
-    }
-  }, [isDirty, onNext]);
+    runAfterEditForm(() => {
+      if (isDirty) {
+        setPendingAction("next");
+        setShowGuardDialog(true);
+      } else if (onNext) {
+        onNext();
+      }
+    });
+  }, [runAfterEditForm, isDirty, onNext]);
 
   const handleConfirmDiscard = useCallback(() => {
     if (currentApp) {
@@ -385,9 +415,11 @@ export function ApplicationDetailSheet({
     }
   }, [handleSaveChanges, onOpenChange, onPrevious, onNext, pendingAction]);
 
-  // Keyboard shortcut navigation (J/K or ArrowUp/ArrowDown)
+  // Keyboard shortcut navigation (J/K or ArrowUp/ArrowDown).
+  // Disabled while the edit form is open so keys on its buttons and
+  // selects don't jump to another application.
   useEffect(() => {
-    if (!open) return;
+    if (!open || isEditing) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (
@@ -411,7 +443,7 @@ export function ApplicationDetailSheet({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, hasNext, hasPrevious, requestNext, requestPrevious]);
+  }, [open, isEditing, hasNext, hasPrevious, requestNext, requestPrevious]);
 
   if (!activeApp) return null;
 
@@ -774,6 +806,7 @@ export function ApplicationDetailSheet({
           >
             {isEditing ? (
               <ApplicationForm
+                ref={editFormRef}
                 defaultValues={activeApp as FormValues & { id?: string }}
                 onClose={() => setIsEditing(false)}
                 onSubmit={async (values) => {

@@ -10,9 +10,9 @@ import {
 } from "@/components/ui/dialog";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ApplicationForm } from "./application-form";
+import { ApplicationForm, type ApplicationFormHandle } from "./application-form";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { insertApplicationSchema } from "../db/schema";
 import { z } from "zod";
@@ -54,8 +54,21 @@ export const EditApplicationSheet = ({
     }
   };
 
+  const formRef = useRef<ApplicationFormHandle>(null);
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        // Esc, outside click and the close button go through the form's
+        // unsaved-changes guard instead of closing immediately.
+        if (!nextOpen && formRef.current) {
+          formRef.current.requestClose();
+        } else {
+          setOpen(nextOpen);
+        }
+      }}
+    >
       {showTrigger && (
         <DialogTrigger asChild>
           <Button
@@ -90,6 +103,7 @@ export const EditApplicationSheet = ({
         </DialogHeader>
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           <ApplicationForm
+            ref={formRef}
             defaultValues={row.original}
             onSubmit={onSubmit}
             onClose={() => setOpen(false)}

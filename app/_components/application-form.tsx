@@ -15,7 +15,14 @@ import {
   isStatusKind,
 } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { useTransition, useState, useEffect } from "react";
+import {
+  useTransition,
+  useState,
+  useEffect,
+  useRef,
+  useImperativeHandle,
+  type Ref,
+} from "react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { LinkAutofillBar } from "./link-autofill-bar";
@@ -41,10 +48,17 @@ const createApplicationSchema = insertApplicationSchema.omit({
 
 export type FormValues = z.input<typeof createApplicationSchema>;
 
+export type ApplicationFormHandle = {
+  // Closes the form, asking for discard confirmation first when there are
+  // unsaved changes. `afterClose` runs only once the form actually closes.
+  requestClose: (afterClose?: () => void) => void;
+};
+
 type Props = {
   defaultValues: FormValues & { id?: string };
   onSubmit: (values: FormValues) => Promise<void>;
   onClose: () => void;
+  ref?: Ref<ApplicationFormHandle>;
 };
 
 const formSchema = z.object({
@@ -95,6 +109,7 @@ export const ApplicationForm = ({
   defaultValues,
   onSubmit,
   onClose,
+  ref,
 }: Props) => {
   const router = useRouter();
   const { toast } = useToast();
@@ -117,7 +132,12 @@ export const ApplicationForm = ({
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema as any),
-    defaultValues: defaultValues,
+    // ResumePicker always registers `resumeId`; a row without that key would
+    // otherwise make the form report unsaved changes as soon as it opens.
+    defaultValues: {
+      ...defaultValues,
+      resumeId: defaultValues.resumeId ?? null,
+    },
   });
 
   const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
@@ -143,13 +163,19 @@ export const ApplicationForm = ({
     }
   };
 
-  const onCancel = () => {
+  const afterDiscardRef = useRef<(() => void) | undefined>(undefined);
+
+  const requestClose = (afterClose?: () => void) => {
     if (form.formState.isDirty || sessionUploadedDocIds.length > 0) {
+      afterDiscardRef.current = afterClose;
       setIsDiscardDialogOpen(true);
       return;
     }
     handleCloseForm(false);
+    afterClose?.();
   };
+
+  useImperativeHandle(ref, () => ({ requestClose }));
 
   const isEditing = Boolean(defaultValues?.id);
   const [entryMode, setEntryMode] = useState<"link" | "manual">(
@@ -237,16 +263,66 @@ export const ApplicationForm = ({
   const isSaveDisabled =
     isPending || isUploadingResume || (isEditing && !isDirty);
 
+  // In-app Discard Confirmation Dialog (rendered in both entry modes)
+  const discardDialog = (
+    <Dialog
+      open={isDiscardDialogOpen}
+      onOpenChange={(open) => {
+        setIsDiscardDialogOpen(open);
+        if (!open) afterDiscardRef.current = undefined;
+      }}
+    >
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Discard Unsaved Changes?</DialogTitle>
+          <DialogDescription>
+            {sessionUploadedDocIds.length > 0
+              ? "You have unsaved changes and an unattached uploaded resume. Discarding will also remove the uploaded file from your library."
+              : "You have modified this job application. Are you sure you want to discard your changes?"}
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              afterDiscardRef.current = undefined;
+              setIsDiscardDialogOpen(false);
+            }}
+            className="cursor-pointer"
+          >
+            Keep Editing
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={() => {
+              const afterClose = afterDiscardRef.current;
+              afterDiscardRef.current = undefined;
+              setIsDiscardDialogOpen(false);
+              handleCloseForm(true);
+              afterClose?.();
+            }}
+            className="cursor-pointer"
+          >
+            Discard Changes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
   if (entryMode === "link") {
     return (
       <div className="flex-1 flex flex-col min-h-0 w-full">
         <LinkAutofillBar
           onAutoFill={handleAutoFill}
           onEnterManually={handleEnterManually}
-          onCancel={() => handleCloseForm(false)}
+          onCancel={() => requestClose()}
           onExtractionFailed={handleExtractionFailed}
           isPending={isPending}
         />
+        {discardDialog}
       </div>
     );
   }
@@ -315,7 +391,7 @@ export const ApplicationForm = ({
             <Button
               type="button"
               variant="outline"
-              onClick={onCancel}
+              onClick={() => requestClose()}
               disabled={isPending || isUploadingResume}
               className="h-10 text-xs rounded-xl cursor-pointer order-2 sm:order-1 w-full sm:w-1/3"
             >
@@ -344,40 +420,7 @@ export const ApplicationForm = ({
         </form>
       </Form>
 
-      {/* In-app Discard Confirmation Dialog */}
-      <Dialog open={isDiscardDialogOpen} onOpenChange={setIsDiscardDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Discard Unsaved Changes?</DialogTitle>
-            <DialogDescription>
-              {sessionUploadedDocIds.length > 0
-                ? "You have unsaved changes and an unattached uploaded resume. Discarding will also remove the uploaded file from your library."
-                : "You have modified this job application. Are you sure you want to discard your changes?"}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsDiscardDialogOpen(false)}
-              className="cursor-pointer"
-            >
-              Keep Editing
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => {
-                setIsDiscardDialogOpen(false);
-                handleCloseForm(true);
-              }}
-              className="cursor-pointer"
-            >
-              Discard Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {discardDialog}
     </div>
   );
 };

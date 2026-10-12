@@ -8,7 +8,11 @@ import { StatusFilterPills } from "./components/status-filter-pills";
 import { ApplicationsKanban } from "./components/applications-kanban";
 import { ApplicationDetailSheet } from "./components/application-detail-sheet";
 import { EditApplicationSheet } from "@/app/_components/edit-application-sheet";
-import { ApplicationForm } from "@/app/_components/application-form";
+import {
+  ApplicationForm,
+  type ApplicationFormHandle,
+} from "@/app/_components/application-form";
+import { useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -76,6 +80,8 @@ export function DataTable<TData extends ApplicationRow, TValue>({
     currentIndex,
     totalApps,
   } = useDataTable({ columns, data });
+
+  const createFormRef = useRef<ApplicationFormHandle>(null);
 
   return (
     <div className="w-full space-y-4">
@@ -165,7 +171,18 @@ export function DataTable<TData extends ApplicationRow, TValue>({
         <Plus className="h-6 w-6" />
       </button>
 
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+      <Dialog
+        open={isCreateOpen}
+        onOpenChange={(open) => {
+          // Esc, outside click and the close button go through the form's
+          // unsaved-changes guard instead of closing immediately.
+          if (!open && createFormRef.current) {
+            createFormRef.current.requestClose();
+          } else {
+            setIsCreateOpen(open);
+          }
+        }}
+      >
         <DialogContent className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-md md:max-w-lg p-0 overflow-hidden flex flex-col max-h-[85dvh] sm:max-h-[90vh] rounded-2xl border border-border/40 bg-card shadow-2xl">
           <DialogHeader className="px-4 sm:px-6 pt-5 pb-3 border-b border-border/30 shrink-0">
             <DialogTitle className="text-xl font-bold">
@@ -177,6 +194,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
           </DialogHeader>
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             <ApplicationForm
+              ref={createFormRef}
               defaultValues={defaultCreateValues}
               onClose={() => setIsCreateOpen(false)}
               onSubmit={async (values) => {
