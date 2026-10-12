@@ -416,7 +416,10 @@ export const ApplicationForm = ({
               title={isEditing && !isDirty ? "No changes to save" : undefined}
             >
               {isPending ? (
-                <Loader2 className="size-5 animate-spin" />
+                <span className="flex items-center gap-1.5 justify-center">
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                  {isEditing ? "Saving..." : "Adding..."}
+                </span>
               ) : isUploadingResume ? (
                 <span className="flex items-center gap-1.5 justify-center">
                   <Loader2 className="size-4 animate-spin" />
