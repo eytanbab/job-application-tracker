@@ -47,7 +47,3 @@ next-env.d.ts
 
 applications.xlsx
 importJobs.ts
-
-
-.agents
-.ux-audit
