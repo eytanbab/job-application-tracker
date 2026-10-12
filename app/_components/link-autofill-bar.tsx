@@ -182,7 +182,7 @@ export function LinkAutofillBar({
               }
             }}
             placeholder="https://linkedin.com/jobs/view/... or any job URL"
-            className="pl-9 pr-20 h-10 text-xs bg-background shadow-2xs focus-visible:ring-primary/40 rounded-xl"
+            className="pl-9 pr-20 h-10 bg-background shadow-2xs focus-visible:ring-primary/40 rounded-xl"
             disabled={isExtracting || isPending}
           />
           <Button

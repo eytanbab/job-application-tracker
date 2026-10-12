@@ -111,7 +111,7 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
                 }}
               >
                 <FormControl>
-                  <SelectTrigger className="w-full h-9 text-xs">
+                  <SelectTrigger className="w-full h-9 text-base md:text-sm font-normal">
                     <SelectValue placeholder="Select status category" />
                   </SelectTrigger>
                 </FormControl>
@@ -178,7 +178,7 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
                     onChange={(e) => {
                       statusField.onChange(e.target.value);
                     }}
-                    className="h-9 text-xs"
+                    className="h-9"
                   />
                 </FormControl>
                 <FormMessage />
@@ -247,7 +247,7 @@ function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full h-9 justify-start text-left text-xs font-normal bg-background/60 px-3 border-input cursor-pointer aria-[invalid=true]:border-destructive",
+                      "w-full h-9 justify-start text-left text-base md:text-sm font-normal rounded-xl bg-slate-100/80 hover:bg-slate-100 dark:bg-muted/30 dark:hover:bg-muted/50 px-3 border-input cursor-pointer aria-[invalid=true]:border-destructive",
                       !field.value && "text-muted-foreground",
                     )}
                   >
@@ -359,10 +359,10 @@ export function ApplicationFormFields({
             </FormLabel>
             <FormControl>
               <Input
-                placeholder="Frontend Developer"
+                placeholder="e.g. Frontend Developer"
                 {...field}
                 value={field.value || ""}
-                className="h-9 text-xs"
+                className="h-9"
               />
             </FormControl>
             <FormMessage />
@@ -383,7 +383,7 @@ export function ApplicationFormFields({
                 placeholder="e.g. Acme Corp"
                 {...field}
                 value={field.value || ""}
-                className="h-9 text-xs"
+                className="h-9"
               />
             </FormControl>
             <FormMessage />
@@ -410,7 +410,7 @@ export function ApplicationFormFields({
                 value={field.value || ""}
                 onChange={(val) => field.onChange(val)}
                 onBlur={field.onBlur}
-                className="h-9 text-xs"
+                className="h-9"
               />
             </FormControl>
             <FormMessage />
@@ -435,7 +435,7 @@ export function ApplicationFormFields({
                 value={field.value || ""}
                 onChange={(val) => field.onChange(val)}
                 onBlur={field.onBlur}
-                className="h-9 text-xs"
+                className="h-9"
               />
             </FormControl>
             <FormMessage />
@@ -490,7 +490,7 @@ export function ApplicationFormFields({
                       placeholder="e.g. $100k - $120k"
                       {...field}
                       value={field.value || ""}
-                      className="h-9 text-xs"
+                      className="h-9"
                     />
                   </FormControl>
                   <FormMessage />
@@ -509,7 +509,7 @@ export function ApplicationFormFields({
                       placeholder="https://www.linkedin.com/jobs/view/..."
                       {...field}
                       value={field.value || ""}
-                      className="h-9 text-xs"
+                      className="h-9"
                     />
                   </FormControl>
                   <FormMessage />
@@ -528,7 +528,7 @@ export function ApplicationFormFields({
                       placeholder="Role responsibilities, requirements, or posting text..."
                       {...field}
                       value={field.value || ""}
-                      className="text-xs min-h-[70px] max-h-40"
+                      className="min-h-[70px] max-h-40"
                     />
                   </FormControl>
                   <FormMessage />
@@ -547,7 +547,7 @@ export function ApplicationFormFields({
                       placeholder="Interview feedback, recruiter contact info, referral notes..."
                       {...field}
                       value={field.value || ""}
-                      className="text-xs min-h-[70px] max-h-40"
+                      className="min-h-[70px] max-h-40"
                     />
                   </FormControl>
                   <FormMessage />

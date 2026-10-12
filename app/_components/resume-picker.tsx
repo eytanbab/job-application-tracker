@@ -461,7 +461,7 @@ export function ResumePicker({
                       value={uploadTitle}
                       onChange={(e) => setUploadTitle(e.target.value)}
                       placeholder="e.g. Senior Frontend Resume 2026"
-                      className="h-8 text-xs bg-background"
+                      className="h-8 bg-background"
                       disabled={isUploading}
                     />
                   </div>
@@ -565,7 +565,7 @@ export function ResumePicker({
                 }}
                 disabled={disabled || isLoadingList}
               >
-                <SelectTrigger className="h-9 text-xs w-full bg-background cursor-pointer">
+                <SelectTrigger className="h-9 text-base md:text-sm font-normal w-full cursor-pointer">
                   <SelectValue
                     placeholder={
                       isLoadingList
