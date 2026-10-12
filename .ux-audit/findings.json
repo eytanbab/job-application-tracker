@@ -1,0 +1,375 @@
+{
+  "schema_version": 1,
+  "counters": {
+    "DATA": 2,
+    "COLOR": 1,
+    "A11Y": 3,
+    "TRUST": 2,
+    "STATE": 1,
+    "AFFORD": 1,
+    "PERS": 1,
+    "HIER": 1
+  },
+  "findings": [
+    {
+      "id": "DATA-01",
+      "category": "DATA",
+      "rule": "yield-leaderboard-sorted-by-volume",
+      "title": "Platform Yield Leaderboard sorts by application volume instead of conversion yield rate",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/insights/actions.ts",
+        "line": 50,
+        "anchor": "getPlatformRoi .sort"
+      },
+      "severity": "high",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "new",
+          "severity": "high"
+        }
+      ]
+    },
+    {
+      "id": "DATA-02",
+      "category": "DATA",
+      "rule": "chart-missing-legend",
+      "title": "Stacked bar chart in Yearly Trends lacks legend and accessible series labels",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/statuses-per-year-bar-chart.tsx",
+        "line": 114,
+        "anchor": "StatusesPerYearBarChart <BarChart>"
+      },
+      "severity": "high",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "new",
+          "severity": "high"
+        }
+      ]
+    },
+    {
+      "id": "COLOR-01",
+      "category": "COLOR",
+      "rule": "low-text-contrast",
+      "title": "Amber and emerald status badge text fails WCAG 2.2 AA contrast requirements on light backgrounds",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/ghosting-risk-card.tsx",
+        "line": 80,
+        "anchor": "GhostingRiskCard text-amber-600 badge"
+      },
+      "severity": "high",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "new",
+          "severity": "high"
+        }
+      ]
+    },
+    {
+      "id": "A11Y-01",
+      "category": "A11Y",
+      "rule": "form-control-missing-label",
+      "title": "AnalyticsFilter SelectTriggers lack accessible names and programmatic label associations",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/analytics-filter.tsx",
+        "line": 83,
+        "anchor": "AnalyticsFilter Month/Year <SelectTrigger>"
+      },
+      "severity": "high",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "new",
+          "severity": "high"
+        }
+      ]
+    },
+    {
+      "id": "A11Y-02",
+      "category": "A11Y",
+      "rule": "invalid-progressbar-semantics",
+      "title": "PlatformRoiDashboard progressBar role misrepresents pipeline distribution as 100% completed progress",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/platform-roi-dashboard.tsx",
+        "line": 149,
+        "anchor": "PlatformRoiCard segmented bar role=progressbar"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "A11Y-03",
+      "category": "A11Y",
+      "rule": "static-element-tabindex-zero",
+      "title": "Static donut chart legend list items have interactive tabIndex=0 causing tab stop fatigue",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/pie-chart.tsx",
+        "line": 168,
+        "anchor": "PieChartComponent <li tabIndex={0}>"
+      },
+      "severity": "low",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "new",
+          "severity": "low"
+        }
+      ]
+    },
+    {
+      "id": "TRUST-01",
+      "category": "TRUST",
+      "rule": "inconsistent-platform-qualification",
+      "title": "Discrepancy in Top Platform qualification thresholds between Overview and Platform ROI subpages",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/actions/analytics.ts",
+        "line": 851,
+        "anchor": "getBestPlatformInsight platform qualification"
+      },
+      "severity": "high",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "new",
+          "severity": "high"
+        }
+      ]
+    },
+    {
+      "id": "TRUST-02",
+      "category": "TRUST",
+      "rule": "inconsistent-ghosting-definition",
+      "title": "Black Hole Breakdown defines ghosting differently than Overview Radar and ignores non-category statuses",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/insights/actions.ts",
+        "line": 84,
+        "anchor": "getBlackHoleBreakdown statusCategory filter"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "STATE-01",
+      "category": "STATE",
+      "rule": "zero-percent-empty-denominator",
+      "title": "KPI cards display misleading 0.0% failure rates when denominator has zero applications or interviews",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/kpi-summary.tsx",
+        "line": 114,
+        "anchor": "KpiSummary interviewRate / interviewConversionRate format"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "AFFORD-01",
+      "category": "AFFORD",
+      "rule": "sub-minimum-touch-target",
+      "title": "Select triggers and company pill links violate minimum mobile touch target standards",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/ghosting-risk-card.tsx",
+        "line": 66,
+        "anchor": "GhostingRiskCard company pill <Link>"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "PERS-01",
+      "category": "PERS",
+      "rule": "view-state-not-persisted",
+      "title": "Platform ROI dashboard view mode and sort criteria reset on tab change or refresh",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/platform-roi-dashboard.tsx",
+        "line": 330,
+        "anchor": "PlatformRoiDashboard viewMode / sortBy useState"
+      },
+      "severity": "low",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "new",
+          "severity": "low"
+        }
+      ]
+    },
+    {
+      "id": "HIER-01",
+      "category": "HIER",
+      "rule": "missing-visible-page-heading",
+      "title": "Analytics pages lack visible top-level heading anchors for visual orientation",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/overview/page.tsx",
+        "line": 93,
+        "anchor": "Overview <h1 className=\"sr-only\">"
+      },
+      "severity": "low",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-12",
+      "last_seen": "2026-10-12",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-12",
+          "report": "reports/2026-10-12-analytics.md",
+          "event": "new",
+          "severity": "low"
+        }
+      ]
+    }
+  ]
+}
