@@ -14,7 +14,6 @@ import {
   StatusKind,
   isStatusKind,
 } from "@/lib/utils";
-import { useRouter } from "next/navigation";
 import {
   useTransition,
   useState,
@@ -111,7 +110,6 @@ export const ApplicationForm = ({
   onClose,
   ref,
 }: Props) => {
-  const router = useRouter();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [userOptions, setUserOptions] = useState<{
@@ -158,9 +156,6 @@ export const ApplicationForm = ({
       cleanupSessionUploads();
     }
     onClose();
-    if (!defaultValues?.id) {
-      router.push("/applications");
-    }
   };
 
   const afterDiscardRef = useRef<(() => void) | undefined>(undefined);
@@ -250,9 +245,6 @@ export const ApplicationForm = ({
       try {
         await onSubmit(values);
         onClose();
-        if (!defaultValues?.id) {
-          router.push("/applications");
-        }
       } catch (err) {
         console.error("Failed to save application:", err);
       }
