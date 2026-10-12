@@ -383,6 +383,22 @@ export const platformOptions = [
   "Other",
 ];
 
+/**
+ * Platforms are stored lowercased as a canonical key. Formats one for display:
+ * known platforms get their proper casing ("linkedin" -> "LinkedIn"), other
+ * all-lowercase values are title-cased, and mixed-case values are kept as is.
+ */
+export function formatPlatformLabel(platform: string | null | undefined): string {
+  const trimmed = (platform ?? "").trim();
+  if (!trimmed) return "";
+  const known = platformOptions.find(
+    (opt) => opt.toLowerCase() === trimmed.toLowerCase(),
+  );
+  if (known) return known;
+  if (trimmed !== trimmed.toLowerCase()) return trimmed;
+  return trimmed.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export function mergeWithDefaultOptions(
   userOptions: string[] = [],
   defaultOptions: string[] = [],

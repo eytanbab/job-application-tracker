@@ -30,6 +30,7 @@ import {
   statusLabels,
   StatusKind,
   cn,
+  formatPlatformLabel,
 } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -311,10 +312,10 @@ export const columns: ColumnDef<FormValues>[] = [
         <div className="min-w-0">
           <Badge
             variant="secondary"
-            className="capitalize text-[11px] font-normal truncate max-w-[85px] xl:max-w-[95px] px-2 py-0.5 inline-block leading-normal"
-            title={platform}
+            className="text-[11px] font-normal truncate max-w-[85px] xl:max-w-[95px] px-2 py-0.5 inline-block leading-normal"
+            title={formatPlatformLabel(platform)}
           >
-            {platform}
+            {formatPlatformLabel(platform)}
           </Badge>
         </div>
       );

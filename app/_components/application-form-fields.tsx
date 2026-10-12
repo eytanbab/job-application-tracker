@@ -34,6 +34,7 @@ import {
   safeFormatDate,
   locationOptions,
   platformOptions,
+  formatPlatformLabel,
   mergeWithDefaultOptions,
   isStandardStatus,
   StatusKind,
@@ -322,7 +323,11 @@ export function ApplicationFormFields({
     [userLocations],
   );
   const mergedPlatforms = useMemo(
-    () => mergeWithDefaultOptions(userPlatforms, platformOptions),
+    () =>
+      mergeWithDefaultOptions(
+        userPlatforms.map(formatPlatformLabel),
+        platformOptions,
+      ),
     [userPlatforms],
   );
 

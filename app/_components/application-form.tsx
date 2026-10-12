@@ -13,6 +13,7 @@ import {
   resolveUpdatedStatus,
   StatusKind,
   isStatusKind,
+  formatPlatformLabel,
 } from "@/lib/utils";
 import {
   useTransition,
@@ -137,6 +138,7 @@ export const ApplicationForm = ({
     // otherwise make the form report unsaved changes as soon as it opens.
     defaultValues: {
       ...defaultValues,
+      platform: formatPlatformLabel(defaultValues.platform),
       resumeId: defaultValues.resumeId ?? null,
     },
   });
