@@ -247,7 +247,7 @@ function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full h-9 justify-start text-left text-xs font-normal bg-background/60 px-3 border-input cursor-pointer",
+                      "w-full h-9 justify-start text-left text-xs font-normal bg-background/60 px-3 border-input cursor-pointer aria-[invalid=true]:border-destructive",
                       !field.value && "text-muted-foreground",
                     )}
                   >

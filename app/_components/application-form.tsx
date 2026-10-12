@@ -63,12 +63,13 @@ type Props = {
 const formSchema = z.object({
   id: z.string().optional(),
   userId: z.string().optional(),
-  role_name: z.string().min(2, {
-    message: "Role name must be at least 2 characters.",
-  }),
-  company_name: z.string().min(2, {
-    message: "Company name must be at least 2 characters.",
-  }),
+  // Messages name each field exactly as its label does and stay short enough
+  // to fit on one line in a half-width column.
+  role_name: z.string().trim().min(1, { message: "Enter the role title." }),
+  company_name: z
+    .string()
+    .trim()
+    .min(1, { message: "Enter the company name." }),
   date_applied: z.union([z.date(), z.string().trim().min(1)], {
     message: "Pick the date you applied.",
   }),
@@ -88,15 +89,15 @@ const formSchema = z.object({
     ),
   description: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
-  location: z.string().min(2, {
-    message: "Location must be at least 2 characters.",
-  }),
-  platform: z.string().min(2, {
-    message: "Platform name must be at least 2 characters.",
-  }),
-  status: z.string().min(2, {
-    message: "Status name must be at least 2 characters.",
-  }),
+  location: z
+    .string()
+    .trim()
+    .min(1, { message: "Enter a location, or Remote." }),
+  platform: z
+    .string()
+    .trim()
+    .min(1, { message: "Enter where you applied." }),
+  status: z.string().trim().min(1, { message: "Enter a stage name." }),
   statusCategory: z.string().min(2, {
     message: "Choose a status category.",
   }),
@@ -285,7 +286,9 @@ export const ApplicationForm = ({
           <DialogDescription>
             {sessionUploadedDocIds.length > 0
               ? "You have unsaved changes and an unattached uploaded resume. Discarding will also remove the uploaded file from your library."
-              : "You have modified this job application. Are you sure you want to discard your changes?"}
+              : isEditing
+                ? "You have modified this job application. Are you sure you want to discard your changes?"
+                : "This application hasn't been saved yet. Discard it?"}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2 sm:gap-0">
