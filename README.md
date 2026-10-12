@@ -156,7 +156,7 @@ Open [http://localhost:3000](http://localhost:3000). With no environment variabl
 
 - Data lives in an in-memory mock store with seed applications. It resets when the server restarts.
 - You use the app as a guest; signing in needs Clerk keys.
-- Without a Gemini key, link autofill returns placeholder values and the ATS checker returns a sample analysis.
+- Without a Gemini key, link autofill only works for postings the built-in parsers can read; for any other link it keeps the URL and switches to manual entry. The ATS checker returns a sample analysis.
 - Without S3, uploads go to a mock location.
 
 ### Full setup
