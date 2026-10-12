@@ -206,6 +206,8 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
 }
 
 function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <FormField
       control={form.control}
@@ -224,13 +226,22 @@ function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
           return isNaN(d.getTime()) ? undefined : d;
         })();
 
+        // Picking a date (or a preset) commits it and closes the picker.
+        // Clicking the already-selected day yields undefined; ignore it so
+        // the required date can't be cleared by accident.
+        const selectDate = (date: Date | undefined) => {
+          if (!date) return;
+          field.onChange(date);
+          setIsOpen(false);
+        };
+
         return (
           <FormItem className="space-y-1 col-span-full">
             <FormLabel className="text-xs font-semibold">
               Date Applied
               <span className="text-destructive ml-1">*</span>
             </FormLabel>
-            <Popover>
+            <Popover open={isOpen} onOpenChange={setIsOpen}>
               <PopoverTrigger asChild>
                 <FormControl>
                   <Button
@@ -256,7 +267,7 @@ function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs px-2.5 rounded-lg cursor-pointer"
-                    onClick={() => field.onChange(new Date())}
+                    onClick={() => selectDate(new Date())}
                   >
                     Today
                   </Button>
@@ -265,7 +276,7 @@ function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs px-2.5 rounded-lg cursor-pointer"
-                    onClick={() => field.onChange(subDays(new Date(), 1))}
+                    onClick={() => selectDate(subDays(new Date(), 1))}
                   >
                     Yesterday
                   </Button>
@@ -274,7 +285,7 @@ function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs px-2.5 rounded-lg cursor-pointer"
-                    onClick={() => field.onChange(subDays(new Date(), 7))}
+                    onClick={() => selectDate(subDays(new Date(), 7))}
                   >
                     1 week ago
                   </Button>
@@ -283,7 +294,7 @@ function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
                   mode="single"
                   showYearSwitcher={true}
                   selected={selectedDate}
-                  onSelect={field.onChange}
+                  onSelect={selectDate}
                   disabled={(date: Date) =>
                     date > endOfDay(new Date()) || date < new Date("1900-01-01")
                   }

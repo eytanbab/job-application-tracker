@@ -69,7 +69,9 @@ const formSchema = z.object({
   company_name: z.string().min(2, {
     message: "Company name must be at least 2 characters.",
   }),
-  date_applied: z.any(),
+  date_applied: z.union([z.date(), z.string().trim().min(1)], {
+    message: "Pick the date you applied.",
+  }),
   link: z
     .string()
     .nullable()
