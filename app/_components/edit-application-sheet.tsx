@@ -55,6 +55,7 @@ export const EditApplicationSheet = ({
   };
 
   const formRef = useRef<ApplicationFormHandle>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
 
   return (
     <Dialog
@@ -92,13 +93,27 @@ export const EditApplicationSheet = ({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-md md:max-w-lg p-0 overflow-hidden flex flex-col max-h-[85dvh] sm:max-h-[90vh] rounded-2xl border border-border/40 bg-card shadow-2xl">
+      <DialogContent
+        className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-md md:max-w-lg p-0 overflow-hidden flex flex-col max-h-[85dvh] sm:max-h-[90vh] rounded-2xl border border-border/40 bg-card shadow-2xl"
+        // Focus the title instead of the first input: Radix would select the
+        // whole role title, so the first keystroke would replace it.
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          titleRef.current?.focus();
+        }}
+      >
         <DialogHeader className="px-4 sm:px-6 pt-5 pb-3 border-b border-border/30 shrink-0">
-          <DialogTitle className="text-xl font-bold">
+          <DialogTitle
+            ref={titleRef}
+            tabIndex={-1}
+            className="text-xl font-bold focus:outline-none"
+          >
             Edit Job Application
           </DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-            Update role details, notes, and application status.
+          <DialogDescription className="text-xs text-muted-foreground mt-0.5 truncate">
+            {[row.original.company_name, row.original.role_name]
+              .filter(Boolean)
+              .join(" · ")}
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
