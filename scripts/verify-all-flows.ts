@@ -4,7 +4,7 @@
  */
 
 import {
-  getApplications,
+  getApplicationsPage,
   createApplication,
   updateApplication,
   deleteApplication,
@@ -67,8 +67,9 @@ async function runAllFlowChecks() {
   console.log("▶ [Flow 1/5] Auditing Applications Tracker Flow (/applications)...");
 
   // 1.1 List initial applications
-  const initialApps = await getApplications();
-  assert(initialApps.length >= 18, `Seed applications loaded (${initialApps.length} found, expected >= 18)`);
+  const initialPage = await getApplicationsPage({ size: 25 });
+  const initialApps = initialPage.rows;
+  assert(initialPage.total >= 18, `Seed applications loaded (${initialPage.total} found, expected >= 18)`);
 
   const vercelApp = initialApps.find((a) => a.company_name === "Vercel");
   assert(Boolean(vercelApp), "Found Vercel Senior Frontend Engineer application");
@@ -97,7 +98,7 @@ async function runAllFlowChecks() {
   assert(Boolean(createdId), `Successfully created new application with ID: ${createdId}`);
 
   // Verify it appears in applications list
-  const appsAfterCreate = await getApplications();
+  const appsAfterCreate = (await getApplicationsPage({ q: "Anthropic", size: 25 })).rows;
   const foundCreated = appsAfterCreate.find((a) => a.id === createdId);
   assert(Boolean(foundCreated), "Newly created Anthropic application appears in application list");
 
@@ -126,7 +127,7 @@ async function runAllFlowChecks() {
 
   // 1.6 Delete application
   await deleteApplication(createdId!);
-  const appsAfterDelete = await getApplications();
+  const appsAfterDelete = (await getApplicationsPage({ q: "Anthropic", size: 25 })).rows;
   assert(!appsAfterDelete.some((a) => a.id === createdId), "Deleted application successfully removed from list");
 
   // 1.7 Sync ghosted applications

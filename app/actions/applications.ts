@@ -13,13 +13,18 @@ import {
 import { z } from "zod";
 import {
   and,
+  asc,
+  count,
   desc,
   eq,
   getTableColumns,
   gte,
+  ilike,
   inArray,
   lte,
   notInArray,
+  or,
+  sql,
 } from "drizzle-orm";
 
 import { addDays, format, isBefore, parseISO, subDays } from "date-fns";
@@ -28,9 +33,21 @@ import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 import {
   getStatusDisplay,
   getStatusKind,
+  isStatusKind,
   safeFormatDate,
   statusLabels,
+  statusOptions,
+  type StatusKind,
 } from "@/lib/utils";
+import {
+  emptyStatusCounts,
+  escapeLikePattern,
+  KANBAN_PAGE_SIZE,
+  normalizeListQuery,
+  queryRows,
+  type ApplicationListQuery,
+  type StatusCounts,
+} from "@/lib/applications/list-query";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema
@@ -226,21 +243,240 @@ export async function syncGhostedApplications(userId?: string) {
   return qualifyingApps.length;
 }
 
-// Get all applications of current user
-export async function getApplications() {
+// List rows carry every column except the long-text ones (job description
+// and notes), which only the detail panel needs: getApplicationDetails.
+const {
+  description: _description,
+  notes: _notes,
+  ...listColumns
+} = getTableColumns(jobApplications);
+
+const listRowFields = {
+  ...listColumns,
+  resumeTitle: documents.title,
+  resumeFileName: documents.file_name,
+  resumeFileSize: documents.file_size,
+};
+
+function displayGhostedStatus<T extends { status: string; statusCategory: string | null }>(
+  app: T,
+): T {
+  if (app.statusCategory === "ghosted") {
+    const rawLower = (app.status || "").trim().toLowerCase();
+    if (
+      !rawLower ||
+      rawLower === "applied" ||
+      rawLower === "in review" ||
+      rawLower === "review"
+    ) {
+      return { ...app, status: "Ghosted" };
+    }
+  }
+  return app;
+}
+
+function listFilterConditions(
+  userId: string,
+  query: Pick<ApplicationListQuery, "search" | "status" | "platform">,
+) {
+  const conditions = [eq(jobApplications.userId, userId)];
+  if (query.status) {
+    conditions.push(eq(jobApplications.statusCategory, query.status));
+  }
+  if (query.platform) {
+    conditions.push(
+      sql`lower(trim(${jobApplications.platform})) = ${query.platform}`,
+    );
+  }
+  if (query.search) {
+    const pattern = `%${escapeLikePattern(query.search)}%`;
+    conditions.push(
+      or(
+        ilike(jobApplications.company_name, pattern),
+        ilike(jobApplications.role_name, pattern),
+        ilike(jobApplications.location, pattern),
+        ilike(jobApplications.platform, pattern),
+        ilike(jobApplications.status, pattern),
+        ilike(jobApplications.statusCategory, pattern),
+        ilike(jobApplications.salary, pattern),
+        ilike(jobApplications.description, pattern),
+      )!,
+    );
+  }
+  return and(...conditions);
+}
+
+function listOrderBy(query: Pick<ApplicationListQuery, "sort" | "desc">) {
+  const direction = query.desc ? desc : asc;
+  const sortColumns = {
+    role_name: [jobApplications.role_name, jobApplications.company_name],
+    date_applied: [jobApplications.date_applied],
+    status: [jobApplications.statusCategory],
+    location: [jobApplications.location],
+    platform: [jobApplications.platform],
+    salary: [jobApplications.salary],
+  } as const;
+  const primary = query.sort ? sortColumns[query.sort].map(direction) : [];
+  // Stable tie-breakers so rows never shuffle between pages
+  return [
+    ...primary,
+    desc(jobApplications.date_applied),
+    desc(jobApplications.createdAt),
+    asc(jobApplications.id),
+  ];
+}
+
+async function queryListRows(userId: string, query: ApplicationListQuery) {
+  const where = listFilterConditions(userId, query);
+  const [rows, [{ total }]] = await Promise.all([
+    db
+      .select(listRowFields)
+      .from(jobApplications)
+      .leftJoin(
+        documents,
+        and(
+          eq(jobApplications.resumeId, documents.id),
+          eq(documents.userId, userId),
+        ),
+      )
+      .where(where)
+      .orderBy(...listOrderBy(query))
+      .limit(query.pageSize)
+      .offset((query.page - 1) * query.pageSize),
+    db.select({ total: count() }).from(jobApplications).where(where),
+  ]);
+  return { rows: rows.map(displayGhostedStatus), total };
+}
+
+function mockListRows(userId: string) {
+  return mockStore.getApplications(userId).map((app) => {
+    const { description: _d, notes: _n, ...row } = app;
+    return row;
+  });
+}
+
+/** One page of the current user's applications, filtered and sorted. */
+export async function getApplicationsPage(
+  rawQuery: Parameters<typeof normalizeListQuery>[0],
+) {
   const userId = await getCurrentUserIdOrThrow();
+  const query = normalizeListQuery(rawQuery);
 
   if (isMockDb) {
-    return mockStore.getApplications(userId);
+    const result = queryRows(mockStore.getApplications(userId), query);
+    const listRows = new Map(mockListRows(userId).map((row) => [row.id, row]));
+    return {
+      rows: result.rows.map((row) => listRows.get(row.id)!),
+      total: result.total,
+      page: query.page,
+      pageSize: query.pageSize,
+    };
+  }
+
+  let result = await queryListRows(userId, query);
+  // A stale URL (e.g. page 9 after deleting rows) lands on the last page
+  const lastPage = Math.max(1, Math.ceil(result.total / query.pageSize));
+  if (query.page > lastPage) {
+    query.page = lastPage;
+    result = await queryListRows(userId, query);
+  }
+  return { ...result, page: query.page, pageSize: query.pageSize };
+}
+
+export type ApplicationListRow = Awaited<
+  ReturnType<typeof getApplicationsPage>
+>["rows"][number];
+
+/** Application count per status across the user's whole account. */
+export async function getApplicationStatusCounts(): Promise<StatusCounts> {
+  const userId = await getCurrentUserIdOrThrow();
+  const counts = emptyStatusCounts();
+
+  if (isMockDb) {
+    for (const app of mockStore.getApplications(userId)) {
+      counts[getStatusKind(app.status, app.statusCategory)]++;
+      counts.all++;
+    }
+    return counts;
   }
 
   const rows = await db
-    .select({
-      ...getTableColumns(jobApplications),
-      resumeTitle: documents.title,
-      resumeFileName: documents.file_name,
-      resumeFileSize: documents.file_size,
-    })
+    .select({ category: jobApplications.statusCategory, total: count() })
+    .from(jobApplications)
+    .where(eq(jobApplications.userId, userId))
+    .groupBy(jobApplications.statusCategory);
+
+  for (const { category, total } of rows) {
+    const kind = category && isStatusKind(category) ? category : "other";
+    counts[kind] += total;
+    counts.all += total;
+  }
+  return counts;
+}
+
+/**
+ * The first cards of every Kanban column, plus each column's full count.
+ * Columns load more cards on demand through getApplicationsPage.
+ */
+export async function getKanbanColumns(
+  rawQuery: Parameters<typeof normalizeListQuery>[0],
+) {
+  const userId = await getCurrentUserIdOrThrow();
+  const query = normalizeListQuery(rawQuery);
+  const kinds = query.status
+    ? [query.status]
+    : statusOptions.map((option) => option.value);
+
+  const columnQuery = (kind: StatusKind): ApplicationListQuery => ({
+    ...query,
+    status: kind,
+    sort: null,
+    page: 1,
+    pageSize: KANBAN_PAGE_SIZE,
+  });
+
+  if (isMockDb) {
+    const all = mockStore.getApplications(userId);
+    const listRows = new Map(mockListRows(userId).map((row) => [row.id, row]));
+    return Object.fromEntries(
+      kinds.map((kind) => {
+        const result = queryRows(all, columnQuery(kind));
+        return [
+          kind,
+          {
+            rows: result.rows.map((row) => listRows.get(row.id)!),
+            total: result.total,
+          },
+        ];
+      }),
+    ) as Partial<Record<StatusKind, { rows: ApplicationListRow[]; total: number }>>;
+  }
+
+  const columns = await Promise.all(
+    kinds.map(
+      async (kind) =>
+        [kind, await queryListRows(userId, columnQuery(kind))] as const,
+    ),
+  );
+  return Object.fromEntries(columns) as Partial<
+    Record<StatusKind, { rows: ApplicationListRow[]; total: number }>
+  >;
+}
+
+export type KanbanColumns = Awaited<ReturnType<typeof getKanbanColumns>>;
+
+/** A single list row, for opening ?appId= links to rows on other pages. */
+export async function getApplicationListItem(
+  applicationId: string,
+): Promise<ApplicationListRow | null> {
+  const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    return mockListRows(userId).find((row) => row.id === applicationId) ?? null;
+  }
+
+  const [row] = await db
+    .select(listRowFields)
     .from(jobApplications)
     .leftJoin(
       documents,
@@ -249,29 +485,64 @@ export async function getApplications() {
         eq(documents.userId, userId),
       ),
     )
-    .where(eq(jobApplications.userId, userId))
-    .orderBy(
-      desc(jobApplications.date_applied),
-      desc(jobApplications.createdAt),
-    );
+    .where(
+      and(
+        eq(jobApplications.userId, userId),
+        eq(jobApplications.id, applicationId),
+      ),
+    )
+    .limit(1);
+  return row ? displayGhostedStatus(row) : null;
+}
 
-  return rows.map((app) => {
-    if (app.statusCategory === "ghosted") {
-      const rawLower = (app.status || "").trim().toLowerCase();
-      if (
-        !rawLower ||
-        rawLower === "applied" ||
-        rawLower === "in review" ||
-        rawLower === "review"
-      ) {
-        return {
-          ...app,
-          status: "Ghosted",
-        };
-      }
-    }
-    return app;
-  });
+/** The long-text fields list rows leave out, loaded when a row is opened. */
+export async function getApplicationDetails(
+  applicationId: string,
+): Promise<{ description: string | null; notes: string | null } | null> {
+  const userId = await getCurrentUserIdOrThrow();
+
+  if (isMockDb) {
+    const app = mockStore
+      .getApplications(userId)
+      .find((row) => row.id === applicationId);
+    return app
+      ? { description: app.description ?? null, notes: app.notes ?? null }
+      : null;
+  }
+
+  const [row] = await db
+    .select({
+      description: jobApplications.description,
+      notes: jobApplications.notes,
+    })
+    .from(jobApplications)
+    .where(
+      and(
+        eq(jobApplications.userId, userId),
+        eq(jobApplications.id, applicationId),
+      ),
+    )
+    .limit(1);
+  return row ?? null;
+}
+
+/** Distinct platforms the user has applied through, for the filter menu. */
+export async function getUserPlatforms(): Promise<string[]> {
+  const userId = await getCurrentUserIdOrThrow();
+
+  const platforms = isMockDb
+    ? mockStore.getApplications(userId).map((app) => app.platform)
+    : (
+        await db
+          .selectDistinct({ platform: jobApplications.platform })
+          .from(jobApplications)
+          .where(eq(jobApplications.userId, userId))
+      ).map((row) => row.platform);
+
+  const unique = new Set(
+    platforms.map((p) => (p ?? "").trim().toLowerCase()).filter(Boolean),
+  );
+  return Array.from(unique).sort((a, b) => a.localeCompare(b));
 }
 
 // Create a new application for the current user

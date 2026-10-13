@@ -30,6 +30,8 @@ interface DataTableGridProps<TData> {
   hasActiveFilters: boolean;
   clearFilters: () => void;
   onSelectRow: (item: TData) => void;
+  /** True while the server loads a new page, sort or filter result. */
+  isPending?: boolean;
 }
 
 export function DataTableGrid<
@@ -50,9 +52,16 @@ export function DataTableGrid<
   hasActiveFilters,
   clearFilters,
   onSelectRow,
+  isPending = false,
 }: DataTableGridProps<TData>) {
   return (
-    <div className="space-y-4 pb-24 lg:pb-4">
+    <div
+      aria-busy={isPending}
+      className={cn(
+        "space-y-4 pb-24 lg:pb-4 transition-opacity",
+        isPending && "opacity-60 delay-150",
+      )}
+    >
       {/* Desktop Table View */}
       <div className="hidden lg:block rounded-xl border border-border/40 bg-card overflow-hidden shadow-2xs">
         <Table className="w-full">
@@ -259,7 +268,7 @@ export function DataTableGrid<
         <div className="flex items-center justify-between sm:justify-start gap-4">
           <p className="font-medium text-xs">
             Showing {table.getRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} application(s)
+            {table.getRowCount()} application(s)
           </p>
 
           <div className="flex items-center space-x-1.5 shrink-0">

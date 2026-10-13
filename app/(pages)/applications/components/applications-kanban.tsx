@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import {
   getStatusDisplay,
   getStatusKind,
@@ -10,7 +12,12 @@ import {
   resolveUpdatedStatus,
   isStatusKind,
 } from "@/lib/utils";
-import { updateApplication } from "@/app/actions/applications";
+import {
+  getApplicationsPage,
+  updateApplication,
+  type KanbanColumns,
+} from "@/app/actions/applications";
+import { KANBAN_PAGE_SIZE } from "@/lib/applications/list-query";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -19,10 +26,14 @@ import { KanbanCard, KanbanItem } from "./kanban-card";
 export type { KanbanItem };
 
 interface ApplicationsKanbanProps {
-  data: KanbanItem[];
+  /** The first cards of each column and each column's total, from the server. */
+  columns: KanbanColumns;
+  /** The active filters, reused when a column loads more cards. */
   searchFilter: string;
   statusFilter: string;
   platformFilter?: string | null;
+  /** True while the server loads a new filter result. */
+  isPending?: boolean;
   onSelectApplication: (app: KanbanItem) => void;
   onEditApplication: (app: KanbanItem) => void;
   onDeleteApplication: (id: string) => void;
@@ -71,10 +82,11 @@ const BASE_KANBAN_COLUMNS: {
 ];
 
 export function ApplicationsKanban({
-  data,
+  columns,
   searchFilter,
   statusFilter,
   platformFilter,
+  isPending = false,
   onSelectApplication,
   onEditApplication,
   onDeleteApplication,
@@ -84,58 +96,63 @@ export function ApplicationsKanban({
   const [activeMobileCol, setActiveMobileCol] = useState<StatusKind>("applied");
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
-  const filteredData = useMemo(() => {
-    const query = searchFilter.toLowerCase().trim();
-    return data.filter((item) => {
-      if (statusFilter && statusFilter !== "all") {
-        const itemKind = getStatusKind(item.status, item.statusCategory);
-        if (itemKind !== statusFilter) return false;
-      }
-
-      if (platformFilter && platformFilter !== "all") {
-        const itemPlatform = (item.platform || "").trim().toLowerCase();
-        if (itemPlatform !== platformFilter.trim().toLowerCase()) return false;
-      }
-
-      if (!query) return true;
-      return (
-        (item.role_name || "").toLowerCase().includes(query) ||
-        (item.company_name || "").toLowerCase().includes(query) ||
-        (item.location || "").toLowerCase().includes(query) ||
-        (item.platform || "").toLowerCase().includes(query) ||
-        (item.status || "").toLowerCase().includes(query) ||
-        (item.statusCategory || "").toLowerCase().includes(query) ||
-        (item.description && item.description.toLowerCase().includes(query)) ||
-        (item.notes && item.notes.toLowerCase().includes(query))
-      );
-    });
-  }, [data, searchFilter, statusFilter, platformFilter]);
+  // Cards loaded with "Show more", per column. A new server result (a
+  // filter change or a status move) starts every column over.
+  const [moreRows, setMoreRows] = useState<
+    Partial<Record<StatusKind, KanbanItem[]>>
+  >({});
+  const [loadingColumn, setLoadingColumn] = useState<StatusKind | null>(null);
+  useEffect(() => {
+    setMoreRows({});
+  }, [columns]);
 
   const groupedData = useMemo(() => {
-    const map: Record<StatusKind, KanbanItem[]> = {
-      applied: [],
-      review: [],
-      interview: [],
-      accepted: [],
-      rejected: [],
-      ghosted: [],
-      other: [],
-    };
-
-    filteredData.forEach((item) => {
-      const kind = getStatusKind(item.status, item.statusCategory);
-      if (map[kind]) {
-        map[kind].push(item);
-      } else {
-        map.other.push(item);
-      }
-    });
-
+    const map = {} as Record<StatusKind, KanbanItem[]>;
+    for (const option of [...BASE_KANBAN_COLUMNS, { id: "other" as const }]) {
+      map[option.id] = [
+        ...(columns[option.id]?.rows ?? []),
+        ...(moreRows[option.id] ?? []),
+      ];
+    }
     return map;
-  }, [filteredData]);
+  }, [columns, moreRows]);
+
+  const columnTotal = (kind: StatusKind) => columns[kind]?.total ?? 0;
+
+  const loadMore = async (kind: StatusKind) => {
+    const loaded = groupedData[kind].length;
+    setLoadingColumn(kind);
+    try {
+      const { rows } = await getApplicationsPage({
+        q: searchFilter,
+        status: kind,
+        platform: platformFilter,
+        page: Math.floor(loaded / KANBAN_PAGE_SIZE) + 1,
+        size: KANBAN_PAGE_SIZE,
+      });
+      setMoreRows((prev) => {
+        const seen = new Set(groupedData[kind].map((item) => item.id));
+        return {
+          ...prev,
+          [kind]: [
+            ...(prev[kind] ?? []),
+            ...rows.filter((row) => !seen.has(row.id)),
+          ],
+        };
+      });
+    } catch (err) {
+      console.error(err);
+      toast({
+        description: "Couldn't load more applications. Try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingColumn(null);
+    }
+  };
 
   const kanbanColumns = useMemo(() => {
-    if (groupedData.other && groupedData.other.length > 0) {
+    if (columnTotal("other") > 0) {
       return [
         ...BASE_KANBAN_COLUMNS,
         {
@@ -147,7 +164,8 @@ export function ApplicationsKanban({
       ];
     }
     return BASE_KANBAN_COLUMNS;
-  }, [groupedData.other]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columns]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartX(e.touches[0].clientX);
@@ -262,7 +280,7 @@ export function ApplicationsKanban({
             variant="secondary"
             className="h-5 rounded-md px-2 text-[11px] shrink-0 font-bold"
           >
-            {items.length}
+            {columnTotal(col.id)}
           </Badge>
         </div>
 
@@ -295,13 +313,38 @@ export function ApplicationsKanban({
               />
             ))
           )}
+          {items.length < columnTotal(col.id) && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => loadMore(col.id)}
+              disabled={loadingColumn === col.id}
+              className="h-8 shrink-0 text-xs font-semibold text-primary hover:bg-primary/10 cursor-pointer"
+            >
+              {loadingColumn === col.id ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                `Show more (${columnTotal(col.id) - items.length})`
+              )}
+            </Button>
+          )}
         </div>
       </div>
     );
   };
 
   return (
-    <div className="w-full space-y-4">
+    <div
+      aria-busy={isPending}
+      className={cn(
+        "w-full space-y-4 transition-opacity",
+        isPending && "opacity-60 delay-150",
+      )}
+    >
       {/* Mobile Column Switcher (ARIA Tablist) */}
       <div
         role="tablist"
@@ -309,7 +352,7 @@ export function ApplicationsKanban({
         className="md:hidden flex items-center gap-1.5 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
         {kanbanColumns.map((col) => {
-          const count = (groupedData[col.id] || []).length;
+          const count = columnTotal(col.id);
           const isActive = activeMobileCol === col.id;
           return (
             <button

@@ -29,10 +29,21 @@ import { DataTableToolbar } from "./components/data-table-toolbar";
 import { DataTableGrid } from "./components/data-table-grid";
 import { DataTableBulkActions } from "./components/data-table-bulk-actions";
 import { useDataTable, ApplicationRow } from "./hooks/use-data-table";
+import type { KanbanColumns } from "@/app/actions/applications";
+import type { StatusCounts } from "@/lib/applications/list-query";
 
 interface DataTableProps<TData extends ApplicationRow, TValue> {
   columns: ColumnDef<TData, TValue>[];
+  /** The current table page; empty in the Kanban view. */
   data: TData[];
+  /** Rows matching the current filters across all pages. */
+  totalRows: number;
+  /** The first cards of each column; null in the table view. */
+  kanbanColumns: KanbanColumns | null;
+  statusCounts: StatusCounts;
+  platforms: string[];
+  /** The ?appId= row, loaded separately in case it isn't on this page. */
+  linkedApp: TData | null;
   /** Whether AI autofill needs a signed-in user (false in the local demo). */
   aiRequiresSignIn: boolean;
 }
@@ -40,6 +51,11 @@ interface DataTableProps<TData extends ApplicationRow, TValue> {
 export function DataTable<TData extends ApplicationRow, TValue>({
   columns,
   data,
+  totalRows,
+  kanbanColumns,
+  statusCounts,
+  platforms,
+  linkedApp,
   aiRequiresSignIn,
 }: DataTableProps<TData, TValue>) {
   const {
@@ -79,7 +95,8 @@ export function DataTable<TData extends ApplicationRow, TValue>({
     goToNextApp,
     currentIndex,
     totalApps,
-  } = useDataTable({ columns, data });
+    isPending,
+  } = useDataTable({ columns, data, totalRows, platforms, linkedApp });
 
   const createFormRef = useRef<ApplicationFormHandle>(null);
 
@@ -88,7 +105,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
       {viewMode !== "kanban" && (
         <div className="w-full">
           <StatusFilterPills
-            data={data}
+            counts={statusCounts}
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
           />
@@ -114,10 +131,11 @@ export function DataTable<TData extends ApplicationRow, TValue>({
 
       {viewMode === "kanban" ? (
         <ApplicationsKanban
-          data={data}
+          columns={kanbanColumns ?? {}}
           searchFilter={globalFilter}
           statusFilter={statusFilter}
           platformFilter={platformFilter}
+          isPending={isPending}
           onSelectApplication={(app) => handleSelectRow(app as TData)}
           onEditApplication={(app) => setEditingApp(app as TData)}
           onDeleteApplication={handleDelete}
@@ -129,6 +147,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
           hasActiveFilters={hasActiveFilters}
           clearFilters={clearFilters}
           onSelectRow={handleSelectRow}
+          isPending={isPending}
         />
       )}
 
