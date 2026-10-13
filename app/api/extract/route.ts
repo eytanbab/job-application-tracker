@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ThinkingLevel } from "@google/genai";
 import { scraper } from "@/lib/scraper";
 import { geminiExtractionClient } from "@/lib/gemini";
 import { tryDeterministicExtraction } from "@/lib/parsers";
@@ -87,7 +88,7 @@ export async function POST(req: Request) {
     // 2. AI Fallback (For unparsed SPAs or non-standard HTML structures)
     if (isDevelopment) {
       console.log(
-        `[API] Deterministic parser could not extract complete data. Falling back to Gemini 2.5 Flash-Lite...`,
+        `[API] Deterministic parser could not extract complete data. Falling back to Gemini 3.5 Flash-Lite...`,
       );
     }
 
@@ -143,7 +144,7 @@ ${webpage}`;
     }
 
     const response = await geminiExtractionClient.models.generateContent({
-      model: "gemini-2.5-flash-lite",
+      model: "gemini-3.5-flash-lite",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
         responseMimeType: "application/json",
@@ -175,8 +176,10 @@ ${webpage}`;
           },
           required: ["status", "application"],
         },
+        // Gemini 3 models reject thinkingBudget: 0; MINIMAL is the
+        // lowest-latency setting they accept.
         thinkingConfig: {
-          thinkingBudget: 0,
+          thinkingLevel: ThinkingLevel.MINIMAL,
         },
       },
     });
