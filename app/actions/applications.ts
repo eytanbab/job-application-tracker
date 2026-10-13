@@ -63,8 +63,13 @@ function extractCleanApplicationFields(values: FormValues) {
     company_name: (normalized.company_name || "").trim(),
     date_applied: formattedDate,
     link: (normalized.link || "").trim(),
-    description: normalized.description ?? null,
-    notes: normalized.notes ?? null,
+    // List rows omit description and notes, so saves built from a list row
+    // (Kanban moves, bulk status changes) send them as undefined. Leave the
+    // stored text alone instead of overwriting it with null.
+    ...(normalized.description !== undefined && {
+      description: normalized.description ?? null,
+    }),
+    ...(normalized.notes !== undefined && { notes: normalized.notes ?? null }),
     location: (normalized.location || "").trim(),
     platform: (normalized.platform || "").toLowerCase().trim(),
     status: normalized.status,
