@@ -48,6 +48,31 @@ function isPrivateIpv4(ip: string): boolean {
   return false;
 }
 
+/**
+ * Checks a bracketed IPv6 hostname as WHATWG URL serializes it (e.g. "[::1]",
+ * "[::ffff:7f00:1]"). Blocks loopback, unspecified, unique local (fc00::/7),
+ * link-local (fe80::/10) and IPv4-mapped/compatible addresses of private IPv4s.
+ */
+function isPrivateIpv6(hostname: string): boolean {
+  if (!hostname.startsWith("[") || !hostname.endsWith("]")) return false;
+  const ip = hostname.slice(1, -1).toLowerCase();
+
+  if (ip === "::" || ip === "::1") return true;
+  if (/^f[cd][0-9a-f]{0,2}:/.test(ip)) return true;
+  if (/^fe[89ab][0-9a-f]?:/.test(ip)) return true;
+
+  // IPv4-mapped (::ffff:a.b.c.d) is serialized as two hex groups: ::ffff:7f00:1
+  const mapped = ip.match(/^::(?:ffff:)?([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  if (mapped) {
+    const high = parseInt(mapped[1], 16);
+    const low = parseInt(mapped[2], 16);
+    const ipv4 = [high >> 8, high & 0xff, low >> 8, low & 0xff].join(".");
+    return isPrivateIpv4(ipv4);
+  }
+
+  return false;
+}
+
 export function validateSafeUrl(rawUrl: string): { safe: boolean; error?: string; url?: URL } {
   if (!rawUrl || typeof rawUrl !== "string") {
     return { safe: false, error: "URL string is missing or invalid" };
@@ -89,7 +114,7 @@ export function validateSafeUrl(rawUrl: string): { safe: boolean; error?: string
   }
 
   // Check IPv4 private and link-local ranges
-  if (isPrivateIpv4(hostname)) {
+  if (isPrivateIpv4(hostname) || isPrivateIpv6(hostname)) {
     return { safe: false, error: "Access to private IP addresses is blocked" };
   }
 
