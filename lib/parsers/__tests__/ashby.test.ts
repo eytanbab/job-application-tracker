@@ -8,8 +8,8 @@ const API_URL = "https://api.ashbyhq.com/posting-api/job-posting-info";
 
 function withJobPosting(jobPosting: Record<string, unknown>): string {
   return readFixture("ashby-next-data.html").replace(
-    /"jobPosting": \{[\s\S]*?\}\n/,
-    `"jobPosting": ${JSON.stringify(jobPosting)}\n`,
+    /"jobPosting": \{[^{}]*\}/,
+    `"jobPosting": ${JSON.stringify(jobPosting)}`,
   );
 }
 
