@@ -4,7 +4,14 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
-import { Briefcase, BarChart3, FileText, FileCheck, Sparkles } from "lucide-react";
+import {
+  Briefcase,
+  BarChart3,
+  FileText,
+  FileCheck,
+  Settings,
+  Sparkles,
+} from "lucide-react";
 import { NewApplicationButton } from "./new-application-button";
 
 const navLinks = [
@@ -13,6 +20,46 @@ const navLinks = [
   { url: "/ats-checker", name: "ATS Checker", icon: FileCheck },
   { url: "/documents", name: "Documents", icon: FileText },
 ];
+
+const footerLinks = [{ url: "/settings", name: "Settings", icon: Settings }];
+
+const legalLinks = [
+  { url: "/privacy", name: "Privacy" },
+  { url: "/terms", name: "Terms" },
+];
+
+function NavLink({
+  item,
+  pathname,
+}: {
+  item: (typeof navLinks)[number];
+  pathname: string;
+}) {
+  const Icon = item.icon;
+  const rootPath = item.url.split("/")[1];
+  const isActive = pathname.startsWith(`/${rootPath}`);
+
+  return (
+    <Link
+      href={item.url}
+      title={item.name}
+      className={cn(
+        "flex items-center md:justify-center lg:justify-start gap-3 px-2.5 lg:px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer",
+        isActive
+          ? "bg-primary/10 text-primary font-semibold"
+          : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+      )}
+    >
+      <Icon
+        className={cn(
+          "h-5 w-5 shrink-0",
+          isActive ? "text-primary" : "text-muted-foreground",
+        )}
+      />
+      <span className="hidden lg:inline">{item.name}</span>
+    </Link>
+  );
+}
 
 const SideNav = () => {
   const pathname = usePathname();
@@ -44,34 +91,32 @@ const SideNav = () => {
           <p className="hidden lg:block px-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
             Menu
           </p>
-          {navLinks.map((item) => {
-            const Icon = item.icon;
-            const rootPath = item.url.split("/")[1];
-            const isActive = pathname.startsWith(`/${rootPath}`);
-
-            return (
-              <Link
-                key={item.url}
-                href={item.url}
-                title={item.name}
-                className={cn(
-                  "flex items-center md:justify-center lg:justify-start gap-3 px-2.5 lg:px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer",
-                  isActive
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                )}
-              >
-                <Icon
-                  className={cn(
-                    "h-5 w-5 shrink-0",
-                    isActive ? "text-primary" : "text-muted-foreground",
-                  )}
-                />
-                <span className="hidden lg:inline">{item.name}</span>
-              </Link>
-            );
-          })}
+          {navLinks.map((item) => (
+            <NavLink key={item.url} item={item} pathname={pathname} />
+          ))}
         </div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="space-y-1">
+          {footerLinks.map((item) => (
+            <NavLink key={item.url} item={item} pathname={pathname} />
+          ))}
+        </div>
+        <nav
+          aria-label="Legal"
+          className="hidden lg:flex items-center gap-3 px-3 text-xs text-muted-foreground"
+        >
+          {legalLinks.map((link) => (
+            <Link
+              key={link.url}
+              href={link.url}
+              className="hover:text-foreground underline-offset-4 hover:underline transition-colors"
+            >
+              {link.name}
+            </Link>
+          ))}
+        </nav>
       </div>
     </aside>
   );
