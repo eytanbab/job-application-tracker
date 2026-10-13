@@ -333,9 +333,9 @@ EVALUATION SPECIFICATIONS:
       };
     }
 
-    // 3. Execute Gemini 2.5 Flash Structured Inference
+    // 3. Execute Gemini 3.5 Flash Structured Inference
     const response = await geminiAtsClient.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.5-flash",
       contents: [{ role: "user", parts }],
       config: {
         responseMimeType: "application/json",
