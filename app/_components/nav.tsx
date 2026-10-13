@@ -47,6 +47,20 @@ const Nav = () => {
       );
     }
 
+    const simpleTitles: [string, string][] = [
+      ["/settings", "Settings"],
+      ["/privacy", "Privacy Policy"],
+      ["/terms", "Terms of Service"],
+    ];
+    const simpleTitle = simpleTitles.find(([path]) => pathname.startsWith(path));
+    if (simpleTitle) {
+      return (
+        <div className="hidden md:flex items-center gap-1.5 text-sm">
+          <span className="font-semibold text-foreground">{simpleTitle[1]}</span>
+        </div>
+      );
+    }
+
     if (pathname.startsWith("/ats-checker")) {
       return (
         <div className="hidden md:flex items-center gap-1.5 text-sm">

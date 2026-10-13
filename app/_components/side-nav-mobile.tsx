@@ -10,7 +10,15 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Menu, Briefcase, BarChart3, FileText, FileCheck, Sparkles } from "lucide-react";
+import {
+  Menu,
+  Briefcase,
+  BarChart3,
+  FileText,
+  FileCheck,
+  Settings,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -20,6 +28,12 @@ const mobileNavLinks = [
   { url: "/analytics/overview", name: "Analytics", icon: BarChart3 },
   { url: "/ats-checker", name: "ATS Checker", icon: FileCheck },
   { url: "/documents", name: "Documents", icon: FileText },
+  { url: "/settings", name: "Settings", icon: Settings },
+];
+
+const legalLinks = [
+  { url: "/privacy", name: "Privacy Policy" },
+  { url: "/terms", name: "Terms of Service" },
 ];
 
 export function MobileSideNav() {
@@ -87,6 +101,22 @@ export function MobileSideNav() {
             })}
           </nav>
         </div>
+
+        <nav
+          aria-label="Legal"
+          className="flex items-center gap-4 px-3.5 text-xs text-muted-foreground"
+        >
+          {legalLinks.map((link) => (
+            <Link
+              key={link.url}
+              href={link.url}
+              onClick={() => setOpen(false)}
+              className="py-2 hover:text-foreground underline-offset-4 hover:underline transition-colors"
+            >
+              {link.name}
+            </Link>
+          ))}
+        </nav>
       </SheetContent>
     </Sheet>
   );
