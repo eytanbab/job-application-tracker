@@ -11,7 +11,11 @@ import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 import { requireSignedInUser } from "./_utils/require-signed-in-user";
 import { consumeAiQuota } from "@/lib/ai-usage";
 import { formatQuotaExceededMessage, type AiAccessErrorCode } from "@/lib/ai-quota";
-import { geminiAtsClient } from "@/lib/gemini";
+import {
+  generateContentWithRetry,
+  geminiAtsClient,
+  getGeminiErrorUserMessage,
+} from "@/lib/gemini";
 import { s3Client } from "@/lib/s3-client";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 
@@ -62,6 +66,10 @@ export type AtsAnalysisResponse =
       resetAt?: string;
     };
 
+// Retry budget for the scan's Gemini call. Keep it under the maxDuration
+// exported by app/(pages)/ats-checker/page.tsx, which bounds this action.
+const ATS_GEMINI_DEADLINE_MS = 100_000;
+
 export type ResumeInputPayload =
   | { type: "text"; text: string }
   | { type: "file"; base64: string; mimeType: string; fileName: string }
@@ -111,6 +119,7 @@ export async function analyzeResumeWithAts(
   resumeInput: ResumeInputPayload,
   jobDescription: string,
 ): Promise<AtsAnalysisResponse> {
+  const requestStart = Date.now();
   try {
     // The ATS scan calls Gemini, so it needs a signed-in user, not a guest.
     const user = await requireSignedInUser();
@@ -322,6 +331,7 @@ EVALUATION SPECIFICATIONS:
     parts.push({ text: prompt });
 
     // Count only scans that reach Gemini; the mock analysis above is free.
+    // Charged once per scan: retries below reuse this quota slot.
     const quota = await consumeAiQuota(userId, "ats");
     if (!quota.allowed) {
       return {
@@ -334,7 +344,7 @@ EVALUATION SPECIFICATIONS:
     }
 
     // 3. Execute Gemini 3.5 Flash Structured Inference
-    const response = await geminiAtsClient.models.generateContent({
+    const response = await generateContentWithRetry(geminiAtsClient, {
       model: "gemini-3.5-flash",
       contents: [{ role: "user", parts }],
       config: {
@@ -451,6 +461,9 @@ EVALUATION SPECIFICATIONS:
           ],
         },
       },
+    }, {
+      deadline: requestStart + ATS_GEMINI_DEADLINE_MS,
+      label: "ATS Action",
     });
 
     const responseText = response.text || "";
@@ -467,13 +480,13 @@ EVALUATION SPECIFICATIONS:
       data: parsedData,
     };
   } catch (err) {
+    // Log the raw error for debugging; never show API error text to users.
     console.error("[ATS Action] Error running resume analysis:", err);
     return {
       success: false,
       error:
-        err instanceof Error
-          ? err.message
-          : "An unexpected error occurred while analyzing your resume.",
+        getGeminiErrorUserMessage(err) ??
+        "An unexpected error occurred while analyzing your resume.",
     };
   }
 }

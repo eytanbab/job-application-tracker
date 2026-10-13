@@ -4,6 +4,9 @@ import { AtsCheckerClient } from "./components/ats-checker-client";
 import { AtsSignInGate } from "./components/ats-sign-in-gate";
 
 export const dynamic = "force-dynamic";
+// Bounds the analyzeResumeWithAts server action, which retries Gemini for up
+// to ATS_GEMINI_DEADLINE_MS (app/actions/ats.ts).
+export const maxDuration = 120;
 
 export async function generateMetadata() {
   return {
