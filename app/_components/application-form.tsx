@@ -59,6 +59,8 @@ type Props = {
   onSubmit: (values: FormValues) => Promise<void>;
   onClose: () => void;
   ref?: Ref<ApplicationFormHandle>;
+  /** Whether link autofill needs a signed-in user. Only used when creating. */
+  aiRequiresSignIn?: boolean;
 };
 
 const formSchema = z.object({
@@ -113,6 +115,7 @@ export const ApplicationForm = ({
   onSubmit,
   onClose,
   ref,
+  aiRequiresSignIn = true,
 }: Props) => {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
@@ -333,6 +336,7 @@ export const ApplicationForm = ({
           onCancel={() => requestClose()}
           onExtractionFailed={handleExtractionFailed}
           isPending={isPending}
+          aiRequiresSignIn={aiRequiresSignIn}
         />
         {discardDialog}
       </div>
