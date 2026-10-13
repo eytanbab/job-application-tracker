@@ -9,26 +9,15 @@ export async function generateMetadata() {
   };
 }
 
+// Load failures propagate to ./error.tsx, which reports them and offers a retry
 export default async function Dashboard() {
   const aiRequiresSignIn = !isAiDemoMode();
-  try {
-    const data = await getApplications();
-    return (
-      <DataTable
-        columns={columns}
-        data={data as any}
-        aiRequiresSignIn={aiRequiresSignIn}
-      />
-    );
-  } catch (err) {
-    console.error("Error fetching applications from database:", err);
-    return (
-      <DataTable
-        columns={columns}
-        data={[] as any}
-        aiRequiresSignIn={aiRequiresSignIn}
-        error="Unable to connect to the database. Your existing job applications could not be loaded."
-      />
-    );
-  }
+  const data = await getApplications();
+  return (
+    <DataTable
+      columns={columns}
+      data={data}
+      aiRequiresSignIn={aiRequiresSignIn}
+    />
+  );
 }

@@ -2,8 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
-import { Plus, AlertCircle, RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import { StatusFilterPills } from "./components/status-filter-pills";
 import { ApplicationsKanban } from "./components/applications-kanban";
 import { ApplicationDetailSheet } from "./components/application-detail-sheet";
@@ -34,7 +33,6 @@ import { useDataTable, ApplicationRow } from "./hooks/use-data-table";
 interface DataTableProps<TData extends ApplicationRow, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  error?: string | null;
   /** Whether AI autofill needs a signed-in user (false in the local demo). */
   aiRequiresSignIn: boolean;
 }
@@ -42,7 +40,6 @@ interface DataTableProps<TData extends ApplicationRow, TValue> {
 export function DataTable<TData extends ApplicationRow, TValue>({
   columns,
   data,
-  error,
   aiRequiresSignIn,
 }: DataTableProps<TData, TValue>) {
   const {
@@ -88,24 +85,6 @@ export function DataTable<TData extends ApplicationRow, TValue>({
 
   return (
     <div className="w-full space-y-4">
-      {error && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-destructive flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
-          <div className="flex items-center gap-2.5 text-sm font-medium">
-            <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
-            <span>{error}</span>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.location.reload()}
-            className="border-destructive/30 hover:bg-destructive/20 text-destructive text-xs shrink-0 cursor-pointer"
-          >
-            <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-            Retry Connection
-          </Button>
-        </div>
-      )}
-
       {viewMode !== "kanban" && (
         <div className="w-full">
           <StatusFilterPills
