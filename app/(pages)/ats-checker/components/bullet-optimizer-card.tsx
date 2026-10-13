@@ -53,7 +53,7 @@ export function BulletOptimizerCard({
           </CardTitle>
         </div>
         <CardDescription className="text-xs text-muted-foreground mt-0.5">
-          Actionable before & after rewrites incorporating target JD keywords and quantifiable impact
+          Rewrites that only use what your resume already says. Replace any [bracketed] placeholder with your real number.
         </CardDescription>
       </CardHeader>
 
@@ -113,7 +113,7 @@ export function BulletOptimizerCard({
                 {item.addedKeywords && item.addedKeywords.length > 0 && (
                   <div className="flex flex-wrap items-center gap-1 mt-2.5 pt-2 border-t border-border/20">
                     <span className="text-[10px] text-muted-foreground font-medium mr-1">
-                      Added Keywords:
+                      JD Keywords Surfaced:
                     </span>
                     {item.addedKeywords.map((kw, kIdx) => (
                       <Badge
