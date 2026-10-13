@@ -8,11 +8,15 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Pencil } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ApplicationForm, type ApplicationFormHandle } from "./application-form";
 
 import { useRef, useState } from "react";
+import {
+  updateCachedApplicationDetails,
+  useApplicationDetails,
+} from "@/hooks/use-application-details";
 import { cn } from "@/lib/utils";
 import { insertApplicationSchema } from "../db/schema";
 import { z } from "zod";
@@ -56,6 +60,12 @@ export const EditApplicationSheet = ({
 
   const formRef = useRef<ApplicationFormHandle>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+
+  // The row comes from the list, which leaves out the description and notes.
+  // Render the form only once they're loaded, so saving can't blank them.
+  const { details, error, retry } = useApplicationDetails(
+    open ? row.original.id : null,
+  );
 
   return (
     <Dialog
@@ -117,12 +127,37 @@ export const EditApplicationSheet = ({
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          <ApplicationForm
-            ref={formRef}
-            defaultValues={row.original}
-            onSubmit={onSubmit}
-            onClose={() => setOpen(false)}
-          />
+          {details ? (
+            <ApplicationForm
+              ref={formRef}
+              defaultValues={{ ...row.original, ...details }}
+              onSubmit={async (values) => {
+                await onSubmit(values);
+                if (row.original.id) {
+                  updateCachedApplicationDetails(row.original.id, {
+                    description: values.description ?? null,
+                    notes: values.notes ?? null,
+                  });
+                }
+              }}
+              onClose={() => setOpen(false)}
+            />
+          ) : error ? (
+            <div className="flex flex-col items-center gap-3 px-6 py-10 text-center text-sm text-muted-foreground">
+              <p>Couldn&apos;t load this application.</p>
+              <Button variant="outline" size="sm" onClick={retry}>
+                Try again
+              </Button>
+            </div>
+          ) : (
+            <div
+              role="status"
+              className="flex items-center justify-center gap-2 px-6 py-10 text-sm text-muted-foreground"
+            >
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading application...
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
