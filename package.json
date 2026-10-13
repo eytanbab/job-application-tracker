@@ -8,7 +8,6 @@
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "next lint",
     "test:e2e": "playwright test",
     "doctor": "npx react-doctor@latest",
     "db:generate": "drizzle-kit generate",
