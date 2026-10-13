@@ -8,6 +8,9 @@ import { and, eq, desc } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { documentsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
+import { requireSignedInUser } from "./_utils/require-signed-in-user";
+import { consumeAiQuota } from "@/lib/ai-usage";
+import { formatQuotaExceededMessage, type AiAccessErrorCode } from "@/lib/ai-quota";
 import { geminiAtsClient } from "@/lib/gemini";
 import { s3Client } from "@/lib/s3-client";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
@@ -47,6 +50,17 @@ export interface AtsAnalysisResult {
     addedKeywords: string[];
   }>;
 }
+
+export type AtsAnalysisResponse =
+  | { success: true; data: AtsAnalysisResult }
+  | {
+      success: false;
+      error: string;
+      code?: AiAccessErrorCode;
+      /** Set with code "rate_limited": the daily limit and when it resets (ISO). */
+      limit?: number;
+      resetAt?: string;
+    };
 
 export type ResumeInputPayload =
   | { type: "text"; text: string }
@@ -96,9 +110,18 @@ export async function getSavedResumes() {
 export async function analyzeResumeWithAts(
   resumeInput: ResumeInputPayload,
   jobDescription: string,
-): Promise<{ success: true; data: AtsAnalysisResult } | { success: false; error: string }> {
+): Promise<AtsAnalysisResponse> {
   try {
-    const userId = await getCurrentUserIdOrThrow();
+    // The ATS scan calls Gemini, so it needs a signed-in user, not a guest.
+    const user = await requireSignedInUser();
+    if (!user.ok) {
+      return {
+        success: false,
+        code: "auth_required",
+        error: "Sign in to run an ATS scan.",
+      };
+    }
+    const userId = user.userId;
 
     if (!jobDescription || jobDescription.trim().length < 30) {
       return {
@@ -297,6 +320,18 @@ EVALUATION SPECIFICATIONS:
    - Explain the technical rationale simply and practically.`;
 
     parts.push({ text: prompt });
+
+    // Count only scans that reach Gemini; the mock analysis above is free.
+    const quota = await consumeAiQuota(userId, "ats");
+    if (!quota.allowed) {
+      return {
+        success: false,
+        code: "rate_limited",
+        error: formatQuotaExceededMessage("ats", quota.limit, quota.resetAt),
+        limit: quota.limit,
+        resetAt: quota.resetAt.toISOString(),
+      };
+    }
 
     // 3. Execute Gemini 2.5 Flash Structured Inference
     const response = await geminiAtsClient.models.generateContent({

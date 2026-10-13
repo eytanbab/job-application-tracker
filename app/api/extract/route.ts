@@ -3,12 +3,45 @@ import { scraper } from "@/lib/scraper";
 import { geminiExtractionClient } from "@/lib/gemini";
 import { tryDeterministicExtraction } from "@/lib/parsers";
 import { validateSafeUrl } from "@/lib/security/url-validator";
+import { requireSignedInUser } from "@/app/actions/_utils/require-signed-in-user";
+import { consumeAiQuota, peekAiQuota, type AiQuotaResult } from "@/lib/ai-usage";
+import { formatQuotaExceededMessage } from "@/lib/ai-quota";
 
 export const maxDuration = 30;
 const isDevelopment = process.env.NODE_ENV === "development";
 
+function quotaExceededResponse(quota: AiQuotaResult) {
+  const retryAfterSeconds = Math.max(
+    1,
+    Math.ceil((quota.resetAt.getTime() - Date.now()) / 1000),
+  );
+  return NextResponse.json(
+    {
+      status: "fail",
+      code: "rate_limited",
+      message: formatQuotaExceededMessage("extract", quota.limit, quota.resetAt),
+      limit: quota.limit,
+      resetAt: quota.resetAt.toISOString(),
+    },
+    { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } },
+  );
+}
+
 export async function POST(req: Request) {
   try {
+    // AI autofill is for signed-in users only; guests enter details manually.
+    const user = await requireSignedInUser();
+    if (!user.ok) {
+      return NextResponse.json(
+        {
+          status: "fail",
+          code: "auth_required",
+          message: "Sign in to autofill applications from a link.",
+        },
+        { status: 401 },
+      );
+    }
+
     const { url } = await req.json();
 
     if (!url) {
@@ -69,6 +102,13 @@ export async function POST(req: Request) {
       });
     }
 
+    // Only calls that reach Gemini count against the daily limit. Check it
+    // before scraping so users over the limit don't trigger scraper work.
+    const quotaBeforeScrape = await peekAiQuota(user.userId, "extract");
+    if (!quotaBeforeScrape.allowed) {
+      return quotaExceededResponse(quotaBeforeScrape);
+    }
+
     const webpage = await scraper(safeUrl);
 
     if (!webpage) {
@@ -96,6 +136,11 @@ If no clear job listing is found, set status to 'fail'.
 
 Webpage Content:
 ${webpage}`;
+
+    const quota = await consumeAiQuota(user.userId, "extract");
+    if (!quota.allowed) {
+      return quotaExceededResponse(quota);
+    }
 
     const response = await geminiExtractionClient.models.generateContent({
       model: "gemini-2.5-flash-lite",
