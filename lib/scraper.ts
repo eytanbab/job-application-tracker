@@ -145,11 +145,11 @@ export const scraper = async (url: string): Promise<string> => {
 
   // 1. Fast Direct HTML Fetch First (Instant for Greenhouse, Lever, Ashby, Workday, etc.)
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    // AbortSignal.timeout also bounds the body read below, not just the headers.
+    const signal = AbortSignal.timeout(3500);
 
     const htmlRes = await fetch(safeTargetUrl, {
-      signal: controller.signal,
+      signal,
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -158,7 +158,6 @@ export const scraper = async (url: string): Promise<string> => {
         "Accept-Language": "en-US,en;q=0.9",
       },
     });
-    clearTimeout(timeoutId);
 
     if (htmlRes.ok) {
       const html = await htmlRes.text();
@@ -192,18 +191,16 @@ export const scraper = async (url: string): Promise<string> => {
   // 2. Jina Reader fallback (with strict 5s timeout)
   try {
     const jinaUrl = `https://r.jina.ai/${encodeURIComponent(url)}`;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const signal = AbortSignal.timeout(5000);
 
     const response = await fetch(jinaUrl, {
-      signal: controller.signal,
+      signal,
       headers: {
         Accept: "text/plain",
         "X-No-Cache": "true",
         "X-Return-Format": "markdown",
       },
     });
-    clearTimeout(timeoutId);
 
     if (response.ok) {
       const text = await response.text();
@@ -225,14 +222,12 @@ export const scraper = async (url: string): Promise<string> => {
   // 3. Standalone Microservice fallback (If configured)
   if (process.env.SCRAPER_SERVICE_URL) {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const signal = AbortSignal.timeout(4000);
 
       const response = await fetch(
         `${process.env.SCRAPER_SERVICE_URL}/scrape?url=${encodeURIComponent(url)}`,
-        { signal: controller.signal },
+        { signal },
       );
-      clearTimeout(timeoutId);
 
       if (response.ok) {
         const data = await response.json();
