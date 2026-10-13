@@ -2,19 +2,20 @@
 
 import {
   ColumnDef,
-  ColumnFiltersState,
-  PaginationState,
   RowSelectionState,
   SortingState,
   getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import {
-  getStatusDisplay,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
+import {
   statusLabels,
   type StatusKind,
   resolveUpdatedStatus,
@@ -22,10 +23,10 @@ import {
 } from "@/lib/utils";
 import {
   useQueryState,
-  parseAsString,
-  parseAsInteger,
-  parseAsBoolean,
   useQueryStates,
+  parseAsString,
+  parseAsBoolean,
+  debounce,
 } from "nuqs";
 import {
   deleteApplication,
@@ -34,6 +35,10 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { type FormValues } from "../columns";
+import {
+  applicationsSearchParams,
+  DEFAULT_PAGE_SIZE,
+} from "@/lib/applications/list-query";
 
 export interface ApplicationRow {
   id?: string;
@@ -55,13 +60,71 @@ export interface ApplicationRow {
 export function useDataTable<TData extends ApplicationRow, TValue>({
   columns,
   data,
+  totalRows,
+  platforms,
+  linkedApp,
 }: {
   columns: ColumnDef<TData, TValue>[];
+  /** The rows of the current page, already filtered and sorted on the server. */
   data: TData[];
+  /** Rows matching the current filters across all pages. */
+  totalRows: number;
+  platforms: string[];
+  /** The ?appId= row when it isn't on the current page. */
+  linkedApp: TData | null;
 }) {
-  const [viewMode, setViewMode] = useQueryState(
-    "view",
-    parseAsString.withDefault("table").withOptions({ shallow: true }),
+  // Filters, sorting and paging live in the URL and are applied by the
+  // server, so changing them re-renders the page with a new slice of rows.
+  // The transition keeps the current rows on screen while that loads.
+  const [isPending, startTransition] = useTransition();
+
+  const [
+    {
+      q: globalFilter,
+      status: statusFilter,
+      platform: platformFilter,
+      sort,
+      dir,
+      page,
+      size,
+      view: viewMode,
+    },
+    setParams,
+  ] = useQueryStates(applicationsSearchParams, {
+    shallow: false,
+    startTransition,
+  });
+
+  const setViewMode = useCallback(
+    (view: string) =>
+      setParams({ view: view === "kanban" ? "kanban" : "table", page: null }),
+    [setParams],
+  );
+  // Every filter change starts again from page 1
+  const setGlobalFilter = useCallback(
+    (value: string) =>
+      setParams(
+        { q: value || null, page: null },
+        // Wait for a pause in typing before querying the server
+        value ? { limitUrlUpdates: debounce(300) } : undefined,
+      ),
+    [setParams],
+  );
+  const setStatusFilter = useCallback(
+    (value: string | null) =>
+      setParams({
+        status: value && value !== "all" ? value : null,
+        page: null,
+      }),
+    [setParams],
+  );
+  const setPlatformFilter = useCallback(
+    (value: string | null) =>
+      setParams({
+        platform: value && value !== "all" ? value : null,
+        page: null,
+      }),
+    [setParams],
   );
 
   const [selectedApp, setSelectedApp] = useState<TData | null>(null);
@@ -69,6 +132,10 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingApp, setEditingApp] = useState<TData | null>(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const selectedAppRef = useRef<TData | null>(null);
+  useEffect(() => {
+    selectedAppRef.current = selectedApp;
+  }, [selectedApp]);
 
   const [appIdParam, setAppIdParam] = useQueryState(
     "appId",
@@ -78,11 +145,15 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
   // Synchronize appIdParam with selectedApp
   useEffect(() => {
     if (appIdParam) {
-      const match = data.find((item) => item.id === appIdParam);
+      const match =
+        data.find((item) => item.id === appIdParam) ??
+        (linkedApp?.id === appIdParam ? linkedApp : null);
       if (match) {
         setSelectedApp(match);
         setIsDetailOpen(true);
-      } else {
+      } else if (selectedAppRef.current?.id !== appIdParam) {
+        // Rows opened from a Kanban "Show more" batch aren't in `data`, so
+        // only close the panel when it shows a different row.
         setSelectedApp(null);
         setIsDetailOpen(false);
       }
@@ -90,7 +161,7 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
       setSelectedApp(null);
       setIsDetailOpen(false);
     }
-  }, [appIdParam, data]);
+  }, [appIdParam, data, linkedApp]);
 
   const [createParam, setCreateParam] = useQueryState(
     "create",
@@ -122,86 +193,17 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [isBulkPending, startBulkTransition] = useTransition();
 
-  const [globalFilter, setGlobalFilter] = useQueryState(
-    "q",
-    parseAsString
-      .withDefault("")
-      .withOptions({ shallow: true, throttleMs: 200 }),
-  );
-
-  const [statusFilter, setStatusFilter] = useQueryState(
-    "status",
-    parseAsString.withDefault("").withOptions({ shallow: true }),
-  );
-
-  const [platformFilter, setPlatformFilter] = useQueryState(
-    "platform",
-    parseAsString.withDefault("").withOptions({ shallow: true }),
-  );
-
-  const [sortingState, setSortingState] = useQueryStates(
-    {
-      sort: parseAsString,
-      dir: parseAsString,
-    },
-    { shallow: true },
-  );
-
-  const [page, setPage] = useQueryState(
-    "page",
-    parseAsInteger.withDefault(1).withOptions({ shallow: true }),
-  );
-
-  const [pageSizeParam, setPageSizeParam] = useQueryState(
-    "size",
-    parseAsInteger.withOptions({ shallow: true }),
-  );
-
-  const sorting: SortingState = useMemo(() => {
-    if (sortingState.sort) {
-      return [
-        {
-          id: sortingState.sort,
-          desc: sortingState.dir === "desc",
-        },
-      ];
-    }
-    return [];
-  }, [sortingState.sort, sortingState.dir]);
-
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-
+  // A new page of rows clears the selection; it referred to the old rows
   useEffect(() => {
-    const nextFilters: ColumnFiltersState = [];
-    if (statusFilter && statusFilter !== "all") {
-      nextFilters.push({ id: "status", value: statusFilter });
-    }
-    if (platformFilter && platformFilter !== "all") {
-      nextFilters.push({ id: "platform", value: platformFilter });
-    }
-    setColumnFilters(nextFilters);
-  }, [statusFilter, platformFilter]);
+    setRowSelection({});
+  }, [data]);
 
-  // Reset pagination to first page whenever search or filters change
-  useEffect(() => {
-    setPage(1);
-    setPagination((prev) => ({
-      ...prev,
-      pageIndex: 0,
-    }));
-  }, [globalFilter, statusFilter, platformFilter, setPage]);
-
-  const [{ pageIndex, pageSize }, setPagination] = useState<PaginationState>({
-    pageIndex: page - 1,
-    pageSize: pageSizeParam ?? 10,
-  });
-
-  useEffect(() => {
-    setPagination({
-      pageIndex: page - 1,
-      pageSize: pageSizeParam ?? 10,
-    });
-  }, [page, pageSizeParam]);
+  const sorting: SortingState = useMemo(
+    () => (sort ? [{ id: sort, desc: dir === "desc" }] : []),
+    [sort, dir],
+  );
+  const pageSize = size ?? DEFAULT_PAGE_SIZE;
+  const pageIndex = Math.max(0, page - 1);
 
   const handleSelectRow = useCallback(
     (app: TData) => {
@@ -239,85 +241,47 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    getRowId: (row, index) => row.id ?? String(index),
+    manualPagination: true,
+    manualSorting: true,
+    manualFiltering: true,
+    rowCount: totalRows,
     onSortingChange: (updaterOrValue) => {
       const nextSorting =
         typeof updaterOrValue === "function"
           ? updaterOrValue(sorting)
           : updaterOrValue;
-      if (nextSorting.length > 0) {
-        setSortingState({
-          sort: nextSorting[0].id,
-          dir: nextSorting[0].desc ? "desc" : "asc",
-        });
-      } else {
-        setSortingState({ sort: null, dir: null });
-      }
+      const next = nextSorting[0];
+      setParams({
+        sort: (next?.id as typeof sort) ?? null,
+        dir: next ? (next.desc ? "desc" : "asc") : null,
+        page: null,
+      });
     },
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    globalFilterFn: (row, _columnId, filterValue) => {
-      const search = String(filterValue ?? "").toLowerCase().trim();
-      if (!search) return true;
-      const app = row.original;
-      const company = String(app.company_name ?? "").toLowerCase();
-      const role = String(app.role_name ?? "").toLowerCase();
-      const location = String(app.location ?? "").toLowerCase();
-      const platform = String(app.platform ?? "").toLowerCase();
-      const status = String(app.status ?? "").toLowerCase();
-      const category = String(app.statusCategory ?? "").toLowerCase();
-      const salary = String(app.salary ?? "").toLowerCase();
-      const description = String(app.description ?? "").toLowerCase();
-
-      return (
-        company.includes(search) ||
-        role.includes(search) ||
-        location.includes(search) ||
-        platform.includes(search) ||
-        status.includes(search) ||
-        category.includes(search) ||
-        salary.includes(search) ||
-        description.includes(search)
-      );
-    },
-    onGlobalFilterChange: setGlobalFilter,
-    onColumnFiltersChange: setColumnFilters,
     onRowSelectionChange: setRowSelection,
     onPaginationChange: (updater) => {
       const next =
         typeof updater === "function"
           ? updater({ pageIndex, pageSize })
           : updater;
-      if (next.pageIndex !== pageIndex) {
-        setPage(next.pageIndex + 1);
-      }
-      if (next.pageSize !== pageSize) {
-        setPageSizeParam(next.pageSize);
-      }
+      // A new page size starts again from page 1
+      setParams(
+        next.pageSize !== pageSize
+          ? { page: null, size: next.pageSize }
+          : { page: next.pageIndex + 1 },
+      );
     },
-    autoResetPageIndex: false,
     meta: {
       onSelectApplication: handleSelectRow,
     },
     state: {
       sorting,
-      globalFilter,
       pagination: { pageIndex, pageSize },
-      columnFilters,
       rowSelection,
     },
   });
 
-  const uniquePlatforms = useMemo(() => {
-    const set = new Set<string>();
-    for (const item of data) {
-      if (item.platform) {
-        const p = item.platform.toLowerCase().trim();
-        if (p) set.add(p);
-      }
-    }
-    return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [data]);
+  const uniquePlatforms = platforms;
 
   const selectedRows = table.getSelectedRowModel().rows;
   const selectedCount = selectedRows.length;
@@ -435,9 +399,7 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
   );
 
   const clearFilters = () => {
-    setGlobalFilter("");
-    setStatusFilter(null);
-    setPlatformFilter(null);
+    setParams({ q: null, status: null, platform: null, page: null });
   };
 
   const defaultCreateValues = {
@@ -455,22 +417,15 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     salary: "",
   };
 
-  const filteredApps = useMemo(() => {
-    const rows = table.getFilteredRowModel().rows;
-    return rows.map((r) => r.original);
-  }, [table]);
-
-  const activeAppIndex = useMemo(() => {
-    if (!selectedApp?.id) return -1;
-    const idx = filteredApps.findIndex((item) => item.id === selectedApp.id);
-    if (idx !== -1) return idx;
-    return data.findIndex((item) => item.id === selectedApp.id);
-  }, [selectedApp?.id, filteredApps, data]);
-
-  const currentList = useMemo(() => {
-    const inFiltered = filteredApps.some((item) => item.id === selectedApp?.id);
-    return inFiltered ? filteredApps : data;
-  }, [filteredApps, data, selectedApp?.id]);
+  // J/K move through the rows of the current page
+  const currentList = data;
+  const activeAppIndex = useMemo(
+    () =>
+      selectedApp?.id
+        ? currentList.findIndex((item) => item.id === selectedApp.id)
+        : -1,
+    [selectedApp?.id, currentList],
+  );
 
   const hasPreviousApp = activeAppIndex > 0;
   const hasNextApp =
@@ -533,5 +488,6 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     goToNextApp,
     currentIndex: activeAppIndex >= 0 ? activeAppIndex + 1 : 0,
     totalApps: currentList.length,
+    isPending,
   };
 }

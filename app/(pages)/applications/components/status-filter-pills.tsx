@@ -1,18 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
-import { getStatusKind, StatusKind } from "@/lib/utils";
+import type { StatusCounts } from "@/lib/applications/list-query";
+import { StatusKind } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
-interface ApplicationItem {
-  id?: string;
-  status: string;
-  statusCategory?: string | null;
-  [key: string]: unknown;
-}
-
 interface StatusFilterPillsProps {
-  data: ApplicationItem[];
+  /** Application count per status across the whole account. */
+  counts: StatusCounts;
   statusFilter?: string | null;
   onStatusFilterChange?: (filter: string | null) => void;
 }
@@ -28,34 +22,10 @@ const PILL_OPTIONS: { id: StatusKind | "all"; label: string }[] = [
 ];
 
 export function StatusFilterPills({
-  data,
+  counts,
   statusFilter,
   onStatusFilterChange,
 }: StatusFilterPillsProps) {
-  const counts = useMemo(() => {
-    const map: Record<string, number> = {
-      all: data.length,
-      applied: 0,
-      review: 0,
-      interview: 0,
-      accepted: 0,
-      rejected: 0,
-      ghosted: 0,
-      other: 0,
-    };
-
-    data.forEach((item) => {
-      const kind = getStatusKind(item.status, item.statusCategory);
-      if (map[kind] !== undefined) {
-        map[kind]++;
-      } else {
-        map.other++;
-      }
-    });
-
-    return map;
-  }, [data]);
-
   return (
     <div className="relative w-full">
       <div className="w-full flex items-center gap-1.5 overflow-x-auto pb-1 pr-8 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
