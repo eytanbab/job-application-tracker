@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { ThinkingLevel } from "@google/genai";
 import { scraper } from "@/lib/scraper";
-import { geminiExtractionClient } from "@/lib/gemini";
+import {
+  generateContentWithRetry,
+  geminiExtractionClient,
+  getGeminiErrorUserMessage,
+} from "@/lib/gemini";
 import { tryDeterministicExtraction } from "@/lib/parsers";
 import { validateSafeUrl } from "@/lib/security/url-validator";
 import { requireSignedInUser } from "@/app/actions/_utils/require-signed-in-user";
@@ -9,6 +13,8 @@ import { consumeAiQuota, peekAiQuota, type AiQuotaResult } from "@/lib/ai-usage"
 import { formatQuotaExceededMessage } from "@/lib/ai-quota";
 
 export const maxDuration = 30;
+// Stop retrying Gemini early enough to send a response before maxDuration.
+const GEMINI_DEADLINE_MS = (maxDuration - 3) * 1000;
 const isDevelopment = process.env.NODE_ENV === "development";
 
 function quotaExceededResponse(quota: AiQuotaResult) {
@@ -29,6 +35,7 @@ function quotaExceededResponse(quota: AiQuotaResult) {
 }
 
 export async function POST(req: Request) {
+  const requestStart = Date.now();
   try {
     // AI autofill is for signed-in users only; guests enter details manually.
     const user = await requireSignedInUser();
@@ -138,12 +145,13 @@ If no clear job listing is found, set status to 'fail'.
 Webpage Content:
 ${webpage}`;
 
+    // Charged once per request: retries below reuse this quota slot.
     const quota = await consumeAiQuota(user.userId, "extract");
     if (!quota.allowed) {
       return quotaExceededResponse(quota);
     }
 
-    const response = await geminiExtractionClient.models.generateContent({
+    const response = await generateContentWithRetry(geminiExtractionClient, {
       model: "gemini-3.5-flash-lite",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
@@ -182,6 +190,9 @@ ${webpage}`;
           thinkingLevel: ThinkingLevel.MINIMAL,
         },
       },
+    }, {
+      deadline: requestStart + GEMINI_DEADLINE_MS,
+      label: "API",
     });
 
     if (!response || !response.candidates || response.candidates.length === 0) {
@@ -207,12 +218,13 @@ ${webpage}`;
     return NextResponse.json(JSON.parse(res));
   } catch (error) {
     console.error("[API] Error in extraction API:", error);
+    const busyMessage = getGeminiErrorUserMessage(error);
     return NextResponse.json(
       {
         status: "fail",
-        message: "Failed to extract information due to an error.",
+        message: busyMessage ?? "Failed to extract information due to an error.",
       },
-      { status: 500 },
+      { status: busyMessage ? 503 : 500 },
     );
   }
 }
