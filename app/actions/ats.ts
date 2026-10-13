@@ -304,8 +304,13 @@ CRITICAL TONE & STYLE DIRECTIVES (STRICT ANTI-AI RULES):
 3. 2026 BULLET REWRITE STANDARD (HIGH SIGNAL-TO-NOISE):
    - Every bullet must follow the concise Impact Format: [Active Verb] + [Specific Technical Mechanism / Stack] + [Measurable Engineering Outcome or Scale].
    - Keep rewrites concise (1 to 2 lines max). Strip away empty modifiers ("highly scalable", "world-class", "innovative solutions"). Let the concrete tech stack and metrics prove the scale.
-   - Embed target Job Description keywords naturally as tools used in context, NOT keyword-stuffed strings.
-   - Use realistic metrics (e.g. latency in ms, throughput in req/s, CI build time in minutes, percentage cost/error reduction, data volume). If the original bullet lacked a metric, insert a realistic quantified benchmark (e.g. "cutting bundle size by 35%" or "reducing p99 latency to <120ms").
+
+4. HONESTY RULES FOR BULLET REWRITES (OVERRIDE EVERY OTHER RULE):
+   - A rewrite may only state what the resume already supports. Rephrase, reorder, sharpen verbs, and name tools or skills that appear elsewhere in the resume when they plausibly belong to that bullet's work.
+   - NEVER add a skill, tool, framework, cloud service, standard, responsibility, team size, or achievement that is not in the resume. If a Job Description keyword is absent from the resume, it must NOT appear in any improvedBullet; it belongs only in missingKeywords.
+   - NEVER invent numbers. Keep metrics the resume states. Where a metric would help but the resume has none, write a bracketed placeholder such as "[X%]" or "[N users]" and say in the reasoning what the candidate should measure. Never fill a placeholder with a guessed value.
+   - Do not inflate scope (e.g. "pages" into "platform", "fixed bugs" into "optimized", "onboarded" into "ran onboarding programs").
+   - addedKeywords lists only Job Description keywords that the rewrite surfaces AND that appear word for word in the resume. It must never contain anything from missingKeywords. Leave it empty if the rewrite surfaces none.
 
 EVALUATION SPECIFICATIONS:
 1. Overall Match Score: 0 to 100 based on realistic employer requirements. Grade as:
@@ -320,13 +325,13 @@ EVALUATION SPECIFICATIONS:
    - formatScore: Clean header hierarchy, standard section titles, ATS-friendly typography, absence of parsing hazards.
 3. Keyword Gap Matrix:
    - matchedKeywords: 4-10 core skills/terms from the JD found in the resume.
-   - missingKeywords: 4-10 critical or recommended keywords from the JD missing or weak in the resume, with specific placement advice.
+   - missingKeywords: 4-10 critical or recommended keywords from the JD missing or weak in the resume. placementAdvice says where the keyword would fit, framed as conditional on the candidate's real experience (e.g. "If you have used Playwright, name it in the testing bullet under DataCo"). Never tell the candidate to claim a skill they may not have.
 4. ATS Formatting & Parsing Checklist:
    - 3-5 checks evaluating resume readability, structural headers, contact info presence, bullet formatting, and quantitative impact.
 5. Bullet Point Optimizations:
    - Identify 2 to 4 bullet points from the resume that could be strengthened for this role.
-   - Rewrite them following the strict Anti-AI 2026 rules above. Sound like an elite senior developer, not an AI.
-   - Explain the technical rationale simply and practically.`;
+   - Rewrite them following the Anti-AI 2026 rules and the honesty rules above. Sound like an elite senior developer, not an AI.
+   - Explain the technical rationale simply and practically. If a missing keyword is relevant to the bullet, the reasoning may say "add X here only if you actually used it", but the improvedBullet itself must not contain it.`;
 
     parts.push({ text: prompt });
 
@@ -405,7 +410,11 @@ EVALUATION SPECIFICATIONS:
                         type: "string",
                         enum: ["critical", "recommended", "optional"],
                       },
-                      placementAdvice: { type: "string" },
+                      placementAdvice: {
+                        type: "string",
+                        description:
+                          "Where the keyword would fit, phrased as conditional on the candidate actually having it.",
+                      },
                     },
                     required: ["keyword", "category", "importance", "placementAdvice"],
                   },
@@ -434,11 +443,17 @@ EVALUATION SPECIFICATIONS:
                 type: "object",
                 properties: {
                   originalBullet: { type: "string" },
-                  improvedBullet: { type: "string" },
+                  improvedBullet: {
+                    type: "string",
+                    description:
+                      "Rewrite that states only what the resume supports. No missing keywords, no invented numbers; use [X%]-style placeholders instead.",
+                  },
                   reasoning: { type: "string" },
                   addedKeywords: {
                     type: "array",
                     items: { type: "string" },
+                    description:
+                      "JD keywords the rewrite surfaces that appear word for word in the resume. Never a missing keyword.",
                   },
                 },
                 required: [
