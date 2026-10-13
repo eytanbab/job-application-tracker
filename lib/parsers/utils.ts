@@ -52,22 +52,16 @@ export async function fetchWithTimeout(
   options: RequestInit = {},
   timeoutMs: number = 4000,
 ): Promise<Response> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal,
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        Accept: "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8",
-        ...options.headers,
-      },
-    });
-    return response;
-  } finally {
-    clearTimeout(timeoutId);
-  }
+  // AbortSignal.timeout stays armed after fetch resolves, so the deadline
+  // also covers reading the body, not just receiving the headers.
+  return fetch(url, {
+    ...options,
+    signal: AbortSignal.timeout(timeoutMs),
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      Accept: "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8",
+      ...options.headers,
+    },
+  });
 }
