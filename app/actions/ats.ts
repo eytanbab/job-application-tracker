@@ -16,6 +16,7 @@ import {
   geminiAtsClient,
   getGeminiErrorUserMessage,
 } from "@/lib/gemini";
+import { groundBulletOptimizations } from "@/lib/ats-grounding";
 import { s3Client } from "@/lib/s3-client";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 
@@ -451,9 +452,9 @@ EVALUATION SPECIFICATIONS:
                   reasoning: { type: "string" },
                   addedKeywords: {
                     type: "array",
-                    items: { type: "string" },
                     description:
                       "JD keywords the rewrite surfaces that appear word for word in the resume. Never a missing keyword.",
+                    items: { type: "string" },
                   },
                 },
                 required: [
@@ -490,6 +491,23 @@ EVALUATION SPECIFICATIONS:
     }
 
     const parsedData: AtsAnalysisResult = JSON.parse(responseText);
+
+    // The prompt forbids invented skills, but enforce it: drop rewrites that
+    // name keywords the resume lacks. Resume text is only on hand for pasted
+    // text; for PDFs the check falls back to the model's missingKeywords.
+    const grounded = groundBulletOptimizations(
+      parsedData.bulletOptimizations ?? [],
+      parsedData.keywordAnalysis?.missingKeywords?.map((k) => k.keyword) ?? [],
+      resumeInput.type === "text" ? resumeInput.text : undefined,
+    );
+    if (grounded.dropped.length > 0) {
+      console.warn(
+        `[ATS Action] Dropped ${grounded.dropped.length} bullet rewrite(s) with unsupported terms:`,
+        grounded.dropped.map((d) => d.unsupportedTerms),
+      );
+    }
+    parsedData.bulletOptimizations = grounded.bulletOptimizations;
+
     return {
       success: true,
       data: parsedData,
