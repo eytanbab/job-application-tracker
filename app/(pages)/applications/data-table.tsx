@@ -35,12 +35,15 @@ interface DataTableProps<TData extends ApplicationRow, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   error?: string | null;
+  /** Whether AI autofill needs a signed-in user (false in the local demo). */
+  aiRequiresSignIn: boolean;
 }
 
 export function DataTable<TData extends ApplicationRow, TValue>({
   columns,
   data,
   error,
+  aiRequiresSignIn,
 }: DataTableProps<TData, TValue>) {
   const {
     viewMode,
@@ -196,6 +199,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
             <ApplicationForm
               ref={createFormRef}
               defaultValues={defaultCreateValues}
+              aiRequiresSignIn={aiRequiresSignIn}
               onClose={() => setIsCreateOpen(false)}
               onSubmit={async (values) => {
                 try {

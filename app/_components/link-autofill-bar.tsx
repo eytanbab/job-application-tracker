@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { SignInButton, useAuth } from "@clerk/nextjs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,11 +10,13 @@ import {
   ArrowRight,
   Loader2,
   AlertCircle,
+  LogIn,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { extractDomainFromUrl, detectPlatformFromUrl } from "@/lib/utils";
 import { FormValues } from "./application-form";
 import { AiData } from "@/lib/types";
+import { formatQuotaExceededMessage } from "@/lib/ai-quota";
 
 export interface LinkAutofillBarProps {
   onAutoFill: (values: Partial<FormValues>, domain: string) => void;
@@ -21,7 +24,12 @@ export interface LinkAutofillBarProps {
   onCancel: () => void;
   onExtractionFailed: (url: string) => void;
   isPending?: boolean;
+  /** Whether autofill needs a signed-in user (false in the local demo). */
+  aiRequiresSignIn?: boolean;
 }
+
+const formatLocalTime = (date: Date) =>
+  date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
 export function LinkAutofillBar({
   onAutoFill,
@@ -29,8 +37,12 @@ export function LinkAutofillBar({
   onCancel,
   onExtractionFailed,
   isPending = false,
+  aiRequiresSignIn = true,
 }: LinkAutofillBarProps) {
   const { toast } = useToast();
+  const { isLoaded, isSignedIn } = useAuth();
+  // Set when the server rejects the session (e.g. it expired in another tab)
+  const [authRejected, setAuthRejected] = useState(false);
   const [url, setUrl] = useState("");
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState<string | null>(null);
@@ -47,12 +59,15 @@ export function LinkAutofillBar({
   // Abort an in-flight extraction when the user leaves this step
   useEffect(() => () => abortRef.current?.abort(), []);
 
+  const needsSignIn =
+    aiRequiresSignIn && ((isLoaded && !isSignedIn) || authRejected);
+
   const detectedDomain = extractDomainFromUrl(url);
   const detectedPlatform = url.trim() ? detectPlatformFromUrl(url) : null;
 
   const handleExtract = async () => {
     const trimmed = url.trim();
-    if (!trimmed || isExtracting || isPending) return;
+    if (!trimmed || isExtracting || isPending || needsSignIn) return;
 
     const validUrl = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 
@@ -71,6 +86,35 @@ export function LinkAutofillBar({
         body: JSON.stringify({ url: validUrl }),
         signal: controller.signal,
       });
+
+      if (response.status === 401) {
+        setAuthRejected(true);
+        setExtractError(
+          "Sign in to autofill from this link, or enter the details manually.",
+        );
+        return;
+      }
+
+      if (response.status === 429) {
+        const body: AiData = await response.json();
+        const resetAt =
+          body.status === "fail" && body.resetAt ? new Date(body.resetAt) : null;
+        toast({
+          title: "Daily autofill limit reached",
+          description:
+            resetAt && body.status === "fail" && body.limit !== undefined
+              ? formatQuotaExceededMessage(
+                  "extract",
+                  body.limit,
+                  resetAt,
+                  new Date(),
+                  formatLocalTime,
+                )
+              : "You've used today's AI autofills. Your link is kept so you can enter the details manually.",
+        });
+        onExtractionFailed(validUrl);
+        return;
+      }
 
       if (!response.ok) {
         toast({
@@ -145,7 +189,9 @@ export function LinkAutofillBar({
         if (extractError) setExtractError(null);
         toast({
           title: "URL pasted from clipboard",
-          description: "Click Autofill or press Enter to extract details.",
+          description: needsSignIn
+            ? "Sign in to autofill, or enter the details manually."
+            : "Click Autofill or press Enter to extract details.",
         });
       } else {
         toast({
@@ -195,7 +241,7 @@ export function LinkAutofillBar({
               if (e.key === "Enter") {
                 e.preventDefault();
                 e.stopPropagation();
-                if (url.trim() && !isExtracting) {
+                if (url.trim() && !isExtracting && !needsSignIn) {
                   handleExtract();
                 }
               }
@@ -239,6 +285,23 @@ export function LinkAutofillBar({
         )}
       </div>
 
+      {needsSignIn && (
+        <div
+          data-testid="autofill-sign-in-prompt"
+          className="flex items-start gap-2.5 rounded-xl border border-border/50 bg-muted/40 px-3 py-2.5"
+        >
+          <LogIn className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
+          <p className="text-[11px] leading-snug text-muted-foreground">
+            <strong className="font-semibold text-foreground">
+              Autofill is available when you&apos;re signed in.
+            </strong>{" "}
+            It reads the posting with AI so you don&apos;t have to copy each
+            field. You can still track this application as a guest: enter the
+            details manually and your link comes with you.
+          </p>
+        </div>
+      )}
+
       {isExtracting && isSlow && (
         <p role="status" className="text-[11px] text-muted-foreground">
           Still working. This can take up to 30 seconds, or you can enter the
@@ -276,25 +339,42 @@ export function LinkAutofillBar({
           >
             Cancel
           </Button>
-          <Button
-            type="button"
-            onClick={handleExtract}
-            disabled={!url.trim() || isExtracting || isPending}
-            data-testid="autofill-button"
-            className="h-10 sm:h-9 w-full sm:w-auto px-4 text-xs font-semibold rounded-xl cursor-pointer gap-1.5 shadow-xs"
-          >
-            {isExtracting ? (
-              <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                <span>Extracting...</span>
-              </>
-            ) : (
-              <>
-                <span>Autofill</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </>
-            )}
-          </Button>
+          {needsSignIn ? (
+            <SignInButton mode="modal">
+              <Button
+                type="button"
+                data-testid="autofill-sign-in-button"
+                onClick={() => {
+                  setAuthRejected(false);
+                  setExtractError(null);
+                }}
+                className="h-10 sm:h-9 w-full sm:w-auto px-4 text-xs font-semibold rounded-xl cursor-pointer gap-1.5 shadow-xs"
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                <span>Sign in to autofill</span>
+              </Button>
+            </SignInButton>
+          ) : (
+            <Button
+              type="button"
+              onClick={handleExtract}
+              disabled={!url.trim() || isExtracting || isPending}
+              data-testid="autofill-button"
+              className="h-10 sm:h-9 w-full sm:w-auto px-4 text-xs font-semibold rounded-xl cursor-pointer gap-1.5 shadow-xs"
+            >
+              {isExtracting ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>Extracting...</span>
+                </>
+              ) : (
+                <>
+                  <span>Autofill</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </div>
     </div>
