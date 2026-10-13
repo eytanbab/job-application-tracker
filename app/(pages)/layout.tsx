@@ -1,3 +1,4 @@
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { GuestNotice } from "@/app/_components/guest-notice";
 import { getClerkUserId } from "@/lib/auth/clerk-session";
 
@@ -14,6 +15,9 @@ export default async function PagesLayout({
     <main className="p-3 sm:p-4 md:p-6 w-full max-w-[1920px] mx-auto overflow-x-hidden min-w-0">
       {!clerkUserId && <GuestNotice />}
       {children}
+      {/* TODO: move to app/layout.tsx once the Phase 0 layout changes land,
+          so "/" and the auth pages are measured too */}
+      <SpeedInsights />
     </main>
   );
 }
