@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
+import { allowsDevFallbacks } from "@/lib/env";
 import { verifyGuestId } from "@/lib/security/guest-token";
 
 export async function getCurrentUserIdOrThrow(): Promise<string> {
@@ -26,12 +27,9 @@ export async function getCurrentUserIdOrThrow(): Promise<string> {
     // cookies() error (e.g. called outside Next.js request context)
   }
 
-  // Development/mock mode fallback when no credentials or sessions are available
-  if (
-    !process.env.DATABASE_URL ||
-    !process.env.CLERK_SECRET_KEY ||
-    process.env.NODE_ENV === "development"
-  ) {
+  // Development/demo fallback when no credentials or sessions are available.
+  // Never in a real deployment: every visitor would share one account.
+  if (allowsDevFallbacks()) {
     return "mock-dev-user";
   }
 

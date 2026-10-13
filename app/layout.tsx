@@ -10,6 +10,7 @@ import { ThemeProvider } from "../lib/context/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 
 import { ClerkProvider } from "@clerk/nextjs";
+import { getClerkPublishableKey } from "@/lib/env";
 import { GuestDataMigrator } from "./_components/guest-data-migrator";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
@@ -36,12 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider
-      publishableKey={
-        process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
-        "pk_test_bW9jay5jbGVyay5hY2NvdW50cy5kZXYk"
-      }
-    >
+    <ClerkProvider publishableKey={getClerkPublishableKey()}>
       <html lang="en" suppressHydrationWarning>
         <body
           suppressHydrationWarning
