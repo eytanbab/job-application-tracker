@@ -22,7 +22,7 @@ export default async function AtsCheckerPage() {
           ATS Resume Checker & Optimizer
         </h1>
         <p className="text-sm text-muted-foreground">
-          Compare your resume against any target job description to diagnose keyword gaps, evaluate ATS parseability, and optimize bullet points with Gemini 2.5.
+          Compare your resume against any target job description to diagnose keyword gaps, evaluate ATS parseability, and optimize bullet points with Gemini 3.5.
         </p>
       </div>
 
