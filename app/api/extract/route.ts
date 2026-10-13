@@ -12,7 +12,9 @@ import { requireSignedInUser } from "@/app/actions/_utils/require-signed-in-user
 import { consumeAiQuota, peekAiQuota, type AiQuotaResult } from "@/lib/ai-usage";
 import { formatQuotaExceededMessage } from "@/lib/ai-quota";
 
-export const maxDuration = 30;
+// Scraping takes ~1s, but Gemini's response time swings from a few seconds
+// to over a minute when the API is under heavy load.
+export const maxDuration = 60;
 // Stop retrying Gemini early enough to send a response before maxDuration.
 const GEMINI_DEADLINE_MS = (maxDuration - 3) * 1000;
 const isDevelopment = process.env.NODE_ENV === "development";
