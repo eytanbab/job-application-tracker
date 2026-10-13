@@ -134,7 +134,7 @@ A single dashboard, filterable by month and year:
 | Storage | Amazon S3 (`@aws-sdk/client-s3`, presigned URLs) |
 | UI | [Tailwind CSS v4](https://tailwindcss.com/), [Radix UI](https://www.radix-ui.com/), [shadcn/ui](https://ui.shadcn.com/), [Lucide](https://lucide.dev/), [Recharts](https://recharts.org/) |
 | Forms and tables | [React Hook Form](https://react-hook-form.com/), [Zod 4](https://zod.dev/), drizzle-zod, [TanStack Table](https://tanstack.com/table) |
-| Testing | [Playwright](https://playwright.dev/) |
+| Testing | [Vitest](https://vitest.dev/), [Playwright](https://playwright.dev/) |
 
 ## Getting started
 
@@ -159,6 +159,17 @@ Open [http://localhost:3000](http://localhost:3000). With no environment variabl
 - Without a Gemini key, link autofill only works for postings the built-in parsers can read; for any other link it keeps the URL and switches to manual entry. The ATS checker returns a sample analysis.
 - Without S3, uploads go to a mock location.
 
+### Production build without services (demo mode)
+
+A production build (`npm run build`, `npm run start`) checks its environment on startup and stops with a list of missing variables unless Clerk and the database are configured (see `lib/env.ts`). To build and run the same self-contained demo in production mode, for example in CI, set `DEMO_MODE=true`:
+
+```bash
+DEMO_MODE=true npm run build
+DEMO_MODE=true npm run start
+```
+
+Never set `DEMO_MODE` on a real deployment: it turns off the production checks and enables development fallbacks (a shared mock user, a public guest-cookie signing key).
+
 ### Full setup
 
 Create `.env.local` in the project root and fill in the services you want (see [Environment variables](#environment-variables)), then apply the database migrations:
@@ -170,11 +181,14 @@ npm run dev
 
 ## Environment variables
 
+Variables marked **required in production** must be set for `npm run build` and `npm run start` (and on Vercel), unless `DEMO_MODE=true`. Everything else is optional. Development needs none of them.
+
 | Variable | Needed for | Notes |
 |---|---|---|
-| `DATABASE_URL` | Persistent data | Neon Postgres connection string. If unset, the in-memory mock store is used. |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Sign-in | From the Clerk dashboard. |
-| `CLERK_SECRET_KEY` | Sign-in, guest sessions | Also signs the guest cookie. Set it in any deployed environment. |
+| `DATABASE_URL` | Persistent data | **Required in production.** Neon Postgres connection string. If unset in development, the in-memory mock store is used. |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Sign-in | **Required in production.** From the Clerk dashboard. |
+| `CLERK_SECRET_KEY` | Sign-in, guest sessions | **Required in production.** Also signs the guest cookie. Without it (development and demo mode only), Clerk is skipped and everyone uses the app as a guest. |
+| `DEMO_MODE` | Production build without services | `true` lets a production build run on mock data with no secrets, as CI does. Never set it on a real deployment. |
 | `GEMINI_EXTRACTION_API_KEY` | Link autofill | Google AI Studio key used by `/api/extract`. |
 | `GEMINI_ATS_API_KEY` | ATS checker | Google AI Studio key used by the resume analysis. |
 | `GEMINI_API_KEY` | Either of the above | Fallback used when the specific Gemini key is not set. |
@@ -201,6 +215,8 @@ Never commit real keys. `.env*` files are git-ignored.
 | `npm run dev` | Start the dev server with Turbopack |
 | `npm run build` | Production build |
 | `npm run start` | Serve the production build |
+| `npm test` | Run the Vitest unit tests |
+| `npm run test:watch` | Run the unit tests in watch mode |
 | `npm run test:e2e` | Run the Playwright end-to-end suite |
 | `npm run db:generate` | Generate a Drizzle migration from schema changes |
 | `npm run db:migrate` | Apply pending migrations |
@@ -209,12 +225,28 @@ Never commit real keys. `.env*` files are git-ignored.
 ## Testing
 
 ```bash
-npx tsc --noEmit     # type check
-npm run build        # production build
-npm run test:e2e     # end-to-end tests
+npx tsc --noEmit                 # type check
+npm test                         # unit tests
+DEMO_MODE=true npm run build     # production build (drop DEMO_MODE once .env.local has production keys)
+npm run test:e2e                 # end-to-end tests
 ```
 
+Unit tests (Vitest) live next to the code in `__tests__` folders. They never touch the network: `test/setup.ts` fails any test that makes an unmocked `fetch`, and parser tests run against saved fixtures in `lib/parsers/__tests__/fixtures/`.
+
 The end-to-end suite signs in as the Clerk test user from `E2E_USER_EMAIL` / `E2E_USER_PASSWORD` and starts the dev server on port 3000 itself, reusing one that is already running.
+
+### Continuous integration
+
+`.github/workflows/ci.yml` runs on every pull request and on pushes to `master`:
+
+- **Type check, unit tests, build**: `npm ci`, `npx tsc --noEmit`, `npm test` and `npm run build`, with `DEMO_MODE=true` and no database (CI has no service secrets).
+- **End-to-end tests**: the Playwright suite against the mock store. It needs a Clerk development instance, so it runs only when the `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `E2E_USER_EMAIL` and `E2E_USER_PASSWORD` repository secrets are set, and is skipped otherwise.
+
+React Doctor runs separately (`.github/workflows/react-doctor.yml`).
+
+### Linting
+
+There is no lint script yet. Next.js 16 removed `next lint`, and `eslint-config-next` loads typescript-eslint, which refuses to run on TypeScript 7. The [TypeScript 7 release notes](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0) describe the fix: give ESLint the TypeScript 6 API from the `@typescript/typescript6` compatibility package, for example with an npm override scoped to `eslint-config-next`, then run `eslint .`.
 
 ## Scheduled jobs
 
@@ -240,13 +272,16 @@ lib/
   parsers/                Deterministic job board parsers
   mock-data/              In-memory store and seed data for demo mode
   security/               Guest token signing, URL validation
+  env.ts                  Environment validation and demo-mode checks
   scraper.ts              Page retrieval chain
   gemini.ts               Gemini clients
   s3-client.ts            S3 client
   utils.ts                Shared helpers (statuses, formatting)
 e2e/                      Playwright tests
+test/                     Vitest setup and shared test helpers
 migrations/               Drizzle migrations
 proxy.ts                  Clerk middleware and guest cookie
+instrumentation.ts        Validates the environment when a server starts
 ```
 
 ## Contributing
