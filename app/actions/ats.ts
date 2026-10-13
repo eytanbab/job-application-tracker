@@ -68,7 +68,7 @@ export type AtsAnalysisResponse =
 
 // Retry budget for the scan's Gemini call. Keep it under the maxDuration
 // exported by app/(pages)/ats-checker/page.tsx, which bounds this action.
-const ATS_GEMINI_DEADLINE_MS = 100_000;
+const ATS_GEMINI_DEADLINE_MS = 55_000;
 
 export type ResumeInputPayload =
   | { type: "text"; text: string }
