@@ -249,6 +249,90 @@ class MockStore {
     return this.getViewUrl(userId, id);
   }
 
+  // --- ACCOUNT DATA ---
+
+  // The mock store is single-tenant: every visitor sees every row (see
+  // getApplications/getDocuments), so a user's export and deletion cover
+  // everything they can see.
+  public exportUserData(userId: string): {
+    applications: MockApplication[];
+    statusHistory: MockStatusHistory[];
+    documents: MockDocument[];
+  } {
+    return {
+      applications: this.applications.map((a) => ({ ...a })),
+      statusHistory: this.statusHistory.map((h) => ({ ...h })),
+      documents: this.documents.map((d) => ({ ...d })),
+    };
+  }
+
+  public deleteUserData(userId: string): {
+    applications: number;
+    documents: number;
+    fileKeys: string[];
+  } {
+    const result = {
+      applications: this.applications.length,
+      documents: this.documents.length,
+      fileKeys: this.documents.map((d) => d.file_key),
+    };
+    this.applications = [];
+    this.statusHistory = [];
+    this.documents = [];
+    return result;
+  }
+
+  /** Latest activity per row owner, for the guest retention job. */
+  public getOwnerActivity(): { ownerId: string; lastActivity: Date }[] {
+    const latest = new Map<string, Date>();
+    const bump = (ownerId: string, at: Date) => {
+      const prev = latest.get(ownerId);
+      if (!prev || at > prev) latest.set(ownerId, at);
+    };
+    const ownerByApp = new Map(this.applications.map((a) => [a.id, a.userId]));
+
+    this.applications.forEach((a) => bump(a.userId, new Date(a.createdAt)));
+    this.statusHistory.forEach((h) => {
+      const ownerId = ownerByApp.get(h.applicationId);
+      if (ownerId) bump(ownerId, new Date(h.createdAt));
+    });
+    this.documents.forEach((d) => bump(d.userId, new Date(d.created_at)));
+
+    return [...latest].map(([ownerId, lastActivity]) => ({
+      ownerId,
+      lastActivity,
+    }));
+  }
+
+  /** Deletes only rows owned by ownerId (used by the retention job). */
+  public deleteOwnerData(ownerId: string): {
+    applications: number;
+    documents: number;
+    fileKeys: string[];
+  } {
+    const appIds = new Set(
+      this.applications.filter((a) => a.userId === ownerId).map((a) => a.id),
+    );
+    const docs = this.documents.filter((d) => d.userId === ownerId);
+    const docIds = new Set(docs.map((d) => d.id));
+
+    this.applications = this.applications
+      .filter((a) => !appIds.has(a.id))
+      .map((a) =>
+        a.resumeId && docIds.has(a.resumeId) ? { ...a, resumeId: null } : a,
+      );
+    this.statusHistory = this.statusHistory.filter(
+      (h) => !appIds.has(h.applicationId),
+    );
+    this.documents = this.documents.filter((d) => !docIds.has(d.id));
+
+    return {
+      applications: appIds.size,
+      documents: docs.length,
+      fileKeys: docs.map((d) => d.file_key),
+    };
+  }
+
   // --- ANALYTICS QUERIES ---
 
   private filterApps(month?: string, year?: string): MockApplication[] {
