@@ -1,16 +1,14 @@
 import { NextResponse } from "next/server";
 import { syncGhostedApplications } from "@/app/actions/applications";
+import { rejectUnauthorizedCron } from "@/lib/security/cron-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  try {
-    // Check for authorization header if CRON_SECRET is configured
-    const authHeader = req.headers.get("authorization");
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const rejection = rejectUnauthorizedCron(req);
+  if (rejection) return rejection;
 
+  try {
     const transitionedCount = await syncGhostedApplications();
 
     return NextResponse.json({
