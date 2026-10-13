@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ResumeInputSection } from "./resume-input-section";
@@ -26,6 +27,7 @@ import {
   Edit3,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { formatQuotaExceededMessage } from "@/lib/ai-quota";
 
 type SavedDocument = {
   id: string;
@@ -47,7 +49,11 @@ const LOADING_STEPS = [
   "Synthesizing high-impact bullet rewrites...",
 ];
 
+const formatLocalTime = (date: Date) =>
+  date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
 export function AtsCheckerClient({ savedDocuments }: AtsCheckerClientProps) {
+  const router = useRouter();
   const [resumeInput, setResumeInput] = useState<ResumeInputPayload>(
     savedDocuments.length > 0
       ? { type: "document", documentId: savedDocuments[0].id }
@@ -96,6 +102,29 @@ export function AtsCheckerClient({ savedDocuments }: AtsCheckerClientProps) {
         toast({
           title: "Analysis complete!",
           description: `Resume evaluated with an overall score of ${res.data.overallScore}/100.`,
+        });
+      } else if (res.code === "auth_required") {
+        // The session ended; re-render the page to show the sign-in gate.
+        toast({
+          title: "Sign in to run an ATS scan",
+          description: res.error,
+        });
+        router.refresh();
+      } else if (res.code === "rate_limited") {
+        const message =
+          res.resetAt && res.limit !== undefined
+            ? formatQuotaExceededMessage(
+                "ats",
+                res.limit,
+                new Date(res.resetAt),
+                new Date(),
+                formatLocalTime,
+              )
+            : res.error;
+        setError(message);
+        toast({
+          title: "Daily ATS scan limit reached",
+          description: message,
         });
       } else {
         setError(res.error);

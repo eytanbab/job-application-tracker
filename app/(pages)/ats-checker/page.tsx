@@ -1,5 +1,7 @@
 import { getSavedResumes } from "@/app/actions/ats";
+import { requireSignedInUser } from "@/app/actions/_utils/require-signed-in-user";
 import { AtsCheckerClient } from "./components/ats-checker-client";
+import { AtsSignInGate } from "./components/ats-sign-in-gate";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +12,8 @@ export async function generateMetadata() {
 }
 
 export default async function AtsCheckerPage() {
-  const savedDocuments = await getSavedResumes();
+  const user = await requireSignedInUser();
+  const savedDocuments = user.ok ? await getSavedResumes() : [];
 
   return (
     <div className="flex flex-col gap-6 w-full opacity-100 transition-opacity duration-500">
@@ -23,7 +26,11 @@ export default async function AtsCheckerPage() {
         </p>
       </div>
 
-      <AtsCheckerClient savedDocuments={savedDocuments} />
+      {user.ok ? (
+        <AtsCheckerClient savedDocuments={savedDocuments} />
+      ) : (
+        <AtsSignInGate />
+      )}
     </div>
   );
 }
