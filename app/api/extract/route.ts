@@ -95,7 +95,7 @@ export async function POST(req: Request) {
     // 2. AI Fallback (For unparsed SPAs or non-standard HTML structures)
     if (isDevelopment) {
       console.log(
-        `[API] Deterministic parser could not extract complete data. Falling back to Gemini 3.5 Flash-Lite...`,
+        `[API] Deterministic parser could not extract complete data. Falling back to Gemini 3.1 Flash-Lite...`,
       );
     }
 
@@ -152,7 +152,9 @@ ${webpage}`;
     }
 
     const response = await generateContentWithRetry(geminiExtractionClient, {
-      model: "gemini-3.5-flash-lite",
+      // 3.1 Flash-Lite answered in a median ~8s in our tests vs ~70s for 3.5
+      // Flash-Lite, with the same extraction quality.
+      model: "gemini-3.1-flash-lite",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
         responseMimeType: "application/json",

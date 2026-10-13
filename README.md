@@ -88,7 +88,7 @@ When you paste a URL, `/api/extract` tries the cheapest method first:
 
 1. **Deterministic parsers** (`lib/parsers/`): board-specific public APIs, embedded data, Schema.org `JobPosting` JSON-LD and page metadata. No AI call is made.
 2. **Page retrieval** (`lib/scraper.ts`), if parsing is incomplete: direct HTML fetch, then the [Jina Reader](https://jina.ai/reader/), then an optional external scraper service (`SCRAPER_SERVICE_URL`), then local Playwright (development only).
-3. **Gemini** (`gemini-3.5-flash-lite`) turns the retrieved page into structured fields.
+3. **Gemini** (`gemini-3.1-flash-lite`) turns the retrieved page into structured fields.
 
 | Coverage | Job boards |
 |---|---|
@@ -133,7 +133,7 @@ A single dashboard, filterable by month and year:
 | Framework | [Next.js 16](https://nextjs.org/) (App Router, Turbopack), [React 19](https://react.dev/), [TypeScript 7](https://www.typescriptlang.org/) |
 | Data | [Neon](https://neon.tech/) serverless Postgres, [Drizzle ORM](https://orm.drizzle.team/) and drizzle-kit |
 | Auth | [Clerk](https://clerk.com/) |
-| AI | [Google Gen AI SDK](https://ai.google.dev/) (Gemini 3.5 Flash and Flash-Lite) |
+| AI | [Google Gen AI SDK](https://ai.google.dev/) (Gemini 3.5 Flash and 3.1 Flash-Lite) |
 | Storage | Amazon S3 (`@aws-sdk/client-s3`, presigned URLs) |
 | UI | [Tailwind CSS v4](https://tailwindcss.com/), [Radix UI](https://www.radix-ui.com/), [shadcn/ui](https://ui.shadcn.com/), [Lucide](https://lucide.dev/), [Recharts](https://recharts.org/) |
 | Forms and tables | [React Hook Form](https://react-hook-form.com/), [Zod 4](https://zod.dev/), drizzle-zod, [TanStack Table](https://tanstack.com/table) |
