@@ -201,6 +201,10 @@ Variables marked **required in production** must be set for `npm run build` and 
 | `NEXT_AWS_S3_SECRET_ACCESS_KEY` | Document uploads | |
 | `SCRAPER_SERVICE_URL` | Optional | External scraper service, tried before local Playwright for pages that need a browser. |
 | `CRON_SECRET` | Scheduled jobs | **Required in production.** Bearer token for the `/api/cron/*` routes. Without it they refuse to run in production (503); in development they run unprotected. |
+| `SENTRY_DSN` | Optional: error monitoring | Sentry DSN for server and edge errors. Sentry stays off when unset. Falls back to `NEXT_PUBLIC_SENTRY_DSN`. |
+| `NEXT_PUBLIC_SENTRY_DSN` | Optional: error monitoring | Sentry DSN for browser errors. Usually the same value as `SENTRY_DSN`. |
+| `SENTRY_AUTH_TOKEN` | Optional: source maps | Build-time token. Source maps are only uploaded to Sentry when set. |
+| `SENTRY_ORG`, `SENTRY_PROJECT` | Optional: source maps | Sentry org and project slugs for the source map upload. |
 | `E2E_USER_EMAIL`, `E2E_USER_PASSWORD` | End-to-end tests | A Clerk test user. Can live in `.env.test`. |
 
 Never commit real keys. `.env*` files are git-ignored.
