@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: ["master"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # CI has no service secrets. DATABASE_URL stays unset, so the app uses the
+  # in-memory mock store, and DEMO_MODE lets a production build run without
+  # Clerk and database keys (see lib/env.ts).
+  DEMO_MODE: "true"
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  checks:
+    name: Type check, unit tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  e2e:
+    name: End-to-end tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # The suite signs in as a Clerk test user, so it needs a Clerk dev
+      # instance. Without these secrets (forks, or before they are configured)
+      # the job is skipped rather than failed.
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+      E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+      E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
+    steps:
+      - name: Check for Clerk test secrets
+        id: secrets
+        run: |
+          if [ -n "$CLERK_SECRET_KEY" ] && [ -n "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" ] && [ -n "$E2E_USER_EMAIL" ] && [ -n "$E2E_USER_PASSWORD" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=E2E skipped::Set the CLERK_SECRET_KEY, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, E2E_USER_EMAIL and E2E_USER_PASSWORD repository secrets to run the Playwright suite."
+          fi
+
+      - uses: actions/checkout@v5
+        if: steps.secrets.outputs.available == 'true'
+
+      - uses: actions/setup-node@v5
+        if: steps.secrets.outputs.available == 'true'
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.secrets.outputs.available == 'true'
+        run: npm ci
+
+      - name: Install Playwright browser
+        if: steps.secrets.outputs.available == 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright
+        if: steps.secrets.outputs.available == 'true'
+        run: npm run test:e2e
+
+      - name: Upload Playwright traces
+        if: failure() && steps.secrets.outputs.available == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
