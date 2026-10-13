@@ -122,6 +122,9 @@ A single dashboard, filterable by month and year:
 
 - [Clerk](https://clerk.com/) authentication.
 - Guests are identified by a signed cookie, so the app works without an account. Guest data is migrated to your account when you sign in.
+- Guests see a dismissible notice that their data lives in this browser only. Guest data with no activity for 90 days is deleted automatically (see [Scheduled jobs](#scheduled-jobs)).
+- **Settings** (`/settings`): manage your Clerk profile, export your data (JSON with applications, status history and document details, or CSV with applications), and delete your account or guest data, including uploaded files.
+- Privacy Policy (`/privacy`) and Terms of Service (`/terms`) templates. Review and fill them in before publishing.
 
 ## Tech stack
 
@@ -197,7 +200,7 @@ Variables marked **required in production** must be set for `npm run build` and 
 | `NEXT_AWS_S3_ACCESS_KEY_ID` | Document uploads | IAM credentials with access to the bucket. |
 | `NEXT_AWS_S3_SECRET_ACCESS_KEY` | Document uploads | |
 | `SCRAPER_SERVICE_URL` | Optional | External scraper service, tried before local Playwright for pages that need a browser. |
-| `CRON_SECRET` | Scheduled jobs | Bearer token required by `/api/cron/sync-ghosted` when set. |
+| `CRON_SECRET` | Scheduled jobs | **Required in production.** Bearer token for the `/api/cron/*` routes. Without it they refuse to run in production (503); in development they run unprotected. |
 | `E2E_USER_EMAIL`, `E2E_USER_PASSWORD` | End-to-end tests | A Clerk test user. Can live in `.env.test`. |
 
 Never commit real keys. `.env*` files are git-ignored.
@@ -250,7 +253,25 @@ There is no lint script yet. Next.js 16 removed `next lint`, and `eslint-config-
 
 ## Scheduled jobs
 
-`GET /api/cron/sync-ghosted` moves applications that have been in Applied or In Review for 30 days without a status change to Ghosted. The same sync also runs after application changes. To run it on a schedule (for example with Vercel Cron), call it with `Authorization: Bearer <CRON_SECRET>`.
+`vercel.json` schedules both jobs with [Vercel Cron](https://vercel.com/docs/cron-jobs), daily (times in UTC):
+
+| Route | Schedule | What it does |
+|---|---|---|
+| `GET /api/cron/sync-ghosted` | 06:00 | Moves applications that have been in Applied or In Review for 30 days without a status change to Ghosted. The same sync also runs after application changes. |
+| `GET /api/cron/cleanup-guests` | 06:30 | Deletes data owned by guest sessions (UUID owner IDs, never Clerk `user_…` IDs) with no activity for 90 days: applications, status history, documents and their S3 files. Activity is the latest of an application's creation, a status change, or a document upload. |
+
+Set `CRON_SECRET` in the Vercel project (Production environment). Vercel Cron then sends `Authorization: Bearer <CRON_SECRET>` automatically. Without it, both routes return 503 in production rather than run unprotected.
+
+`cleanup-guests` options:
+
+- `?dryRun=1` returns the counts it would delete without deleting anything.
+- `?limit=N` caps how many guests one run handles (default 200, maximum 1000).
+
+To call a job yourself:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" "https://<your-domain>/api/cron/cleanup-guests?dryRun=1"
+```
 
 ## Project structure
 
@@ -262,16 +283,19 @@ app/
     analytics/            Analytics dashboard
     ats-checker/          ATS resume checker
     documents/            Resume library
+    settings/             Profile, data export, account deletion
+  privacy/, terms/        Privacy Policy and Terms of Service templates
   _components/            Shared app components (application form, nav, autofill bar)
   actions/                Server actions (applications, analytics, ATS, documents, guest migration)
-  api/                    Route handlers (/api/extract, /api/cron/sync-ghosted)
+  api/                    Route handlers (/api/extract, /api/account/export, /api/cron/*)
   db/                     Drizzle schema and database client
 components/ui/            UI primitives (shadcn/ui on Radix)
 hooks/                    Shared React hooks
 lib/
   parsers/                Deterministic job board parsers
   mock-data/              In-memory store and seed data for demo mode
-  security/               Guest token signing, URL validation
+  security/               Guest token signing, URL validation, cron auth
+  account-data.ts         Data export, account deletion, guest retention
   env.ts                  Environment validation and demo-mode checks
   scraper.ts              Page retrieval chain
   gemini.ts               Gemini clients
@@ -281,6 +305,7 @@ e2e/                      Playwright tests
 test/                     Vitest setup and shared test helpers
 migrations/               Drizzle migrations
 proxy.ts                  Clerk middleware and guest cookie
+vercel.json               Vercel Cron schedules
 instrumentation.ts        Validates the environment when a server starts
 ```
 
