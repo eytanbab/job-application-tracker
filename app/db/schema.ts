@@ -6,6 +6,8 @@ import {
   uuid,
   timestamp,
   index,
+  integer,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 import { createInsertSchema } from "drizzle-zod";
@@ -85,3 +87,17 @@ export const applicationStatusHistory = pgTable(
 );
 
 const insertStatusHistorySchema = createInsertSchema(applicationStatusHistory);
+
+// Per-user daily counters for paid AI calls (Gemini). One row per user,
+// feature and UTC day; incremented with an atomic upsert in lib/ai-usage.ts.
+export const aiUsage = pgTable(
+  "ai_usage",
+  {
+    userId: varchar("user_id", { length: 255 }).notNull(),
+    feature: varchar("feature", { length: 32 }).notNull(),
+    day: date("day", { mode: "string" }).notNull(),
+    count: integer("count").default(0).notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.feature, table.day] })],
+);

@@ -120,6 +120,13 @@
       "when": 1791320683707,
       "tag": "0016_groovy_iron_monger",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791882623885,
+      "tag": "0017_add_ai_usage",
+      "breakpoints": true
     }
   ]
 }
