@@ -57,6 +57,10 @@ import {
   deleteStatusHistoryEntry,
 } from "@/app/actions/applications";
 import { toast } from "@/hooks/use-toast";
+import {
+  useApplicationDetails,
+  type ApplicationDetails,
+} from "@/hooks/use-application-details";
 import { TimelineEntry } from "./application-timeline";
 import { ApplicationDetailView } from "./application-detail-view";
 import {
@@ -219,6 +223,36 @@ export function ApplicationDetailSheet({
     }
   }, [initialApp, open]);
 
+  // List rows leave out the description and notes; load them for the open
+  // row and merge them in. Runs after the reset above, so a refreshed row
+  // keeps its text.
+  const {
+    details,
+    isLoading: isLoadingDetails,
+    error: detailsError,
+    retry: retryDetails,
+    setDetails,
+  } = useApplicationDetails(open ? initialApp?.id : null);
+
+  useEffect(() => {
+    if (!details) return;
+    const withDetails = (app: ApplicationDetail | null) =>
+      app ? { ...app, ...details } : app;
+    setCurrentApp(withDetails);
+    setDraftApp(withDetails);
+  }, [details, initialApp]);
+
+  /** Keeps the loaded details in step with text that was just saved. */
+  const rememberSavedDetails = useCallback(
+    (saved: Partial<ApplicationDetails>) => {
+      const next: Partial<ApplicationDetails> = {};
+      if (saved.description !== undefined) next.description = saved.description;
+      if (saved.notes !== undefined) next.notes = saved.notes;
+      setDetails(next);
+    },
+    [setDetails],
+  );
+
   // Handle draft field changes
   const handleUpdateDraftField = useCallback(
     (field: string, value: unknown) => {
@@ -240,6 +274,7 @@ export function ApplicationDetailSheet({
         try {
           await updateApplication(draftApp as unknown as FormValues);
           setCurrentApp(draftApp);
+          rememberSavedDetails(draftApp);
           setIsDirty(false);
           setIsEditingRole(false);
           setIsEditingCompany(false);
@@ -260,7 +295,7 @@ export function ApplicationDetailSheet({
         }
       });
     });
-  }, [draftApp]);
+  }, [draftApp, rememberSavedDetails]);
 
   // Discard changes
   const handleDiscardChanges = useCallback(() => {
@@ -589,7 +624,8 @@ export function ApplicationDetailSheet({
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
 
-                {totalApps > 1 && (
+                {/* Hidden for a linked row that isn't on the current page */}
+                {totalApps > 1 && currentIndex > 0 && (
                   <div className="flex items-center gap-1 bg-muted/40 p-0.5 rounded-lg border border-border/40 text-xs">
                     <Button
                       variant="ghost"
@@ -805,7 +841,26 @@ export function ApplicationDetailSheet({
                 : "overflow-y-auto p-4 sm:p-6 py-4 space-y-5",
             )}
           >
-            {isEditing ? (
+            {isEditing && !details ? (
+              <div
+                role="status"
+                className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground"
+              >
+                {detailsError ? (
+                  <>
+                    Couldn&apos;t load this application.
+                    <Button variant="outline" size="sm" onClick={retryDetails}>
+                      Try again
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading application...
+                  </>
+                )}
+              </div>
+            ) : isEditing ? (
               <ApplicationForm
                 ref={editFormRef}
                 defaultValues={activeApp as FormValues & { id?: string }}
@@ -813,6 +868,7 @@ export function ApplicationDetailSheet({
                 onSubmit={async (values) => {
                   try {
                     await updateApplication(values);
+                    rememberSavedDetails(values);
                     const updated = {
                       ...activeApp,
                       ...values,
@@ -861,6 +917,9 @@ export function ApplicationDetailSheet({
                 onEdit={() => setIsEditing(true)}
                 onAttachResume={handleAttachResume}
                 onDetachResume={handleDetachResume}
+                isLoadingDetails={isLoadingDetails}
+                detailsError={detailsError}
+                onRetryDetails={retryDetails}
               />
             )}
           </div>

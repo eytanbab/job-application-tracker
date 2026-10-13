@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -84,6 +85,10 @@ export interface ApplicationDetailViewProps {
   onEdit?: () => void;
   onAttachResume?: (resumeId: string, meta: ResumeMeta) => Promise<void>;
   onDetachResume?: () => Promise<void>;
+  /** True while the job description and notes load for this row. */
+  isLoadingDetails?: boolean;
+  detailsError?: boolean;
+  onRetryDetails?: () => void;
 }
 
 export function ApplicationDetailView({
@@ -101,6 +106,9 @@ export function ApplicationDetailView({
   onEdit,
   onAttachResume,
   onDetachResume,
+  isLoadingDetails = false,
+  detailsError = false,
+  onRetryDetails,
 }: ApplicationDetailViewProps) {
   const [copiedJd, setCopiedJd] = useState(false);
   const [isJdExpanded, setIsJdExpanded] = useState(false);
@@ -730,6 +738,41 @@ export function ApplicationDetailView({
       </div>
 
       {/* Separated Job Description & Personal Notes */}
+      {isLoadingDetails || detailsError ? (
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          aria-busy={isLoadingDetails}
+        >
+          {[
+            { icon: FileText, label: "Job Description" },
+            { icon: MessageSquare, label: "Personal Candidate Notes" },
+          ].map(({ icon: Icon, label }) => (
+            <div key={label} className="space-y-2 flex flex-col">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 h-6">
+                <Icon className="h-3.5 w-3.5 text-primary" /> {label}
+              </h4>
+              {detailsError ? (
+                <div className="rounded-xl border border-border/30 bg-muted/10 p-3.5 text-xs text-muted-foreground min-h-[90px] flex flex-col items-start gap-2">
+                  Couldn&apos;t load this section.
+                  {onRetryDetails && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={onRetryDetails}
+                      className="h-7 text-xs px-2.5 cursor-pointer"
+                    >
+                      Try again
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <Skeleton className="h-[90px] w-full rounded-xl" />
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Job Description (Collapsible + Inline Editable) */}
         <div className="space-y-2 flex flex-col">
@@ -928,6 +971,7 @@ export function ApplicationDetailView({
           )}
         </div>
       </div>
+      )}
 
       {/* Status Timeline History */}
       <ApplicationTimeline
