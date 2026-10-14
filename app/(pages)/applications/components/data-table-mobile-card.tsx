@@ -7,23 +7,8 @@ import { Building2, Calendar, ExternalLink, MapPin } from "lucide-react";
 import { getStatusDisplay, getStatusKind, StatusKind } from "@/lib/utils";
 import { formatDate, parseISO } from "date-fns";
 import { cn, formatPlatformLabel } from "@/lib/utils";
+import { statusBadgeClasses } from "./status-badge-classes";
 
-const statusBadgeClasses: Record<StatusKind, string> = {
-  applied:
-    "bg-primary/15 text-primary border border-primary/25 rounded-md font-semibold",
-  accepted:
-    "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 rounded-md font-semibold",
-  ghosted:
-    "bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30 rounded-md font-semibold",
-  review:
-    "bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/25 rounded-md font-semibold",
-  interview:
-    "bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25 rounded-md font-semibold",
-  rejected:
-    "bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/25 rounded-md font-semibold",
-  other:
-    "bg-secondary text-secondary-foreground border border-border rounded-md font-medium",
-};
 
 interface MobileCardItem {
   id?: string;
