@@ -172,26 +172,12 @@ export function DataTableGrid<
                 <TableRow
                   key={row.id}
                   data-testid="table-row"
-                  tabIndex={0}
                   data-state={row.getIsSelected() && "selected"}
+                  // Mouse users can click anywhere on the row; keyboard users
+                  // open it with the role title button, so the row itself
+                  // isn't a second tab stop for the same action.
                   onClick={() => onSelectRow(row.original)}
-                  onKeyDown={(e) => {
-                    const target = e.target as HTMLElement;
-                    if (
-                      target !== e.currentTarget &&
-                      (target.tagName === "BUTTON" ||
-                        target.tagName === "INPUT" ||
-                        target.tagName === "A" ||
-                        !!target.closest('button, input, a, [role="button"]'))
-                    ) {
-                      return;
-                    }
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      onSelectRow(row.original);
-                    }
-                  }}
-                  className="group/row cursor-pointer border-b border-border/30 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
+                  className="group/row cursor-pointer border-b border-border/30 transition-colors hover:bg-accent/40 focus-within:bg-accent/30"
                 >
                   {row.getVisibleCells().map((cell) => {
                     const isActions = cell.column.id === "actions";
