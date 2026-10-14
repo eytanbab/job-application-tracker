@@ -16,9 +16,9 @@ describe("application list actions (mock store)", () => {
   });
 
   it("returns one page of rows without the long-text fields", async () => {
-    const { rows, total } = await getApplicationsPage({ size: 5 });
-    expect(rows).toHaveLength(5);
-    expect(total).toBeGreaterThan(5);
+    const { rows, total } = await getApplicationsPage({ size: 10 });
+    expect(rows).toHaveLength(10);
+    expect(total).toBeGreaterThan(10);
     for (const row of rows) {
       expect(row).not.toHaveProperty("description");
       expect(row).not.toHaveProperty("notes");
@@ -26,11 +26,11 @@ describe("application list actions (mock store)", () => {
   });
 
   it("serves the last page when the requested page is past the end", async () => {
-    const { total } = await getApplicationsPage({ size: 5 });
-    const lastPage = Math.ceil(total / 5);
-    const result = await getApplicationsPage({ page: lastPage + 3, size: 5 });
+    const { total } = await getApplicationsPage({ size: 10 });
+    const lastPage = Math.ceil(total / 10);
+    const result = await getApplicationsPage({ page: lastPage + 3, size: 10 });
     expect(result.page).toBe(lastPage);
-    expect(result.rows.length).toBe(total - (lastPage - 1) * 5);
+    expect(result.rows.length).toBe(total - (lastPage - 1) * 10);
   });
 
   it("returns rows in the requested sort order", async () => {
