@@ -88,7 +88,7 @@ export function DataTableMobileCard({
         {/* Content & Metadata */}
         <div className="flex-1 min-w-0 space-y-1">
           <div className="flex items-start justify-between gap-2">
-            <h3
+            <h2
               id={`application-card-${item.id}`}
               className="font-bold text-sm sm:text-base text-foreground line-clamp-1 leading-snug"
             >
@@ -100,7 +100,7 @@ export function DataTableMobileCard({
               >
                 {item.role_name}
               </button>
-            </h3>
+            </h2>
             <Badge
               variant="outline"
               className={`shrink-0 text-[11px] py-0.5 px-2 rounded-md ${statusBadgeClasses[kind]}`}

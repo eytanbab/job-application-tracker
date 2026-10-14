@@ -315,7 +315,7 @@ export function ApplicationsKanban({
         <div
           className={`flex items-center justify-between px-3 py-2 rounded-md border font-semibold text-xs mb-3 ${col.headerBg}`}
         >
-          <span className="truncate">{col.label}</span>
+          <h2 className="truncate">{col.label}</h2>
           <Badge
             variant="secondary"
             className="h-5 rounded-md px-2 text-[11px] shrink-0 font-bold"
