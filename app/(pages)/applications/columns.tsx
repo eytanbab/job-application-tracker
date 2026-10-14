@@ -173,6 +173,7 @@ export const columns: ColumnDef<FormValues>[] = [
             <button
               type="button"
               data-testid="view-details-button"
+              data-open-application={row.original.id}
               onClick={(e) => {
                 e.stopPropagation();
                 meta?.onSelectApplication?.(row.original);

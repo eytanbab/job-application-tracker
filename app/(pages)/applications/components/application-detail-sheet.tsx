@@ -163,12 +163,20 @@ export function ApplicationDetailSheet({
   );
   const [isEditing, setIsEditing] = useState(false);
   const editFormRef = useRef<ApplicationFormHandle>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  // The application to return focus to when the panel closes. J/K can move
+  // to another row, and the row data is cleared on close, so track it here.
+  const focusReturnIdRef = useRef<string | undefined>(undefined);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [history, setHistory] = useState<TimelineEntry[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isSaving, startSaveTransition] = useTransition();
 
   const activeApp = draftApp || currentApp || initialApp;
+
+  useEffect(() => {
+    if (activeApp?.id) focusReturnIdRef.current = activeApp.id;
+  }, [activeApp?.id]);
 
   // Check if draftApp differs from currentApp
   const checkIsDirty = useCallback(
@@ -593,7 +601,30 @@ export function ApplicationDetailSheet({
         }}
       >
         <SheetContent
+          ref={contentRef}
           side="right"
+          // Focus the panel itself so screen readers announce its title,
+          // instead of landing on the first button ("Next application").
+          onOpenAutoFocus={(e) => {
+            e.preventDefault();
+            contentRef.current?.focus();
+          }}
+          // The panel opens from state, not a Radix trigger, so return focus
+          // to the row, card or Kanban card of the application last shown.
+          onCloseAutoFocus={(e) => {
+            const id = focusReturnIdRef.current;
+            const target = id
+              ? Array.from(
+                  document.querySelectorAll<HTMLElement>(
+                    `[data-open-application="${CSS.escape(id)}"]`,
+                  ),
+                ).find((el) => el.getClientRects().length > 0)
+              : undefined;
+            if (target) {
+              e.preventDefault();
+              target.focus();
+            }
+          }}
           onPointerDownOutside={(e) => {
             if (isDirty) {
               e.preventDefault();

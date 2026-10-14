@@ -65,6 +65,7 @@ export function DataTableMobileCard({
     <Card
       tabIndex={0}
       role="button"
+      data-open-application={item.id}
       aria-label={`Application for ${item.role_name} at ${item.company_name}`}
       onClick={() => onSelectRow(item)}
       onKeyDown={(e) => {

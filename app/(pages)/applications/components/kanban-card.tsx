@@ -96,6 +96,7 @@ export function KanbanCard({
         draggable
         tabIndex={0}
         role="article"
+        data-open-application={item.id}
         aria-label={`Application for ${item.role_name} at ${item.company_name}`}
         onDragStart={(e) => {
           e.dataTransfer.setData("application/json", JSON.stringify(item));
