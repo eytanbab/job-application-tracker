@@ -25,6 +25,14 @@ describe("application list actions (mock store)", () => {
     }
   });
 
+  it("serves the last page when the requested page is past the end", async () => {
+    const { total } = await getApplicationsPage({ size: 5 });
+    const lastPage = Math.ceil(total / 5);
+    const result = await getApplicationsPage({ page: lastPage + 3, size: 5 });
+    expect(result.page).toBe(lastPage);
+    expect(result.rows.length).toBe(total - (lastPage - 1) * 5);
+  });
+
   it("returns rows in the requested sort order", async () => {
     const { rows } = await getApplicationsPage({
       sort: "role_name",

@@ -38,6 +38,8 @@ interface DataTableProps<TData extends ApplicationRow, TValue> {
   data: TData[];
   /** Rows matching the current filters across all pages. */
   totalRows: number;
+  /** The page the server returned; it clamps a page past the end. */
+  currentPage: number;
   /** The first cards of each column; null in the table view. */
   kanbanColumns: KanbanColumns | null;
   statusCounts: StatusCounts;
@@ -52,6 +54,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
   columns,
   data,
   totalRows,
+  currentPage,
   kanbanColumns,
   statusCounts,
   platforms,
@@ -96,7 +99,14 @@ export function DataTable<TData extends ApplicationRow, TValue>({
     currentIndex,
     totalApps,
     isPending,
-  } = useDataTable({ columns, data, totalRows, platforms, linkedApp });
+  } = useDataTable({
+    columns,
+    data,
+    totalRows,
+    currentPage,
+    platforms,
+    linkedApp,
+  });
 
   const createFormRef = useRef<ApplicationFormHandle>(null);
 

@@ -362,23 +362,22 @@ export async function getApplicationsPage(
   const userId = await getCurrentUserIdOrThrow();
   const query = normalizeListQuery(rawQuery);
 
-  if (isMockDb) {
+  const run = async () => {
+    if (!isMockDb) return queryListRows(userId, query);
     const result = queryRows(mockStore.getApplications(userId), query);
     const listRows = new Map(mockListRows(userId).map((row) => [row.id, row]));
     return {
       rows: result.rows.map((row) => listRows.get(row.id)!),
       total: result.total,
-      page: query.page,
-      pageSize: query.pageSize,
     };
-  }
+  };
 
-  let result = await queryListRows(userId, query);
+  let result = await run();
   // A stale URL (e.g. page 9 after deleting rows) lands on the last page
   const lastPage = Math.max(1, Math.ceil(result.total / query.pageSize));
   if (query.page > lastPage) {
     query.page = lastPage;
-    result = await queryListRows(userId, query);
+    result = await run();
   }
   return { ...result, page: query.page, pageSize: query.pageSize };
 }
