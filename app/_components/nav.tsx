@@ -106,7 +106,7 @@ const Nav = () => {
               size="sm"
               className="h-8 px-3 text-xs font-semibold rounded-lg shadow-2xs cursor-pointer"
             >
-              Sign In
+              Sign in
             </Button>
           </SignInButton>
         </Show>

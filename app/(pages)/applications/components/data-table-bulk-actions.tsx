@@ -122,11 +122,15 @@ export function DataTableBulkActions({
           onClick={(e) => e.stopPropagation()}
         >
           <DialogHeader>
-            <DialogTitle>Delete {selectedCount} Applications?</DialogTitle>
+            <DialogTitle>
+              Delete {selectedCount} application{selectedCount === 1 ? "" : "s"}?
+            </DialogTitle>
             <DialogDescription>
-              This action cannot be undone. This will permanently delete all{" "}
+              This action cannot be undone. This will permanently delete{" "}
+              {selectedCount === 1 ? "the" : "all"}{" "}
               <strong className="text-foreground">{selectedCount}</strong>{" "}
-              selected job applications from your tracker.
+              selected job application{selectedCount === 1 ? "" : "s"} from your
+              tracker.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
@@ -156,7 +160,7 @@ export function DataTableBulkActions({
                   Deleting...
                 </>
               ) : (
-                `Delete ${selectedCount} Applications`
+                `Delete ${selectedCount} application${selectedCount === 1 ? "" : "s"}`
               )}
             </Button>
           </DialogFooter>
