@@ -237,8 +237,9 @@ export function KanbanCard({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="text-muted-foreground hover:text-foreground shrink-0"
-                title="Job Link"
+                className="inline-flex items-center justify-center h-11 w-11 -m-3.5 md:h-8 md:w-8 md:-m-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/60 shrink-0"
+                title="Open job posting"
+                aria-label={`Open job posting for ${item.role_name} (opens in new tab)`}
               >
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
