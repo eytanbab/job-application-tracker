@@ -47,29 +47,13 @@ export function DataTableMobileCard({
     .toUpperCase();
 
   return (
+    // The card is an article, not a button: the role title is the "open"
+    // control, stretched over the card with an ::after overlay, so the
+    // checkbox and job link stay separate controls above it.
     <Card
-      tabIndex={0}
-      role="button"
-      data-open-application={item.id}
-      aria-label={`Application for ${item.role_name} at ${item.company_name}`}
-      onClick={() => onSelectRow(item)}
-      onKeyDown={(e) => {
-        const target = e.target as HTMLElement;
-        if (
-          target !== e.currentTarget &&
-          (target.tagName === "INPUT" ||
-            target.tagName === "A" ||
-            target.tagName === "BUTTON")
-        ) {
-          return;
-        }
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onSelectRow(item);
-        }
-      }}
+      aria-labelledby={`application-card-${item.id}`}
       className={cn(
-        "cursor-pointer p-3.5 sm:p-4 rounded-xl border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary select-none active:scale-[0.99]",
+        "relative p-3.5 sm:p-4 rounded-xl border transition-all duration-150 select-none active:scale-[0.99] has-[[data-open-application]:focus-visible]:ring-2 has-[[data-open-application]:focus-visible]:ring-primary",
         isSelected
           ? "border-primary bg-primary/5 ring-1 ring-primary/20 shadow-xs"
           : "border-border/40 bg-card hover:border-primary/40 hover:shadow-xs",
@@ -78,19 +62,17 @@ export function DataTableMobileCard({
       <div className="flex items-start gap-3">
         {/* Selection Checkbox & Company Avatar */}
         <div className="flex items-center gap-2.5 shrink-0">
+          {/* The ::before extends the checkbox's own label to a 44px target */}
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={(checked) => onToggleSelected(!!checked)}
+            aria-label={`Select ${item.role_name} at ${item.company_name}`}
+            className="z-10 before:absolute before:-inset-3.5 before:content-['']"
+          />
           <div
-            className="flex items-center justify-center p-1 -m-1"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
+            aria-hidden="true"
+            className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-base select-none shadow-2xs"
           >
-            <Checkbox
-              checked={isSelected}
-              onCheckedChange={(checked) => onToggleSelected(!!checked)}
-              aria-label="Select application"
-            />
-          </div>
-
-          <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-base select-none shadow-2xs">
             {companyInitial}
           </div>
         </div>
@@ -98,10 +80,19 @@ export function DataTableMobileCard({
         {/* Content & Metadata */}
         <div className="flex-1 min-w-0 space-y-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-bold text-sm sm:text-base text-foreground line-clamp-1 leading-snug">
-              {item.role_name}
+            <h3
+              id={`application-card-${item.id}`}
+              className="font-bold text-sm sm:text-base text-foreground line-clamp-1 leading-snug"
+            >
+              <button
+                type="button"
+                data-open-application={item.id}
+                onClick={() => onSelectRow(item)}
+                className="text-left cursor-pointer focus-visible:outline-none after:absolute after:inset-0 after:rounded-xl after:content-['']"
+              >
+                {item.role_name}
+              </button>
             </h3>
-
             <Badge
               variant="outline"
               className={`capitalize shrink-0 text-[11px] py-0.5 px-2 rounded-md ${statusBadgeClasses[kind]}`}
@@ -143,8 +134,7 @@ export function DataTableMobileCard({
                 href={item.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="p-1 -mr-1 text-muted-foreground hover:text-foreground inline-flex items-center justify-center rounded-md hover:bg-accent/60 transition-colors"
+                className="relative z-10 h-11 w-11 -m-3 text-muted-foreground hover:text-foreground inline-flex items-center justify-center rounded-md hover:bg-accent/60 transition-colors"
                 title="Open job posting"
                 aria-label="Open original job posting (opens in new tab)"
               >
