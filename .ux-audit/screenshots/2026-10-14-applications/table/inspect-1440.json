@@ -1,0 +1,1150 @@
+{
+  "width": 1440,
+  "ok": true,
+  "screenshots": {
+    "fold": ".ux-audit\\screenshots\\2026-10-14-applications\\table\\1440w-fold.png",
+    "full": ".ux-audit\\screenshots\\2026-10-14-applications\\table\\1440w.png"
+  },
+  "structure": {
+    "title": "JobTracker | Applications",
+    "lang": "en",
+    "headings": [
+      {
+        "level": 3,
+        "text": "Full Stack Developer"
+      },
+      {
+        "level": 3,
+        "text": "Database Backend Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Engineer (Tooling)"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Developer"
+      },
+      {
+        "level": 3,
+        "text": "Systems Engineer (Workers Platform)"
+      },
+      {
+        "level": 3,
+        "text": "Product Engineer (Design Systems)"
+      },
+      {
+        "level": 3,
+        "text": "Senior Frontend Developer"
+      },
+      {
+        "level": 3,
+        "text": "Staff Platform Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Senior Frontend Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Engineer (AI Products)"
+      }
+    ],
+    "landmarks": [
+      "aside",
+      "nav",
+      "header",
+      "main"
+    ],
+    "horizontal_overflow": false
+  },
+  "axe": {
+    "violations": [
+      {
+        "id": "button-name",
+        "impact": "critical",
+        "wcag": [
+          "wcag2a",
+          "wcag412"
+        ],
+        "best_practice_only": false,
+        "help": "Buttons must have discernible text",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/button-name?application=axeAPI",
+        "node_count": 1,
+        "nodes": [
+          {
+            "target": ".dark\\:bg-muted\\/40",
+            "html": "<button type=\"button\" role=\"combobox\" aria-expanded=\"false\" aria-autocomplete=\"none\" dir=\"ltr\" data-state=\"closed\" class=\"flex items-center ju...\">",
+            "summary": "Fix any of the following:\n  Element does not have inner text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  "
+          }
+        ]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "wcag": [
+          "wcag2aa",
+          "wcag143"
+        ],
+        "best_practice_only": false,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=axeAPI",
+        "node_count": 10,
+        "nodes": [
+          {
+            "target": ".bg-primary-foreground\\/20",
+            "html": "<span class=\"inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-semibold tabular-nums leading-none bg-primary-foreground/20 text-primary-foreground\">18</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.8 (foreground color: #ffffff, background color: #8d6cef, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".sm\\:px-3.py-1\\.5[role=\"radio\"]:nth-child(2) > .sm\\:inline.hidden",
+            "html": "<span class=\"hidden sm:inline\">Kanban</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #677183, background color: #f3f4f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".group\\/row.focus-visible\\:ring-inset[data-testid=\"table-row\"]:nth-child(1) > .w-\\[125px\\]:nth-child(4) > .min-w-0 > .bg-primary\\/15.border-primary\\/25[title=\"Applied\"]",
+            "html": "<div class=\"items-center transition-colors capitalize border truncate max-w-[115px] xl:max-w-[125px] text-[11px] px-2 py-0.5 inline-block leading-normal bg-primary/15 text-primary border-primary/25 ro",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.45 (foreground color: #7047eb, background color: #eae3fc, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".group\\/row.focus-visible\\:ring-inset[data-testid=\"table-row\"]:nth-child(2) > .w-\\[125px\\]:nth-child(4) > .min-w-0 > .bg-primary\\/15.border-primary\\/25[title=\"Applied\"]",
+            "html": "<div class=\"items-center transition-colors capitalize border truncate max-w-[115px] xl:max-w-[125px] text-[11px] px-2 py-0.5 inline-block leading-normal bg-primary/15 text-primary border-primary/25 ro",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.45 (foreground color: #7047eb, background color: #eae3fc, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".group\\/row.focus-visible\\:ring-inset[data-testid=\"table-row\"]:nth-child(3) > .w-\\[125px\\]:nth-child(4) > .min-w-0 > .bg-primary\\/15.border-primary\\/25[title=\"Applied\"]",
+            "html": "<div class=\"items-center transition-colors capitalize border truncate max-w-[115px] xl:max-w-[125px] text-[11px] px-2 py-0.5 inline-block leading-normal bg-primary/15 text-primary border-primary/25 ro",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.45 (foreground color: #7047eb, background color: #eae3fc, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "page-has-heading-one",
+        "impact": "moderate",
+        "wcag": [],
+        "best_practice_only": true,
+        "help": "Page should contain a level-one heading",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/page-has-heading-one?application=axeAPI",
+        "node_count": 1,
+        "nodes": [
+          {
+            "target": "html",
+            "html": "<html lang=\"en\" class=\"light\" style=\"color-scheme: light;\">",
+            "summary": "Fix all of the following:\n  Page must have a level-one heading"
+          }
+        ]
+      }
+    ],
+    "needs_review": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "wcag": [
+          "wcag2aa",
+          "wcag143"
+        ],
+        "best_practice_only": false,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=axeAPI",
+        "node_count": 6,
+        "nodes": [
+          {
+            "target": ".border-border\\/50.py-1\\.5.hover\\:bg-accent\\/50:nth-child(2) > .bg-muted.leading-none.rounded-full",
+            "html": "<span class=\"inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-semibold tabular-nums leading-none bg-muted text-muted-foreground\">5</span>",
+            "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+          },
+          {
+            "target": ".border-border\\/50.py-1\\.5.hover\\:bg-accent\\/50:nth-child(3) > .bg-muted.leading-none.rounded-full",
+            "html": "<span class=\"inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-semibold tabular-nums leading-none bg-muted text-muted-foreground\">2</span>",
+            "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+          },
+          {
+            "target": ".border-border\\/50.py-1\\.5.hover\\:bg-accent\\/50:nth-child(4) > .bg-muted.leading-none.rounded-full",
+            "html": "<span class=\"inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-semibold tabular-nums leading-none bg-muted text-muted-foreground\">6</span>",
+            "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+          },
+          {
+            "target": ".border-border\\/50.py-1\\.5.hover\\:bg-accent\\/50:nth-child(5) > .bg-muted.leading-none.rounded-full",
+            "html": "<span class=\"inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-semibold tabular-nums leading-none bg-muted text-muted-foreground\">1</span>",
+            "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+          },
+          {
+            "target": ".border-border\\/50.py-1\\.5.hover\\:bg-accent\\/50:nth-child(6) > .bg-muted.leading-none.rounded-full",
+            "html": "<span class=\"inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-semibold tabular-nums leading-none bg-muted text-muted-foreground\">2</span>",
+            "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+          }
+        ]
+      }
+    ]
+  },
+  "keyboard": {
+    "stops_recorded": 60,
+    "no_visible_focus_change": 5,
+    "obscured_focus": 1,
+    "unnamed_stops": 0,
+    "note": "visible_focus_change=false compares computed outline, box-shadow, border, background, color, and text-decoration. Indicators drawn with pseudo-elements or on a parent are not detected, so confirm with --focus-shots or a screenshot before filing.",
+    "stops": [
+      {
+        "idx": 0,
+        "tag": "a",
+        "role": null,
+        "name": "JobTracker Career Pipeline",
+        "selector": "div.flex.min-h-screen:nth-of-type(3) > aside.sticky.top-0 > div.space-y-6:nth-of-type(1) > a.flex.items-center",
+        "rect": {
+          "x": 16,
+          "y": 16,
+          "w": 223,
+          "h": 49
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 1,
+        "tag": "a",
+        "role": null,
+        "name": "Applications",
+        "selector": "aside.sticky.top-0 > div.space-y-6:nth-of-type(1) > div.space-y-1 > a.flex.items-center:nth-of-type(1)",
+        "rect": {
+          "x": 16,
+          "y": 113,
+          "w": 223,
+          "h": 40
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 2,
+        "tag": "a",
+        "role": null,
+        "name": "Analytics",
+        "selector": "aside.sticky.top-0 > div.space-y-6:nth-of-type(1) > div.space-y-1 > a.flex.items-center:nth-of-type(2)",
+        "rect": {
+          "x": 16,
+          "y": 157,
+          "w": 223,
+          "h": 40
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 3,
+        "tag": "a",
+        "role": null,
+        "name": "ATS Checker",
+        "selector": "aside.sticky.top-0 > div.space-y-6:nth-of-type(1) > div.space-y-1 > a.flex.items-center:nth-of-type(3)",
+        "rect": {
+          "x": 16,
+          "y": 201,
+          "w": 223,
+          "h": 40
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 4,
+        "tag": "a",
+        "role": null,
+        "name": "Documents",
+        "selector": "aside.sticky.top-0 > div.space-y-6:nth-of-type(1) > div.space-y-1 > a.flex.items-center:nth-of-type(4)",
+        "rect": {
+          "x": 16,
+          "y": 245,
+          "w": 223,
+          "h": 40
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 5,
+        "tag": "a",
+        "role": null,
+        "name": "Settings",
+        "selector": "aside.sticky.top-0 > div.space-y-3:nth-of-type(2) > div.space-y-1 > a.flex.items-center",
+        "rect": {
+          "x": 16,
+          "y": 816,
+          "w": 223,
+          "h": 40
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 6,
+        "tag": "a",
+        "role": null,
+        "name": "Privacy",
+        "selector": "aside.sticky.top-0 > div.space-y-3:nth-of-type(2) > nav.hidden.items-center > a.underline-offset-4.transition-colors:nth-of-type(1)",
+        "rect": {
+          "x": 28,
+          "y": 868,
+          "w": 42,
+          "h": 16
+        },
+        "obscured_by": "html.light > body.min-h-screen.antialiased > script:nth-of-type(21) > nextjs-portal",
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 7,
+        "tag": "a",
+        "role": null,
+        "name": "Terms",
+        "selector": "aside.sticky.top-0 > div.space-y-3:nth-of-type(2) > nav.hidden.items-center > a.underline-offset-4.transition-colors:nth-of-type(2)",
+        "rect": {
+          "x": 82,
+          "y": 868,
+          "w": 35,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 8,
+        "tag": "button",
+        "role": null,
+        "name": "Toggle theme",
+        "selector": "button#radix-_R_plblb_",
+        "rect": {
+          "x": 1311,
+          "y": 12,
+          "w": 32,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": false
+      },
+      {
+        "idx": 9,
+        "tag": "button",
+        "role": null,
+        "name": "Sign In",
+        "selector": "div.flex-1.flex > header.sticky.top-0 > div.flex.items-center:nth-of-type(2) > button.inline-flex.items-center:nth-of-type(2)",
+        "rect": {
+          "x": 1353,
+          "y": 12,
+          "w": 63,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": false
+      },
+      {
+        "idx": 10,
+        "tag": "button",
+        "role": null,
+        "name": "Sign in",
+        "selector": "main.p-3.w-full > div.mb-4.flex:nth-of-type(1) > div.flex.flex-1 > button.inline-flex.items-center",
+        "rect": {
+          "x": 1296,
+          "y": 93,
+          "w": 63,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": false
+      },
+      {
+        "idx": 11,
+        "tag": "button",
+        "role": null,
+        "name": "Dismiss notice",
+        "selector": "div.flex-1.min-w-0 > main.p-3.w-full > div.mb-4.flex:nth-of-type(1) > button.inline-flex.items-center",
+        "rect": {
+          "x": 1371,
+          "y": 93,
+          "w": 32,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 12,
+        "tag": "button",
+        "role": null,
+        "name": "All 18",
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(1)",
+        "rect": {
+          "x": 280,
+          "y": 154,
+          "w": 75,
+          "h": 30
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 13,
+        "tag": "button",
+        "role": null,
+        "name": "Applied 5",
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(2)",
+        "rect": {
+          "x": 361,
+          "y": 154,
+          "w": 96,
+          "h": 30
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 14,
+        "tag": "button",
+        "role": null,
+        "name": "In Review 2",
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(3)",
+        "rect": {
+          "x": 463,
+          "y": 154,
+          "w": 107,
+          "h": 30
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 15,
+        "tag": "button",
+        "role": null,
+        "name": "Interviewing 6",
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(4)",
+        "rect": {
+          "x": 576,
+          "y": 154,
+          "w": 124,
+          "h": 30
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 16,
+        "tag": "button",
+        "role": null,
+        "name": "Offers 1",
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(5)",
+        "rect": {
+          "x": 706,
+          "y": 154,
+          "w": 88,
+          "h": 30
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 17,
+        "tag": "button",
+        "role": null,
+        "name": "Rejected 2",
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(6)",
+        "rect": {
+          "x": 800,
+          "y": 154,
+          "w": 102,
+          "h": 30
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 18,
+        "tag": "button",
+        "role": null,
+        "name": "Ghosted 2",
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(7)",
+        "rect": {
+          "x": 908,
+          "y": 154,
+          "w": 101,
+          "h": 30
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 19,
+        "tag": "input",
+        "role": null,
+        "name": "Search applications...",
+        "selector": "div.w-full.space-y-4 > div.flex.flex-col:nth-of-type(2) > div.relative.flex-1:nth-of-type(1) > input.flex.rounded-xl",
+        "rect": {
+          "x": 293,
+          "y": 217,
+          "w": 666,
+          "h": 36
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 20,
+        "tag": "button",
+        "role": null,
+        "name": "Platform",
+        "selector": "button#radix-_R_5hclrkneknflblb_",
+        "rect": {
+          "x": 969,
+          "y": 217,
+          "w": 102,
+          "h": 36
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": false
+      },
+      {
+        "idx": 21,
+        "tag": "button",
+        "role": "radio",
+        "name": "Table",
+        "selector": "div.flex.items-center:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > div.inline-flex.items-center > button.inline-flex.items-center:nth-of-type(1)",
+        "rect": {
+          "x": 1082,
+          "y": 221,
+          "w": 76,
+          "h": 28
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 22,
+        "tag": "button",
+        "role": "radio",
+        "name": "Kanban",
+        "selector": "div.flex.items-center:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > div.inline-flex.items-center > button.inline-flex.items-center:nth-of-type(2)",
+        "rect": {
+          "x": 1160,
+          "y": 221,
+          "w": 88,
+          "h": 28
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 23,
+        "tag": "button",
+        "role": null,
+        "name": "Add Application",
+        "selector": "div.flex.flex-col:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > button.items-center.justify-center",
+        "rect": {
+          "x": 1258,
+          "y": 217,
+          "w": 145,
+          "h": 36
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": false
+      },
+      {
+        "idx": 24,
+        "tag": "input",
+        "role": null,
+        "name": "Select all",
+        "selector": "th.h-12.align-middle:nth-of-type(1) > div.flex.items-center > label.relative.inline-flex > input.peer.absolute",
+        "rect": {
+          "x": 294,
+          "y": 300,
+          "w": 14,
+          "h": 14
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 25,
+        "tag": "button",
+        "role": null,
+        "name": "ROLE & COMPANY",
+        "selector": "thead.bg-muted/30 > tr.transition-colors.border-b > th.h-12.text-left:nth-of-type(2) > button.whitespace-nowrap.ring-offset-background",
+        "rect": {
+          "x": 333,
+          "y": 299,
+          "w": 138,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 26,
+        "tag": "button",
+        "role": null,
+        "name": "DATE APPLIED",
+        "selector": "thead.bg-muted/30 > tr.transition-colors.border-b > th.h-12.text-left:nth-of-type(3) > button.whitespace-nowrap.ring-offset-background",
+        "rect": {
+          "x": 633,
+          "y": 299,
+          "w": 114,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 27,
+        "tag": "button",
+        "role": null,
+        "name": "STATUS",
+        "selector": "thead.bg-muted/30 > tr.transition-colors.border-b > th.h-12.text-left:nth-of-type(4) > button.whitespace-nowrap.ring-offset-background",
+        "rect": {
+          "x": 771,
+          "y": 299,
+          "w": 73,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 28,
+        "tag": "button",
+        "role": null,
+        "name": "LOCATION",
+        "selector": "thead.bg-muted/30 > tr.transition-colors.border-b > th.h-12.text-left:nth-of-type(5) > button.whitespace-nowrap.ring-offset-background",
+        "rect": {
+          "x": 920,
+          "y": 299,
+          "w": 89,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 29,
+        "tag": "button",
+        "role": null,
+        "name": "PLATFORM",
+        "selector": "thead.bg-muted/30 > tr.transition-colors.border-b > th.h-12.text-left:nth-of-type(6) > button.whitespace-nowrap.ring-offset-background",
+        "rect": {
+          "x": 1074,
+          "y": 299,
+          "w": 93,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 30,
+        "tag": "button",
+        "role": null,
+        "name": "SALARY",
+        "selector": "thead.bg-muted/30 > tr.transition-colors.border-b > th.h-12.text-left:nth-of-type(7) > button.whitespace-nowrap.ring-offset-background",
+        "rect": {
+          "x": 1193,
+          "y": 299,
+          "w": 74,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 31,
+        "tag": "tr",
+        "role": null,
+        "name": "Full Stack Developer PostHog Oct 12, 2026 Applied: Applied Remote (Global) Wellf",
+        "selector": "div.relative.w-full > table.caption-bottom.text-sm > tbody > tr.group/row.cursor-pointer:nth-of-type(1)",
+        "rect": {
+          "x": 281,
+          "y": 331,
+          "w": 1146,
+          "h": 63
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 32,
+        "tag": "input",
+        "role": null,
+        "name": "Select row",
+        "selector": "td.p-4.align-middle:nth-of-type(1) > div.flex.items-center > label.relative.inline-flex > input.peer.absolute",
+        "rect": {
+          "x": 294,
+          "y": 356,
+          "w": 14,
+          "h": 14
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 33,
+        "tag": "button",
+        "role": null,
+        "name": "Full Stack Developer",
+        "selector": "td.p-4.align-middle:nth-of-type(2) > div.space-y-0.5.min-w-0 > div.flex.items-center:nth-of-type(1) > button.font-semibold.text-foreground",
+        "rect": {
+          "x": 333,
+          "y": 344,
+          "w": 138,
+          "h": 20
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 34,
+        "tag": "a",
+        "role": null,
+        "name": "Open job posting for Full Stack Developer",
+        "selector": "td.p-4.align-middle:nth-of-type(2) > div.space-y-0.5.min-w-0 > div.flex.items-center:nth-of-type(1) > a.inline-flex.items-center",
+        "rect": {
+          "x": 477,
+          "y": 346,
+          "w": 16,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 35,
+        "tag": "button",
+        "role": null,
+        "name": "Edit application",
+        "selector": "tr.group/row.cursor-pointer:nth-of-type(1) > td.p-4.align-middle:nth-of-type(8) > div.flex.items-center > button.inline-flex.items-center:nth-of-type(1)",
+        "rect": {
+          "x": 1335,
+          "y": 347,
+          "w": 32,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 36,
+        "tag": "button",
+        "role": null,
+        "name": "Delete application",
+        "selector": "tr.group/row.cursor-pointer:nth-of-type(1) > td.p-4.align-middle:nth-of-type(8) > div.flex.items-center > button.inline-flex.items-center:nth-of-type(2)",
+        "rect": {
+          "x": 1371,
+          "y": 347,
+          "w": 32,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 37,
+        "tag": "tr",
+        "role": null,
+        "name": "Database Backend Engineer Supabase Oct 11, 2026 Applied: Applied Remote (Global)",
+        "selector": "div.relative.w-full > table.caption-bottom.text-sm > tbody > tr.group/row.cursor-pointer:nth-of-type(2)",
+        "rect": {
+          "x": 281,
+          "y": 394,
+          "w": 1146,
+          "h": 63
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 38,
+        "tag": "input",
+        "role": null,
+        "name": "Select row",
+        "selector": "td.p-4.align-middle:nth-of-type(1) > div.flex.items-center > label.relative.inline-flex > input.peer.absolute",
+        "rect": {
+          "x": 294,
+          "y": 419,
+          "w": 14,
+          "h": 14
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 39,
+        "tag": "button",
+        "role": null,
+        "name": "Database Backend Engineer",
+        "selector": "td.p-4.align-middle:nth-of-type(2) > div.space-y-0.5.min-w-0 > div.flex.items-center:nth-of-type(1) > button.font-semibold.text-foreground",
+        "rect": {
+          "x": 333,
+          "y": 407,
+          "w": 190,
+          "h": 20
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 40,
+        "tag": "a",
+        "role": null,
+        "name": "Open job posting for Database Backend Engineer",
+        "selector": "td.p-4.align-middle:nth-of-type(2) > div.space-y-0.5.min-w-0 > div.flex.items-center:nth-of-type(1) > a.inline-flex.items-center",
+        "rect": {
+          "x": 529,
+          "y": 409,
+          "w": 16,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 41,
+        "tag": "button",
+        "role": null,
+        "name": "Edit application",
+        "selector": "tr.group/row.cursor-pointer:nth-of-type(2) > td.p-4.align-middle:nth-of-type(8) > div.flex.items-center > button.inline-flex.items-center:nth-of-type(1)",
+        "rect": {
+          "x": 1335,
+          "y": 410,
+          "w": 32,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 42,
+        "tag": "button",
+        "role": null,
+        "name": "Delete application",
+        "selector": "tr.group/row.cursor-pointer:nth-of-type(2) > td.p-4.align-middle:nth-of-type(8) > div.flex.items-center > button.inline-flex.items-center:nth-of-type(2)",
+        "rect": {
+          "x": 1371,
+          "y": 410,
+          "w": 32,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 43,
+        "tag": "tr",
+        "role": null,
+        "name": "Full Stack Engineer (Tooling) Anthropic Oct 9, 2026 Applied: Applied San Francis",
+        "selector": "div.relative.w-full > table.caption-bottom.text-sm > tbody > tr.group/row.cursor-pointer:nth-of-type(3)",
+        "rect": {
+          "x": 281,
+          "y": 457,
+          "w": 1146,
+          "h": 63
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 44,
+        "tag": "input",
+        "role": null,
+        "name": "Select row",
+        "selector": "td.p-4.align-middle:nth-of-type(1) > div.flex.items-center > label.relative.inline-flex > input.peer.absolute",
+        "rect": {
+          "x": 294,
+          "y": 482,
+          "w": 14,
+          "h": 14
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 45,
+        "tag": "button",
+        "role": null,
+        "name": "Full Stack Engineer (Tooling)",
+        "selector": "td.p-4.align-middle:nth-of-type(2) > div.space-y-0.5.min-w-0 > div.flex.items-center:nth-of-type(1) > button.font-semibold.text-foreground",
+        "rect": {
+          "x": 333,
+          "y": 470,
+          "w": 193,
+          "h": 20
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 46,
+        "tag": "a",
+        "role": null,
+        "name": "Open job posting for Full Stack Engineer (Tooling)",
+        "selector": "td.p-4.align-middle:nth-of-type(2) > div.space-y-0.5.min-w-0 > div.flex.items-center:nth-of-type(1) > a.inline-flex.items-center",
+        "rect": {
+          "x": 532,
+          "y": 472,
+          "w": 16,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 47,
+        "tag": "button",
+        "role": null,
+        "name": "Edit application",
+        "selector": "tr.group/row.cursor-pointer:nth-of-type(3) > td.p-4.align-middle:nth-of-type(8) > div.flex.items-center > button.inline-flex.items-center:nth-of-type(1)",
+        "rect": {
+          "x": 1335,
+          "y": 473,
+          "w": 32,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 48,
+        "tag": "button",
+        "role": null,
+        "name": "Delete application",
+        "selector": "tr.group/row.cursor-pointer:nth-of-type(3) > td.p-4.align-middle:nth-of-type(8) > div.flex.items-center > button.inline-flex.items-center:nth-of-type(2)",
+        "rect": {
+          "x": 1371,
+          "y": 473,
+          "w": 32,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 49,
+        "tag": "tr",
+        "role": null,
+        "name": "Full Stack Developer Datadog Oct 6, 2026 Applied: Applied New York, NY Indeed $1",
+        "selector": "div.relative.w-full > table.caption-bottom.text-sm > tbody > tr.group/row.cursor-pointer:nth-of-type(4)",
+        "rect": {
+          "x": 281,
+          "y": 520,
+          "w": 1146,
+          "h": 63
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 50,
+        "tag": "input",
+        "role": null,
+        "name": "Select row",
+        "selector": "td.p-4.align-middle:nth-of-type(1) > div.flex.items-center > label.relative.inline-flex > input.peer.absolute",
+        "rect": {
+          "x": 294,
+          "y": 545,
+          "w": 14,
+          "h": 14
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 51,
+        "tag": "button",
+        "role": null,
+        "name": "Full Stack Developer",
+        "selector": "td.p-4.align-middle:nth-of-type(2) > div.space-y-0.5.min-w-0 > div.flex.items-center:nth-of-type(1) > button.font-semibold.text-foreground",
+        "rect": {
+          "x": 333,
+          "y": 533,
+          "w": 138,
+          "h": 20
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 52,
+        "tag": "a",
+        "role": null,
+        "name": "Open job posting for Full Stack Developer",
+        "selector": "td.p-4.align-middle:nth-of-type(2) > div.space-y-0.5.min-w-0 > div.flex.items-center:nth-of-type(1) > a.inline-flex.items-center",
+        "rect": {
+          "x": 477,
+          "y": 535,
+          "w": 16,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 53,
+        "tag": "button",
+        "role": null,
+        "name": "Edit application",
+        "selector": "tr.group/row.cursor-pointer:nth-of-type(4) > td.p-4.align-middle:nth-of-type(8) > div.flex.items-center > button.inline-flex.items-center:nth-of-type(1)",
+        "rect": {
+          "x": 1335,
+          "y": 536,
+          "w": 32,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 54,
+        "tag": "button",
+        "role": null,
+        "name": "Delete application",
+        "selector": "tr.group/row.cursor-pointer:nth-of-type(4) > td.p-4.align-middle:nth-of-type(8) > div.flex.items-center > button.inline-flex.items-center:nth-of-type(2)",
+        "rect": {
+          "x": 1371,
+          "y": 536,
+          "w": 32,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 55,
+        "tag": "tr",
+        "role": null,
+        "name": "Systems Engineer (Workers Platform) Cloudflare Oct 5, 2026 Interview: Recruiter ",
+        "selector": "div.relative.w-full > table.caption-bottom.text-sm > tbody > tr.group/row.cursor-pointer:nth-of-type(5)",
+        "rect": {
+          "x": 281,
+          "y": 583,
+          "w": 1146,
+          "h": 63
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 56,
+        "tag": "input",
+        "role": null,
+        "name": "Select row",
+        "selector": "td.p-4.align-middle:nth-of-type(1) > div.flex.items-center > label.relative.inline-flex > input.peer.absolute",
+        "rect": {
+          "x": 294,
+          "y": 608,
+          "w": 14,
+          "h": 14
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 57,
+        "tag": "button",
+        "role": null,
+        "name": "Systems Engineer (Workers Platform)",
+        "selector": "td.p-4.align-middle:nth-of-type(2) > div.space-y-0.5.min-w-0 > div.flex.items-center:nth-of-type(1) > button.font-semibold.text-foreground",
+        "rect": {
+          "x": 333,
+          "y": 596,
+          "w": 254,
+          "h": 20
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 58,
+        "tag": "a",
+        "role": null,
+        "name": "Open job posting for Systems Engineer (Workers Platform)",
+        "selector": "td.p-4.align-middle:nth-of-type(2) > div.space-y-0.5.min-w-0 > div.flex.items-center:nth-of-type(1) > a.inline-flex.items-center",
+        "rect": {
+          "x": 593,
+          "y": 598,
+          "w": 16,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 59,
+        "tag": "button",
+        "role": null,
+        "name": "Edit application",
+        "selector": "tr.group/row.cursor-pointer:nth-of-type(5) > td.p-4.align-middle:nth-of-type(8) > div.flex.items-center > button.inline-flex.items-center:nth-of-type(1)",
+        "rect": {
+          "x": 1335,
+          "y": 599,
+          "w": 32,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      }
+    ]
+  },
+  "console_errors": []
+}

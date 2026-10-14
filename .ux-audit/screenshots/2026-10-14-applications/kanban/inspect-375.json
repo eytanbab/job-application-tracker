@@ -1,0 +1,471 @@
+{
+  "width": 375,
+  "ok": true,
+  "screenshots": {
+    "fold": ".ux-audit\\screenshots\\2026-10-14-applications\\kanban\\375w-fold.png",
+    "full": ".ux-audit\\screenshots\\2026-10-14-applications\\kanban\\375w.png"
+  },
+  "structure": {
+    "title": "JobTracker | Applications",
+    "lang": "en",
+    "headings": [
+      {
+        "level": 3,
+        "text": "Full Stack Developer"
+      },
+      {
+        "level": 3,
+        "text": "Database Backend Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Engineer (Tooling)"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Developer"
+      },
+      {
+        "level": 3,
+        "text": "Staff Infrastructure Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Developer"
+      },
+      {
+        "level": 3,
+        "text": "Database Backend Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Engineer (Tooling)"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Developer"
+      },
+      {
+        "level": 3,
+        "text": "Staff Infrastructure Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Product Engineer (Design Systems)"
+      },
+      {
+        "level": 3,
+        "text": "Staff Platform Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Systems Engineer (Workers Platform)"
+      },
+      {
+        "level": 3,
+        "text": "Senior Frontend Developer"
+      },
+      {
+        "level": 3,
+        "text": "Senior Frontend Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Engineer (AI Products)"
+      },
+      {
+        "level": 3,
+        "text": "Senior Client Engineer (Web)"
+      },
+      {
+        "level": 3,
+        "text": "Product Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Senior UI Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Senior Backend Developer"
+      },
+      {
+        "level": 3,
+        "text": "Frontend Architect"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Engineer (Workplace AI)"
+      },
+      {
+        "level": 3,
+        "text": "Distributed Systems Engineer"
+      }
+    ],
+    "landmarks": [
+      "aside",
+      "nav",
+      "header",
+      "main"
+    ],
+    "horizontal_overflow": false
+  },
+  "axe": {
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "wcag": [
+          "wcag2aa",
+          "wcag143"
+        ],
+        "best_practice_only": false,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=axeAPI",
+        "node_count": 6,
+        "nodes": [
+          {
+            "target": ".py-1\\.5.sm\\:px-3[role=\"radio\"]:nth-child(1) > .lg\\:hidden",
+            "html": "<span class=\"lg:hidden\">Cards</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #677183, background color: #f3f4f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "#kanban-panel-applied > .md\\:w-\\[280px\\].md\\:shrink-0[data-testid=\"kanban-column-applied\"] > .min-h-\\[260px\\].max-h-\\[68vh\\].overflow-y-auto > .text-card-foreground.cursor-grab.active\\:cursor-grabbing:nth-child(1) > .space-y-2.pt-1.p-3 > .pt-0\\.5.flex-wrap.gap-1\\.5 > .max-w-\\[120px\\].text-emerald-600.dark\\:text-emerald-400",
+            "html": "<span class=\"text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-sm truncate max-w-[120px]\">$160,000 - $180,000</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.31 (foreground color: #009966, background color: #e6f8f2, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "#kanban-panel-applied > .md\\:w-\\[280px\\].md\\:shrink-0[data-testid=\"kanban-column-applied\"] > .min-h-\\[260px\\].max-h-\\[68vh\\].overflow-y-auto > .text-card-foreground.cursor-grab.active\\:cursor-grabbing:nth-child(2) > .space-y-2.pt-1.p-3 > .pt-0\\.5.flex-wrap.gap-1\\.5 > .max-w-\\[120px\\].text-emerald-600.dark\\:text-emerald-400",
+            "html": "<span class=\"text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-sm truncate max-w-[120px]\">$165,000 - $195,000</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.31 (foreground color: #009966, background color: #e6f8f2, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "#kanban-panel-applied > .md\\:w-\\[280px\\].md\\:shrink-0[data-testid=\"kanban-column-applied\"] > .min-h-\\[260px\\].max-h-\\[68vh\\].overflow-y-auto > .text-card-foreground.cursor-grab.active\\:cursor-grabbing:nth-child(3) > .space-y-2.pt-1.p-3 > .pt-0\\.5.flex-wrap.gap-1\\.5 > .max-w-\\[120px\\].text-emerald-600.dark\\:text-emerald-400",
+            "html": "<span class=\"text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-sm truncate max-w-[120px]\">$210,000 - $260,000</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.31 (foreground color: #009966, background color: #e6f8f2, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "#kanban-panel-applied > .md\\:w-\\[280px\\].md\\:shrink-0[data-testid=\"kanban-column-applied\"] > .min-h-\\[260px\\].max-h-\\[68vh\\].overflow-y-auto > .text-card-foreground.cursor-grab.active\\:cursor-grabbing:nth-child(4) > .space-y-2.pt-1.p-3 > .pt-0\\.5.flex-wrap.gap-1\\.5 > .max-w-\\[120px\\].text-emerald-600.dark\\:text-emerald-400",
+            "html": "<span class=\"text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-sm truncate max-w-[120px]\">$175,000 - $215,000</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.31 (foreground color: #009966, background color: #e6f8f2, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "page-has-heading-one",
+        "impact": "moderate",
+        "wcag": [],
+        "best_practice_only": true,
+        "help": "Page should contain a level-one heading",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/page-has-heading-one?application=axeAPI",
+        "node_count": 1,
+        "nodes": [
+          {
+            "target": "html",
+            "html": "<html lang=\"en\" class=\"light\" style=\"color-scheme: light;\">",
+            "summary": "Fix all of the following:\n  Page must have a level-one heading"
+          }
+        ]
+      }
+    ],
+    "needs_review": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "wcag": [
+          "wcag2aa",
+          "wcag143"
+        ],
+        "best_practice_only": false,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=axeAPI",
+        "node_count": 6,
+        "nodes": [
+          {
+            "target": ".bg-primary-foreground\\/20",
+            "html": "<span class=\"px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums bg-primary-foreground/20 text-primary-foreground\">5</span>",
+            "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+          },
+          {
+            "target": "#kanban-tab-review > .bg-muted.py-0\\.2.tabular-nums",
+            "html": "<span class=\"px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums bg-muted text-muted-foreground\">2</span>",
+            "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+          },
+          {
+            "target": "#kanban-tab-interview > .bg-muted.py-0\\.2.tabular-nums",
+            "html": "<span class=\"px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums bg-muted text-muted-foreground\">6</span>",
+            "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+          },
+          {
+            "target": "#kanban-tab-accepted > .bg-muted.py-0\\.2.tabular-nums",
+            "html": "<span class=\"px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums bg-muted text-muted-foreground\">1</span>",
+            "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+          },
+          {
+            "target": "#kanban-tab-rejected > .bg-muted.py-0\\.2.tabular-nums",
+            "html": "<span class=\"px-1.5 py-0.2 rounded-full text-[10px] font-bold tabular-nums bg-muted text-muted-foreground\">2</span>",
+            "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+          }
+        ]
+      }
+    ]
+  },
+  "targets": {
+    "interactive_elements": 37,
+    "below_44px": 25,
+    "failing_wcag_2_5_8": 5,
+    "items": [
+      {
+        "selector": "div.p-3.pt-1:nth-of-type(2) > div.flex.flex-wrap:nth-of-type(2) > div.flex.items-center > a.text-muted-foreground.shrink-0",
+        "name": "Job Link",
+        "width": 14,
+        "height": 14,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.p-3.pt-1:nth-of-type(2) > div.flex.flex-wrap:nth-of-type(2) > div.flex.items-center > a.text-muted-foreground.shrink-0",
+        "name": "Job Link",
+        "width": 14,
+        "height": 14,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.p-3.pt-1:nth-of-type(2) > div.flex.flex-wrap:nth-of-type(2) > div.flex.items-center > a.text-muted-foreground.shrink-0",
+        "name": "Job Link",
+        "width": 14,
+        "height": 14,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.p-3.pt-1:nth-of-type(2) > div.flex.flex-wrap:nth-of-type(2) > div.flex.items-center > a.text-muted-foreground.shrink-0",
+        "name": "Job Link",
+        "width": 14,
+        "height": 14,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.p-3.pt-1:nth-of-type(2) > div.flex.flex-wrap:nth-of-type(2) > div.flex.items-center > a.text-muted-foreground.shrink-0",
+        "name": "Job Link",
+        "width": 14,
+        "height": 14,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.flex-col:nth-of-type(1) > div.self-start.p-3:nth-of-type(1) > div.flex.items-center:nth-of-type(2) > button.inline-flex.items-center:nth-of-type(1)",
+        "name": "Move to In Review",
+        "width": 28,
+        "height": 28,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "button#radix-_R_skmhslrkneknflblb_",
+        "name": "More actions",
+        "width": 28,
+        "height": 28,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex.flex-col:nth-of-type(2) > div.self-start.p-3:nth-of-type(1) > div.flex.items-center:nth-of-type(2) > button.inline-flex.items-center:nth-of-type(1)",
+        "name": "Move to In Review",
+        "width": 28,
+        "height": 28,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "button#radix-_R_sl6hslrkneknflblb_",
+        "name": "More actions",
+        "width": 28,
+        "height": 28,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex.flex-col:nth-of-type(3) > div.self-start.p-3:nth-of-type(1) > div.flex.items-center:nth-of-type(2) > button.inline-flex.items-center:nth-of-type(1)",
+        "name": "Move to In Review",
+        "width": 28,
+        "height": 28,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "button#radix-_R_slmhslrkneknflblb_",
+        "name": "More actions",
+        "width": 28,
+        "height": 28,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex.flex-col:nth-of-type(4) > div.self-start.p-3:nth-of-type(1) > div.flex.items-center:nth-of-type(2) > button.inline-flex.items-center:nth-of-type(1)",
+        "name": "Move to In Review",
+        "width": 28,
+        "height": 28,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "button#radix-_R_sm6hslrkneknflblb_",
+        "name": "More actions",
+        "width": 28,
+        "height": 28,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex.flex-col:nth-of-type(5) > div.self-start.p-3:nth-of-type(1) > div.flex.items-center:nth-of-type(2) > button.inline-flex.items-center:nth-of-type(1)",
+        "name": "Move to In Review",
+        "width": 28,
+        "height": 28,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "button#radix-_R_smmhslrkneknflblb_",
+        "name": "More actions",
+        "width": 28,
+        "height": 28,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "button#radix-_R_plblb_",
+        "name": "Toggle theme",
+        "width": 32,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex-1.min-w-0 > main.p-3.w-full > div.mb-4.flex:nth-of-type(1) > button.inline-flex.items-center",
+        "name": "Dismiss notice",
+        "width": 32,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "header.sticky.top-0 > div.flex.items-center:nth-of-type(2) > div > button.inline-flex.items-center",
+        "name": "Open navigation menu",
+        "width": 36,
+        "height": 36,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex-1.flex > header.sticky.top-0 > div.flex.items-center:nth-of-type(2) > button.inline-flex.items-center:nth-of-type(2)",
+        "name": "Sign In",
+        "width": 63,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "main.p-3.w-full > div.mb-4.flex:nth-of-type(1) > div.flex.flex-1 > button.inline-flex.items-center",
+        "name": "Sign in",
+        "width": 63,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex.items-center:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > div.inline-flex.items-center > button.inline-flex.items-center:nth-of-type(1)",
+        "name": "Cards",
+        "width": 74,
+        "height": 28,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex.items-center:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > div.inline-flex.items-center > button.inline-flex.items-center:nth-of-type(2)",
+        "name": "Board",
+        "width": 74,
+        "height": 28,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "button#radix-_R_5hclrkneknflblb_",
+        "name": "Platform",
+        "width": 98,
+        "height": 36,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex-1.flex > header.sticky.top-0 > div.flex.items-center:nth-of-type(1) > a.flex.items-center",
+        "name": "JobTracker",
+        "width": 124,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.w-full.space-y-4 > div.flex.flex-col:nth-of-type(1) > div.relative.flex-1:nth-of-type(1) > input.flex.rounded-xl",
+        "name": "Search applications...",
+        "width": 329,
+        "height": 36,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      }
+    ]
+  },
+  "console_errors": []
+}

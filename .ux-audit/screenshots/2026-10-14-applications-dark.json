@@ -1,0 +1,56 @@
+{
+  "url": "http://localhost:3100/applications?view=table",
+  "emulation": {
+    "color_scheme": "dark",
+    "reduced_motion": false
+  },
+  "widths": [
+    {
+      "width": 375,
+      "ok": true,
+      "details": ".ux-audit\\screenshots\\2026-10-14-applications\\table-dark\\inspect-375.json",
+      "screenshots": {
+        "fold": ".ux-audit\\screenshots\\2026-10-14-applications\\table-dark\\375w-fold.png",
+        "full": ".ux-audit\\screenshots\\2026-10-14-applications\\table-dark\\375w.png"
+      },
+      "axe": {
+        "violations": [
+          "button-name (critical, 1)",
+          "color-contrast (serious, 1)",
+          "nested-interactive (serious, 10)",
+          "page-has-heading-one (moderate, 1)",
+          "target-size (serious, 10)"
+        ],
+        "needs_review": [
+          "color-contrast (10)",
+          "form-field-multiple-labels (1)"
+        ]
+      },
+      "targets": {
+        "below_44px": 40,
+        "failing_wcag_2_5_8": 20
+      },
+      "horizontal_overflow": false,
+      "console_errors": 0
+    },
+    {
+      "width": 1440,
+      "ok": true,
+      "details": ".ux-audit\\screenshots\\2026-10-14-applications\\table-dark\\inspect-1440.json",
+      "screenshots": {
+        "fold": ".ux-audit\\screenshots\\2026-10-14-applications\\table-dark\\1440w-fold.png",
+        "full": ".ux-audit\\screenshots\\2026-10-14-applications\\table-dark\\1440w.png"
+      },
+      "axe": {
+        "violations": [
+          "button-name (critical, 1)",
+          "color-contrast (serious, 1)",
+          "page-has-heading-one (moderate, 1)"
+        ],
+        "needs_review": []
+      },
+      "horizontal_overflow": false,
+      "console_errors": 0
+    }
+  ]
+}

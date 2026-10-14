@@ -1,0 +1,26 @@
+{
+  "url": "http://localhost:3100/applications?view=table",
+  "emulation": {
+    "color_scheme": "default",
+    "reduced_motion": false
+  },
+  "widths": [
+    {
+      "width": 1440,
+      "ok": true,
+      "details": ".ux-audit\\screenshots\\2026-10-14-applications\\focus\\inspect-1440.json",
+      "screenshots": {
+        "fold": ".ux-audit\\screenshots\\2026-10-14-applications\\focus\\1440w-fold.png",
+        "full": ".ux-audit\\screenshots\\2026-10-14-applications\\focus\\1440w.png"
+      },
+      "keyboard": {
+        "stops": 25,
+        "no_visible_focus_change": 5,
+        "obscured_focus": 1,
+        "unnamed_stops": 0
+      },
+      "horizontal_overflow": false,
+      "console_errors": 0
+    }
+  ]
+}

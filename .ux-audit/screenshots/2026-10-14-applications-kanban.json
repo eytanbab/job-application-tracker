@@ -1,0 +1,53 @@
+{
+  "url": "http://localhost:3100/applications?view=kanban",
+  "emulation": {
+    "color_scheme": "default",
+    "reduced_motion": false
+  },
+  "widths": [
+    {
+      "width": 375,
+      "ok": true,
+      "details": ".ux-audit\\screenshots\\2026-10-14-applications\\kanban\\inspect-375.json",
+      "screenshots": {
+        "fold": ".ux-audit\\screenshots\\2026-10-14-applications\\kanban\\375w-fold.png",
+        "full": ".ux-audit\\screenshots\\2026-10-14-applications\\kanban\\375w.png"
+      },
+      "axe": {
+        "violations": [
+          "color-contrast (serious, 6)",
+          "page-has-heading-one (moderate, 1)"
+        ],
+        "needs_review": [
+          "color-contrast (6)"
+        ]
+      },
+      "targets": {
+        "below_44px": 25,
+        "failing_wcag_2_5_8": 5
+      },
+      "horizontal_overflow": false,
+      "console_errors": 0
+    },
+    {
+      "width": 1440,
+      "ok": true,
+      "details": ".ux-audit\\screenshots\\2026-10-14-applications\\kanban\\inspect-1440.json",
+      "screenshots": {
+        "fold": ".ux-audit\\screenshots\\2026-10-14-applications\\kanban\\1440w-fold.png",
+        "full": ".ux-audit\\screenshots\\2026-10-14-applications\\kanban\\1440w.png"
+      },
+      "axe": {
+        "violations": [
+          "color-contrast (serious, 22)",
+          "page-has-heading-one (moderate, 1)"
+        ],
+        "needs_review": [
+          "color-contrast (2)"
+        ]
+      },
+      "horizontal_overflow": false,
+      "console_errors": 0
+    }
+  ]
+}

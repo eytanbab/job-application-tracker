@@ -1,0 +1,121 @@
+{
+  "width": 1440,
+  "ok": true,
+  "screenshots": {
+    "fold": ".ux-audit\\screenshots\\2026-10-14-applications\\table-dark\\1440w-fold.png",
+    "full": ".ux-audit\\screenshots\\2026-10-14-applications\\table-dark\\1440w.png"
+  },
+  "structure": {
+    "title": "JobTracker | Applications",
+    "lang": "en",
+    "headings": [
+      {
+        "level": 3,
+        "text": "Full Stack Developer"
+      },
+      {
+        "level": 3,
+        "text": "Database Backend Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Engineer (Tooling)"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Developer"
+      },
+      {
+        "level": 3,
+        "text": "Systems Engineer (Workers Platform)"
+      },
+      {
+        "level": 3,
+        "text": "Product Engineer (Design Systems)"
+      },
+      {
+        "level": 3,
+        "text": "Senior Frontend Developer"
+      },
+      {
+        "level": 3,
+        "text": "Staff Platform Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Senior Frontend Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Engineer (AI Products)"
+      }
+    ],
+    "landmarks": [
+      "aside",
+      "nav",
+      "header",
+      "main"
+    ],
+    "horizontal_overflow": false
+  },
+  "axe": {
+    "violations": [
+      {
+        "id": "button-name",
+        "impact": "critical",
+        "wcag": [
+          "wcag2a",
+          "wcag412"
+        ],
+        "best_practice_only": false,
+        "help": "Buttons must have discernible text",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/button-name?application=axeAPI",
+        "node_count": 1,
+        "nodes": [
+          {
+            "target": ".dark\\:bg-muted\\/40",
+            "html": "<button type=\"button\" role=\"combobox\" aria-expanded=\"false\" aria-autocomplete=\"none\" dir=\"ltr\" data-state=\"closed\" class=\"flex items-center ju...\">",
+            "summary": "Fix any of the following:\n  Element does not have inner text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  "
+          }
+        ]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "wcag": [
+          "wcag2aa",
+          "wcag143"
+        ],
+        "best_practice_only": false,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=axeAPI",
+        "node_count": 1,
+        "nodes": [
+          {
+            "target": ".bg-primary-foreground\\/20",
+            "html": "<span class=\"inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-semibold tabular-nums leading-none bg-primary-foreground/20 text-primary-foreground\">18</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.17 (foreground color: #0d1016, background color: #7d66c8, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "page-has-heading-one",
+        "impact": "moderate",
+        "wcag": [],
+        "best_practice_only": true,
+        "help": "Page should contain a level-one heading",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/page-has-heading-one?application=axeAPI",
+        "node_count": 1,
+        "nodes": [
+          {
+            "target": "html",
+            "html": "<html lang=\"en\" class=\"dark\" style=\"color-scheme: dark;\">",
+            "summary": "Fix all of the following:\n  Page must have a level-one heading"
+          }
+        ]
+      }
+    ],
+    "needs_review": []
+  },
+  "console_errors": []
+}
