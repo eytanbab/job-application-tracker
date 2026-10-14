@@ -19,7 +19,9 @@ export async function generateMetadata() {
 // Load failures propagate to ./error.tsx, which reports them and offers a retry
 export default async function Dashboard({
   searchParams,
-}: PageProps<"/applications">) {
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const aiRequiresSignIn = !isAiDemoMode();
   const params = await loadApplicationsSearchParams(searchParams);
   const isKanban = params.view === "kanban";
