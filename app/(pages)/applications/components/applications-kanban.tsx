@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -96,15 +96,15 @@ export function ApplicationsKanban({
   const [activeMobileCol, setActiveMobileCol] = useState<StatusKind>("applied");
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
-  // Cards loaded with "Show more", per column. A new server result (a
-  // filter change or a status move) starts every column over.
-  const [moreRows, setMoreRows] = useState<
-    Partial<Record<StatusKind, KanbanItem[]>>
-  >({});
+  // Cards loaded with "Show more", per column, tagged with the server result
+  // they extend. A new result (a filter change or a status move) starts
+  // every column over.
+  const [extraRows, setExtraRows] = useState<{
+    source: KanbanColumns;
+    rows: Partial<Record<StatusKind, KanbanItem[]>>;
+  }>({ source: columns, rows: {} });
+  const moreRows = extraRows.source === columns ? extraRows.rows : {};
   const [loadingColumn, setLoadingColumn] = useState<StatusKind | null>(null);
-  useEffect(() => {
-    setMoreRows({});
-  }, [columns]);
 
   const groupedData = useMemo(() => {
     const map = {} as Record<StatusKind, KanbanItem[]>;
@@ -120,6 +120,7 @@ export function ApplicationsKanban({
   const columnTotal = (kind: StatusKind) => columns[kind]?.total ?? 0;
 
   const loadMore = async (kind: StatusKind) => {
+    const source = columns;
     const loaded = groupedData[kind].length;
     setLoadingColumn(kind);
     try {
@@ -130,14 +131,18 @@ export function ApplicationsKanban({
         page: Math.floor(loaded / KANBAN_PAGE_SIZE) + 1,
         size: KANBAN_PAGE_SIZE,
       });
-      setMoreRows((prev) => {
+      setExtraRows((prev) => {
+        const current = prev.source === source ? prev.rows : {};
         const seen = new Set(groupedData[kind].map((item) => item.id));
         return {
-          ...prev,
-          [kind]: [
-            ...(prev[kind] ?? []),
-            ...rows.filter((row) => !seen.has(row.id)),
-          ],
+          source,
+          rows: {
+            ...current,
+            [kind]: [
+              ...(current[kind] ?? []),
+              ...rows.filter((row) => !seen.has(row.id)),
+            ],
+          },
         };
       });
     } catch (err) {
