@@ -27,6 +27,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   getStatusDisplay,
   getStatusKind,
+  isStandardStatus,
   statusLabels,
   StatusKind,
   cn,
@@ -46,7 +47,10 @@ import {
 
 import { z } from "zod";
 import { insertApplicationSchema } from "@/app/db/schema";
-import { statusBadgeClasses } from "./components/status-badge-classes";
+import {
+  stageLabels,
+  statusBadgeClasses,
+} from "./components/status-badge-classes";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const columnsSchema = insertApplicationSchema.omit({ userId: true });
@@ -259,19 +263,30 @@ export const columns: ColumnDef<FormValues>[] = [
         row.original.status,
         row.original.statusCategory,
       );
+      const stage = stageLabels[kind];
+      // Custom text like "Technical Screen" is detail within the stage
+      const detail =
+        displayText &&
+        !isStandardStatus(displayText) &&
+        displayText.trim().toLowerCase() !== stage.toLowerCase()
+          ? displayText
+          : null;
       return (
-        <div className="min-w-0">
+        <div className="min-w-0 space-y-1">
           <Badge
             variant="outline"
             className={cn(
-              "capitalize font-medium border truncate max-w-[115px] xl:max-w-[125px] text-[11px] px-2 py-0.5 inline-block leading-normal",
+              "font-medium border whitespace-nowrap text-[11px] px-2 py-0.5 inline-block leading-normal",
               statusBadgeClasses[kind],
             )}
-            title={displayText}
           >
-            <span className="sr-only">{statusLabels[kind]}: </span>
-            {displayText}
+            {stage}
           </Badge>
+          {detail && (
+            <p className="text-xs text-muted-foreground leading-snug break-words">
+              {detail}
+            </p>
+          )}
         </div>
       );
     },
