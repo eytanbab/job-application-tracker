@@ -4,6 +4,7 @@ import {
   ColumnDef,
   RowSelectionState,
   SortingState,
+  Updater,
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
@@ -190,13 +191,25 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     };
   }, [createParam, setCreateParam]);
 
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  // The selection belongs to the rows it was made on: a new page of rows
+  // (paging, filtering or a refresh after a save) starts with none.
+  const [selection, setSelection] = useState<{
+    rows: TData[];
+    value: RowSelectionState;
+  }>({ rows: data, value: {} });
+  const rowSelection = selection.rows === data ? selection.value : {};
+  const setRowSelection = useCallback(
+    (updater: Updater<RowSelectionState>) =>
+      setSelection((prev) => {
+        const current = prev.rows === data ? prev.value : {};
+        return {
+          rows: data,
+          value: typeof updater === "function" ? updater(current) : updater,
+        };
+      }),
+    [data],
+  );
   const [isBulkPending, startBulkTransition] = useTransition();
-
-  // A new page of rows clears the selection; it referred to the old rows
-  useEffect(() => {
-    setRowSelection({});
-  }, [data]);
 
   const sorting: SortingState = useMemo(
     () => (sort ? [{ id: sort, desc: dir === "desc" }] : []),
