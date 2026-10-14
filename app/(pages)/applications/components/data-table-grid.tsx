@@ -18,11 +18,63 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Filter } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Filter,
+} from "lucide-react";
+import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { DataTableMobileCard } from "./data-table-mobile-card";
+import { PAGE_SIZES } from "@/lib/applications/list-query";
 
-const TABLE_ROWS = [5, 10, 15, 20, 25];
+/**
+ * Editable page number. Keyed by the current page, so a new page resets
+ * the draft without an effect.
+ */
+function PageJump({
+  pageIndex,
+  pageCount,
+  onJump,
+}: {
+  pageIndex: number;
+  pageCount: number;
+  onJump: (pageIndex: number) => void;
+}) {
+  const [draft, setDraft] = useState(String(pageIndex + 1));
+  const commit = () => {
+    const page = Number.parseInt(draft, 10);
+    if (!Number.isFinite(page)) {
+      setDraft(String(pageIndex + 1));
+      return;
+    }
+    const clamped = Math.min(Math.max(page, 1), pageCount);
+    setDraft(String(clamped));
+    if (clamped !== pageIndex + 1) onJump(clamped - 1);
+  };
+
+  return (
+    <label className="flex items-center gap-1.5 text-xs font-medium text-foreground whitespace-nowrap">
+      Page
+      <Input
+        type="text"
+        inputMode="numeric"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value.replace(/\D/g, ""))}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit();
+        }}
+        aria-label={`Page number, 1 to ${pageCount}`}
+        className="h-8 w-12 px-1.5 text-center text-xs tabular-nums"
+      />
+      <span className="text-muted-foreground">of {pageCount.toLocaleString()}</span>
+    </label>
+  );
+}
 
 interface DataTableGridProps<TData> {
   table: TanstackTable<TData>;
@@ -266,9 +318,18 @@ export function DataTableGrid<
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-2 pb-1 px-1 text-xs text-muted-foreground border-t border-border/30">
         {/* Top/Left Row: Application count & Page size */}
         <div className="flex items-center justify-between sm:justify-start gap-4">
-          <p className="font-medium text-xs">
-            Showing {table.getRowModel().rows.length} of{" "}
-            {table.getRowCount()} application(s)
+          <p className="font-medium text-xs tabular-nums">
+            {table.getRowCount() === 0
+              ? "0 applications"
+              : `${(
+                  table.getState().pagination.pageIndex *
+                    table.getState().pagination.pageSize +
+                  1
+                ).toLocaleString()}–${(
+                  table.getState().pagination.pageIndex *
+                    table.getState().pagination.pageSize +
+                  table.getRowModel().rows.length
+                ).toLocaleString()} of ${table.getRowCount().toLocaleString()}`}
           </p>
 
           <div className="flex items-center space-x-1.5 shrink-0">
@@ -288,7 +349,7 @@ export function DataTableGrid<
                 />
               </SelectTrigger>
               <SelectContent side="top" className="min-w-[70px]">
-                {TABLE_ROWS.map((pageSize) => (
+                {PAGE_SIZES.map((pageSize) => (
                   <SelectItem
                     key={pageSize}
                     value={`${pageSize}`}
@@ -304,31 +365,34 @@ export function DataTableGrid<
 
         {/* Bottom/Right Row: Page Index & Navigation Buttons */}
         <div className="flex items-center justify-between sm:justify-end gap-3">
-          <span className="text-xs font-semibold text-foreground whitespace-nowrap">
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
-            {Math.max(1, table.getPageCount())}
-          </span>
+          <PageJump
+            key={table.getState().pagination.pageIndex}
+            pageIndex={table.getState().pagination.pageIndex}
+            pageCount={Math.max(1, table.getPageCount())}
+            onJump={(index) => table.setPageIndex(index)}
+          />
 
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              className="h-8 text-xs px-3 cursor-pointer"
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              className="h-8 text-xs px-3 cursor-pointer"
-            >
-              Next
-            </Button>
-          </div>
+          <nav aria-label="Pagination" className="flex gap-1">
+            {[
+              { label: "First page", icon: ChevronsLeft, onClick: () => table.setPageIndex(0), disabled: !table.getCanPreviousPage() },
+              { label: "Previous page", icon: ChevronLeft, onClick: () => table.previousPage(), disabled: !table.getCanPreviousPage() },
+              { label: "Next page", icon: ChevronRight, onClick: () => table.nextPage(), disabled: !table.getCanNextPage() },
+              { label: "Last page", icon: ChevronsRight, onClick: () => table.setPageIndex(table.getPageCount() - 1), disabled: !table.getCanNextPage() },
+            ].map(({ label, icon: Icon, onClick, disabled }) => (
+              <Button
+                key={label}
+                variant="outline"
+                size="icon"
+                onClick={onClick}
+                disabled={disabled}
+                aria-label={label}
+                title={label}
+                className="h-8 w-8 cursor-pointer"
+              >
+                <Icon className="h-4 w-4" />
+              </Button>
+            ))}
+          </nav>
         </div>
       </div>
     </div>

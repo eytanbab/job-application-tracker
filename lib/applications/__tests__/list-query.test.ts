@@ -63,6 +63,12 @@ describe("normalizeListQuery", () => {
     });
   });
 
+  it("accepts the table page sizes and the Kanban batch size only", () => {
+    expect(normalizeListQuery({ size: 100 }).pageSize).toBe(100);
+    expect(normalizeListQuery({ size: 20 }).pageSize).toBe(20);
+    expect(normalizeListQuery({ size: 5 }).pageSize).toBe(DEFAULT_PAGE_SIZE);
+  });
+
   it("caps the search length", () => {
     expect(normalizeListQuery({ q: "x".repeat(500) }).search).toHaveLength(200);
   });

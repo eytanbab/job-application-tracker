@@ -7,11 +7,14 @@ import {
 import { getStatusKind, isStatusKind, type StatusKind } from "@/lib/utils";
 
 /** Rows-per-page choices offered by the table footer. */
-export const PAGE_SIZES = [5, 10, 15, 20, 25] as const;
+export const PAGE_SIZES = [10, 25, 50, 100] as const;
 export const DEFAULT_PAGE_SIZE = 10;
 
 /** Cards loaded per Kanban column, and per "Show more" click. */
 export const KANBAN_PAGE_SIZE = 20;
+
+/** Page sizes the server accepts: the table's choices plus Kanban batches. */
+const ALLOWED_PAGE_SIZES: readonly number[] = [...PAGE_SIZES, KANBAN_PAGE_SIZE];
 
 export const SORT_FIELDS = [
   "role_name",
@@ -78,7 +81,7 @@ export function normalizeListQuery(input: {
     sort,
     desc: sort ? input.dir === "desc" : true,
     page: Number.isInteger(page) && page > 0 ? page : 1,
-    pageSize: (PAGE_SIZES as readonly number[]).includes(size)
+    pageSize: ALLOWED_PAGE_SIZES.includes(size)
       ? size
       : DEFAULT_PAGE_SIZE,
   };
