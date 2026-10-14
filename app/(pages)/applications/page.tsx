@@ -41,6 +41,7 @@ export default async function Dashboard({
       columns={columns}
       data={page?.rows ?? []}
       totalRows={page?.total ?? 0}
+      currentPage={page?.page ?? 1}
       kanbanColumns={kanban}
       statusCounts={statusCounts}
       platforms={platforms}

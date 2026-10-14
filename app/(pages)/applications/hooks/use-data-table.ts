@@ -62,6 +62,7 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
   columns,
   data,
   totalRows,
+  currentPage,
   platforms,
   linkedApp,
 }: {
@@ -70,6 +71,8 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
   data: TData[];
   /** Rows matching the current filters across all pages. */
   totalRows: number;
+  /** The page `data` belongs to, which may differ from a stale ?page=. */
+  currentPage: number;
   platforms: string[];
   /** The ?appId= row when it isn't on the current page. */
   linkedApp: TData | null;
@@ -86,7 +89,6 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
       platform: platformFilter,
       sort,
       dir,
-      page,
       size,
       view: viewMode,
     },
@@ -216,7 +218,7 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     [sort, dir],
   );
   const pageSize = size ?? DEFAULT_PAGE_SIZE;
-  const pageIndex = Math.max(0, page - 1);
+  const pageIndex = currentPage - 1;
 
   const handleSelectRow = useCallback(
     (app: TData) => {
