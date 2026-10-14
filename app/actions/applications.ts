@@ -11,6 +11,7 @@ import {
   documents,
 } from "@/app/db/schema";
 import { z } from "zod";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import {
   and,
   asc,
@@ -307,16 +308,27 @@ function listFilterConditions(
 }
 
 function listOrderBy(query: Pick<ApplicationListQuery, "sort" | "desc">) {
-  const direction = query.desc ? desc : asc;
+  // The database collation (C.UTF-8) orders by byte, putting "CS" before
+  // "Crm"; compare text case-insensitively. Empty text counts as missing,
+  // and missing values go last either way.
+  const text = (column: AnyPgColumn) => sql`nullif(lower(${column}), '')`;
   const sortColumns = {
-    role_name: [jobApplications.role_name, jobApplications.company_name],
-    date_applied: [jobApplications.date_applied],
-    status: [jobApplications.statusCategory],
-    location: [jobApplications.location],
-    platform: [jobApplications.platform],
-    salary: [jobApplications.salary],
-  } as const;
-  const primary = query.sort ? sortColumns[query.sort].map(direction) : [];
+    role_name: [
+      text(jobApplications.role_name),
+      text(jobApplications.company_name),
+    ],
+    date_applied: [sql`${jobApplications.date_applied}`],
+    status: [sql`${jobApplications.statusCategory}`],
+    location: [text(jobApplications.location)],
+    platform: [text(jobApplications.platform)],
+    salary: [text(jobApplications.salary)],
+  };
+  const direction = sql.raw(query.desc ? "desc" : "asc");
+  const primary = query.sort
+    ? sortColumns[query.sort].map(
+        (expr) => sql`${expr} ${direction} nulls last`,
+      )
+    : [];
   // Stable tie-breakers so rows never shuffle between pages
   return [
     ...primary,
