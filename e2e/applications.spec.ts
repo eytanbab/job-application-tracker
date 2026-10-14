@@ -207,7 +207,7 @@ test.describe("Applications Page E2E Suite", () => {
     await ensureTestApplicationExists(page);
 
     // Toggle view to Kanban
-    const kanbanBtn = page.locator("button:has-text('Kanban')").first();
+    const kanbanBtn = page.locator("button:has-text('Board')").first();
     if (await kanbanBtn.isVisible()) {
       await kanbanBtn.click();
     } else {
@@ -235,7 +235,7 @@ test.describe("Applications Page E2E Suite", () => {
         await page.waitForTimeout(300);
 
         // Switch to Kanban
-        const kanbanBtn = page.locator("button:has-text('Kanban')").first();
+        const kanbanBtn = page.locator("button:has-text('Board')").first();
         if (await kanbanBtn.isVisible()) {
           await kanbanBtn.click();
           await page.waitForTimeout(300);

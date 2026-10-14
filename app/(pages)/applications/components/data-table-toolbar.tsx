@@ -149,7 +149,7 @@ export function DataTableToolbar({
             )}
           </div>
 
-          {/* View Mode Switcher: Cards/Table vs Board/Kanban */}
+          {/* View Mode Switcher: List vs Board */}
           <div className="flex items-center gap-2">
             <div
               role="radiogroup"
@@ -169,8 +169,7 @@ export function DataTableToolbar({
                 )}
               >
                 <LayoutList className="h-3.5 w-3.5" />
-                <span className="lg:hidden">Cards</span>
-                <span className="hidden lg:inline">Table</span>
+                List
               </button>
               <button
                 type="button"
@@ -185,8 +184,7 @@ export function DataTableToolbar({
                 )}
               >
                 <LayoutGrid className="h-3.5 w-3.5" />
-                <span className="sm:hidden">Board</span>
-                <span className="hidden sm:inline">Kanban</span>
+                Board
               </button>
             </div>
 
