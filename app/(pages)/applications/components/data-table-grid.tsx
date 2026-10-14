@@ -142,7 +142,7 @@ export function DataTableGrid<
                     <TableHead
                       key={header.id}
                       className={cn(
-                        "px-2.5 xl:px-3 py-3 font-bold text-foreground text-xs uppercase tracking-wider",
+                        "px-2.5 xl:px-3 py-3 text-xs",
                         isSelect && "w-10 px-2 text-center",
                         header.column.id === "role_name" && "w-full max-w-0 min-w-[180px]",
                         isDate && "w-[110px] whitespace-nowrap",
