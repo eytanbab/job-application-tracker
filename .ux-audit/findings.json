@@ -1,20 +1,21 @@
 {
   "schema_version": 1,
   "counters": {
-    "DATA": 2,
-    "COLOR": 3,
-    "A11Y": 5,
+    "DATA": 3,
+    "COLOR": 5,
+    "A11Y": 9,
     "TRUST": 5,
     "STATE": 1,
-    "AFFORD": 2,
+    "AFFORD": 3,
     "PERS": 1,
-    "HIER": 3,
+    "HIER": 9,
     "FLOW": 1,
     "FORM": 3,
     "PLAT": 1,
-    "COPY": 1,
+    "COPY": 2,
     "TYPO": 1,
-    "DSYS": 1
+    "DSYS": 3,
+    "ONBD": 1
   },
   "findings": [
     {
@@ -1066,6 +1067,636 @@
       ],
       "resolved_on": "2026-10-12",
       "status_note": "Fixed and verified (Playwright on mock store, tsc, build)"
+    },
+    {
+      "id": "A11Y-06",
+      "category": "A11Y",
+      "rule": "sheet-close-loses-focus",
+      "title": "Closing the detail panel drops keyboard focus to the page body",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/application-detail-sheet.tsx",
+        "line": 585,
+        "anchor": "ApplicationDetailSheet <Sheet>"
+      },
+      "severity": "high",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-14",
+      "last_seen": "2026-10-14",
+      "resolved_on": "2026-10-14",
+      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "history": [
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "new",
+          "severity": "high"
+        },
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "A11Y-07",
+      "category": "A11Y",
+      "rule": "combobox-no-name",
+      "title": "Rows-per-page select has no accessible name",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/data-table-grid.tsx",
+        "line": 283,
+        "anchor": "Pagination rows-per-page SelectTrigger"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "quick-win",
+      "status": "resolved",
+      "first_flagged": "2026-10-14",
+      "last_seen": "2026-10-14",
+      "resolved_on": "2026-10-14",
+      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "history": [
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "new",
+          "severity": "medium"
+        },
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "A11Y-08",
+      "category": "A11Y",
+      "rule": "nested-interactive",
+      "title": "Mobile card is a role=button that contains a checkbox and a link",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/data-table-mobile-card.tsx",
+        "line": 67,
+        "anchor": "DataTableMobileCard <Card role=button>"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-14",
+      "last_seen": "2026-10-14",
+      "resolved_on": "2026-10-14",
+      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "history": [
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "new",
+          "severity": "medium"
+        },
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "A11Y-09",
+      "category": "A11Y",
+      "rule": "redundant-tab-stops",
+      "title": "Six tab stops per table row; row and title button duplicate one action",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/data-table-grid.tsx",
+        "line": 114,
+        "anchor": "DataTableGrid <TableRow tabIndex=0>"
+      },
+      "severity": "low",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-14",
+      "last_seen": "2026-10-14",
+      "resolved_on": "2026-10-14",
+      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "history": [
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "new",
+          "severity": "low"
+        },
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "COLOR-04",
+      "category": "COLOR",
+      "rule": "low-text-contrast",
+      "title": "Small badges and counts fall below 4.5:1 (3.31–4.47:1)",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/columns.tsx",
+        "line": 59,
+        "anchor": "statusBadgeClasses / pill counts / Kanban salary chip"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "quick-win",
+      "status": "resolved",
+      "first_flagged": "2026-10-14",
+      "last_seen": "2026-10-14",
+      "resolved_on": "2026-10-14",
+      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "history": [
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "new",
+          "severity": "medium"
+        },
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "AFFORD-03",
+      "category": "AFFORD",
+      "rule": "small-touch-target",
+      "title": "Mobile card checkbox (16px) and posting link (22px) fail 2.5.8; area around checkbox is a dead zone",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/data-table-mobile-card.tsx",
+        "line": 96,
+        "anchor": "DataTableMobileCard checkbox + link"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-14",
+      "last_seen": "2026-10-14",
+      "resolved_on": "2026-10-14",
+      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "history": [
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "new",
+          "severity": "medium"
+        },
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "DATA-03",
+      "category": "DATA",
+      "rule": "pagination-scales-poorly",
+      "title": "Pagination offers only Previous/Next and at most 25 rows for large accounts",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/data-table-grid.tsx",
+        "line": 25,
+        "anchor": "DataTableGrid pagination footer"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-14",
+      "last_seen": "2026-10-14",
+      "resolved_on": "2026-10-14",
+      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "history": [
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "new",
+          "severity": "medium"
+        },
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "HIER-04",
+      "category": "HIER",
+      "rule": "offscreen-content-no-cue",
+      "title": "Kanban hides Rejected and Ghosted columns off-screen with no scroll cue",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/applications-kanban.tsx",
+        "line": 413,
+        "anchor": "ApplicationsKanban desktop board"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-14",
+      "last_seen": "2026-10-14",
+      "resolved_on": "2026-10-14",
+      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "history": [
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "new",
+          "severity": "medium"
+        },
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "ONBD-01",
+      "category": "ONBD",
+      "rule": "no-empty-state",
+      "title": "First-run page is an empty table with zero-count filters",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/data-table-grid.tsx",
+        "line": 175,
+        "anchor": "DataTableGrid empty row"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "medium",
+      "status": "resolved",
+      "first_flagged": "2026-10-14",
+      "last_seen": "2026-10-14",
+      "resolved_on": "2026-10-14",
+      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "history": [
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "new",
+          "severity": "medium"
+        },
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "COPY-02",
+      "category": "COPY",
+      "rule": "inconsistent-terms",
+      "title": "View labels, sign-in casing and bulk-delete plural are inconsistent",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/data-table-toolbar.tsx",
+        "line": 167,
+        "anchor": "View switch / Sign in buttons / bulk delete dialog"
+      },
+      "severity": "low",
+      "confidence": "observed",
+      "effort": "quick-win",
+      "status": "resolved",
+      "first_flagged": "2026-10-14",
+      "last_seen": "2026-10-14",
+      "resolved_on": "2026-10-14",
+      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "history": [
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "new",
+          "severity": "low"
+        },
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "HIER-05",
+      "category": "HIER",
+      "rule": "missing-h1",
+      "title": "Page has no h1; the page title is a span in the top bar",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/_components/nav.tsx",
+        "line": 74,
+        "anchor": "Nav breadcrumb title"
+      },
+      "severity": "low",
+      "confidence": "observed",
+      "effort": "quick-win",
+      "status": "resolved",
+      "first_flagged": "2026-10-14",
+      "last_seen": "2026-10-14",
+      "resolved_on": "2026-10-14",
+      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "history": [
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "new",
+          "severity": "low"
+        },
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "HIER-06",
+      "category": "HIER",
+      "rule": "low-information-density",
+      "title": "Four stacked bands and ~63px rows leave room for about 9 applications per screen",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/data-table-grid.tsx",
+        "line": 58,
+        "anchor": "Applications page chrome + table rows"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "medium",
+      "status": "resolved",
+      "first_flagged": "2026-10-14",
+      "last_seen": "2026-10-14",
+      "resolved_on": "2026-10-14",
+      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "history": [
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "new",
+          "severity": "medium"
+        },
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "HIER-07",
+      "category": "HIER",
+      "rule": "status-category-hidden",
+      "title": "Status column shows sub-stage text, so one colour carries four different labels and long ones truncate",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/columns.tsx",
+        "line": 280,
+        "anchor": "Status cell badge"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-14",
+      "last_seen": "2026-10-14",
+      "resolved_on": "2026-10-14",
+      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "history": [
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "new",
+          "severity": "medium"
+        },
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "COLOR-05",
+      "category": "COLOR",
+      "rule": "low-non-text-contrast",
+      "title": "Unchecked checkboxes are nearly invisible (1.2:1 light, 1.08:1 dark)",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "components/ui/checkbox.tsx",
+        "line": 36,
+        "anchor": "Checkbox unchecked border"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "resolved",
+      "first_flagged": "2026-10-14",
+      "last_seen": "2026-10-14",
+      "resolved_on": "2026-10-14",
+      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "history": [
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "new",
+          "severity": "medium"
+        },
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "HIER-08",
+      "category": "HIER",
+      "rule": "column-width-imbalance",
+      "title": "Role column has slack while Status, Location and Platform truncate",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/columns.tsx",
+        "line": 305,
+        "anchor": "Column widths (role/status/location/platform)"
+      },
+      "severity": "low",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-14",
+      "last_seen": "2026-10-14",
+      "resolved_on": "2026-10-14",
+      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "history": [
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "new",
+          "severity": "low"
+        },
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "DSYS-02",
+      "category": "DSYS",
+      "rule": "inconsistent-row-actions",
+      "title": "Table shows edit and delete icons on every row; Kanban uses a ⋯ menu",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/columns.tsx",
+        "line": 337,
+        "anchor": "Actions column"
+      },
+      "severity": "low",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-14",
+      "last_seen": "2026-10-14",
+      "resolved_on": "2026-10-14",
+      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "history": [
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "new",
+          "severity": "low"
+        },
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "DSYS-03",
+      "category": "DSYS",
+      "rule": "visual-noise",
+      "title": "Repeated icons, always-on sort arrows and platform chips compete with the data",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/columns.tsx",
+        "line": 201,
+        "anchor": "Role cell icons / header / platform chip"
+      },
+      "severity": "low",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-14",
+      "last_seen": "2026-10-14",
+      "resolved_on": "2026-10-14",
+      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "history": [
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "new",
+          "severity": "low"
+        },
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "HIER-09",
+      "category": "HIER",
+      "rule": "uneven-row-rhythm",
+      "title": "Rows with a resume icon are taller, and the header band stops short of the actions column",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/columns.tsx",
+        "line": 229,
+        "anchor": "Resume icon h-5 / actions TableHead bg-card"
+      },
+      "severity": "low",
+      "confidence": "observed",
+      "effort": "quick-win",
+      "status": "resolved",
+      "first_flagged": "2026-10-14",
+      "last_seen": "2026-10-14",
+      "resolved_on": "2026-10-14",
+      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "history": [
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "new",
+          "severity": "low"
+        },
+        {
+          "date": "2026-10-14",
+          "report": "reports/2026-10-14-applications.md",
+          "event": "resolved"
+        }
+      ]
     }
   ]
 }
