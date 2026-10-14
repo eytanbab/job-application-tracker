@@ -315,7 +315,7 @@ export const columns: ColumnDef<FormValues>[] = [
     cell: ({ row }) => {
       const location = row.getValue<string>("location");
       return (
-        <div className="text-xs text-muted-foreground truncate max-w-[110px] xl:max-w-[130px]" title={location || undefined}>
+        <div className="text-xs text-muted-foreground truncate max-w-[110px] xl:max-w-[170px]" title={location || undefined}>
           {location || "-"}
         </div>
       );
@@ -331,7 +331,7 @@ export const columns: ColumnDef<FormValues>[] = [
         <div className="min-w-0">
           <Badge
             variant="secondary"
-            className="text-[11px] font-normal truncate max-w-[85px] xl:max-w-[95px] px-2 py-0.5 inline-block leading-normal"
+            className="text-[11px] font-normal truncate max-w-[100px] px-2 py-0.5 inline-block leading-normal"
             title={formatPlatformLabel(platform)}
           >
             {formatPlatformLabel(platform)}
