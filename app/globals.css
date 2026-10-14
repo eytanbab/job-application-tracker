@@ -131,7 +131,8 @@ h6 {
     --destructive: 0 90% 66%;
     --destructive-foreground: 224 25% 7%;
 
-    --border: 224 16% 15%;
+    /* Lifted from 15% so the table card keeps a visible edge */
+    --border: 224 16% 20%;
     /* Field boundary: 3.42:1 on card (WCAG 1.4.11) */
     --input: 220 10% 44%;
     --ring: 255 85% 72%;

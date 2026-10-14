@@ -98,7 +98,7 @@ test.describe("Applications Page E2E Suite", () => {
     await ensureTestApplicationExists(page);
 
     // Verify sort headers exist
-    const roleHeader = page.locator("button:has-text('Role & Company')");
+    const roleHeader = page.locator("button:has-text('Role & company')");
     await expect(roleHeader).toBeVisible();
 
     // Click sort by Role & Company
@@ -106,7 +106,7 @@ test.describe("Applications Page E2E Suite", () => {
     await page.waitForTimeout(300);
 
     // Click sort by Date Applied
-    const dateHeader = page.locator("button:has-text('Date Applied')");
+    const dateHeader = page.locator("button:has-text('Date applied')");
     await dateHeader.click();
     await page.waitForTimeout(300);
 

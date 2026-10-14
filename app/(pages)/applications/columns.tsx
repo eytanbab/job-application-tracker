@@ -6,7 +6,6 @@ import {
   ArrowUp,
   ArrowDown,
   ExternalLink,
-  Building2,
   FileText,
 } from "lucide-react";
 
@@ -53,8 +52,8 @@ function renderSortHeader<TData, TValue>(column: Column<TData, TValue>, label: s
       variant="ghost"
       size="sm"
       className={cn(
-        "h-auto p-0 font-bold hover:bg-transparent transition-colors justify-start text-left text-xs uppercase tracking-wider text-foreground select-none inline-flex items-center gap-1.5",
-        isSorted && "text-primary font-extrabold",
+        "group/sort h-auto p-0 font-medium hover:bg-transparent hover:text-foreground transition-colors justify-start text-left text-xs text-muted-foreground select-none inline-flex items-center gap-1.5",
+        isSorted && "text-foreground font-semibold",
       )}
       onClick={() => column.toggleSorting(isSorted === "asc")}
     >
@@ -64,7 +63,8 @@ function renderSortHeader<TData, TValue>(column: Column<TData, TValue>, label: s
       ) : isSorted === "desc" ? (
         <ArrowDown className="h-3.5 w-3.5 text-primary shrink-0" />
       ) : (
-        <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
+        // Only the active column shows an arrow at rest
+        <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0 opacity-0 group-hover/sort:opacity-100 group-focus-visible/sort:opacity-100 transition-opacity" />
       )}
     </Button>
   );
@@ -116,7 +116,7 @@ export const columns: ColumnDef<FormValues>[] = [
   {
     id: "role_name",
     accessorFn: (row) => `${row.role_name} ${row.company_name}`,
-    header: ({ column }) => renderSortHeader(column, "Role & Company"),
+    header: ({ column }) => renderSortHeader(column, "Role & company"),
     cell: ({ row, table }) => {
       const role = row.original.role_name;
       const company = row.original.company_name;
@@ -157,7 +157,8 @@ export const columns: ColumnDef<FormValues>[] = [
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e) => e.stopPropagation()}
-                className="inline-flex items-center justify-center h-4 w-4 rounded text-muted-foreground/60 hover:text-primary transition-colors shrink-0 cursor-pointer"
+                // Shown on row hover or focus; the title already opens the row
+                className="relative before:absolute before:-inset-1 before:content-[''] inline-flex items-center justify-center h-4 w-4 rounded text-muted-foreground/60 hover:text-primary transition-[color,opacity] shrink-0 cursor-pointer opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
                 title="Open job posting"
                 aria-label={`Open job posting for ${role}`}
               >
@@ -166,12 +167,10 @@ export const columns: ColumnDef<FormValues>[] = [
             )}
           </div>
           <div className="text-xs text-muted-foreground flex items-center gap-1.5 min-w-0">
-            {compact ? (
+            {compact && (
               <span aria-hidden="true" className="text-muted-foreground/50">
                 ·
               </span>
-            ) : (
-              <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
             )}
             <span className="truncate" title={company}>{company}</span>
             {row.original.resumeId && (
@@ -200,7 +199,8 @@ export const columns: ColumnDef<FormValues>[] = [
                     });
                   }
                 }}
-                className="inline-flex items-center justify-center h-4 w-4 rounded text-primary/80 hover:text-primary hover:bg-primary/10 transition-colors shrink-0 cursor-pointer"
+                // 24px target; the negative margin keeps the row height
+                className="inline-flex items-center justify-center h-6 w-6 -my-1 -mx-1 rounded text-primary/80 hover:text-primary hover:bg-primary/10 transition-colors shrink-0 cursor-pointer"
                 title={
                   (row.original as any).resumeTitle
                     ? `Applied with: ${(row.original as any).resumeTitle} (Click to preview)`
@@ -222,7 +222,7 @@ export const columns: ColumnDef<FormValues>[] = [
   },
   {
     accessorKey: "date_applied",
-    header: ({ column }) => renderSortHeader(column, "Date Applied"),
+    header: ({ column }) => renderSortHeader(column, "Date applied"),
     cell: ({ row }) => {
       const rawDate = row.getValue<string>("date_applied");
       if (!rawDate) return <span className="text-muted-foreground">-</span>;
@@ -298,14 +298,12 @@ export const columns: ColumnDef<FormValues>[] = [
       const platform = row.getValue<string>("platform");
       if (!platform) return <span className="text-muted-foreground">-</span>;
       return (
-        <div className="min-w-0">
-          <Badge
-            variant="secondary"
-            className="text-[11px] font-normal truncate max-w-[100px] px-2 py-0.5 inline-block leading-normal"
-            title={formatPlatformLabel(platform)}
-          >
-            {formatPlatformLabel(platform)}
-          </Badge>
+        // Plain text like Location: colour is reserved for the stage
+        <div
+          className="text-xs text-muted-foreground truncate max-w-[100px]"
+          title={formatPlatformLabel(platform)}
+        >
+          {formatPlatformLabel(platform)}
         </div>
       );
     },
