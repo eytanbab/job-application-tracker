@@ -103,10 +103,10 @@ export function ApplicationsKanban({
     source: KanbanColumns;
     rows: Partial<Record<StatusKind, KanbanItem[]>>;
   }>({ source: columns, rows: {} });
-  const moreRows = extraRows.source === columns ? extraRows.rows : {};
   const [loadingColumn, setLoadingColumn] = useState<StatusKind | null>(null);
 
   const groupedData = useMemo(() => {
+    const moreRows = extraRows.source === columns ? extraRows.rows : {};
     const map = {} as Record<StatusKind, KanbanItem[]>;
     for (const option of [...BASE_KANBAN_COLUMNS, { id: "other" as const }]) {
       map[option.id] = [
@@ -115,7 +115,7 @@ export function ApplicationsKanban({
       ];
     }
     return map;
-  }, [columns, moreRows]);
+  }, [columns, extraRows]);
 
   const columnTotal = (kind: StatusKind) => columns[kind]?.total ?? 0;
 
