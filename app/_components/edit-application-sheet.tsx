@@ -35,6 +35,8 @@ type Row = {
   onOpenChange?: (open: boolean) => void;
   showTrigger?: boolean;
   triggerClassName?: string;
+  /** Where focus goes on close when the dialog was opened from a menu. */
+  returnFocusRef?: React.RefObject<HTMLElement | null>;
 };
 
 export const EditApplicationSheet = ({
@@ -44,6 +46,7 @@ export const EditApplicationSheet = ({
   onOpenChange: controlledOnOpenChange,
   showTrigger = true,
   triggerClassName,
+  returnFocusRef,
 }: Row) => {
   const [internalOpen, setInternalOpen] = useState(false);
 
@@ -110,6 +113,12 @@ export const EditApplicationSheet = ({
         onOpenAutoFocus={(e) => {
           e.preventDefault();
           titleRef.current?.focus();
+        }}
+        onCloseAutoFocus={(e) => {
+          if (returnFocusRef?.current) {
+            e.preventDefault();
+            returnFocusRef.current.focus();
+          }
         }}
       >
         <DialogHeader className="text-left px-4 sm:px-6 pt-5 pb-3 border-b border-border/30 shrink-0">
