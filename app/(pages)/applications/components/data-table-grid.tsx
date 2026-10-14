@@ -144,12 +144,12 @@ export function DataTableGrid<
                       className={cn(
                         "px-2.5 xl:px-3 py-3 font-bold text-foreground text-xs uppercase tracking-wider",
                         isSelect && "w-10 px-2 text-center",
-                        header.column.id === "role_name" && "w-full max-w-0 min-w-[200px]",
+                        header.column.id === "role_name" && "w-full max-w-0 min-w-[180px]",
                         isDate && "w-[110px] whitespace-nowrap",
-                        header.column.id === "status" && "w-[125px]",
-                        header.column.id === "location" && "w-[125px]",
-                        header.column.id === "platform" && "w-[100px]",
-                        isSalary && "w-[130px] whitespace-nowrap",
+                        header.column.id === "status" && "w-[130px] xl:w-[150px] xl:min-w-[150px]",
+                        header.column.id === "location" && "w-[120px] xl:w-[180px]",
+                        header.column.id === "platform" && "hidden xl:table-cell w-[110px]",
+                        isSalary && "hidden xl:table-cell w-[130px] whitespace-nowrap",
                         isActions &&
                           "w-[76px] sticky right-0 z-20 bg-[color-mix(in_srgb,var(--color-muted)_30%,var(--color-card))] text-right pr-3 border-l border-border/30 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.3)]",
                       )}
@@ -206,12 +206,12 @@ export function DataTableGrid<
                           "px-2.5 xl:px-3 text-sm",
                           density === "compact" ? "py-1.5" : "py-3",
                           isSelect && "w-10 px-2 text-center",
-                          cell.column.id === "role_name" && "w-full max-w-0 min-w-[200px]",
+                          cell.column.id === "role_name" && "w-full max-w-0 min-w-[180px]",
                           isDate && "w-[110px] whitespace-nowrap",
-                          cell.column.id === "status" && "w-[125px]",
-                          cell.column.id === "location" && "w-[125px]",
-                          cell.column.id === "platform" && "w-[100px]",
-                          isSalary && "w-[130px] whitespace-nowrap",
+                          cell.column.id === "status" && "w-[130px] xl:w-[150px] xl:min-w-[150px]",
+                          cell.column.id === "location" && "w-[120px] xl:w-[180px]",
+                          cell.column.id === "platform" && "hidden xl:table-cell w-[110px]",
+                          isSalary && "hidden xl:table-cell w-[130px] whitespace-nowrap",
                           isActions &&
                             "w-[76px] sticky right-0 z-10 bg-card group-hover/row:bg-accent/40 group-data-[state=selected]/row:bg-muted text-right pr-3 border-l border-border/30 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.3)]",
                         )}
