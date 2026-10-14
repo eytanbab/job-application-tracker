@@ -1,9 +1,16 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import {
   getStatusDisplay,
   getStatusKind,
@@ -95,6 +102,34 @@ export function ApplicationsKanban({
   const [dragOverCol, setDragOverCol] = useState<StatusKind | null>(null);
   const [activeMobileCol, setActiveMobileCol] = useState<StatusKind>("applied");
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
+
+  // Six columns don't fit beside the sidebar on most laptops, so the board
+  // scrolls sideways. Show fading edges and arrow buttons while there's
+  // more to see, so the Rejected and Ghosted columns aren't missed.
+  const boardRef = useRef<HTMLDivElement>(null);
+  const [scrollEdges, setScrollEdges] = useState({ left: false, right: false });
+  const updateScrollEdges = useCallback(() => {
+    const el = boardRef.current;
+    if (!el) return;
+    const left = el.scrollLeft > 4;
+    const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 4;
+    setScrollEdges((prev) =>
+      prev.left === left && prev.right === right ? prev : { left, right },
+    );
+  }, []);
+  useEffect(() => {
+    const el = boardRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(updateScrollEdges);
+    observer.observe(el);
+    if (el.firstElementChild) observer.observe(el.firstElementChild);
+    updateScrollEdges();
+    return () => observer.disconnect();
+  }, [updateScrollEdges]);
+  const scrollBoard = (direction: 1 | -1) => {
+    const el = boardRef.current;
+    el?.scrollBy({ left: direction * el.clientWidth * 0.8, behavior: "smooth" });
+  };
 
   // Cards loaded with "Show more", per column, tagged with the server result
   // they extend. A new result (a filter change or a status move) starts
@@ -410,12 +445,48 @@ export function ApplicationsKanban({
       </div>
 
       {/* Desktop View */}
-      <div className="hidden md:block w-full overflow-x-auto pb-4 pt-1 scrollbar-thin">
-        <div className="flex gap-4 min-w-max w-full items-start">
-          {kanbanColumns.map((col, colIdx) =>
-            renderColumnContent(col, colIdx),
-          )}
+      <div className="relative hidden md:block">
+        <div
+          ref={boardRef}
+          onScroll={updateScrollEdges}
+          className="w-full overflow-x-auto pb-4 pt-1"
+        >
+          <div className="flex gap-4 min-w-max w-full items-start">
+            {kanbanColumns.map((col, colIdx) =>
+              renderColumnContent(col, colIdx),
+            )}
+          </div>
         </div>
+        {[
+          { side: "left" as const, show: scrollEdges.left, dir: -1 as const, Icon: ChevronLeft },
+          { side: "right" as const, show: scrollEdges.right, dir: 1 as const, Icon: ChevronRight },
+        ].map(
+          ({ side, show, dir, Icon }) =>
+            show && (
+              <div
+                key={side}
+                className={cn(
+                  "pointer-events-none absolute top-0 bottom-4 w-20 from-background to-transparent",
+                  side === "left" ? "left-0 bg-gradient-to-r" : "right-0 bg-gradient-to-l",
+                )}
+              >
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => scrollBoard(dir)}
+                  aria-label={side === "left" ? "Scroll board left" : "Scroll board right"}
+                  title={side === "left" ? "Scroll board left" : "Scroll board right"}
+                  className={cn(
+                    "pointer-events-auto absolute top-2.5 h-9 w-9 rounded-full shadow-md bg-card cursor-pointer",
+                    side === "left" ? "left-1" : "right-1",
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                </Button>
+              </div>
+            ),
+        )}
       </div>
     </div>
   );
