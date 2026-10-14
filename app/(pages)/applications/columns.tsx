@@ -58,6 +58,8 @@ export type FormValues = z.input<typeof columnsSchema>;
 
 export interface CustomColumnMeta {
   onSelectApplication?: (app: FormValues) => void;
+  /** Compact rows put role and company on one line and drop detail lines. */
+  density?: "comfortable" | "compact";
 }
 
 
@@ -155,10 +157,16 @@ export const columns: ColumnDef<FormValues>[] = [
           ? link
           : `https://${link}`);
       const meta = table.options.meta as CustomColumnMeta | undefined;
+      const compact = meta?.density === "compact";
 
       return (
-        <div className="space-y-0.5 min-w-0 w-full">
-          <div className="flex items-center gap-1.5 min-w-0">
+        <div
+          className={cn(
+            "min-w-0 w-full",
+            compact ? "flex items-center gap-1.5" : "space-y-0.5",
+          )}
+        >
+          <div className="flex items-center gap-1.5 min-w-0 shrink">
             <button
               type="button"
               data-testid="view-details-button"
@@ -188,7 +196,13 @@ export const columns: ColumnDef<FormValues>[] = [
             )}
           </div>
           <div className="text-xs text-muted-foreground flex items-center gap-1.5 min-w-0">
-            <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
+            {compact ? (
+              <span aria-hidden="true" className="text-muted-foreground/50">
+                ·
+              </span>
+            ) : (
+              <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
+            )}
             <span className="truncate" title={company}>{company}</span>
             {row.original.resumeId && (
               <button
@@ -254,7 +268,10 @@ export const columns: ColumnDef<FormValues>[] = [
     id: "status",
     accessorFn: (row) => getStatusKind(row.status, row.statusCategory),
     header: ({ column }) => renderSortHeader(column, "Status"),
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
+      const compact =
+        (table.options.meta as CustomColumnMeta | undefined)?.density ===
+        "compact";
       const kind = getStatusKind(
         row.original.status,
         row.original.statusCategory,
@@ -279,10 +296,11 @@ export const columns: ColumnDef<FormValues>[] = [
               "font-medium border whitespace-nowrap text-[11px] px-2 py-0.5 inline-block leading-normal",
               statusBadgeClasses[kind],
             )}
+            title={detail ?? undefined}
           >
             {stage}
           </Badge>
-          {detail && (
+          {detail && !compact && (
             <p className="text-xs text-muted-foreground leading-snug break-words">
               {detail}
             </p>

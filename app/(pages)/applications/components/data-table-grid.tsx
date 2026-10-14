@@ -84,6 +84,8 @@ interface DataTableGridProps<TData> {
   onSelectRow: (item: TData) => void;
   /** True while the server loads a new page, sort or filter result. */
   isPending?: boolean;
+  density?: "comfortable" | "compact";
+  onDensityChange?: (density: "comfortable" | "compact") => void;
 }
 
 export function DataTableGrid<
@@ -105,6 +107,8 @@ export function DataTableGrid<
   clearFilters,
   onSelectRow,
   isPending = false,
+  density = "comfortable",
+  onDensityChange,
 }: DataTableGridProps<TData>) {
   return (
     <div
@@ -116,8 +120,13 @@ export function DataTableGrid<
     >
       {/* Desktop Table View */}
       <div className="hidden lg:block rounded-xl border border-border/40 bg-card overflow-hidden shadow-2xs">
-        <Table className="w-full">
-          <TableHeader className="bg-muted/30">
+        {/* Capped to the viewport so long pages scroll inside the table
+            and the header row stays visible (sticky within this box). */}
+        <Table
+          className="w-full"
+          containerClassName="max-h-[calc(100dvh-9rem)]"
+        >
+          <TableHeader className="sticky top-0 z-20 bg-[color-mix(in_srgb,var(--color-muted)_30%,var(--color-card))]">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
@@ -135,14 +144,14 @@ export function DataTableGrid<
                       className={cn(
                         "px-2.5 xl:px-3 py-3 font-bold text-foreground text-xs uppercase tracking-wider",
                         isSelect && "w-10 px-2 text-center",
-                        header.column.id === "role_name" && "min-w-[160px]",
+                        header.column.id === "role_name" && "w-full max-w-0 min-w-[200px]",
                         isDate && "w-[110px] whitespace-nowrap",
                         header.column.id === "status" && "w-[125px]",
                         header.column.id === "location" && "w-[125px]",
                         header.column.id === "platform" && "w-[100px]",
                         isSalary && "w-[130px] whitespace-nowrap",
                         isActions &&
-                          "w-[76px] sticky right-0 z-20 bg-card/95 backdrop-blur-xs text-right pr-3 border-l border-border/30 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.3)]",
+                          "w-[76px] sticky right-0 z-20 bg-[color-mix(in_srgb,var(--color-muted)_30%,var(--color-card))] text-right pr-3 border-l border-border/30 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.3)]",
                       )}
                     >
                       {header.isPlaceholder
@@ -194,9 +203,10 @@ export function DataTableGrid<
                       <TableCell
                         key={cell.id}
                         className={cn(
-                          "px-2.5 xl:px-3 py-3 text-sm",
+                          "px-2.5 xl:px-3 text-sm",
+                          density === "compact" ? "py-1.5" : "py-3",
                           isSelect && "w-10 px-2 text-center",
-                          cell.column.id === "role_name" && "min-w-[160px]",
+                          cell.column.id === "role_name" && "w-full max-w-0 min-w-[200px]",
                           isDate && "w-[110px] whitespace-nowrap",
                           cell.column.id === "status" && "w-[125px]",
                           cell.column.id === "location" && "w-[125px]",
@@ -333,6 +343,31 @@ export function DataTableGrid<
           </p>
 
           <div className="flex items-center space-x-1.5 shrink-0">
+            {onDensityChange && (
+              <div
+                role="radiogroup"
+                aria-label="Row density"
+                className="hidden lg:inline-flex items-center rounded-md border border-border/40 p-0.5 mr-2"
+              >
+                {(["comfortable", "compact"] as const).map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    role="radio"
+                    aria-checked={density === option}
+                    onClick={() => onDensityChange(option)}
+                    className={cn(
+                      "h-7 px-2.5 rounded text-xs font-medium capitalize cursor-pointer transition-colors",
+                      density === option
+                        ? "bg-muted text-foreground"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            )}
             <span className="font-medium text-xs hidden sm:inline">Rows per page:</span>
             <span className="font-medium text-xs sm:hidden">Rows:</span>
             <Select

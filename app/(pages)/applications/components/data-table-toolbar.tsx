@@ -36,6 +36,8 @@ interface DataTableToolbarProps {
   viewMode: string;
   setViewMode: (val: string) => void;
   onOpenCreate: () => void;
+  /** Optional first row inside the toolbar card (the status pills). */
+  topRow?: React.ReactNode;
 }
 
 export function DataTableToolbar({
@@ -53,143 +55,147 @@ export function DataTableToolbar({
   viewMode,
   setViewMode,
   onOpenCreate,
+  topRow,
 }: DataTableToolbarProps) {
   return (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-card border border-border/40 rounded-xl p-2.5 sm:p-3 shadow-2xs">
-      {/* 1. Search Bar (Full-width on mobile) */}
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-        <Input
-          placeholder="Search applications..."
-          value={globalFilter}
-          onChange={(e) => setGlobalFilter(String(e.target.value))}
-          className="pl-9 pr-8 w-full h-9 text-xs bg-background/60"
-        />
-        {globalFilter.length > 0 && (
-          <button
-            type="button"
-            aria-label="Clear search filter"
-            onClick={() => setGlobalFilter("")}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 cursor-pointer"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        )}
-      </div>
-
-      {/* 2. Controls Row: Platform Filter + View Mode Switcher */}
-      <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
-        {/* Platform Dropdown & Reset */}
-        <div className="flex items-center gap-1.5">
-          {uniquePlatforms.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "h-9 text-xs justify-between bg-background/60 px-2.5 sm:px-3 font-medium cursor-pointer border-border/50 shrink-0",
-                    platformFilter && "border-primary/40 bg-primary/5 text-primary",
-                  )}
-                >
-                  <span className="truncate max-w-[100px] sm:max-w-[120px]">
-                    {platformFilter ? formatPlatformLabel(platformFilter) : "Platform"}
-                  </span>
-                  <ChevronDown className="h-3.5 w-3.5 opacity-50 shrink-0 ml-1" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="start"
-                collisionPadding={8}
-                className="w-48 max-h-64 sm:max-h-72 overflow-y-auto overflow-x-hidden"
-              >
-                <DropdownMenuRadioGroup
-                  value={platformFilter || "all"}
-                  onValueChange={(value) =>
-                    setPlatformFilter(value === "all" ? null : value)
-                  }
-                >
-                  <DropdownMenuRadioItem
-                    value="all"
-                    className="text-xs cursor-pointer"
-                  >
-                    <span className="truncate">All Platforms</span>
-                  </DropdownMenuRadioItem>
-                  {uniquePlatforms.map((plat) => (
-                    <DropdownMenuRadioItem
-                      key={plat}
-                      value={plat}
-                      title={formatPlatformLabel(plat)}
-                      className="text-xs cursor-pointer"
-                    >
-                      <span className="truncate">{formatPlatformLabel(plat)}</span>
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={clearFilters}
-              title="Reset all filters"
-              aria-label="Reset all filters"
-              className="h-9 w-9 text-muted-foreground hover:text-foreground shrink-0 cursor-pointer"
+    <div className="flex flex-col gap-2.5 bg-card border border-border/40 rounded-xl p-2.5 sm:p-3 shadow-2xs">
+      {topRow}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+        {/* 1. Search Bar (Full-width on mobile) */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Search applications..."
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(String(e.target.value))}
+            className="pl-9 pr-8 w-full h-9 text-xs bg-background/60"
+          />
+          {globalFilter.length > 0 && (
+            <button
+              type="button"
+              aria-label="Clear search filter"
+              onClick={() => setGlobalFilter("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 cursor-pointer"
             >
-              <RotateCcw className="h-3.5 w-3.5" />
-            </Button>
+              <X className="h-3.5 w-3.5" />
+            </button>
           )}
         </div>
 
-        {/* View Mode Switcher: Cards/Table vs Board/Kanban */}
-        <div className="flex items-center gap-2">
-          <div
-            role="radiogroup"
-            aria-label="View mode"
-            className="inline-flex items-center rounded-lg bg-muted/40 p-0.5 gap-0.5 border border-border/30"
-          >
-            <button
-              type="button"
-              role="radio"
-              aria-checked={viewMode === "table"}
-              onClick={() => setViewMode("table")}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer",
-                viewMode === "table"
-                  ? "bg-background text-foreground shadow-2xs font-semibold"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <LayoutList className="h-3.5 w-3.5" />
-              <span className="lg:hidden">Cards</span>
-              <span className="hidden lg:inline">Table</span>
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={viewMode === "kanban"}
-              onClick={() => setViewMode("kanban")}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer",
-                viewMode === "kanban"
-                  ? "bg-background text-foreground shadow-2xs font-semibold"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <LayoutGrid className="h-3.5 w-3.5" />
-              <span className="sm:hidden">Board</span>
-              <span className="hidden sm:inline">Kanban</span>
-            </button>
+        {/* 2. Controls Row: Platform Filter + View Mode Switcher */}
+        <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+          {/* Platform Dropdown & Reset */}
+          <div className="flex items-center gap-1.5">
+            {uniquePlatforms.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-9 text-xs justify-between bg-background/60 px-2.5 sm:px-3 font-medium cursor-pointer border-border/50 shrink-0",
+                      platformFilter && "border-primary/40 bg-primary/5 text-primary",
+                    )}
+                  >
+                    <span className="truncate max-w-[100px] sm:max-w-[120px]">
+                      {platformFilter ? formatPlatformLabel(platformFilter) : "Platform"}
+                    </span>
+                    <ChevronDown className="h-3.5 w-3.5 opacity-50 shrink-0 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  collisionPadding={8}
+                  className="w-48 max-h-64 sm:max-h-72 overflow-y-auto overflow-x-hidden"
+                >
+                  <DropdownMenuRadioGroup
+                    value={platformFilter || "all"}
+                    onValueChange={(value) =>
+                      setPlatformFilter(value === "all" ? null : value)
+                    }
+                  >
+                    <DropdownMenuRadioItem
+                      value="all"
+                      className="text-xs cursor-pointer"
+                    >
+                      <span className="truncate">All Platforms</span>
+                    </DropdownMenuRadioItem>
+                    {uniquePlatforms.map((plat) => (
+                      <DropdownMenuRadioItem
+                        key={plat}
+                        value={plat}
+                        title={formatPlatformLabel(plat)}
+                        className="text-xs cursor-pointer"
+                      >
+                        <span className="truncate">{formatPlatformLabel(plat)}</span>
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={clearFilters}
+                title="Reset all filters"
+                aria-label="Reset all filters"
+                className="h-9 w-9 text-muted-foreground hover:text-foreground shrink-0 cursor-pointer"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+              </Button>
+            )}
           </div>
 
-          <NewApplicationButton
-            onClick={onOpenCreate}
-            label="Add Application"
-            className="hidden lg:inline-flex px-3.5 font-semibold h-9"
-          />
+          {/* View Mode Switcher: Cards/Table vs Board/Kanban */}
+          <div className="flex items-center gap-2">
+            <div
+              role="radiogroup"
+              aria-label="View mode"
+              className="inline-flex items-center rounded-lg bg-muted/40 p-0.5 gap-0.5 border border-border/30"
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={viewMode === "table"}
+                onClick={() => setViewMode("table")}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer",
+                  viewMode === "table"
+                    ? "bg-background text-foreground shadow-2xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <LayoutList className="h-3.5 w-3.5" />
+                <span className="lg:hidden">Cards</span>
+                <span className="hidden lg:inline">Table</span>
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={viewMode === "kanban"}
+                onClick={() => setViewMode("kanban")}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer",
+                  viewMode === "kanban"
+                    ? "bg-background text-foreground shadow-2xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <LayoutGrid className="h-3.5 w-3.5" />
+                <span className="sm:hidden">Board</span>
+                <span className="hidden sm:inline">Kanban</span>
+              </button>
+            </div>
+
+            <NewApplicationButton
+              onClick={onOpenCreate}
+              label="Add Application"
+              className="hidden lg:inline-flex px-3.5 font-semibold h-9"
+            />
+          </div>
         </div>
       </div>
     </div>
