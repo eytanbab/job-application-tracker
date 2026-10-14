@@ -4,10 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Building2, Calendar, ExternalLink, MapPin } from "lucide-react";
-import { getStatusDisplay, getStatusKind, StatusKind } from "@/lib/utils";
+import { getStatusDisplay, getStatusKind, isStandardStatus } from "@/lib/utils";
 import { formatDate, parseISO } from "date-fns";
 import { cn, formatPlatformLabel } from "@/lib/utils";
-import { statusBadgeClasses } from "./status-badge-classes";
+import { stageLabels, statusBadgeClasses } from "./status-badge-classes";
 
 
 interface MobileCardItem {
@@ -37,6 +37,14 @@ export function DataTableMobileCard({
 }: DataTableMobileCardProps) {
   const kind = getStatusKind(item.status, item.statusCategory);
   const displayLabel = getStatusDisplay(item.status, item.statusCategory);
+  const stage = stageLabels[kind];
+  // Custom text like "Technical Screen" is detail within the stage
+  const stageDetail =
+    displayLabel &&
+    !isStandardStatus(displayLabel) &&
+    displayLabel.trim().toLowerCase() !== stage.toLowerCase()
+      ? displayLabel
+      : null;
   const formattedDate = item.date_applied
     ? formatDate(parseISO(item.date_applied), "MMM d, yyyy")
     : "";
@@ -95,9 +103,9 @@ export function DataTableMobileCard({
             </h3>
             <Badge
               variant="outline"
-              className={`capitalize shrink-0 text-[11px] py-0.5 px-2 rounded-md ${statusBadgeClasses[kind]}`}
+              className={`shrink-0 text-[11px] py-0.5 px-2 rounded-md ${statusBadgeClasses[kind]}`}
             >
-              {displayLabel}
+              {stage}
             </Badge>
           </div>
 
@@ -112,6 +120,12 @@ export function DataTableMobileCard({
               </>
             )}
           </p>
+
+          {stageDetail && (
+            <p className="text-xs text-muted-foreground truncate">
+              {stageDetail}
+            </p>
+          )}
 
           <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1">
             <div className="flex items-center gap-2 min-w-0">

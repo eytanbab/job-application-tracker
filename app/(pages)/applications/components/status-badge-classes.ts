@@ -1,5 +1,20 @@
 import type { StatusKind } from "@/lib/utils";
 
+/**
+ * Stage names shown on status badges. They match the filter pills, so a
+ * badge always says which pill it belongs to; custom status text (e.g.
+ * "Technical Screen") is shown separately.
+ */
+export const stageLabels: Record<StatusKind, string> = {
+  applied: "Applied",
+  review: "In Review",
+  interview: "Interviewing",
+  accepted: "Offer",
+  rejected: "Rejected",
+  ghosted: "Ghosted",
+  other: "Other",
+};
+
 /** Badge colours per pipeline stage, shared by the table, cards and panel. */
 export const statusBadgeClasses: Record<StatusKind, string> = {
   applied:
