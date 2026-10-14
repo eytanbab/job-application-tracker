@@ -8,9 +8,11 @@ test.describe("Applications Form Dirty State Guard E2E Suite", () => {
 
   test("1. Edit Form Prompts Discard Confirmation Dialog When Changes are Unsaved", async ({ page }) => {
     // Open edit application dialog on first row
-    const editBtn = page.getByTestId("edit-application-button").first();
-    if (await editBtn.isVisible()) {
-      await editBtn.click({ force: true });
+    // Row actions live in a ⋯ menu
+    const actionsBtn = page.getByTestId("row-actions-button").first();
+    if (await actionsBtn.isVisible()) {
+      await actionsBtn.click();
+      await page.getByTestId("edit-application-button").click();
       await expect(page.locator("text=Edit Job Application")).toBeVisible();
 
       // Modify notes

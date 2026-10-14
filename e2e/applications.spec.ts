@@ -185,8 +185,8 @@ test.describe("Applications Page E2E Suite", () => {
     await ensureTestApplicationExists(page);
 
     // Click edit application button on first row using data-testid
-    const editBtn = page.getByTestId("edit-application-button").first();
-    await editBtn.click({ force: true });
+    await page.getByTestId("row-actions-button").first().click();
+    await page.getByTestId("edit-application-button").click();
 
     // Expect edit dialog title
     await expect(page.locator("text=Edit Job Application")).toBeVisible();
@@ -282,8 +282,8 @@ test.describe("Applications Page E2E Suite", () => {
     await ensureTestApplicationExists(page);
 
     // Click edit application button using data-testid
-    const editBtn = page.getByTestId("edit-application-button").first();
-    await editBtn.click({ force: true });
+    await page.getByTestId("row-actions-button").first().click();
+    await page.getByTestId("edit-application-button").click();
 
     // Submit button should be disabled when no edits have been made
     const noChangesBtn = page.locator("button:has-text('No Changes')");
@@ -316,9 +316,10 @@ test.describe("Applications Page E2E Suite", () => {
   test("13. Happy Path - Application Deletion Confirmation Modal", async ({ page }) => {
     await ensureTestApplicationExists(page);
 
-    const trashBtn = page.getByTestId("delete-application-button").first();
-    if (await trashBtn.isVisible()) {
-      await trashBtn.click({ force: true });
+    const actionsBtn = page.getByTestId("row-actions-button").first();
+    if (await actionsBtn.isVisible()) {
+      await actionsBtn.click();
+      await page.getByTestId("delete-application-button").click();
 
       // Expect deletion confirmation modal
       await expect(page.locator("text=Are you absolutely sure?")).toBeVisible();
@@ -335,9 +336,10 @@ test.describe("Applications Page E2E Suite", () => {
   test("14. Happy Path - Confirm Application Deletion", async ({ page }) => {
     await ensureTestApplicationExists(page);
 
-    const trashBtn = page.getByTestId("delete-application-button").first();
-    if (await trashBtn.isVisible()) {
-      await trashBtn.click({ force: true });
+    const actionsBtn = page.getByTestId("row-actions-button").first();
+    if (await actionsBtn.isVisible()) {
+      await actionsBtn.click();
+      await page.getByTestId("delete-application-button").click();
 
       // Expect deletion confirmation modal
       await expect(page.locator("text=Are you absolutely sure?")).toBeVisible();

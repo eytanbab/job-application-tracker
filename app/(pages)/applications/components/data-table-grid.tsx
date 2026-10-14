@@ -151,7 +151,7 @@ export function DataTableGrid<
                         header.column.id === "platform" && "hidden xl:table-cell w-[110px]",
                         isSalary && "hidden xl:table-cell w-[130px] whitespace-nowrap",
                         isActions &&
-                          "w-[76px] sticky right-0 z-20 bg-[color-mix(in_srgb,var(--color-muted)_30%,var(--color-card))] text-right pr-3 border-l border-border/30 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.3)]",
+                          "w-[56px] sticky right-0 z-20 bg-[color-mix(in_srgb,var(--color-muted)_30%,var(--color-card))] text-right pr-3 border-l border-border/30 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.3)]",
                       )}
                     >
                       {header.isPlaceholder
@@ -199,7 +199,7 @@ export function DataTableGrid<
                           cell.column.id === "platform" && "hidden xl:table-cell w-[110px]",
                           isSalary && "hidden xl:table-cell w-[130px] whitespace-nowrap",
                           isActions &&
-                            "w-[76px] sticky right-0 z-10 bg-card group-hover/row:bg-accent/40 group-data-[state=selected]/row:bg-muted text-right pr-3 border-l border-border/30 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.3)]",
+                            "w-[56px] sticky right-0 z-10 bg-card group-hover/row:bg-accent/40 group-data-[state=selected]/row:bg-muted text-right pr-3 border-l border-border/30 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.3)]",
                         )}
                       >
                         {flexRender(

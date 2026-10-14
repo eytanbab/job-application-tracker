@@ -1,23 +1,16 @@
 "use client";
 
 import { ColumnDef, Column, Table } from "@tanstack/react-table";
-import { useEffect, useRef } from "react";
 import {
-  Trash2,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
   ExternalLink,
-  Eye,
   Building2,
   FileText,
 } from "lucide-react";
 
-import { EditApplicationSheet } from "@/app/_components/edit-application-sheet";
-import {
-  deleteApplication,
-  updateApplication,
-} from "@/app/actions/applications";
+import { RowActions } from "./components/row-actions";
 import { getViewUrl } from "@/app/actions/documents";
 import { formatDate, parseISO } from "date-fns";
 import { toast } from "@/hooks/use-toast";
@@ -34,16 +27,6 @@ import {
   formatPlatformLabel,
 } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 
 import { z } from "zod";
 import { insertApplicationSchema } from "@/app/db/schema";
@@ -62,19 +45,6 @@ export interface CustomColumnMeta {
   density?: "comfortable" | "compact";
 }
 
-
-const handleApplicationDelete = async (id: string) => {
-  try {
-    await deleteApplication(id);
-    toast({ description: "Successfully deleted application!" });
-  } catch (err) {
-    console.error(err);
-    toast({
-      description: "Failed to delete application",
-      variant: "destructive",
-    });
-  }
-};
 
 function renderSortHeader<TData, TValue>(column: Column<TData, TValue>, label: string) {
   const isSorted = column.getIsSorted();
@@ -355,89 +325,14 @@ export const columns: ColumnDef<FormValues>[] = [
   {
     id: "actions",
     header: () => <span className="sr-only">Actions</span>,
-    cell: ({ row }) => {
-      const editDefaults = {
-        ...row.original,
-      } as FormValues;
-
-      const onSubmit = async (values: FormValues) => {
-        try {
-          await updateApplication(values);
-          toast({
-            description: "Application updated successfully!",
-            variant: "default",
-          });
-        } catch (err) {
-          toast({
-            description: "Failed to update application.",
-            variant: "destructive",
-          });
-          throw err;
+    cell: ({ row, table }) => (
+      <RowActions
+        application={row.original}
+        onView={() =>
+          (table.options.meta as CustomColumnMeta | undefined)
+            ?.onSelectApplication?.(row.original)
         }
-      };
-
-      return (
-        <div
-          className="flex items-center gap-1 justify-end"
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-        >
-          <EditApplicationSheet
-            row={{ original: editDefaults }}
-            onSubmit={onSubmit}
-            triggerClassName="cursor-pointer"
-          />
-
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                data-testid="delete-application-button"
-                className="h-7 w-7 xl:h-8 xl:w-8 text-muted-foreground hover:text-destructive cursor-pointer"
-                title="Delete application"
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-              >
-                <Trash2 className="h-3.5 w-3.5 xl:h-4 xl:w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Are you absolutely sure?</DialogTitle>
-                <DialogDescription>
-                  This action cannot be undone. This will permanently delete
-                  your application for{" "}
-                  <strong className="text-foreground">
-                    {row.original.role_name}
-                  </strong>{" "}
-                  at{" "}
-                  <strong className="text-foreground">
-                    {row.original.company_name}
-                  </strong>
-                  .
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter className="gap-2 sm:gap-0">
-                <DialogClose asChild>
-                  <Button type="button" variant="outline" className="cursor-pointer">
-                    Cancel
-                  </Button>
-                </DialogClose>
-                <DialogClose asChild>
-                  <Button
-                    variant="destructive"
-                    className="cursor-pointer"
-                    onClick={() => handleApplicationDelete(row.original.id!)}
-                  >
-                    Delete Application
-                  </Button>
-                </DialogClose>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      );
-    },
+      />
+    ),
   },
 ];
