@@ -119,6 +119,8 @@ export function DataTable<TData extends ApplicationRow, TValue>({
 
   return (
     <div className="w-full space-y-4">
+      {/* The visible title is in the top bar, which is hidden on phones */}
+      <h1 className="sr-only">Job applications</h1>
       {isFirstRun ? (
         <ApplicationsEmptyState onOpenCreate={() => setIsCreateOpen(true)} />
       ) : (
