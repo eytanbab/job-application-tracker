@@ -178,9 +178,11 @@ export function queryRows<T extends QueryableRow>(
   const filtered = filterRows(rows, query);
   const sorted = [...filtered].sort((a, b) => {
     if (query.sort) {
-      const order = sortValue(a, query.sort).localeCompare(
-        sortValue(b, query.sort),
-      );
+      const left = sortValue(a, query.sort);
+      const right = sortValue(b, query.sort);
+      // Empty values go last in both directions, as in the SQL query
+      if (!left !== !right) return left ? -1 : 1;
+      const order = left.localeCompare(right);
       if (order !== 0) return query.desc ? -order : order;
     }
     const byDate = b.date_applied.localeCompare(a.date_applied);
