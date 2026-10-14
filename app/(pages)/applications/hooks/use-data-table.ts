@@ -27,6 +27,7 @@ import {
   useQueryStates,
   parseAsString,
   parseAsBoolean,
+  parseAsStringLiteral,
   debounce,
 } from "nuqs";
 import {
@@ -139,6 +140,14 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
   useEffect(() => {
     selectedAppRef.current = selectedApp;
   }, [selectedApp]);
+
+  // A display preference, so it stays client-side (shallow)
+  const [density, setDensity] = useQueryState(
+    "density",
+    parseAsStringLiteral(["comfortable", "compact"] as const)
+      .withDefault("comfortable")
+      .withOptions({ shallow: true, clearOnDefault: true }),
+  );
 
   const [appIdParam, setAppIdParam] = useQueryState(
     "appId",
@@ -288,6 +297,7 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     },
     meta: {
       onSelectApplication: handleSelectRow,
+      density,
     },
     state: {
       sorting,
@@ -504,5 +514,7 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     currentIndex: activeAppIndex >= 0 ? activeAppIndex + 1 : 0,
     totalApps: currentList.length,
     isPending,
+    density,
+    setDensity,
   };
 }

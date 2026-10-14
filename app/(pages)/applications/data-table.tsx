@@ -99,6 +99,8 @@ export function DataTable<TData extends ApplicationRow, TValue>({
     currentIndex,
     totalApps,
     isPending,
+    density,
+    setDensity,
   } = useDataTable({
     columns,
     data,
@@ -112,17 +114,16 @@ export function DataTable<TData extends ApplicationRow, TValue>({
 
   return (
     <div className="w-full space-y-4">
-      {viewMode !== "kanban" && (
-        <div className="w-full">
-          <StatusFilterPills
-            counts={statusCounts}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-          />
-        </div>
-      )}
-
       <DataTableToolbar
+        topRow={
+          viewMode !== "kanban" && (
+            <StatusFilterPills
+              counts={statusCounts}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+            />
+          )
+        }
         globalFilter={globalFilter}
         setGlobalFilter={setGlobalFilter}
         statusFilter={statusFilter}
@@ -158,6 +159,8 @@ export function DataTable<TData extends ApplicationRow, TValue>({
           clearFilters={clearFilters}
           onSelectRow={handleSelectRow}
           isPending={isPending}
+          density={density}
+          onDensityChange={setDensity}
         />
       )}
 
