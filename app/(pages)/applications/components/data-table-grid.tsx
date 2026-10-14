@@ -280,7 +280,9 @@ export function DataTableGrid<
                 table.setPageSize(Number(value));
               }}
             >
-              <SelectTrigger className="h-8 w-[64px] text-xs bg-background/60 px-2.5 font-medium cursor-pointer">
+              <SelectTrigger
+                aria-label="Rows per page"
+                className="h-8 w-[64px] text-xs bg-background/60 px-2.5 font-medium cursor-pointer">
                 <SelectValue
                   placeholder={table.getState().pagination.pageSize}
                 />
