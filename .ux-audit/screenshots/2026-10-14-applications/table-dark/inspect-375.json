@@ -1,0 +1,665 @@
+{
+  "width": 375,
+  "ok": true,
+  "screenshots": {
+    "fold": ".ux-audit\\screenshots\\2026-10-14-applications\\table-dark\\375w-fold.png",
+    "full": ".ux-audit\\screenshots\\2026-10-14-applications\\table-dark\\375w.png"
+  },
+  "structure": {
+    "title": "JobTracker | Applications",
+    "lang": "en",
+    "headings": [
+      {
+        "level": 3,
+        "text": "Full Stack Developer"
+      },
+      {
+        "level": 3,
+        "text": "Database Backend Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Engineer (Tooling)"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Developer"
+      },
+      {
+        "level": 3,
+        "text": "Systems Engineer (Workers Platform)"
+      },
+      {
+        "level": 3,
+        "text": "Product Engineer (Design Systems)"
+      },
+      {
+        "level": 3,
+        "text": "Senior Frontend Developer"
+      },
+      {
+        "level": 3,
+        "text": "Staff Platform Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Senior Frontend Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Engineer (AI Products)"
+      }
+    ],
+    "landmarks": [
+      "aside",
+      "nav",
+      "header",
+      "main"
+    ],
+    "horizontal_overflow": false
+  },
+  "axe": {
+    "violations": [
+      {
+        "id": "button-name",
+        "impact": "critical",
+        "wcag": [
+          "wcag2a",
+          "wcag412"
+        ],
+        "best_practice_only": false,
+        "help": "Buttons must have discernible text",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/button-name?application=axeAPI",
+        "node_count": 1,
+        "nodes": [
+          {
+            "target": ".dark\\:bg-muted\\/40",
+            "html": "<button type=\"button\" role=\"combobox\" aria-expanded=\"false\" aria-autocomplete=\"none\" dir=\"ltr\" data-state=\"closed\" class=\"flex items-center ju...\">",
+            "summary": "Fix any of the following:\n  Element does not have inner text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  "
+          }
+        ]
+      },
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "wcag": [
+          "wcag2aa",
+          "wcag143"
+        ],
+        "best_practice_only": false,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=axeAPI",
+        "node_count": 1,
+        "nodes": [
+          {
+            "target": ".bg-primary-foreground\\/20",
+            "html": "<span class=\"inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-semibold tabular-nums leading-none bg-primary-foreground/20 text-primary-foreground\">18</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.17 (foreground color: #0d1016, background color: #7d66c8, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "nested-interactive",
+        "impact": "serious",
+        "wcag": [
+          "wcag2a",
+          "wcag412"
+        ],
+        "best_practice_only": false,
+        "help": "Interactive controls must not be nested",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/nested-interactive?application=axeAPI",
+        "node_count": 10,
+        "nodes": [
+          {
+            "target": ".text-card-foreground.p-3\\.5.active\\:scale-\\[0\\.99\\]:nth-child(2)",
+            "html": "<div class=\"flex w-full flex-col...\" tabindex=\"0\" role=\"button\" aria-label=\"Application for Full...\">",
+            "summary": "Fix any of the following:\n  Element has focusable descendants"
+          },
+          {
+            "target": ".text-card-foreground.p-3\\.5.active\\:scale-\\[0\\.99\\]:nth-child(3)",
+            "html": "<div class=\"flex w-full flex-col...\" tabindex=\"0\" role=\"button\" aria-label=\"Application for Data...\">",
+            "summary": "Fix any of the following:\n  Element has focusable descendants"
+          },
+          {
+            "target": ".text-card-foreground.p-3\\.5.active\\:scale-\\[0\\.99\\]:nth-child(4)",
+            "html": "<div class=\"flex w-full flex-col...\" tabindex=\"0\" role=\"button\" aria-label=\"Application for Full...\">",
+            "summary": "Fix any of the following:\n  Element has focusable descendants"
+          },
+          {
+            "target": ".text-card-foreground.p-3\\.5.active\\:scale-\\[0\\.99\\]:nth-child(5)",
+            "html": "<div class=\"flex w-full flex-col...\" tabindex=\"0\" role=\"button\" aria-label=\"Application for Full...\">",
+            "summary": "Fix any of the following:\n  Element has focusable descendants"
+          },
+          {
+            "target": ".text-card-foreground.p-3\\.5.active\\:scale-\\[0\\.99\\]:nth-child(6)",
+            "html": "<div class=\"flex w-full flex-col...\" tabindex=\"0\" role=\"button\" aria-label=\"Application for Syst...\">",
+            "summary": "Fix any of the following:\n  Element has focusable descendants"
+          }
+        ]
+      },
+      {
+        "id": "page-has-heading-one",
+        "impact": "moderate",
+        "wcag": [],
+        "best_practice_only": true,
+        "help": "Page should contain a level-one heading",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/page-has-heading-one?application=axeAPI",
+        "node_count": 1,
+        "nodes": [
+          {
+            "target": "html",
+            "html": "<html lang=\"en\" class=\"dark\" style=\"color-scheme: dark;\">",
+            "summary": "Fix all of the following:\n  Page must have a level-one heading"
+          }
+        ]
+      },
+      {
+        "id": "target-size",
+        "impact": "serious",
+        "wcag": [
+          "wcag22aa",
+          "wcag258"
+        ],
+        "best_practice_only": false,
+        "help": "All touch targets must be 24px large, or leave sufficient space",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/target-size?application=axeAPI",
+        "node_count": 10,
+        "nodes": [
+          {
+            "target": ".text-card-foreground.p-3\\.5.active\\:scale-\\[0\\.99\\]:nth-child(2) > .gap-3.items-start.flex > .space-y-1.flex-1.min-w-0 > .pt-1.justify-between.text-\\[11px\\] > .-mr-1.p-1[target=\"_blank\"]",
+            "html": "<a href=\"https://posthog.com/...\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"p-1 -mr-1 text-muted...\" title=\"Open job posting\" aria-label=\"Open original job po...\">",
+            "summary": "Fix any of the following:\n  Target has insufficient size (22px by 22px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 22px instead of at least 24px."
+          },
+          {
+            "target": ".text-card-foreground.p-3\\.5.active\\:scale-\\[0\\.99\\]:nth-child(3) > .gap-3.items-start.flex > .space-y-1.flex-1.min-w-0 > .pt-1.justify-between.text-\\[11px\\] > .-mr-1.p-1[target=\"_blank\"]",
+            "html": "<a href=\"https://supabase.com...\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"p-1 -mr-1 text-muted...\" title=\"Open job posting\" aria-label=\"Open original job po...\">",
+            "summary": "Fix any of the following:\n  Target has insufficient size (22px by 22px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 22px instead of at least 24px."
+          },
+          {
+            "target": ".text-card-foreground.p-3\\.5.active\\:scale-\\[0\\.99\\]:nth-child(4) > .gap-3.items-start.flex > .space-y-1.flex-1.min-w-0 > .pt-1.justify-between.text-\\[11px\\] > .-mr-1.p-1[target=\"_blank\"]",
+            "html": "<a href=\"https://anthropic.co...\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"p-1 -mr-1 text-muted...\" title=\"Open job posting\" aria-label=\"Open original job po...\">",
+            "summary": "Fix any of the following:\n  Target has insufficient size (22px by 22px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 22px instead of at least 24px."
+          },
+          {
+            "target": ".text-card-foreground.p-3\\.5.active\\:scale-\\[0\\.99\\]:nth-child(5) > .gap-3.items-start.flex > .space-y-1.flex-1.min-w-0 > .pt-1.justify-between.text-\\[11px\\] > .-mr-1.p-1[target=\"_blank\"]",
+            "html": "<a href=\"https://datadog.com/...\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"p-1 -mr-1 text-muted...\" title=\"Open job posting\" aria-label=\"Open original job po...\">",
+            "summary": "Fix any of the following:\n  Target has insufficient size (22px by 22px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 22px instead of at least 24px."
+          },
+          {
+            "target": ".text-card-foreground.p-3\\.5.active\\:scale-\\[0\\.99\\]:nth-child(6) > .gap-3.items-start.flex > .space-y-1.flex-1.min-w-0 > .pt-1.justify-between.text-\\[11px\\] > .-mr-1.p-1[target=\"_blank\"]",
+            "html": "<a href=\"https://cloudflare.c...\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"p-1 -mr-1 text-muted...\" title=\"Open job posting\" aria-label=\"Open original job po...\">",
+            "summary": "Fix any of the following:\n  Target has insufficient size (22px by 22px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 22px instead of at least 24px."
+          }
+        ]
+      }
+    ],
+    "needs_review": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "wcag": [
+          "wcag2aa",
+          "wcag143"
+        ],
+        "best_practice_only": false,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=axeAPI",
+        "node_count": 10,
+        "nodes": [
+          {
+            "target": ".text-card-foreground.p-3\\.5.active\\:scale-\\[0\\.99\\]:nth-child(2) > .gap-3.items-start.flex > .space-y-1.flex-1.min-w-0 > p > .text-muted-foreground\\/40.font-normal",
+            "html": "<span class=\"text-muted-foreground/40 font-normal\">·</span>",
+            "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+          },
+          {
+            "target": ".text-card-foreground.p-3\\.5.active\\:scale-\\[0\\.99\\]:nth-child(3) > .gap-3.items-start.flex > .space-y-1.flex-1.min-w-0 > p > .text-muted-foreground\\/40.font-normal",
+            "html": "<span class=\"text-muted-foreground/40 font-normal\">·</span>",
+            "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+          },
+          {
+            "target": ".text-card-foreground.p-3\\.5.active\\:scale-\\[0\\.99\\]:nth-child(4) > .gap-3.items-start.flex > .space-y-1.flex-1.min-w-0 > p > .text-muted-foreground\\/40.font-normal",
+            "html": "<span class=\"text-muted-foreground/40 font-normal\">·</span>",
+            "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+          },
+          {
+            "target": ".text-card-foreground.p-3\\.5.active\\:scale-\\[0\\.99\\]:nth-child(5) > .gap-3.items-start.flex > .space-y-1.flex-1.min-w-0 > p > .text-muted-foreground\\/40.font-normal",
+            "html": "<span class=\"text-muted-foreground/40 font-normal\">·</span>",
+            "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+          },
+          {
+            "target": ".text-card-foreground.p-3\\.5.active\\:scale-\\[0\\.99\\]:nth-child(6) > .gap-3.items-start.flex > .space-y-1.flex-1.min-w-0 > p > .text-muted-foreground\\/40.font-normal",
+            "html": "<span class=\"text-muted-foreground/40 font-normal\">·</span>",
+            "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+          }
+        ]
+      },
+      {
+        "id": "form-field-multiple-labels",
+        "impact": "moderate",
+        "wcag": [
+          "wcag2a",
+          "wcag332"
+        ],
+        "best_practice_only": false,
+        "help": "Form field must not have multiple label elements",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/form-field-multiple-labels?application=axeAPI",
+        "node_count": 1,
+        "nodes": [
+          {
+            "target": "input[aria-label=\"Select all applications\"]",
+            "html": "<input type=\"checkbox\" class=\"peer absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0 m-0 p-0\" aria-label=\"Select all applications\" style=\"\">",
+            "summary": "Fix all of the following:\n  Multiple label elements is not widely supported in assistive technologies. Ensure the first label contains all necessary information."
+          }
+        ]
+      }
+    ]
+  },
+  "targets": {
+    "interactive_elements": 51,
+    "below_44px": 40,
+    "failing_wcag_2_5_8": 20,
+    "items": [
+      {
+        "selector": "div.flex.items-center:nth-of-type(1) > div.flex.items-center:nth-of-type(1) > label.relative.inline-flex > input.peer.absolute",
+        "name": "Select application",
+        "width": 16,
+        "height": 16,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-center:nth-of-type(1) > div.flex.items-center:nth-of-type(1) > label.relative.inline-flex > input.peer.absolute",
+        "name": "Select application",
+        "width": 16,
+        "height": 16,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-center:nth-of-type(1) > div.flex.items-center:nth-of-type(1) > label.relative.inline-flex > input.peer.absolute",
+        "name": "Select application",
+        "width": 16,
+        "height": 16,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-center:nth-of-type(1) > div.flex.items-center:nth-of-type(1) > label.relative.inline-flex > input.peer.absolute",
+        "name": "Select application",
+        "width": 16,
+        "height": 16,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-center:nth-of-type(1) > div.flex.items-center:nth-of-type(1) > label.relative.inline-flex > input.peer.absolute",
+        "name": "Select application",
+        "width": 16,
+        "height": 16,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-center:nth-of-type(1) > div.flex.items-center:nth-of-type(1) > label.relative.inline-flex > input.peer.absolute",
+        "name": "Select application",
+        "width": 16,
+        "height": 16,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-center:nth-of-type(1) > div.flex.items-center:nth-of-type(1) > label.relative.inline-flex > input.peer.absolute",
+        "name": "Select application",
+        "width": 16,
+        "height": 16,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-center:nth-of-type(1) > div.flex.items-center:nth-of-type(1) > label.relative.inline-flex > input.peer.absolute",
+        "name": "Select application",
+        "width": 16,
+        "height": 16,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-center:nth-of-type(1) > div.flex.items-center:nth-of-type(1) > label.relative.inline-flex > input.peer.absolute",
+        "name": "Select application",
+        "width": 16,
+        "height": 16,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-center:nth-of-type(1) > div.flex.items-center:nth-of-type(1) > label.relative.inline-flex > input.peer.absolute",
+        "name": "Select application",
+        "width": 16,
+        "height": 16,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-start > div.flex-1.min-w-0:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > a.p-1.-mr-1",
+        "name": "Open original job posting (opens in new tab)",
+        "width": 22,
+        "height": 22,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-start > div.flex-1.min-w-0:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > a.p-1.-mr-1",
+        "name": "Open original job posting (opens in new tab)",
+        "width": 22,
+        "height": 22,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-start > div.flex-1.min-w-0:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > a.p-1.-mr-1",
+        "name": "Open original job posting (opens in new tab)",
+        "width": 22,
+        "height": 22,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-start > div.flex-1.min-w-0:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > a.p-1.-mr-1",
+        "name": "Open original job posting (opens in new tab)",
+        "width": 22,
+        "height": 22,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-start > div.flex-1.min-w-0:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > a.p-1.-mr-1",
+        "name": "Open original job posting (opens in new tab)",
+        "width": 22,
+        "height": 22,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-start > div.flex-1.min-w-0:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > a.p-1.-mr-1",
+        "name": "Open original job posting (opens in new tab)",
+        "width": 22,
+        "height": 22,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-start > div.flex-1.min-w-0:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > a.p-1.-mr-1",
+        "name": "Open original job posting (opens in new tab)",
+        "width": 22,
+        "height": 22,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-start > div.flex-1.min-w-0:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > a.p-1.-mr-1",
+        "name": "Open original job posting (opens in new tab)",
+        "width": 22,
+        "height": 22,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-start > div.flex-1.min-w-0:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > a.p-1.-mr-1",
+        "name": "Open original job posting (opens in new tab)",
+        "width": 22,
+        "height": 22,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "div.flex.items-start > div.flex-1.min-w-0:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > a.p-1.-mr-1",
+        "name": "Open original job posting (opens in new tab)",
+        "width": 22,
+        "height": 22,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": true
+      },
+      {
+        "selector": "button#radix-_R_plblb_",
+        "name": "Toggle theme",
+        "width": 32,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex-1.min-w-0 > main.p-3.w-full > div.mb-4.flex:nth-of-type(1) > button.inline-flex.items-center",
+        "name": "Dismiss notice",
+        "width": 32,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "header.sticky.top-0 > div.flex.items-center:nth-of-type(2) > div > button.inline-flex.items-center",
+        "name": "Open navigation menu",
+        "width": 36,
+        "height": 36,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex.items-center:nth-of-type(1) > label.flex.items-center > label.relative.inline-flex > input.peer.absolute",
+        "name": "Select all applications",
+        "width": 101,
+        "height": 16,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": true,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex.flex-col:nth-of-type(3) > div.flex.items-center:nth-of-type(2) > div.flex.gap-2 > button.inline-flex.items-center:nth-of-type(2)",
+        "name": "Next",
+        "width": 53,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex-1.flex > header.sticky.top-0 > div.flex.items-center:nth-of-type(2) > button.inline-flex.items-center:nth-of-type(2)",
+        "name": "Sign In",
+        "width": 63,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "main.p-3.w-full > div.mb-4.flex:nth-of-type(1) > div.flex.flex-1 > button.inline-flex.items-center",
+        "name": "Sign in",
+        "width": 63,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex.flex-col:nth-of-type(3) > div.flex.items-center:nth-of-type(1) > div.flex.items-center > button.flex.items-center",
+        "name": "10",
+        "width": 64,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex.items-center:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > div.inline-flex.items-center > button.inline-flex.items-center:nth-of-type(1)",
+        "name": "Cards",
+        "width": 74,
+        "height": 28,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex.items-center:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > div.inline-flex.items-center > button.inline-flex.items-center:nth-of-type(2)",
+        "name": "Board",
+        "width": 74,
+        "height": 28,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(1)",
+        "name": "All 18",
+        "width": 75,
+        "height": 30,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(5)",
+        "name": "Offers 1",
+        "width": 88,
+        "height": 30,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(2)",
+        "name": "Applied 5",
+        "width": 96,
+        "height": 30,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(7)",
+        "name": "Ghosted 2",
+        "width": 101,
+        "height": 30,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(6)",
+        "name": "Rejected 2",
+        "width": 102,
+        "height": 30,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(3)",
+        "name": "In Review 2",
+        "width": 107,
+        "height": 30,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "button#radix-_R_5hclrkneknflblb_",
+        "name": "Platform",
+        "width": 98,
+        "height": 36,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(4)",
+        "name": "Interviewing 6",
+        "width": 124,
+        "height": 30,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex-1.flex > header.sticky.top-0 > div.flex.items-center:nth-of-type(1) > a.flex.items-center",
+        "name": "JobTracker",
+        "width": 124,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.w-full.space-y-4 > div.flex.flex-col:nth-of-type(2) > div.relative.flex-1:nth-of-type(1) > input.flex.rounded-xl",
+        "name": "Search applications...",
+        "width": 329,
+        "height": 36,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      }
+    ]
+  },
+  "console_errors": []
+}

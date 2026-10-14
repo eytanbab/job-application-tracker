@@ -1,0 +1,471 @@
+{
+  "width": 1440,
+  "ok": true,
+  "screenshots": {
+    "fold": ".ux-audit\\screenshots\\2026-10-14-applications\\focus\\1440w-fold.png",
+    "full": ".ux-audit\\screenshots\\2026-10-14-applications\\focus\\1440w.png"
+  },
+  "structure": {
+    "title": "JobTracker | Applications",
+    "lang": "en",
+    "headings": [
+      {
+        "level": 3,
+        "text": "Full Stack Developer"
+      },
+      {
+        "level": 3,
+        "text": "Database Backend Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Engineer (Tooling)"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Developer"
+      },
+      {
+        "level": 3,
+        "text": "Systems Engineer (Workers Platform)"
+      },
+      {
+        "level": 3,
+        "text": "Product Engineer (Design Systems)"
+      },
+      {
+        "level": 3,
+        "text": "Senior Frontend Developer"
+      },
+      {
+        "level": 3,
+        "text": "Staff Platform Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Senior Frontend Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Engineer (AI Products)"
+      }
+    ],
+    "landmarks": [
+      "aside",
+      "nav",
+      "header",
+      "main"
+    ],
+    "horizontal_overflow": false
+  },
+  "keyboard": {
+    "stops_recorded": 25,
+    "no_visible_focus_change": 5,
+    "obscured_focus": 1,
+    "unnamed_stops": 0,
+    "note": "visible_focus_change=false compares computed outline, box-shadow, border, background, color, and text-decoration. Indicators drawn with pseudo-elements or on a parent are not detected, so confirm with --focus-shots or a screenshot before filing.",
+    "stops": [
+      {
+        "idx": 0,
+        "tag": "a",
+        "role": null,
+        "name": "JobTracker Career Pipeline",
+        "selector": "div.flex.min-h-screen:nth-of-type(3) > aside.sticky.top-0 > div.space-y-6:nth-of-type(1) > a.flex.items-center",
+        "rect": {
+          "x": 16,
+          "y": 16,
+          "w": 223,
+          "h": 49
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 1,
+        "tag": "a",
+        "role": null,
+        "name": "Applications",
+        "selector": "aside.sticky.top-0 > div.space-y-6:nth-of-type(1) > div.space-y-1 > a.flex.items-center:nth-of-type(1)",
+        "rect": {
+          "x": 16,
+          "y": 113,
+          "w": 223,
+          "h": 40
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 2,
+        "tag": "a",
+        "role": null,
+        "name": "Analytics",
+        "selector": "aside.sticky.top-0 > div.space-y-6:nth-of-type(1) > div.space-y-1 > a.flex.items-center:nth-of-type(2)",
+        "rect": {
+          "x": 16,
+          "y": 157,
+          "w": 223,
+          "h": 40
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 3,
+        "tag": "a",
+        "role": null,
+        "name": "ATS Checker",
+        "selector": "aside.sticky.top-0 > div.space-y-6:nth-of-type(1) > div.space-y-1 > a.flex.items-center:nth-of-type(3)",
+        "rect": {
+          "x": 16,
+          "y": 201,
+          "w": 223,
+          "h": 40
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 4,
+        "tag": "a",
+        "role": null,
+        "name": "Documents",
+        "selector": "aside.sticky.top-0 > div.space-y-6:nth-of-type(1) > div.space-y-1 > a.flex.items-center:nth-of-type(4)",
+        "rect": {
+          "x": 16,
+          "y": 245,
+          "w": 223,
+          "h": 40
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 5,
+        "tag": "a",
+        "role": null,
+        "name": "Settings",
+        "selector": "aside.sticky.top-0 > div.space-y-3:nth-of-type(2) > div.space-y-1 > a.flex.items-center",
+        "rect": {
+          "x": 16,
+          "y": 816,
+          "w": 223,
+          "h": 40
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 6,
+        "tag": "a",
+        "role": null,
+        "name": "Privacy",
+        "selector": "aside.sticky.top-0 > div.space-y-3:nth-of-type(2) > nav.hidden.items-center > a.underline-offset-4.transition-colors:nth-of-type(1)",
+        "rect": {
+          "x": 28,
+          "y": 868,
+          "w": 42,
+          "h": 16
+        },
+        "obscured_by": "html.light > body.min-h-screen.antialiased > script:nth-of-type(21) > nextjs-portal",
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 7,
+        "tag": "a",
+        "role": null,
+        "name": "Terms",
+        "selector": "aside.sticky.top-0 > div.space-y-3:nth-of-type(2) > nav.hidden.items-center > a.underline-offset-4.transition-colors:nth-of-type(2)",
+        "rect": {
+          "x": 82,
+          "y": 868,
+          "w": 35,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 8,
+        "tag": "button",
+        "role": null,
+        "name": "Toggle theme",
+        "selector": "button#radix-_R_plblb_",
+        "rect": {
+          "x": 1311,
+          "y": 12,
+          "w": 32,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": false
+      },
+      {
+        "idx": 9,
+        "tag": "button",
+        "role": null,
+        "name": "Sign In",
+        "selector": "div.flex-1.flex > header.sticky.top-0 > div.flex.items-center:nth-of-type(2) > button.inline-flex.items-center:nth-of-type(2)",
+        "rect": {
+          "x": 1353,
+          "y": 12,
+          "w": 63,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": false
+      },
+      {
+        "idx": 10,
+        "tag": "button",
+        "role": null,
+        "name": "Sign in",
+        "selector": "main.p-3.w-full > div.mb-4.flex:nth-of-type(1) > div.flex.flex-1 > button.inline-flex.items-center",
+        "rect": {
+          "x": 1296,
+          "y": 93,
+          "w": 63,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": false
+      },
+      {
+        "idx": 11,
+        "tag": "button",
+        "role": null,
+        "name": "Dismiss notice",
+        "selector": "div.flex-1.min-w-0 > main.p-3.w-full > div.mb-4.flex:nth-of-type(1) > button.inline-flex.items-center",
+        "rect": {
+          "x": 1371,
+          "y": 93,
+          "w": 32,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 12,
+        "tag": "button",
+        "role": null,
+        "name": "All 18",
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(1)",
+        "rect": {
+          "x": 280,
+          "y": 154,
+          "w": 75,
+          "h": 30
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 13,
+        "tag": "button",
+        "role": null,
+        "name": "Applied 5",
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(2)",
+        "rect": {
+          "x": 361,
+          "y": 154,
+          "w": 96,
+          "h": 30
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 14,
+        "tag": "button",
+        "role": null,
+        "name": "In Review 2",
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(3)",
+        "rect": {
+          "x": 463,
+          "y": 154,
+          "w": 107,
+          "h": 30
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 15,
+        "tag": "button",
+        "role": null,
+        "name": "Interviewing 6",
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(4)",
+        "rect": {
+          "x": 576,
+          "y": 154,
+          "w": 124,
+          "h": 30
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 16,
+        "tag": "button",
+        "role": null,
+        "name": "Offers 1",
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(5)",
+        "rect": {
+          "x": 706,
+          "y": 154,
+          "w": 88,
+          "h": 30
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 17,
+        "tag": "button",
+        "role": null,
+        "name": "Rejected 2",
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(6)",
+        "rect": {
+          "x": 800,
+          "y": 154,
+          "w": 102,
+          "h": 30
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 18,
+        "tag": "button",
+        "role": null,
+        "name": "Ghosted 2",
+        "selector": "div.w-full:nth-of-type(1) > div.relative.w-full > div.w-full.flex:nth-of-type(1) > button.inline-flex.items-center:nth-of-type(7)",
+        "rect": {
+          "x": 908,
+          "y": 154,
+          "w": 101,
+          "h": 30
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 19,
+        "tag": "input",
+        "role": null,
+        "name": "Search applications...",
+        "selector": "div.w-full.space-y-4 > div.flex.flex-col:nth-of-type(2) > div.relative.flex-1:nth-of-type(1) > input.flex.rounded-xl",
+        "rect": {
+          "x": 293,
+          "y": 217,
+          "w": 666,
+          "h": 36
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 20,
+        "tag": "button",
+        "role": null,
+        "name": "Platform",
+        "selector": "button#radix-_R_5hclrkneknflblb_",
+        "rect": {
+          "x": 969,
+          "y": 217,
+          "w": 102,
+          "h": 36
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": false
+      },
+      {
+        "idx": 21,
+        "tag": "button",
+        "role": "radio",
+        "name": "Table",
+        "selector": "div.flex.items-center:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > div.inline-flex.items-center > button.inline-flex.items-center:nth-of-type(1)",
+        "rect": {
+          "x": 1082,
+          "y": 221,
+          "w": 76,
+          "h": 28
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 22,
+        "tag": "button",
+        "role": "radio",
+        "name": "Kanban",
+        "selector": "div.flex.items-center:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > div.inline-flex.items-center > button.inline-flex.items-center:nth-of-type(2)",
+        "rect": {
+          "x": 1160,
+          "y": 221,
+          "w": 88,
+          "h": 28
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 23,
+        "tag": "button",
+        "role": null,
+        "name": "Add Application",
+        "selector": "div.flex.flex-col:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > button.items-center.justify-center",
+        "rect": {
+          "x": 1258,
+          "y": 217,
+          "w": 145,
+          "h": 36
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": false
+      },
+      {
+        "idx": 24,
+        "tag": "input",
+        "role": null,
+        "name": "Select all",
+        "selector": "th.h-12.align-middle:nth-of-type(1) > div.flex.items-center > label.relative.inline-flex > input.peer.absolute",
+        "rect": {
+          "x": 294,
+          "y": 300,
+          "w": 14,
+          "h": 14
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      }
+    ]
+  },
+  "console_errors": []
+}

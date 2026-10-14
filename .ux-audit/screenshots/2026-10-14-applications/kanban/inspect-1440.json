@@ -1,0 +1,199 @@
+{
+  "width": 1440,
+  "ok": true,
+  "screenshots": {
+    "fold": ".ux-audit\\screenshots\\2026-10-14-applications\\kanban\\1440w-fold.png",
+    "full": ".ux-audit\\screenshots\\2026-10-14-applications\\kanban\\1440w.png"
+  },
+  "structure": {
+    "title": "JobTracker | Applications",
+    "lang": "en",
+    "headings": [
+      {
+        "level": 3,
+        "text": "Full Stack Developer"
+      },
+      {
+        "level": 3,
+        "text": "Database Backend Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Engineer (Tooling)"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Developer"
+      },
+      {
+        "level": 3,
+        "text": "Staff Infrastructure Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Developer"
+      },
+      {
+        "level": 3,
+        "text": "Database Backend Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Engineer (Tooling)"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Developer"
+      },
+      {
+        "level": 3,
+        "text": "Staff Infrastructure Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Product Engineer (Design Systems)"
+      },
+      {
+        "level": 3,
+        "text": "Staff Platform Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Systems Engineer (Workers Platform)"
+      },
+      {
+        "level": 3,
+        "text": "Senior Frontend Developer"
+      },
+      {
+        "level": 3,
+        "text": "Senior Frontend Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Engineer (AI Products)"
+      },
+      {
+        "level": 3,
+        "text": "Senior Client Engineer (Web)"
+      },
+      {
+        "level": 3,
+        "text": "Product Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Senior UI Engineer"
+      },
+      {
+        "level": 3,
+        "text": "Senior Backend Developer"
+      },
+      {
+        "level": 3,
+        "text": "Frontend Architect"
+      },
+      {
+        "level": 3,
+        "text": "Full Stack Engineer (Workplace AI)"
+      },
+      {
+        "level": 3,
+        "text": "Distributed Systems Engineer"
+      }
+    ],
+    "landmarks": [
+      "aside",
+      "nav",
+      "header",
+      "main"
+    ],
+    "horizontal_overflow": false
+  },
+  "axe": {
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "wcag": [
+          "wcag2aa",
+          "wcag143"
+        ],
+        "best_practice_only": false,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=axeAPI",
+        "node_count": 22,
+        "nodes": [
+          {
+            "target": ".py-1\\.5.sm\\:px-3[role=\"radio\"]:nth-child(1) > .lg\\:inline.hidden",
+            "html": "<span class=\"hidden lg:inline\">Table</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.47 (foreground color: #677183, background color: #f3f4f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".gap-4 > .md\\:w-\\[280px\\].md\\:shrink-0[data-testid=\"kanban-column-applied\"] > .min-h-\\[260px\\].max-h-\\[68vh\\].overflow-y-auto > .text-card-foreground.cursor-grab.active\\:cursor-grabbing:nth-child(1) > .space-y-2.pt-1.p-3 > .pt-0\\.5.flex-wrap.gap-1\\.5 > .max-w-\\[120px\\].text-emerald-600.dark\\:text-emerald-400",
+            "html": "<span class=\"text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-sm truncate max-w-[120px]\">$160,000 - $180,000</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.31 (foreground color: #009966, background color: #e6f8f2, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".gap-4 > .md\\:w-\\[280px\\].md\\:shrink-0[data-testid=\"kanban-column-applied\"] > .min-h-\\[260px\\].max-h-\\[68vh\\].overflow-y-auto > .text-card-foreground.cursor-grab.active\\:cursor-grabbing:nth-child(2) > .space-y-2.pt-1.p-3 > .pt-0\\.5.flex-wrap.gap-1\\.5 > .max-w-\\[120px\\].text-emerald-600.dark\\:text-emerald-400",
+            "html": "<span class=\"text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-sm truncate max-w-[120px]\">$165,000 - $195,000</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.31 (foreground color: #009966, background color: #e6f8f2, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".gap-4 > .md\\:w-\\[280px\\].md\\:shrink-0[data-testid=\"kanban-column-applied\"] > .min-h-\\[260px\\].max-h-\\[68vh\\].overflow-y-auto > .text-card-foreground.cursor-grab.active\\:cursor-grabbing:nth-child(3) > .space-y-2.pt-1.p-3 > .pt-0\\.5.flex-wrap.gap-1\\.5 > .max-w-\\[120px\\].text-emerald-600.dark\\:text-emerald-400",
+            "html": "<span class=\"text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-sm truncate max-w-[120px]\">$210,000 - $260,000</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.31 (foreground color: #009966, background color: #e6f8f2, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".gap-4 > .md\\:w-\\[280px\\].md\\:shrink-0[data-testid=\"kanban-column-applied\"] > .min-h-\\[260px\\].max-h-\\[68vh\\].overflow-y-auto > .text-card-foreground.cursor-grab.active\\:cursor-grabbing:nth-child(4) > .space-y-2.pt-1.p-3 > .pt-0\\.5.flex-wrap.gap-1\\.5 > .max-w-\\[120px\\].text-emerald-600.dark\\:text-emerald-400",
+            "html": "<span class=\"text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-sm truncate max-w-[120px]\">$175,000 - $215,000</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.31 (foreground color: #009966, background color: #e6f8f2, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "page-has-heading-one",
+        "impact": "moderate",
+        "wcag": [],
+        "best_practice_only": true,
+        "help": "Page should contain a level-one heading",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/page-has-heading-one?application=axeAPI",
+        "node_count": 1,
+        "nodes": [
+          {
+            "target": "html",
+            "html": "<html lang=\"en\" class=\"light\" style=\"color-scheme: light;\">",
+            "summary": "Fix all of the following:\n  Page must have a level-one heading"
+          }
+        ]
+      }
+    ],
+    "needs_review": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "wcag": [
+          "wcag2aa",
+          "wcag143"
+        ],
+        "best_practice_only": false,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=axeAPI",
+        "node_count": 2,
+        "nodes": [
+          {
+            "target": ".bg-rose-500\\/10 > .truncate",
+            "html": "<span class=\"truncate\">Rejected</span>",
+            "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+          },
+          {
+            "target": ".bg-slate-500\\/15 > .truncate",
+            "html": "<span class=\"truncate\">Ghosted</span>",
+            "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+          }
+        ]
+      }
+    ]
+  },
+  "console_errors": []
+}

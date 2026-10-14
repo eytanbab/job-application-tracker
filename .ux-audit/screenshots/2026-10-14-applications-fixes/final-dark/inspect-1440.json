@@ -1,0 +1,101 @@
+{
+  "width": 1440,
+  "ok": true,
+  "screenshots": {
+    "fold": ".ux-audit\\screenshots\\2026-10-14-applications-fixes\\final-dark\\1440w-fold.png",
+    "full": ".ux-audit\\screenshots\\2026-10-14-applications-fixes\\final-dark\\1440w.png"
+  },
+  "structure": {
+    "title": "JobTracker | Applications",
+    "lang": "en",
+    "headings": [
+      {
+        "level": 1,
+        "text": "Job applications"
+      },
+      {
+        "level": 2,
+        "text": "Full Stack Developer"
+      },
+      {
+        "level": 2,
+        "text": "Database Backend Engineer"
+      },
+      {
+        "level": 2,
+        "text": "Full Stack Engineer (Tooling)"
+      },
+      {
+        "level": 2,
+        "text": "Full Stack Developer"
+      },
+      {
+        "level": 2,
+        "text": "Systems Engineer (Workers Platform)"
+      },
+      {
+        "level": 2,
+        "text": "Product Engineer (Design Systems)"
+      },
+      {
+        "level": 2,
+        "text": "Senior Frontend Developer"
+      },
+      {
+        "level": 2,
+        "text": "Staff Platform Engineer"
+      },
+      {
+        "level": 2,
+        "text": "Senior Frontend Engineer"
+      },
+      {
+        "level": 2,
+        "text": "Full Stack Engineer (AI Products)"
+      }
+    ],
+    "landmarks": [
+      "aside",
+      "nav",
+      "header",
+      "main",
+      "nav"
+    ],
+    "horizontal_overflow": false
+  },
+  "axe": {
+    "violations": [
+      {
+        "id": "target-size",
+        "impact": "serious",
+        "wcag": [
+          "wcag22aa",
+          "wcag258"
+        ],
+        "best_practice_only": false,
+        "help": "All touch targets must be 24px large, or leave sufficient space",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/target-size?application=axeAPI",
+        "node_count": 3,
+        "nodes": [
+          {
+            "target": ".group\\/row.focus-within\\:bg-accent\\/30[data-testid=\"table-row\"]:nth-child(6) > .max-w-0.min-w-\\[180px\\].w-full > .space-y-0\\.5.w-full.min-w-0 > .gap-1\\.5.min-w-0.text-xs > .text-primary\\/80.hover\\:bg-primary\\/10.rounded",
+            "html": "<button type=\"button\" class=\"inline-flex items-ce...\" title=\"Applied with: Fronte...\" aria-label=\"Resume: Frontend & U...\">",
+            "summary": "Fix any of the following:\n  Target has insufficient size (16px by 16px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 20px instead of at least 24px."
+          },
+          {
+            "target": ".group\\/row.focus-within\\:bg-accent\\/30[data-testid=\"table-row\"]:nth-child(9) > .max-w-0.min-w-\\[180px\\].w-full > .space-y-0\\.5.w-full.min-w-0 > .gap-1\\.5.min-w-0.text-xs > .text-primary\\/80.hover\\:bg-primary\\/10.rounded",
+            "html": "<button type=\"button\" class=\"inline-flex items-ce...\" title=\"Applied with: Senior...\" aria-label=\"Resume: Senior Full ...\">",
+            "summary": "Fix any of the following:\n  Target has insufficient size (16px by 16px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 20px instead of at least 24px."
+          },
+          {
+            "target": ".group\\/row.focus-within\\:bg-accent\\/30[data-testid=\"table-row\"]:nth-child(10) > .max-w-0.min-w-\\[180px\\].w-full > .space-y-0\\.5.w-full.min-w-0 > .gap-1\\.5.min-w-0.text-xs > .text-primary\\/80.hover\\:bg-primary\\/10.rounded",
+            "html": "<button type=\"button\" class=\"inline-flex items-ce...\" title=\"Applied with: Senior...\" aria-label=\"Resume: Senior Full ...\">",
+            "summary": "Fix any of the following:\n  Target has insufficient size (16px by 16px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 20px instead of at least 24px."
+          }
+        ]
+      }
+    ],
+    "needs_review": []
+  },
+  "console_errors": []
+}
