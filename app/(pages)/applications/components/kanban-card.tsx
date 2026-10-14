@@ -212,7 +212,7 @@ export function KanbanCard({
             </Badge>
           )}
           {item.salary && (
-            <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-sm truncate max-w-[120px]">
+            <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-1.5 py-0.5 rounded-sm truncate max-w-[120px]">
               {item.salary}
             </span>
           )}

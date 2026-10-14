@@ -149,7 +149,7 @@ export function DataTableToolbar({
           <div
             role="radiogroup"
             aria-label="View mode"
-            className="inline-flex items-center rounded-lg bg-muted/60 p-0.5 gap-0.5 border border-border/30"
+            className="inline-flex items-center rounded-lg bg-muted/40 p-0.5 gap-0.5 border border-border/30"
           >
             <button
               type="button"
