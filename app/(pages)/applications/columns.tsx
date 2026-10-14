@@ -230,7 +230,7 @@ export const columns: ColumnDef<FormValues>[] = [
                     });
                   }
                 }}
-                className="inline-flex items-center justify-center h-5 w-5 rounded text-primary/80 hover:text-primary hover:bg-primary/10 transition-colors shrink-0 cursor-pointer"
+                className="inline-flex items-center justify-center h-4 w-4 rounded text-primary/80 hover:text-primary hover:bg-primary/10 transition-colors shrink-0 cursor-pointer"
                 title={
                   (row.original as any).resumeTitle
                     ? `Applied with: ${(row.original as any).resumeTitle} (Click to preview)`
