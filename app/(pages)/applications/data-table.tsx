@@ -28,6 +28,7 @@ import { toast } from "@/hooks/use-toast";
 import { DataTableToolbar } from "./components/data-table-toolbar";
 import { DataTableGrid } from "./components/data-table-grid";
 import { DataTableBulkActions } from "./components/data-table-bulk-actions";
+import { ApplicationsEmptyState } from "./components/applications-empty-state";
 import { useDataTable, ApplicationRow } from "./hooks/use-data-table";
 import type { KanbanColumns } from "@/app/actions/applications";
 import type { StatusCounts } from "@/lib/applications/list-query";
@@ -112,56 +113,67 @@ export function DataTable<TData extends ApplicationRow, TValue>({
 
   const createFormRef = useRef<ApplicationFormHandle>(null);
 
+  // A brand-new account gets onboarding instead of an empty table and
+  // seven zero-count filters
+  const isFirstRun = statusCounts.all === 0 && !hasActiveFilters;
+
   return (
     <div className="w-full space-y-4">
-      <DataTableToolbar
-        topRow={
-          viewMode !== "kanban" && (
-            <StatusFilterPills
-              counts={statusCounts}
-              statusFilter={statusFilter}
-              onStatusFilterChange={setStatusFilter}
-            />
-          )
-        }
-        globalFilter={globalFilter}
-        setGlobalFilter={setGlobalFilter}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        platformFilter={platformFilter}
-        setPlatformFilter={setPlatformFilter}
-        uniquePlatforms={uniquePlatforms}
-        hasActiveFilters={hasActiveFilters}
-        clearFilters={clearFilters}
-        isMobileFilterOpen={isMobileFilterOpen}
-        setIsMobileFilterOpen={setIsMobileFilterOpen}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        onOpenCreate={() => setIsCreateOpen(true)}
-      />
-
-      {viewMode === "kanban" ? (
-        <ApplicationsKanban
-          columns={kanbanColumns ?? {}}
-          searchFilter={globalFilter}
-          statusFilter={statusFilter}
-          platformFilter={platformFilter}
-          isPending={isPending}
-          onSelectApplication={(app) => handleSelectRow(app as TData)}
-          onEditApplication={(app) => setEditingApp(app as TData)}
-          onDeleteApplication={handleDelete}
-        />
+      {isFirstRun ? (
+        <ApplicationsEmptyState onOpenCreate={() => setIsCreateOpen(true)} />
       ) : (
-        <DataTableGrid
-          table={table}
-          columnsCount={columns.length}
-          hasActiveFilters={hasActiveFilters}
-          clearFilters={clearFilters}
-          onSelectRow={handleSelectRow}
-          isPending={isPending}
-          density={density}
-          onDensityChange={setDensity}
-        />
+        <>
+          <DataTableToolbar
+            topRow={
+              viewMode !== "kanban" && (
+                <StatusFilterPills
+                  counts={statusCounts}
+                  statusFilter={statusFilter}
+                  onStatusFilterChange={setStatusFilter}
+                />
+              )
+            }
+            globalFilter={globalFilter}
+            setGlobalFilter={setGlobalFilter}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            platformFilter={platformFilter}
+            setPlatformFilter={setPlatformFilter}
+            uniquePlatforms={uniquePlatforms}
+            hasActiveFilters={hasActiveFilters}
+            clearFilters={clearFilters}
+            isMobileFilterOpen={isMobileFilterOpen}
+            setIsMobileFilterOpen={setIsMobileFilterOpen}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            onOpenCreate={() => setIsCreateOpen(true)}
+          />
+
+          {viewMode === "kanban" ? (
+            <ApplicationsKanban
+              columns={kanbanColumns ?? {}}
+              searchFilter={globalFilter}
+              statusFilter={statusFilter}
+              platformFilter={platformFilter}
+              isPending={isPending}
+              onSelectApplication={(app) => handleSelectRow(app as TData)}
+              onEditApplication={(app) => setEditingApp(app as TData)}
+              onDeleteApplication={handleDelete}
+            />
+          ) : (
+            <DataTableGrid
+              table={table}
+              columnsCount={columns.length}
+              hasActiveFilters={hasActiveFilters}
+              clearFilters={clearFilters}
+              onSelectRow={handleSelectRow}
+              isPending={isPending}
+              density={density}
+              onDensityChange={setDensity}
+            />
+          )}
+
+        </>
       )}
 
       <DataTableBulkActions
