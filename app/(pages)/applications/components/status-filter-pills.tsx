@@ -62,7 +62,7 @@ export function StatusFilterPills({
               className={cn(
                 "inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-semibold tabular-nums leading-none",
                 isActive
-                  ? "bg-primary-foreground/20 text-primary-foreground"
+                  ? "bg-primary-foreground text-primary"
                   : "bg-muted text-muted-foreground",
               )}
             >

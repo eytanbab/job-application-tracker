@@ -53,25 +53,25 @@ const BASE_KANBAN_COLUMNS: {
     id: "review",
     label: "In Review",
     headerBg:
-      "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25",
+      "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/25",
   },
   {
     id: "interview",
     label: "Interviewing",
     headerBg:
-      "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25",
+      "bg-amber-500/10 text-amber-800 dark:text-amber-400 border-amber-500/25",
   },
   {
     id: "accepted",
     label: "Offer / Accepted",
     headerBg:
-      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
+      "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25",
   },
   {
     id: "rejected",
     label: "Rejected",
     headerBg:
-      "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25",
+      "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/25",
   },
   {
     id: "ghosted",
