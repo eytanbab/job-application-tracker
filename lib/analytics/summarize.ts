@@ -19,6 +19,7 @@ import {
   type Delta,
 } from "./stats";
 import type { AnalyticsDataset, AppFacts, DateRange, Rate, WorkMode } from "./types";
+import { weeklyCounts, type WeeklyCounts } from "./weekly";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -136,6 +137,8 @@ export interface AnalyticsOverview {
   };
   /** Applications per week for the last 12 weeks, oldest first, whatever the period. */
   weeks: WeekBucket[];
+  /** The last 7 days against the 7 before, whatever the period. */
+  weekly: WeeklyCounts;
   /** Years that have applications, newest first. */
   years: string[];
 }
@@ -454,6 +457,7 @@ export function summarizeOverview(
     },
     needsAction: needsAction(allFacts, today, options.actionLimit ?? 5),
     weeks: bucketWeeks(allFacts, today),
+    weekly: weeklyCounts(allFacts, today),
     years: [...new Set(allFacts.map((f) => f.app.dateApplied.slice(0, 4)))]
       .filter((y) => /^\d{4}$/.test(y))
       .sort()
