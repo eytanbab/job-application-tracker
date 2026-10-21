@@ -16,11 +16,13 @@ import {
 import { addDays, differenceInDays, parseISO } from "date-fns";
 import { GHOST_AFTER_DAYS, ghostsAt } from "@/lib/analytics/definitions";
 import type { AnalyticsDataset } from "@/lib/analytics/types";
+import type { UserPreferences } from "@/lib/preferences";
 
 class MockStore {
   private applications: MockApplication[] = [];
   private statusHistory: MockStatusHistory[] = [];
   private documents: MockDocument[] = [];
+  private preferences = new Map<string, UserPreferences>();
   private initialized = false;
 
   constructor() {
@@ -31,6 +33,7 @@ class MockStore {
     this.applications = SEED_APPLICATIONS.map((app) => ({ ...app }));
     this.statusHistory = SEED_STATUS_HISTORY.map((h) => ({ ...h }));
     this.documents = SEED_DOCUMENTS.map((doc) => ({ ...doc }));
+    this.preferences = new Map();
     this.initialized = true;
   }
 
@@ -260,12 +263,30 @@ class MockStore {
     applications: MockApplication[];
     statusHistory: MockStatusHistory[];
     documents: MockDocument[];
+    preferences: UserPreferences | null;
   } {
     return {
       applications: this.applications.map((a) => ({ ...a })),
       statusHistory: this.statusHistory.map((h) => ({ ...h })),
       documents: this.documents.map((d) => ({ ...d })),
+      preferences: this.getPreferences(userId),
     };
+  }
+
+  public getPreferences(userId: string): UserPreferences | null {
+    const prefs = this.preferences.get(userId);
+    return prefs ? { ...prefs } : null;
+  }
+
+  public setPreferences(userId: string, patch: Partial<UserPreferences>): UserPreferences {
+    const next = {
+      weeklyApplicationGoal: null,
+      salaryCurrency: null,
+      ...this.preferences.get(userId),
+      ...patch,
+    };
+    this.preferences.set(userId, next);
+    return { ...next };
   }
 
   public deleteUserData(userId: string): {
@@ -281,6 +302,7 @@ class MockStore {
     this.applications = [];
     this.statusHistory = [];
     this.documents = [];
+    this.preferences = new Map();
     return result;
   }
 
@@ -327,6 +349,7 @@ class MockStore {
       (h) => !appIds.has(h.applicationId),
     );
     this.documents = this.documents.filter((d) => !docIds.has(d.id));
+    this.preferences.delete(ownerId);
 
     return {
       applications: appIds.size,
