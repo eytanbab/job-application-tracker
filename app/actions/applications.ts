@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 
 import { db, isMockDb } from "@/app/db";
@@ -30,7 +30,7 @@ import {
 } from "drizzle-orm";
 
 import { format, subDays } from "date-fns";
-import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
+import { applicationsTag, expireTag } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 import {
   getStatusDisplay,
@@ -110,7 +110,7 @@ function extractCleanApplicationFields(values: FormValues) {
 
 function purgeCaches(userId: string) {
   try {
-    revalidateTag(applicationsTag(userId), "max");
+    expireTag(applicationsTag(userId));
     revalidatePath("/applications");
     revalidatePath("/analytics/overview");
   } catch {

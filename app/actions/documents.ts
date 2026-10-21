@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
+import { revalidatePath, unstable_cache } from "next/cache";
 
 import { db, isMockDb } from "@/app/db";
 import { mockStore } from "@/lib/mock-data/mock-store";
@@ -14,6 +14,7 @@ import {
   CACHE_REVALIDATE_SECONDS,
   documentsTag,
   applicationsTag,
+  expireTag,
 } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 import { asciiFileName, contentDisposition } from "@/lib/utils";
@@ -120,7 +121,7 @@ export async function createFile(
       file_size: file_size || null,
     });
     try {
-      revalidateTag(documentsTag(userId), "max");
+      expireTag(documentsTag(userId));
       revalidatePath("/documents");
     } catch {}
     return { id: newDoc.id };
@@ -139,7 +140,7 @@ export async function createFile(
     })
     .returning({ insertedId: documents.id });
   try {
-    revalidateTag(documentsTag(userId), "max");
+    expireTag(documentsTag(userId));
     revalidatePath("/documents");
   } catch {}
   return { id: result[0]?.insertedId };
@@ -258,8 +259,8 @@ export async function deleteFile(id: string) {
   if (isMockDb) {
     mockStore.deleteDocument(userId, id);
     try {
-      revalidateTag(documentsTag(userId), "max");
-      revalidateTag(applicationsTag(userId), "max");
+      expireTag(documentsTag(userId));
+      expireTag(applicationsTag(userId));
       revalidatePath("/documents");
       revalidatePath("/applications");
       revalidatePath("/analytics/overview");
@@ -296,8 +297,8 @@ export async function deleteFile(id: string) {
     throw err;
   } finally {
     try {
-      revalidateTag(documentsTag(userId), "max");
-      revalidateTag(applicationsTag(userId), "max");
+      expireTag(documentsTag(userId));
+      expireTag(applicationsTag(userId));
       revalidatePath("/documents");
       revalidatePath("/applications");
       revalidatePath("/analytics/overview");
