@@ -1,5 +1,5 @@
 import { DeleteObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
-import { count, eq, inArray, sql } from "drizzle-orm";
+import { and, count, eq, gte, inArray, lte, sql } from "drizzle-orm";
 
 import { db, isMockDb } from "@/app/db";
 import {
@@ -11,6 +11,8 @@ import {
 import { mockStore } from "@/lib/mock-data/mock-store";
 import { s3Client } from "@/lib/s3-client";
 import type { UserPreferences } from "@/lib/preference-options";
+import { inRange } from "@/lib/analytics/range";
+import type { DateRange } from "@/lib/analytics/types";
 
 // Server-only helpers behind data export, account deletion and guest
 // retention. Callers are responsible for resolving which user they act on.
@@ -117,6 +119,32 @@ export async function collectUserData(userId: string): Promise<UserDataExport> {
     documents: docs.map(toExportedDocument),
     preferences: preferences ?? null,
   };
+}
+
+/** The user's applications with date_applied inside range (inclusive). */
+export async function collectApplications(
+  userId: string,
+  range: DateRange,
+): Promise<ApplicationRow[]> {
+  if (isMockDb) {
+    return mockStore
+      .exportUserData(userId)
+      .applications.filter((a) => inRange(a.date_applied, range))
+      .map((a) => ({ ...a, resumeId: a.resumeId ?? null }))
+      .sort((a, b) => a.date_applied.localeCompare(b.date_applied));
+  }
+
+  return db
+    .select()
+    .from(jobApplications)
+    .where(
+      and(
+        eq(jobApplications.userId, userId),
+        range.from ? gte(jobApplications.date_applied, range.from) : undefined,
+        range.to ? lte(jobApplications.date_applied, range.to) : undefined,
+      ),
+    )
+    .orderBy(jobApplications.date_applied);
 }
 
 const CSV_COLUMNS: { header: string; value: (a: ApplicationRow) => unknown }[] = [
