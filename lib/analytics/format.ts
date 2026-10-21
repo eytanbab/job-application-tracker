@@ -1,3 +1,4 @@
+import { statusLabels, type StatusKind } from "@/lib/utils";
 import type { Delta } from "./stats";
 import type { Rate } from "./types";
 
@@ -56,4 +57,9 @@ export function describeDelta(
     spoken: `${word} ${Math.abs(value)}${spokenUnit} ${against}`,
     tone: delta.meaningful ? (improved ? "good" : "bad") : "neutral",
   };
+}
+
+/** Status names as the analytics page says them ("Offer", not "Accepted / Offer"). */
+export function statusLabel(kind: StatusKind): string {
+  return kind === "accepted" ? "Offer" : statusLabels[kind];
 }
