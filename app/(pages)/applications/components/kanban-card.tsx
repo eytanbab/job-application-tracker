@@ -23,6 +23,7 @@ import {
   StatusKind,
   isStandardStatus,
   formatPlatformLabel,
+  normalizeJobLink,
 } from "@/lib/utils";
 import { useState } from "react";
 import { formatDate, parseISO } from "date-fns";
@@ -231,9 +232,9 @@ export function KanbanCard({
                 <span className="truncate">{item.location}</span>
               </span>
             )}
-            {item.link && (
+            {normalizeJobLink(item.link) && (
               <a
-                href={item.link}
+                href={normalizeJobLink(item.link)!}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}

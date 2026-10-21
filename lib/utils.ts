@@ -376,3 +376,22 @@ export function contentDisposition(
   );
   return `${type}; filename="${asciiFileName(name)}"; filename*=UTF-8''${encoded}`;
 }
+
+/**
+ * A job link as an absolute http(s) URL ("company.com/job" gets https://),
+ * or null when it is empty or not a web link.
+ */
+export function normalizeJobLink(raw: string | null | undefined): string | null {
+  const text = (raw ?? "").trim();
+  if (!text) return null;
+  // "scheme:" means a scheme was given; "host:8080" is a port, not a scheme.
+  const hasScheme = /^[a-z][a-z0-9+.-]*:(?!\d)/i.test(text);
+  const withScheme = hasScheme ? text : `https://${text}`;
+  try {
+    const url = new URL(withScheme);
+    const web = url.protocol === "http:" || url.protocol === "https:";
+    return web && !url.username && !url.password ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
