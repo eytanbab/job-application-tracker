@@ -13,7 +13,8 @@ import {
   formatApplicationsPerYear,
   StatusKind,
 } from "@/lib/utils";
-import { differenceInDays, parseISO } from "date-fns";
+import { addDays, differenceInDays, parseISO } from "date-fns";
+import { GHOST_AFTER_DAYS, ghostsAt } from "@/lib/analytics/definitions";
 import type { AnalyticsDataset } from "@/lib/analytics/types";
 
 class MockStore {
@@ -790,31 +791,35 @@ class MockStore {
     };
   }
 
+  /** Same rule as the database sync: 30 days with no application or status activity. */
   public syncGhostedApplications(userId?: string): number {
     const now = new Date();
     let count = 0;
     this.applications.forEach((app) => {
-      const kind = getStatusKind(app.status, app.statusCategory);
-      if (kind === "applied" || kind === "review") {
-        if (app.date_applied) {
-          const appliedDate = parseISO(app.date_applied);
-          if (!isNaN(appliedDate.getTime())) {
-            const daysAgo = differenceInDays(now, appliedDate);
-            if (daysAgo >= 30) {
-              app.status = "Ghosted";
-              app.statusCategory = "ghosted";
-              this.statusHistory.unshift({
-                id: `hist-ghost-${app.id}`,
-                applicationId: app.id,
-                status: "Ghosted",
-                statusCategory: "ghosted",
-                createdAt: now,
-              });
-              count++;
-            }
-          }
-        }
+      const history = this.statusHistory.filter((h) => h.applicationId === app.id);
+      const due = ghostsAt(
+        {
+          status: app.status,
+          statusCategory: app.statusCategory,
+          dateApplied: app.date_applied,
+        },
+        history.map((h) => ({ createdAt: new Date(h.createdAt).getTime() })),
+      );
+      if (due === null || due > now.getTime()) return;
+
+      app.status = "Ghosted";
+      app.statusCategory = "ghosted";
+      if (!history.some((h) => h.statusCategory === "ghosted")) {
+        const milestone = addDays(parseISO(app.date_applied), GHOST_AFTER_DAYS);
+        this.statusHistory.unshift({
+          id: `hist-ghost-${app.id}`,
+          applicationId: app.id,
+          status: "Ghosted",
+          statusCategory: "ghosted",
+          createdAt: milestone > now ? now : milestone,
+        });
       }
+      count++;
     });
     return count;
   }
