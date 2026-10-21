@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "counters": {
-    "DATA": 4,
+    "DATA": 5,
     "COLOR": 6,
-    "A11Y": 11,
+    "A11Y": 12,
     "TRUST": 7,
     "STATE": 2,
     "AFFORD": 3,
@@ -11,13 +11,13 @@
     "HIER": 9,
     "FLOW": 2,
     "FORM": 3,
-    "PLAT": 1,
-    "COPY": 3,
+    "PLAT": 2,
+    "COPY": 4,
     "TYPO": 2,
     "DSYS": 3,
     "ONBD": 1,
     "COGN": 1,
-    "PERF": 1,
+    "PERF": 2,
     "SRCH": 1
   },
   "findings": [
@@ -375,22 +375,22 @@
       "id": "PERS-01",
       "category": "PERS",
       "rule": "view-state-not-persisted",
-      "title": "Platform ROI dashboard view mode and sort criteria reset on tab change or refresh",
+      "title": "Platform table sort, search and expansion, and the chart view mode, reset on refresh",
       "flows": [
         "analytics"
       ],
       "location": {
-        "file": "app/(pages)/analytics/components/platform-roi-dashboard.tsx",
-        "line": 330,
-        "anchor": "PlatformRoiDashboard viewMode / sortBy useState"
+        "file": "app/(pages)/analytics/components/channel-performance-matrix.tsx",
+        "line": 83,
+        "anchor": "ChannelPerformanceMatrix sortField / isExpanded / searchQuery useState; chart viewMode"
       },
       "severity": "low",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "resolved",
+      "status": "open",
       "first_flagged": "2026-10-12",
-      "last_seen": "2026-10-12",
-      "resolved_on": "2026-10-12",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
       "status_note": "Resolved during analytics UX/UI audit remediation",
       "history": [
         {
@@ -403,6 +403,12 @@
           "date": "2026-10-12",
           "report": "reports/2026-10-12-analytics.md",
           "event": "resolved"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "regressed",
+          "note": "Platform ROI dashboard was replaced by ChannelPerformanceMatrix, which keeps view state in useState again"
         }
       ]
     },
@@ -1745,7 +1751,7 @@
         "anchor": "getWorkModeAnalysis / ChannelPerformanceMatrix respondedCount"
       },
       "severity": "high",
-      "confidence": "code-confirmed",
+      "confidence": "observed",
       "effort": "low",
       "status": "open",
       "first_flagged": "2026-10-21",
@@ -1758,6 +1764,12 @@
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "high"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "seen",
+          "note": "Observed on demo data: work model sums to 7 interviewed, funnel shows 8"
         }
       ]
     },
@@ -1938,6 +1950,12 @@
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "seen",
+          "note": "dataviz validator: Rejected vs Offer deltaE 5.6 (deutan), two greys below chroma floor, dashed grid"
         }
       ]
     },
@@ -2088,6 +2106,157 @@
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "low"
+        }
+      ]
+    },
+    {
+      "id": "DATA-05",
+      "category": "DATA",
+      "rule": "small-sample-claim",
+      "title": "'Top-performing source' and work-model rates are presented as findings from 3-8 applications",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/channel-performance-matrix.tsx",
+        "line": 124,
+        "anchor": "topPlatform qualification (N >= 3); MarketRealityMatrix rows"
+      },
+      "severity": "high",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "new",
+          "severity": "high"
+        }
+      ]
+    },
+    {
+      "id": "A11Y-12",
+      "category": "A11Y",
+      "rule": "chart-not-accessible",
+      "title": "Activity chart is an unnamed role=application with no table alternative; view toggle has no pressed state; funnel reads as one run-on string",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/total-applications-per-year-bar-chart.tsx",
+        "line": 138,
+        "anchor": "view toggle buttons; <BarChart accessibilityLayer>"
+      },
+      "severity": "high",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "new",
+          "severity": "high"
+        }
+      ]
+    },
+    {
+      "id": "PLAT-02",
+      "category": "PLAT",
+      "rule": "tablet-layout-collision",
+      "title": "At 768px the platform table headers overlap and funnel card headers wrap word by word",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/channel-performance-matrix.tsx",
+        "line": 393,
+        "anchor": "desktop table shown from md breakpoint"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "COPY-04",
+      "category": "COPY",
+      "rule": "inconsistent-terminology",
+      "title": "One concept has several names (Platform/Channel/Source; Offer/Accepted / Offer; On-Site/On-site) and Title Case mixes with sentence case",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/channel-performance-matrix.tsx",
+        "line": 398,
+        "anchor": "table header 'Channel', top-source banner, legends"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "PERF-02",
+      "category": "PERF",
+      "rule": "late-inserted-banner",
+      "title": "Guest notice is inserted after hydration and pushes the page down 142px (CLS 0.137 at 375px)",
+      "flows": [
+        "analytics",
+        "applications"
+      ],
+      "location": {
+        "file": "app/_components/guest-notice.tsx",
+        "line": 48,
+        "anchor": "GuestNotice useSyncExternalStore server snapshot"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "new",
+          "severity": "medium"
         }
       ]
     }
