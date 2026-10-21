@@ -16,6 +16,7 @@ import {
   applicationsTag,
 } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
+import { asciiFileName, contentDisposition } from "@/lib/utils";
 
 /** A signed document URL, or why one could not be made. */
 export type SignedUrlResult =
@@ -42,9 +43,7 @@ export async function generatePresignedUrl(
     }
 
     // Sanitize file name to avoid path traversal and invalid characters
-    const sanitizedFileName = fileName
-      .replace(/[^a-zA-Z0-9._-]/g, "_")
-      .slice(0, 100);
+    const sanitizedFileName = asciiFileName(fileName, /[^a-zA-Z0-9._-]/g, 100);
 
     // Generate a unique filename for the file in the S3 bucket
     const fileKey = `${userId}/${Date.now().toString()}-${sanitizedFileName}`;
@@ -301,9 +300,6 @@ export async function getViewUrl(id: string): Promise<SignedUrlResult> {
       throw new Error("Document not found");
     }
 
-    const safeFileName = (document[0].file_name || "resume.pdf")
-      .replace(/["\r\n\\]/g, "_")
-      .slice(0, 150);
 
     const getCommand = new (
       await import("@aws-sdk/client-s3")
@@ -311,7 +307,7 @@ export async function getViewUrl(id: string): Promise<SignedUrlResult> {
       Bucket: process.env.NEXT_AWS_S3_BUCKET_NAME || "",
       Key: document[0].file_key,
       ResponseContentType: "application/pdf",
-      ResponseContentDisposition: `inline; filename="${safeFileName}"`,
+      ResponseContentDisposition: contentDisposition("inline", document[0].file_name || "resume.pdf"),
     });
 
     const signedUrl = await getSignedUrl(s3Client, getCommand, {
@@ -343,16 +339,13 @@ export async function getDownloadUrl(id: string): Promise<SignedUrlResult> {
       throw new Error("Document not found");
     }
 
-    const safeFileName = (document[0].file_name || "resume.pdf")
-      .replace(/["\r\n\\]/g, "_")
-      .slice(0, 150);
 
     const getCommand = new (
       await import("@aws-sdk/client-s3")
     ).GetObjectCommand({
       Bucket: process.env.NEXT_AWS_S3_BUCKET_NAME || "",
       Key: document[0].file_key,
-      ResponseContentDisposition: `attachment; filename="${safeFileName}"`,
+      ResponseContentDisposition: contentDisposition("attachment", document[0].file_name || "resume.pdf"),
     });
 
     const signedUrl = await getSignedUrl(s3Client, getCommand, {
