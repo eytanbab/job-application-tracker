@@ -243,6 +243,19 @@ export const getStatusDisplay = (
   return statusLabels[kind];
 };
 
+/**
+ * Free-text status fragments that mean an interview happened, even when the
+ * category says otherwise. The tracker's SQL stage filter builds its pattern
+ * from this list, so keep the two in step.
+ */
+export const INTERVIEW_TEXT_PATTERNS = [
+  "interview",
+  "phone screen",
+  "technical",
+  "onsite",
+  "screening",
+] as const;
+
 export const didReachInterviewStage = (
   status: string | null | undefined,
   statusCategory?: string | null,
@@ -253,12 +266,8 @@ export const didReachInterviewStage = (
   }
 
   const normalizedStatus = (status ?? "").toLowerCase();
-  return (
-    normalizedStatus.includes("interview") ||
-    normalizedStatus.includes("phone screen") ||
-    normalizedStatus.includes("technical") ||
-    normalizedStatus.includes("onsite") ||
-    normalizedStatus.includes("screening")
+  return INTERVIEW_TEXT_PATTERNS.some((pattern) =>
+    normalizedStatus.includes(pattern),
   );
 };
 
