@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { getCurrentUserIdOrThrow } from "@/app/actions/_utils/user-context";
 import { collectUserData } from "@/lib/account-data";
+import { DEFAULT_PREFERENCES } from "@/lib/preference-options";
 import { getClerkUserId } from "@/lib/auth/clerk-session";
 import { ProfileCard } from "./components/profile-card";
 import { ExportDataCard } from "./components/export-data-card";
 import { DeleteAccountCard } from "./components/delete-account-card";
+import { PreferencesCard } from "./components/preferences-card";
 
 export const dynamic = "force-dynamic";
 
@@ -34,11 +36,12 @@ export default async function SettingsPage() {
           Settings
         </h1>
         <p className="text-sm text-muted-foreground">
-          Manage your profile, download a copy of your data, or delete it.
+          Manage your profile and analytics preferences, download a copy of your data, or delete it.
         </p>
       </div>
 
       <ProfileCard signedIn={signedIn} />
+      <PreferencesCard preferences={data.preferences ?? DEFAULT_PREFERENCES} />
       <ExportDataCard counts={counts} />
       <DeleteAccountCard signedIn={signedIn} counts={counts} />
 
