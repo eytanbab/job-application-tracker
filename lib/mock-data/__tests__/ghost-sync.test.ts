@@ -39,8 +39,8 @@ function ageHistory(id: string, days: number) {
 }
 
 // The mock sync must follow the database rule (app/actions/applications.ts):
-// 30 days without application or status activity, ghost row dated to the
-// 30-day mark. The analytics "Ghosting soon" list relies on the same rule.
+// 30 days without application or status activity, ghost row dated 30 days
+// after the last activity. The analytics "Ghosting soon" list relies on the same rule.
 describe("mock ghost sync", () => {
   beforeEach(() => {
     mockStore.reset();
@@ -69,5 +69,23 @@ describe("mock ghost sync", () => {
     mockStore.syncGhostedApplications();
     mockStore.syncGhostedApplications();
     expect(historyOf(app.id).filter((h) => h.statusCategory === "ghosted")).toHaveLength(1);
+  });
+
+  it("dates the ghost row after later activity, so it is the newest entry", () => {
+    // Applied 90 days ago, moved to review 45 days ago, quiet since.
+    const app = addApplied(daysAgo(90));
+    mockStore.updateApplication("mock-dev-user", app.id, { ...app, status: "In Review", statusCategory: "review" } as never);
+    const store = mockStore as unknown as {
+      statusHistory: { applicationId: string; statusCategory: string; createdAt: Date }[];
+    };
+    for (const row of store.statusHistory.filter((h) => h.applicationId === app.id)) {
+      row.createdAt = subDays(new Date(), row.statusCategory === "review" ? 45 : 90);
+    }
+
+    mockStore.syncGhostedApplications();
+
+    const rows = historyOf(app.id).sort((a, b) => b.createdAt - a.createdAt);
+    expect(rows.map((r) => r.statusCategory)).toEqual(["ghosted", "review", "applied"]);
+    expect(format(new Date(rows[0].createdAt), "yyyy-MM-dd")).toBe(daysAgo(15));
   });
 });
