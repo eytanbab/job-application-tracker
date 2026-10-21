@@ -131,22 +131,22 @@ This document lists the features and product work needed before Job Application 
 
 ### 7. Analytics
 
-- [ ] Analytics date range filter across all analytics pages.
+- [x] Analytics date range filter across all analytics pages.
 - [ ] AI Insights filters matching main analytics.
 - [ ] Response rate by platform, company, role keyword, location, and weekday.
 - [ ] Interview rate by platform, company, role keyword, location, and weekday.
-- [ ] Offer rate.
+- [x] Offer rate.
 - [ ] Rejection rate.
 - [ ] Ghosting rate.
-- [ ] Time to first response.
-- [ ] Time to interview.
-- [ ] Time to offer.
+- [x] Time to first response.
+- [x] Time to interview.
+- [x] Time to offer.
 - [ ] Time to rejection.
-- [ ] Active pipeline count by status category.
-- [ ] Conversion funnel by canonical status.
+- [x] Active pipeline count by status category.
+- [x] Conversion funnel by canonical status.
 - [ ] Salary analytics using structured salary fields.
-- [ ] Trend comparisons over weeks/months.
-- [ ] Export analytics charts/data.
+- [x] Trend comparisons over weeks/months.
+- [x] Export analytics charts/data.
 - [ ] Empty states explaining what data is needed for each chart.
 - [ ] Definitions/tooltips for metrics.
 
@@ -186,7 +186,7 @@ This document lists the features and product work needed before Job Application 
 - [ ] Accessibility audit.
 - [ ] Mobile navigation polish.
 - [ ] Dark mode visual QA.
-- [ ] Consistent chart colors and legends.
+- [x] Consistent chart colors and legends.
 - [ ] Product copy pass.
 
 ### 11. Security, Privacy, And Compliance
@@ -299,8 +299,8 @@ This document lists the features and product work needed before Job Application 
 ## Technical Debt To Resolve Before SaaS
 
 - [x] Replace free-text-only status workflows with canonical status categories plus optional custom labels.
-- [ ] Move repeated analytics logic into tested helper functions.
-- [ ] Add tests for `getStatusKind`, analytics rates, salary parsing, and ghosting rules.
+- [x] Move repeated analytics logic into tested helper functions.
+- [x] Add tests for `getStatusKind`, analytics rates, salary parsing, and ghosting rules.
 - [ ] Add database indexes for common filters and ownership queries.
 - [ ] Add a real error boundary for app pages.
 - [ ] Avoid production console logging of sensitive data.
