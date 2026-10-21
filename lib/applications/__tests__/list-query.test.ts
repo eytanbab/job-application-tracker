@@ -3,6 +3,7 @@ import {
   DEFAULT_PAGE_SIZE,
   escapeLikePattern,
   normalizeListQuery,
+  parseStatuses,
   queryRows,
 } from "../list-query";
 
@@ -32,7 +33,10 @@ describe("normalizeListQuery", () => {
       }),
     ).toEqual({
       search: "",
-      status: null,
+      statuses: null,
+      stage: null,
+      from: null,
+      to: null,
       platform: null,
       sort: null,
       desc: true,
@@ -54,7 +58,10 @@ describe("normalizeListQuery", () => {
       }),
     ).toEqual({
       search: "react",
-      status: "ghosted",
+      statuses: ["ghosted"],
+      stage: null,
+      from: null,
+      to: null,
       platform: "linkedin",
       sort: "location",
       desc: false,
@@ -69,8 +76,36 @@ describe("normalizeListQuery", () => {
     expect(normalizeListQuery({ size: 5 }).pageSize).toBe(DEFAULT_PAGE_SIZE);
   });
 
+  it("accepts a stage and valid date bounds only", () => {
+    expect(normalizeListQuery({ stage: "interviewed", from: "2026-09-01", to: "2026-09-30" })).toMatchObject({
+      stage: "interviewed",
+      from: "2026-09-01",
+      to: "2026-09-30",
+    });
+    expect(normalizeListQuery({ stage: "hired", from: "2026-02-30", to: "soon" })).toMatchObject({
+      stage: null,
+      from: null,
+      to: null,
+    });
+    expect(normalizeListQuery({ from: "2026-10-01", to: "2026-09-01" })).toMatchObject({
+      from: "2026-09-01",
+      to: "2026-10-01",
+    });
+  });
+
   it("caps the search length", () => {
     expect(normalizeListQuery({ q: "x".repeat(500) }).search).toHaveLength(200);
+  });
+});
+
+describe("parseStatuses", () => {
+  it("reads single statuses, lists and groups", () => {
+    expect(parseStatuses("ghosted")).toEqual(["ghosted"]);
+    expect(parseStatuses("rejected, ghosted,bogus")).toEqual(["rejected", "ghosted"]);
+    expect(parseStatuses("active")).toEqual(["applied", "review", "interview", "other"]);
+    expect(parseStatuses("closed")).toEqual(["accepted", "rejected", "ghosted"]);
+    expect(parseStatuses("")).toBeNull();
+    expect(parseStatuses("bogus")).toBeNull();
   });
 });
 
@@ -110,8 +145,30 @@ describe("queryRows", () => {
   });
 
   it("filters by status and platform", () => {
-    expect(queryRows(rows, { ...base, status: "rejected" }).total).toBe(1);
+    expect(queryRows(rows, { ...base, statuses: ["rejected"] }).total).toBe(1);
+    expect(queryRows(rows, { ...base, statuses: ["rejected", "applied"] }).total).toBe(3);
     expect(queryRows(rows, { ...base, platform: "indeed" }).total).toBe(1);
+  });
+
+  it("filters by date applied, inclusive", () => {
+    expect(queryRows(rows, { ...base, from: "2026-02-01", to: "2026-03-01" }).total).toBe(2);
+    expect(queryRows(rows, { ...base, to: "2026-01-31" }).total).toBe(1);
+  });
+
+  it("filters by stage using status history", () => {
+    const staged = [
+      row({ id: "a", company_name: "Was interviewed", status: "Rejected", statusCategory: "rejected" }),
+      row({ id: "b", company_name: "Only reviewed", status: "In Review", statusCategory: "review" }),
+      row({ id: "c", company_name: "No reply", status: "Ghosted", statusCategory: "ghosted" }),
+    ];
+    const history = new Map([
+      ["a", [{ status: "Interview", statusCategory: "interview" }]],
+      ["c", [{ status: "Applied", statusCategory: "applied" }]],
+    ]);
+    const names = (stage: "interviewed" | "responded") =>
+      queryRows(staged, { ...base, stage }, history).rows.map((r) => r.company_name);
+    expect(names("interviewed")).toEqual(["Was interviewed"]);
+    expect(names("responded")).toEqual(["Was interviewed", "Only reviewed"]);
   });
 
   it("sorts by the requested column and pages the result", () => {

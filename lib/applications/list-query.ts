@@ -5,6 +5,12 @@ import {
   parseAsStringLiteral,
 } from "nuqs/server";
 import { getStatusKind, isStatusKind, type StatusKind } from "@/lib/utils";
+import {
+  ACTIVE_KINDS,
+  reachedInterview,
+  responded,
+} from "@/lib/analytics/definitions";
+import { isIsoDate } from "@/lib/analytics/range";
 
 /** Rows-per-page choices offered by the table footer. */
 export const PAGE_SIZES = [10, 25, 50, 100] as const;
@@ -28,6 +34,16 @@ export type SortField = (typeof SORT_FIELDS)[number];
 
 const MAX_SEARCH_LENGTH = 200;
 
+/** Named groups the `status` param accepts besides single statuses. */
+export const STATUS_GROUPS: Record<"active" | "closed", readonly StatusKind[]> = {
+  active: ACTIVE_KINDS,
+  closed: ["accepted", "rejected", "ghosted"],
+};
+
+/** History-based filters used by links from the analytics page. */
+export const STAGES = ["responded", "interviewed"] as const;
+export type Stage = (typeof STAGES)[number];
+
 /**
  * URL search params of /applications. The page reads them on the server to
  * query one page of rows; the client hook writes them with the same parsers.
@@ -42,6 +58,9 @@ export const applicationsSearchParams = {
   size: parseAsInteger,
   view: parseAsStringLiteral(["table", "kanban"] as const).withDefault("table"),
   appId: parseAsString.withDefault(""),
+  stage: parseAsStringLiteral(STAGES),
+  from: parseAsString,
+  to: parseAsString,
 };
 
 export const loadApplicationsSearchParams = createLoader(
@@ -50,7 +69,13 @@ export const loadApplicationsSearchParams = createLoader(
 
 export type ApplicationListQuery = {
   search: string;
-  status: StatusKind | null;
+  /** Statuses to include; null means all. */
+  statuses: StatusKind[] | null;
+  /** Ever reached this stage, according to status history. */
+  stage: Stage | null;
+  /** Inclusive `YYYY-MM-DD` bounds on the date applied. */
+  from: string | null;
+  to: string | null;
   platform: string | null;
   sort: SortField | null;
   desc: boolean;
@@ -58,17 +83,36 @@ export type ApplicationListQuery = {
   pageSize: number;
 };
 
+/**
+ * Parses the `status` param: one status, a comma-separated list, or a group
+ * name ("active", "closed"). Unknown values are dropped.
+ */
+export function parseStatuses(raw: string | null | undefined): StatusKind[] | null {
+  const kinds = new Set<StatusKind>();
+  for (const part of (raw ?? "").toLowerCase().split(",")) {
+    const value = part.trim();
+    if (value in STATUS_GROUPS) {
+      STATUS_GROUPS[value as keyof typeof STATUS_GROUPS].forEach((k) => kinds.add(k));
+    } else if (isStatusKind(value)) {
+      kinds.add(value);
+    }
+  }
+  return kinds.size ? [...kinds] : null;
+}
+
 /** Turns raw (untrusted) params into a bounded query. */
 export function normalizeListQuery(input: {
   q?: string | null;
   status?: string | null;
+  stage?: string | null;
+  from?: string | null;
+  to?: string | null;
   platform?: string | null;
   sort?: string | null;
   dir?: string | null;
   page?: number | null;
   size?: number | null;
 }): ApplicationListQuery {
-  const status = input.status?.trim().toLowerCase() ?? "";
   const platform = input.platform?.trim().toLowerCase() ?? "";
   const sort = SORT_FIELDS.find((field) => field === input.sort) ?? null;
   const size = input.size ?? DEFAULT_PAGE_SIZE;
@@ -76,7 +120,9 @@ export function normalizeListQuery(input: {
 
   return {
     search: (input.q ?? "").trim().slice(0, MAX_SEARCH_LENGTH),
-    status: status && isStatusKind(status) ? status : null,
+    statuses: parseStatuses(input.status),
+    stage: STAGES.find((stage) => stage === input.stage) ?? null,
+    ...dateBounds(input.from, input.to),
     platform: platform && platform !== "all" ? platform : null,
     sort,
     desc: sort ? input.dir === "desc" : true,
@@ -85,6 +131,12 @@ export function normalizeListQuery(input: {
       ? size
       : DEFAULT_PAGE_SIZE,
   };
+}
+
+function dateBounds(from?: string | null, to?: string | null) {
+  const start = isIsoDate(from) ? from : null;
+  const end = isIsoDate(to) ? to : null;
+  return start && end && start > end ? { from: end, to: start } : { from: start, to: end };
 }
 
 /** Escapes LIKE wildcards so a search for "100%" matches literally. */
@@ -144,18 +196,37 @@ function sortValue(row: QueryableRow, field: SortField): string {
   }
 }
 
-/** Rows matching the search, status and platform filters (no paging). */
-export function filterRows<T extends QueryableRow>(
+export type ListFilters = Pick<
+  ApplicationListQuery,
+  "search" | "statuses" | "stage" | "from" | "to" | "platform"
+>;
+
+type HistoryRow = { status: string; statusCategory: string };
+
+/** Rows matching the filters (no paging). Stage filters need each row's history. */
+export function filterRows<T extends QueryableRow & { id?: string }>(
   rows: T[],
-  query: Pick<ApplicationListQuery, "search" | "status" | "platform">,
+  query: ListFilters,
+  historyByApp: ReadonlyMap<string, readonly HistoryRow[]> = new Map(),
 ): T[] {
   const search = query.search.toLowerCase();
   return rows.filter((row) => {
     if (
-      query.status &&
-      getStatusKind(row.status, row.statusCategory) !== query.status
+      query.statuses &&
+      !query.statuses.includes(getStatusKind(row.status, row.statusCategory))
     ) {
       return false;
+    }
+    if (query.from && row.date_applied < query.from) return false;
+    if (query.to && row.date_applied > query.to) return false;
+    if (query.stage) {
+      const current = { status: row.status, statusCategory: row.statusCategory ?? "" };
+      const history = (row.id && historyByApp.get(row.id)) || [];
+      const matches =
+        query.stage === "interviewed"
+          ? reachedInterview(current, history)
+          : responded(current, history);
+      if (!matches) return false;
     }
     if (
       query.platform &&
@@ -174,11 +245,12 @@ export function filterRows<T extends QueryableRow>(
  * In-memory version of the SQL list query, used by the mock store so demo
  * mode filters, sorts and pages exactly like the database path.
  */
-export function queryRows<T extends QueryableRow>(
+export function queryRows<T extends QueryableRow & { id?: string }>(
   rows: T[],
   query: ApplicationListQuery,
+  historyByApp?: ReadonlyMap<string, readonly HistoryRow[]>,
 ): { rows: T[]; total: number } {
-  const filtered = filterRows(rows, query);
+  const filtered = filterRows(rows, query, historyByApp);
   const sorted = [...filtered].sort((a, b) => {
     if (query.sort) {
       const left = sortValue(a, query.sort);

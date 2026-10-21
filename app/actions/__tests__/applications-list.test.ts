@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { mockStore } from "@/lib/mock-data/mock-store";
+import { getAnalyticsOverview } from "@/lib/analytics/load";
 import {
   getApplicationDetails,
   getApplicationsPage,
@@ -104,5 +105,25 @@ describe("application list actions (mock store)", () => {
       expect(column!.total).toBe(inColumn.length);
       expect(column!.rows.length).toBe(Math.min(inColumn.length, 20));
     }
+  });
+
+  // Every count on the analytics page links to the tracker; the two must agree.
+  it("returns the same counts the analytics page links to", async () => {
+    const range = { range: "custom", from: "2000-01-01", to: "2100-12-31" } as const;
+    const overview = await getAnalyticsOverview(range);
+    const total = async (params: Record<string, string>) =>
+      (await getApplicationsPage({ ...params, from: range.from, to: range.to })).total;
+
+    expect(await total({})).toBe(overview.totals.applications);
+    expect(await total({ stage: "interviewed" })).toBe(overview.totals.interviewed);
+    expect(await total({ stage: "responded" })).toBe(overview.totals.responded);
+    expect(await total({ status: "active" })).toBe(overview.totals.active);
+    expect(await total({ status: "ghosted" })).toBe(overview.totals.ghosted.total);
+    expect(await total({ status: "accepted" })).toBe(overview.totals.offers);
+  });
+
+  it("limits Kanban columns to the requested statuses", async () => {
+    const columns = await getKanbanColumns({ status: "closed" });
+    expect(Object.keys(columns).sort()).toEqual(["accepted", "ghosted", "rejected"]);
   });
 });
