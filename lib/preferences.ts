@@ -1,6 +1,5 @@
 import { eq } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
-import { z } from "zod";
 import { db, isMockDb } from "@/app/db";
 import { userPreferences } from "@/app/db/schema";
 import {
@@ -8,25 +7,18 @@ import {
   preferencesTag,
 } from "@/app/actions/_utils/cache-tags";
 import { mockStore } from "@/lib/mock-data/mock-store";
+import { DEFAULT_PREFERENCES, type UserPreferences } from "./preference-options";
 
 // Server-only. Reads and writes for the user_preferences row; the server
 // actions in app/actions/preferences.ts validate input and resolve the user.
 
-export interface UserPreferences {
-  weeklyApplicationGoal: number | null;
-  salaryCurrency: string | null;
-}
-
-export const DEFAULT_PREFERENCES: UserPreferences = {
-  weeklyApplicationGoal: null,
-  salaryCurrency: null,
-};
-
-/** Currencies offered in settings; the salary parser recognizes each of them. */
-export const SALARY_CURRENCIES = ["USD", "EUR", "GBP", "ILS", "INR", "CAD", "AUD"] as const;
-
-export const weeklyGoalSchema = z.number().int().min(1).max(200).nullable();
-export const salaryCurrencySchema = z.enum(SALARY_CURRENCIES).nullable();
+export {
+  DEFAULT_PREFERENCES,
+  SALARY_CURRENCIES,
+  salaryCurrencySchema,
+  weeklyGoalSchema,
+  type UserPreferences,
+} from "./preference-options";
 
 export async function getPreferences(userId: string): Promise<UserPreferences> {
   if (isMockDb) return mockStore.getPreferences(userId) ?? DEFAULT_PREFERENCES;

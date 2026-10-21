@@ -16,7 +16,7 @@ import {
 import { addDays, differenceInDays, parseISO } from "date-fns";
 import { GHOST_AFTER_DAYS, ghostsAt } from "@/lib/analytics/definitions";
 import type { AnalyticsDataset } from "@/lib/analytics/types";
-import type { UserPreferences } from "@/lib/preferences";
+import type { UserPreferences } from "@/lib/preference-options";
 
 class MockStore {
   private applications: MockApplication[] = [];

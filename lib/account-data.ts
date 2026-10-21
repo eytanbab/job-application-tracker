@@ -10,7 +10,7 @@ import {
 } from "@/app/db/schema";
 import { mockStore } from "@/lib/mock-data/mock-store";
 import { s3Client } from "@/lib/s3-client";
-import type { UserPreferences } from "@/lib/preferences";
+import type { UserPreferences } from "@/lib/preference-options";
 
 // Server-only helpers behind data export, account deletion and guest
 // retention. Callers are responsible for resolving which user they act on.
