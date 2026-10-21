@@ -1,10 +1,20 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { documents, jobApplications, applicationStatusHistory } from "./schema";
+import {
+  documents,
+  jobApplications,
+  applicationStatusHistory,
+  userPreferences,
+} from "./schema";
 
 export const isMockDb = !process.env.DATABASE_URL;
 
-const schema = { jobApplications, documents, applicationStatusHistory };
+const schema = {
+  jobApplications,
+  documents,
+  applicationStatusHistory,
+  userPreferences,
+};
 const sql = neon(
   process.env.DATABASE_URL || "postgresql://mock:mock@localhost:5432/mock",
 );
