@@ -4,21 +4,14 @@ import {
   describeDelta,
   formatDays,
   formatPct,
+  previousPeriodLabel,
   rateHeadline,
   type DeltaText,
 } from "@/lib/analytics/format";
 import { trackerHref } from "@/lib/analytics/links";
-import type { ResolvedRange } from "@/lib/analytics/range";
 import type { AnalyticsOverview } from "@/lib/analytics/summarize";
 import type { Rate } from "@/lib/analytics/types";
 import { cn } from "@/lib/utils";
-
-/** "previous 30 days" for presets, "previous period" otherwise. */
-export function previousPeriodLabel(range: ResolvedRange): string {
-  return range.days && ["7d", "30d", "90d"].includes(range.preset)
-    ? `previous ${range.days} days`
-    : "previous period";
-}
 
 function DeltaLine({ delta }: { delta: DeltaText | null }) {
   if (!delta) return null;

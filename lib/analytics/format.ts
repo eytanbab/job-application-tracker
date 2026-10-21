@@ -1,4 +1,5 @@
 import { statusLabels, type StatusKind } from "@/lib/utils";
+import type { ResolvedRange } from "./range";
 import type { Delta } from "./stats";
 import type { Rate } from "./types";
 
@@ -62,4 +63,11 @@ export function describeDelta(
 /** Status names as the analytics page says them ("Offer", not "Accepted / Offer"). */
 export function statusLabel(kind: StatusKind): string {
   return kind === "accepted" ? "Offer" : statusLabels[kind];
+}
+
+/** "previous 30 days" for presets, "previous period" otherwise. */
+export function previousPeriodLabel(range: ResolvedRange): string {
+  return range.days && ["7d", "30d", "90d"].includes(range.preset)
+    ? `previous ${range.days} days`
+    : "previous period";
 }
