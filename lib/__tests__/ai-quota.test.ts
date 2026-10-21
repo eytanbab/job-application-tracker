@@ -10,12 +10,14 @@ describe("getDailyLimit", () => {
   it("uses the defaults when the env vars are unset", () => {
     expect(getDailyLimit("extract", {})).toBe(30);
     expect(getDailyLimit("ats", {})).toBe(10);
+    expect(getDailyLimit("summary", {})).toBe(5);
   });
 
   it("reads the per-feature env var", () => {
     const env = { AI_DAILY_EXTRACT_LIMIT: "5", AI_DAILY_ATS_LIMIT: " 2 " };
     expect(getDailyLimit("extract", env)).toBe(5);
     expect(getDailyLimit("ats", env)).toBe(2);
+    expect(getDailyLimit("summary", { AI_DAILY_SUMMARY_LIMIT: "3" })).toBe(3);
   });
 
   it("accepts 0 to turn a feature off", () => {
