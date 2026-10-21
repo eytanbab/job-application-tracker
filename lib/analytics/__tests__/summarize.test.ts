@@ -50,6 +50,12 @@ describe("summarizeOverview", () => {
     expect(o.kpis.daysToFirstUpdate).toMatchObject({ median: 7, n: 7 });
   });
 
+  it("times reply-to-interview only when the reply came first", () => {
+    // Only a3 was in review (13 Sep) before its interview (20 Sep); for the
+    // others the interview itself was the first reply.
+    expect(o.timeInStage.updateToInterview).toEqual({ median: 7, n: 1 });
+  });
+
   it("compares with the previous period", () => {
     expect(o.kpis.applications.previous).toBe(1);
     expect(o.kpis.applications.delta?.change).toBe(8);
