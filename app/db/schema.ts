@@ -88,6 +88,18 @@ export const applicationStatusHistory = pgTable(
 
 const insertStatusHistorySchema = createInsertSchema(applicationStatusHistory);
 
+// One row per user (or guest id) for settings that change what analytics
+// shows. Typed columns, so each new preference is a migration, not a blob.
+export const userPreferences = pgTable("user_preferences", {
+  userId: varchar("user_id", { length: 255 }).primaryKey(),
+  // Applications per week the user aims for; null means no goal.
+  weeklyApplicationGoal: integer("weekly_application_goal"),
+  // ISO 4217 code for salary figures; null means use the most common one.
+  salaryCurrency: varchar("salary_currency", { length: 3 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Per-user daily counters for paid AI calls (Gemini). One row per user,
 // feature and UTC day; incremented with an atomic upsert in lib/ai-usage.ts.
 export const aiUsage = pgTable(
