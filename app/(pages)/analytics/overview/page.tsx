@@ -10,6 +10,7 @@ import {
 import type { AnalyticsOverview } from "@/lib/analytics/summarize";
 import { statusOptions } from "@/lib/utils";
 
+import { FilteredEmptyState } from "../components/filtered-empty-state";
 import { KpiSummaryStrip } from "../components/kpi-summary-strip";
 import { PipelineHealthHero } from "../components/pipeline-health-hero";
 import { ChannelPerformanceMatrix } from "../components/channel-performance-matrix";
@@ -71,6 +72,11 @@ async function AnalyticsDashboardContent({ params }: { params: RangeParams }) {
   const overview = await getAnalyticsOverview(params);
   const { totals } = overview;
   const series = activitySeries(overview.activity);
+
+  // The account has data, just not in this period: one card, not five empty ones.
+  if (totals.applications === 0 && overview.years.length > 0) {
+    return <FilteredEmptyState range={overview.range} />;
+  }
 
   return (
     <div className="flex flex-col gap-6 w-full min-w-0">

@@ -136,4 +136,15 @@ test.describe("Analytics Page Overhaul & Usability", () => {
     await page.goto("/analytics/insights?month=3");
     await expect(page).toHaveURL(/\/analytics\/overview\?range=all$/);
   });
+
+  test("offers a way out of an empty period", async ({ page }) => {
+    await ensureApplicationExists(page);
+    await page.goto("/analytics/overview?range=custom&from=2000-01-01&to=2000-01-31");
+    await expect(page.getByRole("heading", { name: "No applications in this period" })).toBeVisible();
+    // A click before hydration finishes is dropped by the client router.
+    await page.waitForLoadState("networkidle");
+    await page.getByRole("link", { name: "Show all time" }).click();
+    await expect(page).toHaveURL(/range=all/);
+    await expect(page.locator("text=Total Applied").first()).toBeVisible();
+  });
 });
