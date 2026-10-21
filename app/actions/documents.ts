@@ -17,6 +17,11 @@ import {
 } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 
+/** A signed document URL, or why one could not be made. */
+export type SignedUrlResult =
+  | { url: string; error?: undefined }
+  | { error: string; url?: undefined };
+
 export async function generatePresignedUrl(
   fileName: string,
   contentType: string,
@@ -278,7 +283,7 @@ export async function deleteFile(id: string) {
   }
 }
 
-export async function getViewUrl(id: string) {
+export async function getViewUrl(id: string): Promise<SignedUrlResult> {
   const userId = await getCurrentUserIdOrThrow();
 
   if (isMockDb) {
@@ -320,7 +325,7 @@ export async function getViewUrl(id: string) {
   }
 }
 
-export async function getDownloadUrl(id: string) {
+export async function getDownloadUrl(id: string): Promise<SignedUrlResult> {
   const userId = await getCurrentUserIdOrThrow();
 
   if (isMockDb) {
