@@ -722,8 +722,13 @@ export async function updateApplication(values: FormValues) {
     )
     .limit(1);
 
+  // Every write below, including the history row, must target the caller's
+  // own application; the history table has no user column of its own.
+  if (!currentApp[0]) {
+    throw new Error("Application not found");
+  }
+
   const statusChanged =
-    !currentApp[0] ||
     currentApp[0].status !== fields.status ||
     currentApp[0].statusCategory !== fields.statusCategory;
 
