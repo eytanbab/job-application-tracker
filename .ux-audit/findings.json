@@ -1,21 +1,24 @@
 {
   "schema_version": 1,
   "counters": {
-    "DATA": 3,
-    "COLOR": 5,
-    "A11Y": 9,
-    "TRUST": 5,
-    "STATE": 1,
+    "DATA": 4,
+    "COLOR": 6,
+    "A11Y": 11,
+    "TRUST": 7,
+    "STATE": 2,
     "AFFORD": 3,
     "PERS": 1,
     "HIER": 9,
-    "FLOW": 1,
+    "FLOW": 2,
     "FORM": 3,
     "PLAT": 1,
-    "COPY": 2,
-    "TYPO": 1,
+    "COPY": 3,
+    "TYPO": 2,
     "DSYS": 3,
-    "ONBD": 1
+    "ONBD": 1,
+    "COGN": 1,
+    "PERF": 1,
+    "SRCH": 1
   },
   "findings": [
     {
@@ -1695,6 +1698,396 @@
           "date": "2026-10-14",
           "report": "reports/2026-10-14-applications.md",
           "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "TRUST-06",
+      "category": "TRUST",
+      "rule": "wrong-computed-value",
+      "title": "Salary parser turns bonuses, 401k and hourly/monthly pay into wrong annual figures, all shown as USD",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/insights/actions.ts",
+        "line": 309,
+        "anchor": "getSalaryInsights salary regex"
+      },
+      "severity": "high",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "new",
+          "severity": "high"
+        }
+      ]
+    },
+    {
+      "id": "TRUST-07",
+      "category": "TRUST",
+      "rule": "inconsistent-metric-definition",
+      "title": "Interview and response rates use different definitions in the funnel, platform table and work model",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/insights/actions.ts",
+        "line": 245,
+        "anchor": "getWorkModeAnalysis / ChannelPerformanceMatrix respondedCount"
+      },
+      "severity": "high",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "new",
+          "severity": "high"
+        }
+      ]
+    },
+    {
+      "id": "COPY-03",
+      "category": "COPY",
+      "rule": "misleading-metric-label",
+      "title": "Metric labels describe something other than what is measured",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/kpi-summary-strip.tsx",
+        "line": 136,
+        "anchor": "Avg. Response Time caption; funnel and outcome captions"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "A11Y-10",
+      "category": "A11Y",
+      "rule": "sort-state-not-announced",
+      "title": "Platform table sort headers have no aria-sort; '(early)' label is 2.95:1",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/channel-performance-matrix.tsx",
+        "line": 397,
+        "anchor": "ChannelPerformanceMatrix <TableHead> sort buttons"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "STATE-02",
+      "category": "STATE",
+      "rule": "wrong-empty-state",
+      "title": "A filter with no matches tells a user with data to add their first application, across four empty cards",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/pipeline-health-hero.tsx",
+        "line": 47,
+        "anchor": "PipelineHealthHero total === 0 branch"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "COGN-01",
+      "category": "COGN",
+      "rule": "duplicate-metrics",
+      "title": "Offers appear three times, interview rate and total twice; funnel takes 1.5 screens on desktop and ~3 on mobile",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/pipeline-health-hero.tsx",
+        "line": 194,
+        "anchor": "PipelineHealthHero outcome cards + KpiSummaryStrip"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "medium",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "DATA-04",
+      "category": "DATA",
+      "rule": "chart-rendering-defects",
+      "title": "Activity chart clips Y-axis labels, lists zero rows in the tooltip, drops 'Other' and rounds the wrong segment",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/total-applications-per-year-bar-chart.tsx",
+        "line": 197,
+        "anchor": "TotalApplicationsPerYearBarChart <BarChart>"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "COLOR-06",
+      "category": "COLOR",
+      "rule": "low-non-text-contrast",
+      "title": "Status colours come from three palettes; chart segments are 2.1-2.6:1 and Applied vs Ghosted is 1.85:1",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/total-applications-per-year-bar-chart.tsx",
+        "line": 40,
+        "anchor": "statusCategories hex + getStatusBgColor classes"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "TYPO-02",
+      "category": "TYPO",
+      "rule": "text-too-small",
+      "title": "43 uses of 10-11px text and monospace for prose; KPI and work-model captions truncate on mobile",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/kpi-summary-strip.tsx",
+        "line": 72,
+        "anchor": "KPI captions, funnel captions, work model rows"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "FLOW-02",
+      "category": "FLOW",
+      "rule": "no-drill-down",
+      "title": "Funnel stages, outcome cards and 'In Progress > View' do not open the matching tracker view",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/pipeline-health-hero.tsx",
+        "line": 144,
+        "anchor": "funnelStages cards; KpiSummaryStrip View link"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "PERF-01",
+      "category": "PERF",
+      "rule": "blocking-data-fetch",
+      "title": "Page shell waits on getYears, then 8 more queries each load every matching row",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/overview/page.tsx",
+        "line": 157,
+        "anchor": "Overview getYears await; AnalyticsDashboardContent Promise.all"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "medium",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "SRCH-01",
+      "category": "SRCH",
+      "rule": "filter-model-mismatch",
+      "title": "Only calendar month/year filters: no rolling ranges, and 'October' alone merges every year",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/analytics-filter.tsx",
+        "line": 33,
+        "anchor": "AnalyticsFilter useQueryStates"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "medium",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "A11Y-11",
+      "category": "A11Y",
+      "rule": "heading-level-skip",
+      "title": "Work model, salary and activity sections are h3 under the 'Platforms & Sources' h2",
+      "flows": [
+        "analytics"
+      ],
+      "location": {
+        "file": "app/(pages)/analytics/components/market-reality-matrix.tsx",
+        "line": 46,
+        "anchor": "MarketRealityMatrix <h3>, YearlyTrendsCard CardTitle"
+      },
+      "severity": "low",
+      "confidence": "observed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": null,
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "new",
+          "severity": "low"
         }
       ]
     }
