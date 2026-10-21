@@ -44,6 +44,7 @@ const statusCategories = [
   { key: "Applied", label: "Applied", color: "#64748b" },
   { key: "Rejected", label: "Rejected", color: "#f43f5e" },
   { key: "Ghosted", label: "Ghosted", color: "#94a3b8" },
+  { key: "Other", label: "Other", color: "#a78bfa" },
 ] as const;
 
 const chartConfig: ChartConfig = {
@@ -74,6 +75,10 @@ const chartConfig: ChartConfig = {
   Ghosted: {
     label: "Ghosted",
     color: "#94a3b8",
+  },
+  Other: {
+    label: "Other",
+    color: "#a78bfa",
   },
 };
 
