@@ -1,8 +1,8 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
-test.describe("Analytics Page Overhaul & Usability", () => {
-  // Helper to ensure at least one application exists for funnel testing
-  async function ensureApplicationExists(page: any) {
+test.describe("Analytics page", () => {
+  // Most checks need at least one application in the last 90 days
+  async function ensureApplicationExists(page: Page) {
     await page.goto("/applications?view=table");
     await page.waitForLoadState("domcontentloaded");
 
@@ -22,107 +22,85 @@ test.describe("Analytics Page Overhaul & Usability", () => {
     }
   }
 
-  test("renders clean, human page header without AI-slop or follow-up reminders", async ({ page }) => {
-    await page.goto("/analytics/overview");
-    await page.waitForLoadState("domcontentloaded");
-
-    // 1. Clean title and subtitle
-    const heading = page.locator("h1", { hasText: "Analytics" }).first();
-    await expect(heading).toBeVisible();
-
-    const subtitle = page.locator("text=Track your job search progress, interview rates, and platform performance.").first();
-    await expect(subtitle).toBeVisible();
-
-    // 2. Ensure obsolete buzzword titles and follow-up reminders are completely gone
-    await expect(page.locator("text=Pipeline Health & Conversion Velocity")).not.toBeVisible();
-    await expect(page.locator("text=Strategic Intelligence & Analytics")).not.toBeVisible();
-    await expect(page.locator("text=Action Pulse")).not.toBeVisible();
-    await expect(page.locator("text=Follow-Up Reminders")).not.toBeVisible();
-    await expect(page.locator("text=Screening Yield")).not.toBeVisible();
-    await expect(page.locator("text=Response Velocity")).not.toBeVisible();
-    await expect(page.locator("text=Market Reality Matrix")).not.toBeVisible();
-  });
-
-  test("displays 5 top-level KPI metric cards", async ({ page }) => {
-    await page.goto("/analytics/overview");
-    await page.waitForLoadState("domcontentloaded");
-
-    await expect(page.locator("text=Total Applied").first()).toBeVisible();
-    await expect(page.locator("text=In Progress").first()).toBeVisible();
-    await expect(page.locator("text=Interview Rate").first()).toBeVisible();
-    await expect(page.locator("text=Offers").first()).toBeVisible();
-    await expect(page.locator("text=Days to First Update").first()).toBeVisible();
-  });
-
-  test("renders empty state or corrected 3-stage application funnel with consistent outcome stats", async ({ page }) => {
+  test.beforeAll(async ({ browser }, testInfo) => {
+    // The first visit compiles the add-application form on a cold dev server
+    testInfo.setTimeout(120_000);
+    const page = await browser.newPage();
     await ensureApplicationExists(page);
-
-    await page.goto("/analytics/overview");
-    await page.waitForLoadState("domcontentloaded");
-
-    const funnelHeading = page.locator("h2", { hasText: "Application Funnel" }).first();
-    await expect(funnelHeading).toBeVisible();
-
-    await expect(page.locator("text=1. Applied").first()).toBeVisible();
-    await expect(page.locator("text=2. Interview").first()).toBeVisible();
-    await expect(page.locator("text=3. Offer").first()).toBeVisible();
-
-    // Ensure Under Review and Active Pipeline are NOT present as funnel stages
-    await expect(page.locator("text=2. Under Review")).not.toBeVisible();
-    await expect(page.locator("text=2. Active Pipeline")).not.toBeVisible();
-
-    // Outcomes row with consistent count formatting
-    await expect(page.locator("text=Offers Received").first()).toBeVisible();
-    await expect(page.locator("text=Ghosted").first()).toBeVisible();
-    await expect(page.locator("text=Rejections").first()).toBeVisible();
+    await page.close();
   });
 
-  test("renders unified platform breakdown with sort controls, top 5 default limit, and no sample label", async ({ page }) => {
+  test("shows the header and the three questions the page answers", async ({ page }) => {
     await page.goto("/analytics/overview");
-    await page.waitForLoadState("domcontentloaded");
 
-    // Platforms & Sources section is visible directly on page
-    await expect(page.locator("h2", { hasText: "Platforms & Sources" }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Analytics" })).toBeVisible();
+    await expect(page.getByText("Track your job search progress, interview rates, and platform performance.")).toBeVisible();
+    for (const name of ["How am I doing", "Where is it stuck", "What works", "Activity"]) {
+      await expect(page.getByRole("heading", { level: 2, name })).toBeVisible();
+    }
 
-    // Ensure awkward 'Sample: ... apps' and redundant applications logged badge are gone
-    await expect(page.locator("text=/Sample:/")).not.toBeVisible();
-    await expect(page.locator("text=/applications logged/")).not.toBeVisible();
-
-    // Ensure table column headers have interactive sort buttons
-    await expect(page.locator("th button:has-text('Volume')").first()).toBeVisible();
-    await expect(page.locator("th button:has-text('Interview Rate')").first()).toBeVisible();
-
-    // Ensure artificial "Direct Portals" and "Job Boards" toggle buttons are gone
-    await expect(page.locator("button:has-text('Direct Portals')")).not.toBeVisible();
-    await expect(page.locator("button:has-text('Job Boards')")).not.toBeVisible();
-    await expect(page.locator("text=ATS Domain")).not.toBeVisible();
+    // Retired sections stay gone
+    await expect(page.getByText("Offers Received")).not.toBeVisible();
+    await expect(page.getByText("Market Reality Matrix")).not.toBeVisible();
   });
 
-  test("renders application activity trends with By Status and Total Volume view toggle", async ({ page }) => {
+  test("shows five KPI tiles that open the matching applications", async ({ page }) => {
     await page.goto("/analytics/overview");
-    await page.waitForLoadState("domcontentloaded");
+    const section = page.getByRole("region", { name: "How am I doing" });
+    for (const label of ["Applications", "Response rate", "Interview rate", "Offers", "Days to first reply"]) {
+      await expect(section.getByText(label, { exact: true })).toBeVisible();
+    }
 
-    await expect(page.locator("text=Application Activity").first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "By Status" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Total Volume" })).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    await section.getByRole("link", { name: /Interview rate/ }).click();
+    await expect(page).toHaveURL(/\/applications\?.*stage=interviewed/);
+    await expect(page.getByText("Filtered from Analytics:")).toBeVisible();
   });
 
-  test("renders work model and salary benchmarks without redundant status donut", async ({ page }) => {
+  test("shows the pipeline as four linked stages with exits", async ({ page }) => {
     await page.goto("/analytics/overview");
-    await page.waitForLoadState("domcontentloaded");
+    const section = page.getByRole("region", { name: "Where is it stuck" });
+    const stages = section.getByRole("list").first().getByRole("listitem");
+    await expect(stages).toHaveCount(4);
+    await expect(stages.nth(0)).toContainText("Applied");
+    await expect(stages.nth(2)).toContainText("Reached interview");
+    for (const exit of ["Rejected", "Ghosted", "Still open"]) {
+      await expect(section.getByText(exit, { exact: true })).toBeVisible();
+    }
+    await expect(section.getByRole("heading", { name: "Needs action" })).toBeVisible();
+    await expect(section.getByRole("heading", { name: "Time between steps" })).toBeVisible();
+  });
 
-    // Work Model and Salary sections are visible on the dashboard
-    await expect(page.locator("text=Work Model Breakdown").first()).toBeVisible();
-    await expect(page.locator("text=Salary & Compensation").first()).toBeVisible();
+  test("sorts platforms from the URL and keeps the order on reload", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/analytics/overview");
+    const table = page.getByRole("table");
+    await expect(table.getByRole("columnheader", { name: /Applications/ })).toHaveAttribute("aria-sort", "descending");
 
-    // Redundant status breakdown donut chart is gone
-    await expect(page.locator("h2:has-text('Status Breakdown'), h3:has-text('Status Breakdown')")).not.toBeVisible();
+    await page.waitForLoadState("networkidle");
+    await table.getByRole("button", { name: "Platform" }).click();
+    await expect(page).toHaveURL(/psort=platform/);
+    await page.reload();
+    await expect(page.getByRole("table").getByRole("columnheader", { name: /Platform/ }).first()).toHaveAttribute(
+      "aria-sort",
+      "ascending",
+    );
+  });
+
+  test("shows work model, resume and salary panels", async ({ page }) => {
+    await page.goto("/analytics/overview");
+    const section = page.getByRole("region", { name: "What works" });
+    for (const name of ["Work model", "Resume versions", "Salary"]) {
+      await expect(section.getByRole("heading", { level: 3, name })).toBeVisible();
+    }
   });
 
   test("keeps the chosen period in the URL across reloads", async ({ page }) => {
     await page.goto("/analytics/overview");
     await expect(page.getByRole("radio", { name: "Last 90 days" })).toHaveAttribute("aria-checked", "true");
 
+    // The presets are buttons, so they only respond once hydration finishes.
+    await page.waitForLoadState("networkidle");
     await page.getByRole("radio", { name: "Last 30 days" }).click();
     await expect(page).toHaveURL(/range=30d/);
     await page.reload();
@@ -138,13 +116,12 @@ test.describe("Analytics Page Overhaul & Usability", () => {
   });
 
   test("offers a way out of an empty period", async ({ page }) => {
-    await ensureApplicationExists(page);
     await page.goto("/analytics/overview?range=custom&from=2000-01-01&to=2000-01-31");
     await expect(page.getByRole("heading", { name: "No applications in this period" })).toBeVisible();
     // A click before hydration finishes is dropped by the client router.
     await page.waitForLoadState("networkidle");
     await page.getByRole("link", { name: "Show all time" }).click();
     await expect(page).toHaveURL(/range=all/);
-    await expect(page.locator("text=Total Applied").first()).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "How am I doing" })).toBeVisible();
   });
 });
