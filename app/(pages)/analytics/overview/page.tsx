@@ -25,6 +25,7 @@ import { ResumeOutcomesCard } from "../components/resume-outcomes-card";
 import { SalaryCard } from "../components/salary-card";
 import { TimeInStage } from "../components/time-in-stage";
 import { WorkModelCard } from "../components/work-model-card";
+import { WeeklyActivity } from "../components/weekly-activity";
 import AnalyticsOverviewLoading from "./loading";
 
 const YearlyTrendsCard = dynamicImport(
@@ -100,6 +101,7 @@ async function AnalyticsDashboardContent({ params }: { params: RangeParams }) {
       >
         <KpiRow overview={overview} />
         <p className="text-xs text-muted-foreground">{benchmark}</p>
+        <WeeklyActivity weeks={overview.weeks} goal={overview.preferences.weeklyApplicationGoal} />
       </AnalyticsSection>
 
       <AnalyticsSection

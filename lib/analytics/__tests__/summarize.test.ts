@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { resolveRange } from "../range";
-import { summarizeOverview } from "../summarize";
-import { sampleDataset, TODAY } from "./fixtures";
+import { buildFacts } from "../facts";
+import { bucketWeeks, summarizeOverview } from "../summarize";
+import { app, sampleDataset, TODAY } from "./fixtures";
 
 const september = resolveRange({ range: "custom", from: "2026-09-01", to: "2026-10-21" }, TODAY);
 
@@ -90,5 +91,24 @@ describe("summarizeOverview", () => {
     expect(empty.totals.applications).toBe(0);
     expect(empty.activity).toEqual([]);
     expect(empty.kpis.responseRate.rate.pct).toBe(0);
+  });
+});
+
+describe("bucketWeeks", () => {
+  it("counts the last 12 Monday-start weeks across a year boundary", () => {
+    const facts = buildFacts({
+      apps: [
+        app({ id: "1", dateApplied: "2026-12-28" }), // Monday of the week of 1 Jan 2027
+        app({ id: "2", dateApplied: "2027-01-03" }), // Sunday, same week
+        app({ id: "3", dateApplied: "2026-12-27" }), // Sunday, previous week
+        app({ id: "4", dateApplied: "2026-01-01" }), // too old
+      ],
+      history: [],
+    });
+    const weeks = bucketWeeks(facts, new Date(2027, 0, 1, 12));
+    expect(weeks).toHaveLength(12);
+    expect(weeks.at(-1)).toEqual({ start: "2026-12-28", total: 2 });
+    expect(weeks.at(-2)).toEqual({ start: "2026-12-21", total: 1 });
+    expect(weeks.reduce((s, w) => s + w.total, 0)).toBe(3);
   });
 });

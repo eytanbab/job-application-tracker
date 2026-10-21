@@ -1,4 +1,11 @@
-import { addDays, differenceInCalendarDays, format, parseISO } from "date-fns";
+import {
+  addDays,
+  differenceInCalendarDays,
+  format,
+  parseISO,
+  startOfISOWeek,
+  subWeeks,
+} from "date-fns";
 import { statusOptions, type StatusKind } from "@/lib/utils";
 import { buildFacts } from "./facts";
 import { inRange, type ResolvedRange } from "./range";
@@ -80,6 +87,12 @@ export interface ActivityBucket {
   byKind: KindCounts;
 }
 
+export interface WeekBucket {
+  /** Monday of the week, `YYYY-MM-DD`. */
+  start: string;
+  total: number;
+}
+
 export interface ActionItem {
   id: string;
   role: string;
@@ -114,6 +127,8 @@ export interface AnalyticsOverview {
     interviewStale: ActionGroup;
     ghostingSoon: ActionGroup;
   };
+  /** Applications per week for the last 12 weeks, oldest first, whatever the period. */
+  weeks: WeekBucket[];
   /** Years that have applications, newest first. */
   years: string[];
 }
@@ -244,6 +259,25 @@ function summarizeResumes(facts: readonly AppFacts[]): ResumeSummary[] {
       interviewed: rate(rows.filter((f) => f.reachedInterview).length, rows.length),
     }))
     .sort((a, b) => b.total - a.total);
+}
+
+const WEEKS_SHOWN = 12;
+
+/** Applications per ISO week (Monday start) for the last 12 weeks including this one. */
+export function bucketWeeks(facts: readonly AppFacts[], today: Date): WeekBucket[] {
+  const thisWeek = startOfISOWeek(today);
+  const weeks = Array.from({ length: WEEKS_SHOWN }, (_, i) => ({
+    start: format(subWeeks(thisWeek, WEEKS_SHOWN - 1 - i), "yyyy-MM-dd"),
+    total: 0,
+  }));
+  const index = new Map(weeks.map((w, i) => [w.start, i]));
+  for (const f of facts) {
+    const applied = parseISO(f.app.dateApplied);
+    if (Number.isNaN(applied.getTime())) continue;
+    const i = index.get(format(startOfISOWeek(applied), "yyyy-MM-dd"));
+    if (i !== undefined) weeks[i].total++;
+  }
+  return weeks;
 }
 
 /** Monthly counts between the first and last month with applications. */
@@ -389,6 +423,7 @@ export function summarizeOverview(
     salary: summarizeSalaries(facts, options.preferredCurrency),
     activity: bucketActivity(facts),
     needsAction: needsAction(allFacts, today, options.actionLimit ?? 5),
+    weeks: bucketWeeks(allFacts, today),
     years: [...new Set(allFacts.map((f) => f.app.dateApplied.slice(0, 4)))]
       .filter((y) => /^\d{4}$/.test(y))
       .sort()
