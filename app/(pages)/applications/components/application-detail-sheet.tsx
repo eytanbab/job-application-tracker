@@ -159,6 +159,22 @@ export function ApplicationDetailSheet({
 
   const activeApp = draftApp || currentApp || initialApp;
 
+  // The application on screen, for discarding responses that arrive after
+  // J/K moved on, and the last reset, for telling a refresh of the same row
+  // from opening another one.
+  const shownIdRef = useRef<string | undefined>(undefined);
+  const lastResetRef = useRef<{ id?: string; open: boolean }>({ open: false });
+  const isDirtyRef = useRef(false);
+  useEffect(() => {
+    isDirtyRef.current = isDirty;
+  }, [isDirty]);
+
+  /** Reloads the timeline, ignoring the answer if another application is shown by then. */
+  const refreshHistory = useCallback(async (appId: string) => {
+    const entries = await getApplicationHistory(appId);
+    if (shownIdRef.current === appId) setHistory(entries);
+  }, []);
+
   useEffect(() => {
     if (activeApp?.id) focusReturnIdRef.current = activeApp.id;
   }, [activeApp?.id]);
@@ -184,6 +200,23 @@ export function ApplicationDetailSheet({
   );
 
   useEffect(() => {
+    const isRefresh =
+      open &&
+      lastResetRef.current.open &&
+      !!initialApp?.id &&
+      lastResetRef.current.id === initialApp.id;
+    lastResetRef.current = { id: initialApp?.id, open };
+
+    if (isRefresh) {
+      // New data for the row already on screen (after any revalidation):
+      // take the server's copy, but never overwrite unsaved edits.
+      setCurrentApp(initialApp);
+      if (!isDirtyRef.current) setDraftApp({ ...initialApp });
+      return;
+    }
+
+    shownIdRef.current = initialApp?.id;
+    isDirtyRef.current = false;
     setCurrentApp(initialApp);
     setDraftApp(initialApp ? { ...initialApp } : null);
     setIsDirty(false);
@@ -201,16 +234,18 @@ export function ApplicationDetailSheet({
       if (open && initialApp.id) {
         setIsEditing(false);
         setIsConfirmingDelete(false);
+        const appId = initialApp.id as string;
+        setHistory([]);
         setIsLoadingHistory(true);
-        getApplicationHistory(initialApp.id as string)
+        getApplicationHistory(appId)
           .then((res) => {
-            setHistory(res);
+            if (shownIdRef.current === appId) setHistory(res);
           })
           .catch((err) => {
             console.error("Failed to load history:", err);
           })
           .finally(() => {
-            setIsLoadingHistory(false);
+            if (shownIdRef.current === appId) setIsLoadingHistory(false);
           });
       }
     }
@@ -232,7 +267,7 @@ export function ApplicationDetailSheet({
     const withDetails = (app: ApplicationDetail | null) =>
       app ? { ...app, ...details } : app;
     setCurrentApp(withDetails);
-    setDraftApp(withDetails);
+    if (!isDirtyRef.current) setDraftApp(withDetails);
   }, [details, initialApp]);
 
   /** Keeps the loaded details in step with text that was just saved. */
@@ -273,10 +308,7 @@ export function ApplicationDetailSheet({
           setIsEditingCompany(false);
           setIsEditingLink(false);
           toast({ description: "Application updated successfully!" });
-          if (draftApp.id) {
-            const updatedHistory = await getApplicationHistory(draftApp.id);
-            setHistory(updatedHistory);
-          }
+          if (draftApp.id) await refreshHistory(draftApp.id);
           resolve(true);
         } catch (err) {
           console.error(err);
@@ -288,7 +320,7 @@ export function ApplicationDetailSheet({
         }
       });
     });
-  }, [draftApp, rememberSavedDetails]);
+  }, [draftApp, rememberSavedDetails, refreshHistory]);
 
   // Discard changes
   const handleDiscardChanges = useCallback(() => {
@@ -505,23 +537,19 @@ export function ApplicationDetailSheet({
       return;
     }
 
-    const payload: ApplicationDetail = {
-      ...activeApp,
-      id: activeApp.id,
-      role_name: activeApp.role_name,
-      company_name: activeApp.company_name,
-      date_applied: activeApp.date_applied,
-      link: activeApp.link,
-      platform: activeApp.platform,
-      location: activeApp.location,
-      month: activeApp.month,
-      year: activeApp.year,
-      statusCategory: cat,
-      status: updatedStatus,
+    // Save only the stage, on top of the saved copy: unsaved inline edits
+    // stay a draft.
+    const saved = currentApp ?? activeApp;
+    const previous = { status: saved.status, statusCategory: saved.statusCategory };
+    const previousText = quickStatusText;
+    const payload: ApplicationDetail = { ...saved, statusCategory: cat, status: updatedStatus };
+    const appId = saved.id as string;
+    const applyStatus = (next: { status: string; statusCategory: string }) => {
+      setCurrentApp((prev) => (prev ? { ...prev, ...next } : prev));
+      setDraftApp((prev) => (prev ? { ...prev, ...next } : prev));
     };
 
-    setCurrentApp(payload);
-    setDraftApp(payload);
+    applyStatus({ status: updatedStatus, statusCategory: cat });
     setQuickStatusText(customText);
 
     startSaveTransition(async () => {
@@ -530,13 +558,14 @@ export function ApplicationDetailSheet({
         toast({
           description: `Status updated to ${statusLabels[cat] || cat}`,
         });
-
-        if (activeApp.id) {
-          const updatedHistory = await getApplicationHistory(activeApp.id);
-          setHistory(updatedHistory);
-        }
+        await refreshHistory(appId);
       } catch (err) {
         console.error(err);
+        // Put the stage back, unless the user has already moved on.
+        if (shownIdRef.current === appId) {
+          applyStatus(previous as { status: string; statusCategory: string });
+          setQuickStatusText(previousText);
+        }
         toast({
           description: "Failed to update status",
           variant: "destructive",
@@ -546,17 +575,15 @@ export function ApplicationDetailSheet({
   };
 
   const handleDeleteTimelineEntry = async (entryId: string) => {
+    const appId = shownIdRef.current;
     try {
       const updated = await deleteStatusHistoryEntry(entryId);
+      if (shownIdRef.current !== appId) return;
       setHistory((prev) => prev.filter((h) => h.id !== entryId));
-      if (updated && activeApp) {
-        const nextApp = {
-          ...activeApp,
-          status: updated.status,
-          statusCategory: updated.statusCategory,
-        };
-        setCurrentApp(nextApp);
-        setDraftApp(nextApp);
+      if (updated) {
+        const next = { status: updated.status, statusCategory: updated.statusCategory };
+        setCurrentApp((prev) => (prev ? { ...prev, ...next } : prev));
+        setDraftApp((prev) => (prev ? { ...prev, ...next } : prev));
         const isStandard = isStandardStatus(updated.status);
         setQuickStatusText(isStandard ? "" : updated.status);
       }
@@ -902,12 +929,7 @@ export function ApplicationDetailSheet({
                     toast({
                       description: "Application updated successfully!",
                     });
-                    if (activeApp.id) {
-                      const updatedHistory = await getApplicationHistory(
-                        activeApp.id,
-                      );
-                      setHistory(updatedHistory);
-                    }
+                    if (activeApp.id) await refreshHistory(activeApp.id);
                   } catch (err) {
                     toast({
                       description: "Failed to update application",
