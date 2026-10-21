@@ -18,7 +18,7 @@ import {
   separates,
   type Delta,
 } from "./stats";
-import type { AnalyticsDataset, AppFacts, Rate, WorkMode } from "./types";
+import type { AnalyticsDataset, AppFacts, DateRange, Rate, WorkMode } from "./types";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -80,11 +80,18 @@ export interface ResumeSummary {
   interviewed: Rate;
 }
 
+export type ActivityGranularity = "week" | "month";
+
 export interface ActivityBucket {
-  /** `YYYY-MM`. */
-  month: string;
+  /** First day of the week (Monday) or month, `YYYY-MM-DD`. */
+  start: string;
   total: number;
   byKind: KindCounts;
+}
+
+export interface Activity {
+  granularity: ActivityGranularity;
+  buckets: ActivityBucket[];
 }
 
 export interface WeekBucket {
@@ -121,7 +128,7 @@ export interface AnalyticsOverview {
   workModes: WorkModeSummary[];
   resumes: ResumeSummary[];
   salary: SalarySummary;
-  activity: ActivityBucket[];
+  activity: Activity;
   needsAction: {
     noReply: ActionGroup;
     interviewStale: ActionGroup;
@@ -280,27 +287,43 @@ export function bucketWeeks(facts: readonly AppFacts[], today: Date): WeekBucket
   return weeks;
 }
 
-/** Monthly counts between the first and last month with applications. */
-export function bucketActivity(facts: readonly AppFacts[]): ActivityBucket[] {
-  if (facts.length === 0) return [];
-  const byMonth = new Map<string, ActivityBucket>();
+const periodStart = (date: Date, granularity: ActivityGranularity) =>
+  granularity === "week" ? startOfISOWeek(date) : new Date(date.getFullYear(), date.getMonth(), 1);
+
+const nextPeriod = (date: Date, granularity: ActivityGranularity) =>
+  granularity === "week" ? addDays(date, 7) : new Date(date.getFullYear(), date.getMonth() + 1, 1);
+
+/**
+ * Counts per week or month by current status, covering the whole period
+ * (or the first to last application when the period is open-ended).
+ */
+export function bucketActivity(
+  facts: readonly AppFacts[],
+  granularity: ActivityGranularity,
+  range: DateRange = { from: null, to: null },
+): ActivityBucket[] {
+  const dates = facts.map((f) => f.app.dateApplied).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+  const from = range.from ?? dates[0];
+  const to = range.to ?? dates[dates.length - 1];
+  if (!from || !to) return [];
+
+  const buckets = new Map<string, ActivityBucket>();
+  for (
+    let cursor = periodStart(parseISO(from), granularity);
+    cursor <= parseISO(to);
+    cursor = nextPeriod(cursor, granularity)
+  ) {
+    const start = format(cursor, "yyyy-MM-dd");
+    buckets.set(start, { start, total: 0, byKind: emptyKindCounts() });
+  }
   for (const f of facts) {
-    const month = f.app.dateApplied.slice(0, 7);
-    const bucket = byMonth.get(month) ?? { month, total: 0, byKind: emptyKindCounts() };
+    const key = format(periodStart(parseISO(f.app.dateApplied), granularity), "yyyy-MM-dd");
+    const bucket = buckets.get(key);
+    if (!bucket) continue;
     bucket.total++;
     bucket.byKind[f.kind]++;
-    byMonth.set(month, bucket);
   }
-  const months = [...byMonth.keys()].sort();
-  const result: ActivityBucket[] = [];
-  let cursor = parseISO(`${months[0]}-01`);
-  const last = months[months.length - 1];
-  for (let key = months[0]; key <= last; ) {
-    result.push(byMonth.get(key) ?? { month: key, total: 0, byKind: emptyKindCounts() });
-    cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
-    key = format(cursor, "yyyy-MM");
-  }
-  return result;
+  return [...buckets.values()];
 }
 
 function actionGroup(
@@ -421,7 +444,14 @@ export function summarizeOverview(
     workModes: summarizeWorkModes(facts),
     resumes: summarizeResumes(facts),
     salary: summarizeSalaries(facts, options.preferredCurrency),
-    activity: bucketActivity(facts),
+    activity: {
+      granularity: range.days !== null && range.days <= 90 ? "week" : "month",
+      buckets: bucketActivity(
+        facts,
+        range.days !== null && range.days <= 90 ? "week" : "month",
+        range.current,
+      ),
+    },
     needsAction: needsAction(allFacts, today, options.actionLimit ?? 5),
     weeks: bucketWeeks(allFacts, today),
     years: [...new Set(allFacts.map((f) => f.app.dateApplied.slice(0, 4)))]
