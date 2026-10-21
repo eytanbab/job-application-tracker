@@ -2,7 +2,7 @@
  * Production-ready high performance scraper.
  * Prioritizes fast direct fetch + JSON-LD / Meta extraction, with timed Jina Reader and Playwright fallbacks.
  */
-import { validateSafeUrl } from "./security/url-validator";
+import { safeFetch, validateSafeUrl } from "./security/url-validator";
 
 // Helper to extract JSON-LD JobPosting schema from raw HTML
 function extractJsonLdJob(html: string): string | null {
@@ -148,7 +148,7 @@ export const scraper = async (url: string): Promise<string> => {
     // AbortSignal.timeout also bounds the body read below, not just the headers.
     const signal = AbortSignal.timeout(3500);
 
-    const htmlRes = await fetch(safeTargetUrl, {
+    const htmlRes = await safeFetch(safeTargetUrl, {
       signal,
       headers: {
         "User-Agent":
