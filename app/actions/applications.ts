@@ -111,7 +111,6 @@ function purgeCaches(userId: string) {
     revalidateTag(applicationsTag(userId), "max");
     revalidatePath("/applications");
     revalidatePath("/analytics/overview");
-    revalidatePath("/analytics/insights");
   } catch {
     // Gracefully ignore when invoked outside Next.js request context (e.g. testing scripts)
   }
