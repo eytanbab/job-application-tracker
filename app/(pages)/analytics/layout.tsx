@@ -1,5 +1,4 @@
-import { Suspense } from "react";
-import Tabs from "@/app/_components/tabs";
+import { AnalyticsHeader } from "./components/analytics-header";
 
 export default function PagesLayout({
   children,
@@ -8,13 +7,7 @@ export default function PagesLayout({
 }>) {
   return (
     <div className="flex flex-col w-full h-full gap-4 min-w-0">
-      <Suspense
-        fallback={
-          <div className="h-9 w-48 bg-muted/40 rounded-xl animate-pulse" />
-        }
-      >
-        <Tabs />
-      </Suspense>
+      <AnalyticsHeader />
       {children}
     </div>
   );

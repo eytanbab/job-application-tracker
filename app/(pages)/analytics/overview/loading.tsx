@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AnalyticsOverviewLoading({
-  hideFilter = false,
+  hideFilter = true,
 }: {
   hideFilter?: boolean;
 } = {}) {
