@@ -572,4 +572,15 @@ test.describe("Applications Page E2E Suite", () => {
     // Close dialog
     await page.keyboard.press("Escape");
   });
+
+  test("shows and clears a filter that came from an analytics link", async ({ page }) => {
+    await page.goto("/applications?view=table&stage=interviewed&from=2000-01-01&to=2100-12-31");
+    const chip = page.getByRole("button", { name: /Remove filter: Reached interview/ });
+    await expect(chip).toBeVisible();
+
+    await page.waitForLoadState("networkidle");
+    await chip.click();
+    await expect(page).not.toHaveURL(/stage=/);
+    await expect(page.getByText("Filtered from Analytics:")).not.toBeVisible();
+  });
 });

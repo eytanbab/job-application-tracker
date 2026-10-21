@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
 import { Plus } from "lucide-react";
 import { StatusFilterPills } from "./components/status-filter-pills";
+import { AnalyticsFilterChip } from "./components/analytics-filter-chip";
 import { ApplicationsKanban } from "./components/applications-kanban";
 import { ApplicationDetailSheet } from "./components/application-detail-sheet";
 import { EditApplicationSheet } from "@/app/_components/edit-application-sheet";
@@ -80,6 +81,9 @@ export function DataTable<TData extends ApplicationRow, TValue>({
     setStatusFilter,
     platformFilter,
     setPlatformFilter,
+    analyticsFilter,
+    hasAnalyticsFilter,
+    clearAnalyticsFilter,
     table,
     uniquePlatforms,
     selectedCount,
@@ -151,12 +155,19 @@ export function DataTable<TData extends ApplicationRow, TValue>({
             onOpenCreate={() => setIsCreateOpen(true)}
           />
 
+          {hasAnalyticsFilter && (
+            <AnalyticsFilterChip {...analyticsFilter} onClear={clearAnalyticsFilter} />
+          )}
+
           {viewMode === "kanban" ? (
             <ApplicationsKanban
               columns={kanbanColumns ?? {}}
               searchFilter={globalFilter}
               statusFilter={statusFilter}
               platformFilter={platformFilter}
+              stageFilter={analyticsFilter.stage}
+              fromFilter={analyticsFilter.from}
+              toFilter={analyticsFilter.to}
               isPending={isPending}
               onSelectApplication={(app) => handleSelectRow(app as TData)}
               onEditApplication={(app) => setEditingApp(app as TData)}

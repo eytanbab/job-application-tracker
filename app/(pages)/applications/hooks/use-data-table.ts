@@ -92,6 +92,9 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
       dir,
       size,
       view: viewMode,
+      stage: stageFilter,
+      from: fromFilter,
+      to: toFilter,
     },
     setParams,
   ] = useQueryStates(applicationsSearchParams, {
@@ -114,13 +117,28 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
       ),
     [setParams],
   );
+  // Picking a status replaces any filter that came from an analytics link
   const setStatusFilter = useCallback(
     (value: string | null) =>
       setParams({
         status: value && value !== "all" ? value : null,
+        stage: null,
+        from: null,
+        to: null,
         page: null,
       }),
     [setParams],
+  );
+  const clearAnalyticsFilter = useCallback(
+    () =>
+      setParams({
+        status: statusFilter && isStatusKind(statusFilter) ? statusFilter : null,
+        stage: null,
+        from: null,
+        to: null,
+        page: null,
+      }),
+    [setParams, statusFilter],
   );
   const setPlatformFilter = useCallback(
     (value: string | null) =>
@@ -417,14 +435,34 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     });
   };
 
+  const analyticsFilter = {
+    stage: stageFilter,
+    from: fromFilter,
+    to: toFilter,
+    // Groups and lists ("active", "rejected,ghosted") have no status pill
+    statusGroup: statusFilter && !isStatusKind(statusFilter) ? statusFilter : null,
+  };
+  const hasAnalyticsFilter = Boolean(
+    stageFilter || fromFilter || toFilter || analyticsFilter.statusGroup,
+  );
+
   const hasActiveFilters = Boolean(
     globalFilter ||
     (statusFilter && statusFilter !== "all") ||
-    (platformFilter && platformFilter !== "all"),
+    (platformFilter && platformFilter !== "all") ||
+    hasAnalyticsFilter,
   );
 
   const clearFilters = () => {
-    setParams({ q: null, status: null, platform: null, page: null });
+    setParams({
+      q: null,
+      status: null,
+      platform: null,
+      stage: null,
+      from: null,
+      to: null,
+      page: null,
+    });
   };
 
   const defaultCreateValues = {
@@ -495,6 +533,9 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     setStatusFilter,
     platformFilter,
     setPlatformFilter,
+    analyticsFilter,
+    hasAnalyticsFilter,
+    clearAnalyticsFilter,
     table,
     uniquePlatforms,
     selectedCount,

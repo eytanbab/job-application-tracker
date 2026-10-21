@@ -39,6 +39,10 @@ interface ApplicationsKanbanProps {
   searchFilter: string;
   statusFilter: string;
   platformFilter?: string | null;
+  /** Filters from an analytics link; "Show more" must keep applying them. */
+  stageFilter?: string | null;
+  fromFilter?: string | null;
+  toFilter?: string | null;
   /** True while the server loads a new filter result. */
   isPending?: boolean;
   onSelectApplication: (app: KanbanItem) => void;
@@ -93,6 +97,9 @@ export function ApplicationsKanban({
   searchFilter,
   statusFilter,
   platformFilter,
+  stageFilter,
+  fromFilter,
+  toFilter,
   isPending = false,
   onSelectApplication,
   onEditApplication,
@@ -163,6 +170,9 @@ export function ApplicationsKanban({
         q: searchFilter,
         status: kind,
         platform: platformFilter,
+        stage: stageFilter,
+        from: fromFilter,
+        to: toFilter,
         page: Math.floor(loaded / KANBAN_PAGE_SIZE) + 1,
         size: KANBAN_PAGE_SIZE,
       });
