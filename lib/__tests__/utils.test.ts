@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  didReachInterviewStage,
   formatPlatformLabel,
   getStatusKind,
   isStandardStatus,
@@ -22,6 +23,25 @@ describe("statusOptions", () => {
       "other",
     ]);
     expect(statusLabels.accepted).toBe("Accepted / Offer");
+  });
+});
+
+describe("didReachInterviewStage", () => {
+  it("is true for interview and offer categories", () => {
+    expect(didReachInterviewStage("Anything", "interview")).toBe(true);
+    expect(didReachInterviewStage("Signed", "accepted")).toBe(true);
+  });
+
+  it("recognizes interview wording in free-text statuses", () => {
+    expect(didReachInterviewStage("Phone Screen scheduled", "other")).toBe(true);
+    expect(didReachInterviewStage("Onsite loop", "other")).toBe(true);
+    expect(didReachInterviewStage("Technical assessment", null)).toBe(true);
+  });
+
+  it("is false for other stages", () => {
+    expect(didReachInterviewStage("In Review", "review")).toBe(false);
+    expect(didReachInterviewStage("Rejected", "rejected")).toBe(false);
+    expect(didReachInterviewStage(null, null)).toBe(false);
   });
 });
 
