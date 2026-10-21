@@ -335,3 +335,44 @@ export function mergeWithDefaultOptions(
   return merged;
 }
 
+
+/**
+ * An ASCII-only version of a file name. Characters matched by `invalid`
+ * become "_"; a name left with no letters or digits (e.g. all Hebrew)
+ * becomes "document" with the original extension.
+ */
+export function asciiFileName(
+  fileName: string,
+  invalid: RegExp = /[^\x20-\x7e]|["\\]/g,
+  maxLength = 150,
+): string {
+  const ext = /\.[A-Za-z0-9]{1,8}$/.exec(fileName)?.[0] ?? "";
+  const base = fileName
+    .slice(0, fileName.length - ext.length)
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(invalid, "_")
+    // One "_" for each run of replaced characters, including spaces between them
+    .replace(/_[\s_]*_/g, "_")
+    .trim();
+  const safeBase = /[A-Za-z0-9]/.test(base) ? base : "document";
+  return safeBase.slice(0, Math.max(1, maxLength - ext.length)) + ext;
+}
+
+/**
+ * A Content-Disposition header value that survives any file name. HTTP
+ * headers must be ISO-8859-1, so the name goes in twice (RFC 6266): an ASCII
+ * fallback in `filename` and the UTF-8 original, percent-encoded, in
+ * `filename*`, which browsers prefer.
+ */
+export function contentDisposition(
+  type: "inline" | "attachment",
+  fileName: string,
+): string {
+  const name = fileName.replace(/[\r\n]+/g, " ").trim() || "document.pdf";
+  const encoded = encodeURIComponent(name).replace(
+    /['()*]/g,
+    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
+  );
+  return `${type}; filename="${asciiFileName(name)}"; filename*=UTF-8''${encoded}`;
+}
