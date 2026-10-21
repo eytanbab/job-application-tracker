@@ -6,8 +6,20 @@
   "platform": [
     "web"
   ],
-  "known_pain_points": "Chart legend clarity, responsive layout on mobile, filtering options context, visual hierarchy, navigation between analytics subpages.",
+  "known_pain_points": "Metric definitions differ between sections, salary parsing, duplicated KPIs, chart legibility, filter model limited to calendar month/year.",
   "reference_product": "Huntr, Teal, LinkedIn Insights",
-  "last_flow": "applications",
-  "last_updated": "2026-10-14"
+  "last_flow": "analytics",
+  "last_updated": "2026-10-21",
+  "tech_stack": [
+    "Next.js 16 (App Router, Turbopack)",
+    "React 19",
+    "TypeScript",
+    "Tailwind CSS v4",
+    "shadcn/ui (Radix)",
+    "Recharts 3",
+    "nuqs",
+    "Drizzle ORM",
+    "Neon Postgres",
+    "Clerk"
+  ]
 }
