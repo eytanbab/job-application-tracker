@@ -140,23 +140,25 @@ export function WeeklyActivity({ weeks, goal }: { weeks: WeekBucket[]; goal: num
         <span>This week</span>
       </div>
 
-      <table className="sr-only">
-        <caption>Applications per week{goal ? `, goal ${goal}` : ""}</caption>
-        <thead>
-          <tr>
-            <th scope="col">Week of</th>
-            <th scope="col">Applications</th>
-          </tr>
-        </thead>
-        <tbody>
-          {weeks.map((week) => (
-            <tr key={week.start}>
-              <td>{format(parseISO(week.start), "d MMMM yyyy")}</td>
-              <td>{week.total}</td>
+      <div className="sr-only">
+        <table>
+          <caption>Applications per week{goal ? `, goal ${goal}` : ""}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Week of</th>
+              <th scope="col">Applications</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {weeks.map((week) => (
+              <tr key={week.start}>
+                <td>{format(parseISO(week.start), "d MMMM yyyy")}</td>
+                <td>{week.total}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </Panel>
   );
 }
