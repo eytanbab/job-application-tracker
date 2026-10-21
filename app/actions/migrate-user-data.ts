@@ -4,9 +4,13 @@ import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { revalidateTag } from "next/cache";
 import { db } from "@/app/db";
-import { documents, jobApplications } from "@/app/db/schema";
+import { documents, jobApplications, userPreferences } from "@/app/db/schema";
 import { eq } from "drizzle-orm";
-import { applicationsTag, documentsTag } from "./_utils/cache-tags";
+import {
+  applicationsTag,
+  documentsTag,
+  preferencesTag,
+} from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 import { verifyGuestId } from "@/lib/security/guest-token";
 
@@ -34,7 +38,19 @@ export async function migrateGuestData() {
   const resolvedUserId = await getCurrentUserIdOrThrow();
   if (resolvedUserId !== userId) return;
 
-  // Migrate applications and documents atomically via batch
+  // Keep the account's own preferences if it has any; otherwise adopt the guest's.
+  const [accountPrefs] = await db
+    .select({ userId: userPreferences.userId })
+    .from(userPreferences)
+    .where(eq(userPreferences.userId, resolvedUserId));
+  const movePreferences = accountPrefs
+    ? db.delete(userPreferences).where(eq(userPreferences.userId, guestId))
+    : db
+        .update(userPreferences)
+        .set({ userId: resolvedUserId })
+        .where(eq(userPreferences.userId, guestId));
+
+  // Migrate applications, documents and preferences atomically via batch
   await db.batch([
     db
       .update(jobApplications)
@@ -44,12 +60,15 @@ export async function migrateGuestData() {
       .update(documents)
       .set({ userId: resolvedUserId })
       .where(eq(documents.userId, guestId)),
+    movePreferences,
   ]);
 
   revalidateTag(applicationsTag(guestId), "max");
   revalidateTag(applicationsTag(resolvedUserId), "max");
   revalidateTag(documentsTag(guestId), "max");
   revalidateTag(documentsTag(resolvedUserId), "max");
+  revalidateTag(preferencesTag(guestId), "max");
+  revalidateTag(preferencesTag(resolvedUserId), "max");
 
   // Clear the guest session cookie
   cookieStore.set("guest_id", "", { path: "/", maxAge: 0, httpOnly: true });
