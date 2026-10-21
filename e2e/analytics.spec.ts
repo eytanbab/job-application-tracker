@@ -138,4 +138,18 @@ test.describe("Analytics page", () => {
     await page.goto("/settings");
     await expect(page.getByLabel("Weekly application goal")).toHaveValue("7");
   });
+
+  test("describes the activity chart and offers it as a table", async ({ page }) => {
+    await page.goto("/analytics/overview");
+    const section = page.getByRole("region", { name: "Activity" });
+    await expect(section.getByRole("img", { name: /applications over \d+ weeks/ })).toBeVisible();
+    await expect(section.getByRole("radio", { name: "By status" })).toHaveAttribute("aria-checked", "true");
+
+    await page.waitForLoadState("networkidle");
+    await section.getByRole("radio", { name: "Total" }).click();
+    await expect(page).toHaveURL(/view=total/);
+    await section.getByRole("button", { name: "Show as table" }).click();
+    await expect(section.getByRole("table")).toBeVisible();
+    await expect(section.getByRole("columnheader", { name: "Week of" })).toBeVisible();
+  });
 });

@@ -23,7 +23,7 @@ describe("summarizeOverview", () => {
     const platformInterviews = o.platforms.reduce((sum, p) => sum + p.interviewed.k, 0);
     const workModeTotal = o.workModes.reduce((sum, m) => sum + m.total, 0);
     const workModeInterviews = o.workModes.reduce((sum, m) => sum + m.interviewed.k, 0);
-    const activityTotal = o.activity.reduce((sum, b) => sum + b.total, 0);
+    const activityTotal = o.activity.buckets.reduce((sum, b) => sum + b.total, 0);
 
     expect(platformInterviews).toBe(o.totals.interviewed);
     expect(workModeTotal).toBe(o.totals.applications);
@@ -63,6 +63,23 @@ describe("summarizeOverview", () => {
     expect(o.kpis.applications.delta?.meaningful).toBe(false);
   });
 
+  it("buckets activity by week for short periods, filling empty weeks", () => {
+    const short = summarizeOverview(sampleDataset(), resolveRange({ range: "30d" }, TODAY), TODAY);
+    expect(short.activity.granularity).toBe("week");
+    // 22 Sep - 21 Oct spans five ISO weeks starting Monday 22 Sep
+    expect(short.activity.buckets.map((b) => b.start)).toEqual([
+      "2026-09-21",
+      "2026-09-28",
+      "2026-10-05",
+      "2026-10-12",
+      "2026-10-19",
+    ]);
+    expect(o.activity.granularity).toBe("week");
+    const allTime = summarizeOverview(sampleDataset(), resolveRange({ range: "all" }, TODAY), TODAY);
+    expect(allTime.activity.granularity).toBe("month");
+    expect(allTime.activity.buckets.map((b) => b.start)).toEqual(["2026-08-01", "2026-09-01", "2026-10-01"]);
+  });
+
   it("lists applications that need action", () => {
     expect(o.needsAction.noReply.items.map((i) => i.id)).toEqual(["a7"]);
     expect(o.needsAction.interviewStale.items.map((i) => i.id)).toEqual(["a9"]);
@@ -89,7 +106,7 @@ describe("summarizeOverview", () => {
       TODAY,
     );
     expect(empty.totals.applications).toBe(0);
-    expect(empty.activity).toEqual([]);
+    expect(empty.activity.buckets.every((b) => b.total === 0)).toBe(true);
     expect(empty.kpis.responseRate.rate.pct).toBe(0);
   });
 });
