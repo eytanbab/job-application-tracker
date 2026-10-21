@@ -275,6 +275,9 @@ export const getColor = (status: string, statusCategory?: string | null) => {
   return predefinedColors[getStatusKind(status, statusCategory)];
 };
 
+/** The one colour for a status, shared by badges, bars and charts. */
+export const statusColor = (kind: StatusKind): string => predefinedColors[kind];
+
 /**
  * Extracts the root domain (e.g. "myworkdayjobs.com", "workable.com", "greenhouse.io") from a hostname.
  */
