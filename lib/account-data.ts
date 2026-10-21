@@ -6,9 +6,11 @@ import {
   applicationStatusHistory,
   documents,
   jobApplications,
+  userPreferences,
 } from "@/app/db/schema";
 import { mockStore } from "@/lib/mock-data/mock-store";
 import { s3Client } from "@/lib/s3-client";
+import type { UserPreferences } from "@/lib/preferences";
 
 // Server-only helpers behind data export, account deletion and guest
 // retention. Callers are responsible for resolving which user they act on.
@@ -27,6 +29,7 @@ export interface UserDataExport {
   applications: ApplicationRow[];
   statusHistory: StatusHistoryRow[];
   documents: ExportedDocument[];
+  preferences: UserPreferences | null;
 }
 
 export interface DeletionSummary {
@@ -69,10 +72,11 @@ export async function collectUserData(userId: string): Promise<UserDataExport> {
       })),
       statusHistory: data.statusHistory,
       documents: data.documents.map(toExportedDocument),
+      preferences: data.preferences,
     };
   }
 
-  const [applications, statusHistory, docs] = await Promise.all([
+  const [applications, statusHistory, docs, [preferences]] = await Promise.all([
     db
       .select()
       .from(jobApplications)
@@ -98,12 +102,20 @@ export async function collectUserData(userId: string): Promise<UserDataExport> {
       .from(documents)
       .where(eq(documents.userId, userId))
       .orderBy(documents.created_at),
+    db
+      .select({
+        weeklyApplicationGoal: userPreferences.weeklyApplicationGoal,
+        salaryCurrency: userPreferences.salaryCurrency,
+      })
+      .from(userPreferences)
+      .where(eq(userPreferences.userId, userId)),
   ]);
 
   return {
     applications,
     statusHistory,
     documents: docs.map(toExportedDocument),
+    preferences: preferences ?? null,
   };
 }
 
@@ -169,6 +181,7 @@ async function deleteStoredData(userId: string): Promise<DeletionSummary> {
       .delete(documents)
       .where(eq(documents.userId, userId))
       .returning({ id: documents.id }),
+    db.delete(userPreferences).where(eq(userPreferences.userId, userId)),
   ]);
 
   return {
