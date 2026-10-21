@@ -5,8 +5,7 @@ import {
   MockStatusHistory,
 } from "./mock-applications";
 import { SEED_DOCUMENTS, MockDocument } from "./mock-documents";
-import { addDays, parseISO } from "date-fns";
-import { GHOST_AFTER_DAYS, ghostsAt } from "@/lib/analytics/definitions";
+import { ghostsAt } from "@/lib/analytics/definitions";
 import type { AnalyticsDataset } from "@/lib/analytics/types";
 import type { UserPreferences } from "@/lib/preference-options";
 
@@ -369,13 +368,13 @@ class MockStore {
       app.status = "Ghosted";
       app.statusCategory = "ghosted";
       if (!history.some((h) => h.statusCategory === "ghosted")) {
-        const milestone = addDays(parseISO(app.date_applied), GHOST_AFTER_DAYS);
+        // Dated when it became due, after the last activity (already <= now).
         this.statusHistory.unshift({
           id: `hist-ghost-${app.id}`,
           applicationId: app.id,
           status: "Ghosted",
           statusCategory: "ghosted",
-          createdAt: milestone > now ? now : milestone,
+          createdAt: new Date(due),
         });
       }
       count++;

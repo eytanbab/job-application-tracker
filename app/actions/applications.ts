@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
+import { after } from "next/server";
 
 import { db, isMockDb } from "@/app/db";
 import { mockStore } from "@/lib/mock-data/mock-store";
@@ -28,7 +29,7 @@ import {
   sql,
 } from "drizzle-orm";
 
-import { addDays, format, isBefore, parseISO, subDays } from "date-fns";
+import { format, subDays } from "date-fns";
 import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 import {
@@ -51,6 +52,7 @@ import {
   type StatusCounts,
 } from "@/lib/applications/list-query";
 import {
+  ghostsAt,
   INTERVIEW_KINDS,
   INTERVIEW_TEXT_REGEX,
   RESPONSE_KINDS,
@@ -183,59 +185,62 @@ export async function syncGhostedApplications(userId?: string) {
 
   const qualifyingIds = qualifyingApps.map((a) => a.id);
 
-  // 4. Query existing ghosted history entries to prevent duplicate history records
-  const existingGhostedHistory = await db
-    .select({ applicationId: applicationStatusHistory.applicationId })
+  // 4. Load their history: an existing Ghosted entry is not duplicated, and
+  // the new one is dated after the last activity, like ghostsAt.
+  const qualifyingHistory = await db
+    .select({
+      applicationId: applicationStatusHistory.applicationId,
+      statusCategory: applicationStatusHistory.statusCategory,
+      createdAt: applicationStatusHistory.createdAt,
+    })
     .from(applicationStatusHistory)
+    .where(inArray(applicationStatusHistory.applicationId, qualifyingIds));
+  const historyByApp = new Map<string, { createdAt: number }[]>();
+  const appsWithGhostedHistory = new Set<string>();
+  for (const h of qualifyingHistory) {
+    if (h.statusCategory === "ghosted") appsWithGhostedHistory.add(h.applicationId);
+    const list = historyByApp.get(h.applicationId) ?? [];
+    list.push({ createdAt: new Date(h.createdAt).getTime() });
+    historyByApp.set(h.applicationId, list);
+  }
+
+  // 5. Ghost them, re-checking the category so a status change made since
+  // the select above is not overwritten, then record history for exactly
+  // the rows that changed.
+  const ghosted = await db
+    .update(jobApplications)
+    .set({
+      status: "Ghosted",
+      statusCategory: "ghosted",
+    })
     .where(
       and(
-        inArray(applicationStatusHistory.applicationId, qualifyingIds),
-        eq(applicationStatusHistory.statusCategory, "ghosted"),
+        inArray(jobApplications.id, qualifyingIds),
+        inArray(jobApplications.statusCategory, ["applied", "review"]),
       ),
-    );
-  const appsWithGhostedHistory = new Set(
-    existingGhostedHistory.map((h) => h.applicationId),
-  );
+    )
+    .returning({ id: jobApplications.id });
+  const ghostedIds = new Set(ghosted.map((g) => g.id));
 
-  const now = new Date();
+  const now = Date.now();
   const historyEntries = qualifyingApps
-    .filter((app) => !appsWithGhostedHistory.has(app.id))
+    .filter((app) => ghostedIds.has(app.id) && !appsWithGhostedHistory.has(app.id))
     .map((app) => {
-      const appliedDate = parseISO(app.date_applied);
-      let milestoneDate = !isNaN(appliedDate.getTime())
-        ? addDays(appliedDate, 30)
-        : now;
-
-      if (milestoneDate > now) {
-        milestoneDate = now;
-      }
-
+      const due = ghostsAt(
+        { status: app.status, statusCategory: app.statusCategory, dateApplied: app.date_applied },
+        historyByApp.get(app.id) ?? [],
+      );
       return {
         applicationId: app.id,
         status: "Ghosted",
         statusCategory: "ghosted",
-        createdAt: milestoneDate,
+        createdAt: new Date(Math.min(due ?? now, now)),
       };
     });
 
-  // 5. Update applications and insert history atomically
-  const batchOperations: any[] = [
-    db
-      .update(jobApplications)
-      .set({
-        status: "Ghosted",
-        statusCategory: "ghosted",
-      })
-      .where(inArray(jobApplications.id, qualifyingIds)),
-  ];
-
   if (historyEntries.length > 0) {
-    batchOperations.push(
-      db.insert(applicationStatusHistory).values(historyEntries),
-    );
+    await db.insert(applicationStatusHistory).values(historyEntries);
   }
-
-  await db.batch(batchOperations as any);
 
   // 6. Purge caches for affected users
   if (userId) {
@@ -247,7 +252,7 @@ export async function syncGhostedApplications(userId?: string) {
     }
   }
 
-  return qualifyingApps.length;
+  return ghostedIds.size;
 }
 
 // List rows carry every column except the long-text ones (job description
@@ -643,8 +648,15 @@ export async function createApplication(values: FormValues) {
     }),
   ]);
 
-  // Sync ghosted applications during mutation in the background
-  syncGhostedApplications(userId).catch(console.error);
+  // Sync ghosted applications once the response is sent. after() keeps the
+  // function alive for it on serverless; outside a request (scripts, tests)
+  // there is no response to wait for, so run it directly.
+  const sync = () => syncGhostedApplications(userId).catch(console.error);
+  try {
+    after(sync);
+  } catch {
+    void sync();
+  }
 
   purgeCaches(userId);
   return [{ insertedId: applicationId }];
@@ -968,12 +980,14 @@ export async function getApplicationHistory(applicationId: string) {
   );
 
   if (!hasGhostedEntry && app[0].statusCategory === "ghosted") {
-    const appliedDate = app[0].date_applied
-      ? parseISO(app[0].date_applied)
-      : null;
+    // When the sync would have ghosted it: 30 days after the last activity.
+    const due = ghostsAt(
+      { status: "Applied", statusCategory: "applied", dateApplied: app[0].date_applied },
+      sanitizedHistory.map((h) => ({ createdAt: new Date(h.createdAt).getTime() })),
+    );
     const ghostedDate =
-      appliedDate && !isNaN(appliedDate.getTime())
-        ? addDays(appliedDate, 30)
+      due !== null
+        ? new Date(Math.min(due, Date.now()))
         : app[0].createdAt || new Date();
 
     sanitizedHistory.push({
