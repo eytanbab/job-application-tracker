@@ -47,7 +47,7 @@ export function ActivityChart({ activity }: { activity: Activity }) {
     : "No applications in this period.";
 
   const table = (
-    <table className={cn("w-full text-sm", !showTable && "sr-only")}>
+    <table className="w-full text-sm">
       <caption className={showTable ? "sr-only" : undefined}>Applications per {unit} by status</caption>
       <thead>
         <tr className="border-b border-border/40 text-left text-muted-foreground">
@@ -123,7 +123,7 @@ export function ActivityChart({ activity }: { activity: Activity }) {
               ))}
             </ul>
           )}
-          {table}
+          <div className="sr-only">{table}</div>
         </>
       )}
     </div>
