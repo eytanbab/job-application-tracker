@@ -1,19 +1,29 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { SignInButton, useAuth } from "@clerk/nextjs";
 import { Info, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { GUEST_NOTICE_COOKIE } from "@/lib/guest-notice";
 
 const STORAGE_KEY = "jat:guest-notice-dismissed";
 
-// Dismissal is remembered in localStorage; the in-memory flag covers browsers
-// where storage is unavailable, so the banner still hides for this page view.
+// Dismissal is remembered in a cookie (so the server render already includes
+// or omits the banner and the page doesn't shift) and in localStorage; the
+// in-memory flag covers browsers where both are blocked.
 let dismissedInMemory = false;
 const listeners = new Set<() => void>();
 
+function hasCookie(): boolean {
+  return document.cookie.split("; ").includes(`${GUEST_NOTICE_COOKIE}=1`);
+}
+
+function writeCookie() {
+  document.cookie = `${GUEST_NOTICE_COOKIE}=1; path=/; max-age=31536000; samesite=lax`;
+}
+
 function readDismissed(): boolean {
-  if (dismissedInMemory) return true;
+  if (dismissedInMemory || hasCookie()) return true;
   try {
     return window.localStorage.getItem(STORAGE_KEY) === "1";
   } catch {
@@ -32,6 +42,7 @@ function subscribe(onChange: () => void) {
 
 function dismiss() {
   dismissedInMemory = true;
+  writeCookie();
   try {
     window.localStorage.setItem(STORAGE_KEY, "1");
   } catch {
@@ -40,12 +51,19 @@ function dismiss() {
   listeners.forEach((listener) => listener());
 }
 
-/** Tells guests their data lives in this browser only. Render for guests only. */
-export function GuestNotice() {
+/**
+ * Tells guests their data lives in this browser only. Render for guests only.
+ * `initialDismissed` comes from the cookie, so the server HTML matches.
+ */
+export function GuestNotice({ initialDismissed }: { initialDismissed: boolean }) {
   const { isSignedIn } = useAuth();
-  // Server render assumes dismissed so the banner never flashes before
-  // the stored choice is read.
-  const dismissed = useSyncExternalStore(subscribe, readDismissed, () => true);
+  const dismissed = useSyncExternalStore(subscribe, readDismissed, () => initialDismissed);
+
+  // Dismissed before the cookie existed (localStorage only): add the cookie so
+  // the next server render omits the banner.
+  useEffect(() => {
+    if (dismissed && !hasCookie()) writeCookie();
+  }, [dismissed]);
 
   if (dismissed || isSignedIn) return null;
 
