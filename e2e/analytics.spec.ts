@@ -48,7 +48,7 @@ test.describe("Analytics page", () => {
     await page.goto("/analytics/overview");
     const section = page.getByRole("region", { name: "How am I doing" });
     for (const label of ["Applications", "Response rate", "Interview rate", "Offers", "Days to first reply"]) {
-      await expect(section.getByText(label, { exact: true })).toBeVisible();
+      await expect(section.getByRole("term").getByText(label, { exact: true })).toBeVisible();
     }
 
     await page.waitForLoadState("networkidle");
@@ -74,14 +74,14 @@ test.describe("Analytics page", () => {
   test("sorts platforms from the URL and keeps the order on reload", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/analytics/overview");
-    const table = page.getByRole("table");
+    const table = page.getByRole("region", { name: "What works" }).getByRole("table");
     await expect(table.getByRole("columnheader", { name: /Applications/ })).toHaveAttribute("aria-sort", "descending");
 
     await page.waitForLoadState("networkidle");
     await table.getByRole("button", { name: "Platform" }).click();
     await expect(page).toHaveURL(/psort=platform/);
     await page.reload();
-    await expect(page.getByRole("table").getByRole("columnheader", { name: /Platform/ }).first()).toHaveAttribute(
+    await expect(table.getByRole("columnheader", { name: /Platform/ }).first()).toHaveAttribute(
       "aria-sort",
       "ascending",
     );
@@ -123,5 +123,19 @@ test.describe("Analytics page", () => {
     await page.getByRole("link", { name: "Show all time" }).click();
     await expect(page).toHaveURL(/range=all/);
     await expect(page.getByRole("heading", { level: 2, name: "How am I doing" })).toBeVisible();
+  });
+
+  test("saves a weekly goal and shows progress against it", async ({ page }) => {
+    await page.goto("/analytics/overview");
+    await page.waitForLoadState("networkidle");
+    await page.getByRole("button", { name: /Set a weekly goal|Change goal/ }).click();
+    await page.getByLabel("Applications per week").fill("7");
+    await page.getByRole("button", { name: "Save goal" }).click();
+    await expect(page.getByText(/This week: \d+ of 7 applications/)).toBeVisible();
+
+    await page.reload();
+    await expect(page.getByText(/This week: \d+ of 7 applications/)).toBeVisible();
+    await page.goto("/settings");
+    await expect(page.getByLabel("Weekly application goal")).toHaveValue("7");
   });
 });
