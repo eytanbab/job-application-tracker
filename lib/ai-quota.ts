@@ -3,7 +3,7 @@
  * Server-only counting lives in lib/ai-usage.ts.
  */
 
-export type AiFeature = "extract" | "ats" | "summary";
+export type AiFeature = "extract" | "ats";
 
 /** Error codes the AI endpoints return alongside a failure message. */
 export type AiAccessErrorCode = "auth_required" | "rate_limited";
@@ -11,19 +11,16 @@ export type AiAccessErrorCode = "auth_required" | "rate_limited";
 export const DEFAULT_DAILY_LIMITS: Record<AiFeature, number> = {
   extract: 30,
   ats: 10,
-  summary: 5,
 };
 
 export const DAILY_LIMIT_ENV_VARS: Record<AiFeature, string> = {
   extract: "AI_DAILY_EXTRACT_LIMIT",
   ats: "AI_DAILY_ATS_LIMIT",
-  summary: "AI_DAILY_SUMMARY_LIMIT",
 };
 
 const FEATURE_NOUNS: Record<AiFeature, string> = {
   extract: "AI autofills",
   ats: "ATS scans",
-  summary: "AI summaries",
 };
 
 /**

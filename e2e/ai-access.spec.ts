@@ -61,11 +61,4 @@ test.describe("AI access for guests", () => {
     await expect(page.getByTestId("ats-sign-in-gate")).toBeVisible();
     await expect(page.getByRole("button", { name: /Run ATS Compatibility Scan/ })).toHaveCount(0);
   });
-
-  test("the analytics weekly summary asks guests to sign in", async ({ page }) => {
-    await page.goto("/analytics/overview?range=all");
-
-    await expect(page.getByRole("button", { name: "Sign in to get a summary" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Write my summary" })).toHaveCount(0);
-  });
 });
