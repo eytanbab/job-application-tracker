@@ -1,6 +1,6 @@
 /**
  * Verification Test Suite for Job Application Tracker User Flows
- * Covers: /applications, /analytics/overview, /analytics/insights, /ats-checker, /documents
+ * Covers: /applications, /analytics/overview, /ats-checker, /documents
  */
 
 import {
@@ -14,25 +14,7 @@ import {
   syncGhostedApplications,
 } from "../app/actions/applications";
 
-import {
-  getDetailedApplicationBreakdown,
-  getGhostedApplications,
-  getStatusPerPlatform,
-  getDomainLeaderboard,
-  getApplicationsPerYear,
-  getStasusesPerYear,
-  getYears,
-  getBestPlatformInsight,
-  getFunnelBottleneckInsight,
-} from "../app/actions/analytics";
-
-import {
-  getWorkModeAnalysis,
-  getSalaryInsights,
-  getPlatformRoi,
-  getBlackHoleBreakdown,
-  getRoleTargetingAnalysis,
-} from "../app/(pages)/analytics/insights/actions";
+import { getAnalyticsOverview } from "../lib/analytics/load";
 
 import {
   getSavedResumes,
@@ -64,7 +46,7 @@ async function runAllFlowChecks() {
   // ----------------------------------------------------
   // FLOW 1: APPLICATIONS TRACKER (/applications)
   // ----------------------------------------------------
-  console.log("▶ [Flow 1/5] Auditing Applications Tracker Flow (/applications)...");
+  console.log("▶ [Flow 1/4] Auditing Applications Tracker Flow (/applications)...");
 
   // 1.1 List initial applications
   const initialPage = await getApplicationsPage({ size: 25 });
@@ -138,84 +120,39 @@ async function runAllFlowChecks() {
   // ----------------------------------------------------
   // FLOW 2: ANALYTICS OVERVIEW (/analytics/overview)
   // ----------------------------------------------------
-  console.log("▶ [Flow 2/5] Auditing Analytics Overview Flow (/analytics/overview)...");
+  console.log("▶ [Flow 2/4] Auditing Analytics Overview Flow (/analytics/overview)...");
 
-  // 2.1 Detailed breakdown metrics
-  const breakdown = await getDetailedApplicationBreakdown();
-  assert(breakdown.total >= 18, `Funnel breakdown analyzed ${breakdown.total} applications`);
-  assert(breakdown.stages.applied === breakdown.total, "All applications registered in 'applied' stage");
-  assert(breakdown.stages.interview > 0, `Interview stage reached by ${breakdown.stages.interview} candidates`);
-  assert(breakdown.resumeConversion > 0, `Resume pass rate computed (${breakdown.resumeConversion.toFixed(1)}%)`);
-  assert(breakdown.interviewConversion > 0, `Interview conversion computed (${breakdown.interviewConversion.toFixed(1)}%)`);
-  assert(breakdown.averageResponseDays !== null, `Average recruiter response velocity: ${breakdown.averageResponseDays} days`);
+  // 2.1 One overview for all time; every section must add up to the same totals
+  const overview = await getAnalyticsOverview({ range: "all" });
+  const { totals } = overview;
+  assert(totals.applications >= 18, `Overview counts ${totals.applications} applications`);
+  assert(totals.responded >= totals.interviewed, `Responded (${totals.responded}) >= reached interview (${totals.interviewed})`);
+  assert(totals.interviewed >= totals.offers, `Reached interview (${totals.interviewed}) >= offers (${totals.offers})`);
 
-  // 2.2 Ghosted applications radar
-  const ghostedData = await getGhostedApplications();
-  assert(ghostedData.count > 0, `Ghosted radar identified ${ghostedData.count} ghosted applications`);
-  assert(ghostedData.companies.length > 0, `Identified top ghosting companies: ${ghostedData.companies.join(", ")}`);
-  assert(ghostedData.followUpQueue.length > 0, `Follow-up radar identified ${ghostedData.followUpQueue.length} jobs in 7-14 day window`);
+  // 2.2 Platforms, work models and activity buckets match the totals
+  const platformInterviews = overview.platforms.reduce((sum, p) => sum + p.interviewed.k, 0);
+  assert(platformInterviews === totals.interviewed, `Platform interviews (${platformInterviews}) match the funnel`);
+  const workModeTotal = overview.workModes.reduce((sum, m) => sum + m.total, 0);
+  assert(workModeTotal === totals.applications, `Work model totals (${workModeTotal}) match applications`);
+  const activityTotal = overview.activity.buckets.reduce((sum, b) => sum + b.total, 0);
+  assert(activityTotal === totals.applications, `Activity buckets (${activityTotal}) match applications`);
 
-  // 2.3 Platform performance
-  const platformStats = await getStatusPerPlatform();
-  assert(platformStats.length > 0, `Platform breakdown calculated across ${platformStats.length} platforms`);
-  const topPlatform = platformStats[0];
-  assert(topPlatform.total > 0, `Top platform '${topPlatform.platformName}' has ${topPlatform.total} applications`);
+  // 2.3 Salary, needs action and weekly pace
+  assert(overview.salary.statedCount > 0, `Salary parsed for ${overview.salary.statedCount}/${overview.salary.totalCount} applications (${overview.salary.currency})`);
+  assert(overview.weeks.length === 12, "Weekly pace covers the last 12 weeks");
+  assert(overview.years.length > 0, `Years with applications: ${overview.years.join(", ")}`);
+  const groups = Object.values(overview.needsAction);
+  assert(groups.every((g) => g.items.length <= g.total), `Needs action lists ${groups.reduce((sum, g) => sum + g.total, 0)} applications`);
 
-  // 2.4 Domain leaderboard & time-series
-  const leaderboard = await getDomainLeaderboard();
-  assert(leaderboard.length > 0, `Domain leaderboard generated (${leaderboard.length} domains)`);
-
-  const appsPerYear = await getApplicationsPerYear();
-  assert(appsPerYear.length > 0, `Time series applications per year generated (${appsPerYear.length} year groups)`);
-
-  const statusesPerYear = await getStasusesPerYear();
-  assert(statusesPerYear.length > 0, "Statuses per year timeline generated");
-
-  const years = await getYears();
-  assert(years.length > 0, `Available years: ${years.join(", ")}`);
-
-  // 2.5 Insights heuristics
-  const bestPlatform = await getBestPlatformInsight();
-  assert(bestPlatform.bestPlatform !== null, `Best platform insight: ${bestPlatform.bestPlatform?.name} (${bestPlatform.bestPlatform?.interviewRate.toFixed(1)}% interview yield)`);
-
-  const bottleneck = await getFunnelBottleneckInsight();
-  assert(Boolean(bottleneck.headline), `Funnel bottleneck diagnostic: "${bottleneck.headline}" [${bottleneck.health}]`);
+  // 2.4 A shorter period never counts more than all time
+  const last30 = await getAnalyticsOverview({ range: "30d" });
+  assert(last30.totals.applications <= totals.applications, `Last 30 days: ${last30.totals.applications} applications`);
   console.log("  ✅ Analytics Overview Flow passed!\n");
 
   // ----------------------------------------------------
-  // FLOW 3: ANALYTICS INSIGHTS (/analytics/insights)
+  // FLOW 3: ATS RESUME COMPATIBILITY SCANNER (/ats-checker)
   // ----------------------------------------------------
-  console.log("▶ [Flow 3/5] Auditing Analytics Insights Flow (/analytics/insights)...");
-
-  // 3.1 Work mode analysis
-  const workModes = await getWorkModeAnalysis();
-  assert(workModes.length === 3, "Work mode analysis includes Remote, Hybrid, and On-site");
-  const remote = workModes.find((m) => m.name === "Remote");
-  assert(Boolean(remote && remote.total > 0), `Remote jobs analyzed: ${remote?.total} jobs (${remote?.sharePct.toFixed(1)}% share)`);
-
-  // 3.2 Salary insights
-  const salaryInsights = await getSalaryInsights();
-  assert(salaryInsights.statedCount > 0, `Salary stated in ${salaryInsights.statedCount}/${salaryInsights.totalCount} applications`);
-  assert(salaryInsights.avgSalary !== null && salaryInsights.avgSalary > 100000, `Average market salary computed: $${salaryInsights.avgSalary?.toLocaleString()}`);
-  assert(Boolean(salaryInsights.topRole), `Top paying role identified: ${salaryInsights.topRole} at ${salaryInsights.topCompany} (${salaryInsights.topSalaryFormatted})`);
-
-  // 3.3 Platform ROI
-  const platformRoi = await getPlatformRoi();
-  assert(platformRoi.length > 0, `Platform ROI computed (${platformRoi.length} platforms ranked)`);
-
-  // 3.4 Black hole breakdown
-  const blackHole = await getBlackHoleBreakdown();
-  assert(blackHole.ghosted + blackHole.rejected > 0, `Black hole analyzed: ${blackHole.ghosted} ghosted, ${blackHole.rejected} rejected`);
-
-  // 3.5 Role targeting
-  const roleTargeting = await getRoleTargetingAnalysis();
-  assert(roleTargeting.length > 0, `Role targeting normalized: ${roleTargeting.map((r) => `${r.name} (${r.count})`).join(", ")}`);
-  console.log("  ✅ Analytics Insights Flow passed!\n");
-
-  // ----------------------------------------------------
-  // FLOW 4: ATS RESUME COMPATIBILITY SCANNER (/ats-checker)
-  // ----------------------------------------------------
-  console.log("▶ [Flow 4/5] Auditing ATS Compatibility Scanner Flow (/ats-checker)...");
+  console.log("▶ [Flow 3/4] Auditing ATS Compatibility Scanner Flow (/ats-checker)...");
 
   // 4.1 Saved resumes retrieval
   const savedResumes = await getSavedResumes();
@@ -271,9 +208,9 @@ Experience:
   console.log("  ✅ ATS Compatibility Scanner Flow passed!\n");
 
   // ----------------------------------------------------
-  // FLOW 5: DOCUMENTS MANAGEMENT (/documents)
+  // FLOW 4: DOCUMENTS MANAGEMENT (/documents)
   // ----------------------------------------------------
-  console.log("▶ [Flow 5/5] Auditing Documents Management Flow (/documents)...");
+  console.log("▶ [Flow 4/4] Auditing Documents Management Flow (/documents)...");
 
   // 5.1 List documents
   const initialDocs = await getFiles();
