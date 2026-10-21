@@ -2,11 +2,11 @@
 
 import { clerkClient } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 
 import { deleteUserData } from "@/lib/account-data";
 import { getClerkUserId } from "@/lib/auth/clerk-session";
-import { applicationsTag, documentsTag } from "./_utils/cache-tags";
+import { applicationsTag, documentsTag, expireTag } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 
 // Must match the phrase the settings dialog asks the user to type.
@@ -42,8 +42,8 @@ export async function deleteAccount(
     };
   }
 
-  revalidateTag(applicationsTag(userId), "max");
-  revalidateTag(documentsTag(userId), "max");
+  expireTag(applicationsTag(userId));
+  expireTag(documentsTag(userId));
   revalidatePath("/", "layout");
 
   if (signedIn) {

@@ -1,13 +1,12 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
 import {
   salaryCurrencySchema,
   savePreferences,
   weeklyGoalSchema,
   type UserPreferences,
 } from "@/lib/preferences";
-import { preferencesTag } from "./_utils/cache-tags";
+import { expireTag, preferencesTag } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 
 type Result = { ok: true; preferences: UserPreferences } | { ok: false; error: string };
@@ -16,7 +15,7 @@ async function save(patch: Partial<UserPreferences>): Promise<Result> {
   const userId = await getCurrentUserIdOrThrow();
   const preferences = await savePreferences(userId, patch);
   try {
-    revalidateTag(preferencesTag(userId), "max");
+    expireTag(preferencesTag(userId));
   } catch {
     // Outside a request (tests): nothing to revalidate.
   }

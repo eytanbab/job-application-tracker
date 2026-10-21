@@ -2,7 +2,6 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
-import { revalidateTag } from "next/cache";
 import { db } from "@/app/db";
 import { documents, jobApplications, userPreferences } from "@/app/db/schema";
 import { eq } from "drizzle-orm";
@@ -10,6 +9,7 @@ import {
   applicationsTag,
   documentsTag,
   preferencesTag,
+  expireTag,
 } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 import { verifyGuestId } from "@/lib/security/guest-token";
@@ -63,12 +63,12 @@ export async function migrateGuestData() {
     movePreferences,
   ]);
 
-  revalidateTag(applicationsTag(guestId), "max");
-  revalidateTag(applicationsTag(resolvedUserId), "max");
-  revalidateTag(documentsTag(guestId), "max");
-  revalidateTag(documentsTag(resolvedUserId), "max");
-  revalidateTag(preferencesTag(guestId), "max");
-  revalidateTag(preferencesTag(resolvedUserId), "max");
+  expireTag(applicationsTag(guestId));
+  expireTag(applicationsTag(resolvedUserId));
+  expireTag(documentsTag(guestId));
+  expireTag(documentsTag(resolvedUserId));
+  expireTag(preferencesTag(guestId));
+  expireTag(preferencesTag(resolvedUserId));
 
   // Clear the guest session cookie
   cookieStore.set("guest_id", "", { path: "/", maxAge: 0, httpOnly: true });
