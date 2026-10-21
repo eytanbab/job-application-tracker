@@ -51,7 +51,7 @@ test.describe("Analytics Page Overhaul & Usability", () => {
     await expect(page.locator("text=In Progress").first()).toBeVisible();
     await expect(page.locator("text=Interview Rate").first()).toBeVisible();
     await expect(page.locator("text=Offers").first()).toBeVisible();
-    await expect(page.locator("text=Avg. Response Time").first()).toBeVisible();
+    await expect(page.locator("text=Days to First Update").first()).toBeVisible();
   });
 
   test("renders empty state or corrected 3-stage application funnel with consistent outcome stats", async ({ page }) => {
@@ -73,7 +73,7 @@ test.describe("Analytics Page Overhaul & Usability", () => {
 
     // Outcomes row with consistent count formatting
     await expect(page.locator("text=Offers Received").first()).toBeVisible();
-    await expect(page.locator("text=No Response (30+ Days)").first()).toBeVisible();
+    await expect(page.locator("text=Ghosted").first()).toBeVisible();
     await expect(page.locator("text=Rejections").first()).toBeVisible();
   });
 
