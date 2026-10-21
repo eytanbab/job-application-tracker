@@ -17,6 +17,26 @@ import {
 } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 import { asciiFileName, contentDisposition } from "@/lib/utils";
+import { isGuestOwnerId } from "@/lib/account-data";
+
+/**
+ * True when an S3 key lies in the user's own folder. Keys come from the
+ * client after upload, so every action that stores or signs one checks it.
+ */
+function isOwnFileKey(userId: string, fileKey: string): boolean {
+  return fileKey.startsWith(`${userId}/`) && !fileKey.includes("..");
+}
+
+/**
+ * Keys that may be signed or deleted for a document row the user owns: their
+ * own folder, or a guest folder, because signing in moves a guest's rows to
+ * the new account without moving the S3 objects (migrate-user-data.ts).
+ */
+function isSignableFileKey(userId: string, fileKey: string): boolean {
+  if (isOwnFileKey(userId, fileKey)) return true;
+  const folder = fileKey.split("/")[0];
+  return isGuestOwnerId(folder) && !fileKey.includes("..");
+}
 
 /** A signed document URL, or why one could not be made. */
 export type SignedUrlResult =
@@ -86,6 +106,9 @@ export async function createFile(
   file_size?: string,
 ) {
   const userId = await getCurrentUserIdOrThrow();
+  if (!isOwnFileKey(userId, file_key)) {
+    throw new Error("Invalid file key");
+  }
 
   if (isMockDb) {
     const newDoc = mockStore.createDocument(userId, {
@@ -257,7 +280,7 @@ export async function deleteFile(id: string) {
     const fileKey = deletedDocument[0].file_key;
     if (fileKey && process.env.NEXT_AWS_S3_BUCKET_NAME) {
       try {
-        if (fileKey.startsWith(`${userId}/`)) {
+        if (isSignableFileKey(userId, fileKey)) {
           const deleteParams = {
             Bucket: process.env.NEXT_AWS_S3_BUCKET_NAME,
             Key: fileKey,
@@ -296,7 +319,8 @@ export async function getViewUrl(id: string): Promise<SignedUrlResult> {
       .where(and(eq(documents.userId, userId), eq(documents.id, id)))
       .limit(1);
 
-    if (!document || document.length === 0) {
+    // A row whose key points outside the user's folder is never signed.
+    if (!document || document.length === 0 || !isSignableFileKey(userId, document[0].file_key)) {
       throw new Error("Document not found");
     }
 
@@ -335,7 +359,8 @@ export async function getDownloadUrl(id: string): Promise<SignedUrlResult> {
       .where(and(eq(documents.userId, userId), eq(documents.id, id)))
       .limit(1);
 
-    if (!document || document.length === 0) {
+    // A row whose key points outside the user's folder is never signed.
+    if (!document || document.length === 0 || !isSignableFileKey(userId, document[0].file_key)) {
       throw new Error("Document not found");
     }
 
