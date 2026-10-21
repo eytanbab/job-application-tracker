@@ -63,7 +63,7 @@ export function PeriodPicker() {
       <div
         role="radiogroup"
         aria-label="Period"
-        className="flex items-center gap-1 overflow-x-auto rounded-lg border border-border/40 bg-muted/40 p-0.5 [scrollbar-width:none]"
+        className="flex flex-wrap items-center gap-1 rounded-lg border border-border/40 bg-muted/40 p-0.5"
       >
         {PRESETS.map((preset, index) => {
           const checked = selected === preset;
