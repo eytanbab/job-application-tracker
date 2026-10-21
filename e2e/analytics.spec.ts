@@ -107,6 +107,15 @@ test.describe("Analytics page", () => {
     await expect(page.getByRole("radio", { name: "Last 30 days" })).toHaveAttribute("aria-checked", "true");
   });
 
+  test("exports the selected period as CSV", async ({ page }) => {
+    await page.goto("/analytics/overview?range=30d");
+    const link = page.getByRole("link", { name: /Export CSV of applications, Last 30 days/ });
+    await expect(link).toHaveAttribute("href", "/api/analytics/export?range=30d");
+
+    const [download] = await Promise.all([page.waitForEvent("download"), link.click()]);
+    expect(download.suggestedFilename()).toMatch(/^job-applications-\d{4}-\d{2}-\d{2}-to-\d{4}-\d{2}-\d{2}\.csv$/);
+  });
+
   test("redirects old month/year links to a date range", async ({ page }) => {
     await page.goto("/analytics/overview?month=10&year=2026");
     await expect(page).toHaveURL(/range=custom&from=2026-10-01&to=2026-10-31/);

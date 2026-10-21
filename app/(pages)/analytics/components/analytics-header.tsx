@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { ExportLink } from "./export-link";
 import { PeriodPicker } from "./period-picker";
 
 export function AnalyticsHeader() {
@@ -13,7 +14,10 @@ export function AnalyticsHeader() {
         </p>
       </div>
       <Suspense fallback={<div className="h-9 w-80 max-w-full bg-muted/40 rounded-lg animate-pulse" />}>
-        <PeriodPicker />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 min-w-0">
+          <PeriodPicker />
+          <ExportLink />
+        </div>
       </Suspense>
     </div>
   );
