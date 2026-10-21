@@ -118,4 +118,22 @@ test.describe("Analytics Page Overhaul & Usability", () => {
     // Redundant status breakdown donut chart is gone
     await expect(page.locator("h2:has-text('Status Breakdown'), h3:has-text('Status Breakdown')")).not.toBeVisible();
   });
+
+  test("keeps the chosen period in the URL across reloads", async ({ page }) => {
+    await page.goto("/analytics/overview");
+    await expect(page.getByRole("radio", { name: "Last 90 days" })).toHaveAttribute("aria-checked", "true");
+
+    await page.getByRole("radio", { name: "Last 30 days" }).click();
+    await expect(page).toHaveURL(/range=30d/);
+    await page.reload();
+    await expect(page.getByRole("radio", { name: "Last 30 days" })).toHaveAttribute("aria-checked", "true");
+  });
+
+  test("redirects old month/year links to a date range", async ({ page }) => {
+    await page.goto("/analytics/overview?month=10&year=2026");
+    await expect(page).toHaveURL(/range=custom&from=2026-10-01&to=2026-10-31/);
+
+    await page.goto("/analytics/insights?month=3");
+    await expect(page).toHaveURL(/\/analytics\/overview\?range=all$/);
+  });
 });

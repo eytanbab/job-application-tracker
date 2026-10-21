@@ -1,10 +1,15 @@
 import { Suspense } from "react";
 import dynamicImport from "next/dynamic";
+import { redirect } from "next/navigation";
 import { getAnalyticsOverview } from "@/lib/analytics/load";
+import type { RangeParams } from "@/lib/analytics/range";
+import {
+  legacyRangeRedirect,
+  loadAnalyticsSearchParams,
+} from "@/lib/analytics/search-params";
 import type { AnalyticsOverview } from "@/lib/analytics/summarize";
 import { statusOptions } from "@/lib/utils";
 
-import { AnalyticsFilter } from "../components/analytics-filter";
 import { KpiSummaryStrip } from "../components/kpi-summary-strip";
 import { PipelineHealthHero } from "../components/pipeline-health-hero";
 import { ChannelPerformanceMatrix } from "../components/channel-performance-matrix";
@@ -62,17 +67,8 @@ function activitySeries(activity: AnalyticsOverview["activity"]) {
   return { years, applicationsPerYear, statusesPerYear };
 }
 
-async function AnalyticsDashboardContent({
-  month,
-  year,
-}: {
-  month?: string;
-  year?: string;
-}) {
-  const isAllMonths = !month || month === "all";
-  // Until the period picker lands, the month/year filter maps to a range and
-  // an unfiltered page shows all time, as before.
-  const overview = await getAnalyticsOverview({ month, year }, "all");
+async function AnalyticsDashboardContent({ params }: { params: RangeParams }) {
+  const overview = await getAnalyticsOverview(params);
   const { totals } = overview;
   const series = activitySeries(overview.activity);
 
@@ -123,14 +119,13 @@ async function AnalyticsDashboardContent({
         <MarketRealityMatrix modes={overview.workModes} salary={overview.salary} />
       </section>
 
-      {/* 5. Activity Over Time (Displayed when viewing all months) */}
-      {isAllMonths && (
+      {/* 5. Activity Over Time */}
+      {series.years.length > 0 && (
         <section aria-label="Application Activity Over Time">
           <YearlyTrendsCard
             years={series.years}
             applicationsPerYear={series.applicationsPerYear}
             statusesPerYear={series.statusesPerYear}
-            globalYear={year}
           />
         </section>
       )}
@@ -142,38 +137,19 @@ export default async function Overview(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const searchParams = await props.searchParams;
-  const month =
-    typeof searchParams.month === "string" ? searchParams.month : undefined;
-  const year =
-    typeof searchParams.year === "string" ? searchParams.year : undefined;
+  const legacy = legacyRangeRedirect(searchParams, new Date());
+  if (legacy) redirect(legacy);
+
+  const { range, from, to } = loadAnalyticsSearchParams(searchParams);
 
   return (
-    <div className="flex flex-col gap-5 w-full max-w-7xl mx-auto opacity-100 transition-opacity duration-500 pb-12 min-w-0">
-      {/* 1. Timeframe Filter Toolbar */}
+    <div className="flex flex-col gap-5 w-full max-w-7xl mx-auto pb-12 min-w-0">
       <Suspense
-        fallback={
-          <div className="h-14 w-full bg-card/40 rounded-xl border border-border/30 animate-pulse" />
-        }
-      >
-        <FilterBar />
-      </Suspense>
-
-      {/* 2. Reactive Suspense Data Content with Key */}
-      <Suspense
-        key={`${month || "all"}-${year || "all"}`}
+        key={`${range}-${from ?? ""}-${to ?? ""}`}
         fallback={<AnalyticsOverviewLoading hideFilter />}
       >
-        <AnalyticsDashboardContent month={month} year={year} />
+        <AnalyticsDashboardContent params={{ range, from, to }} />
       </Suspense>
     </div>
   );
-}
-
-/** Streams in with the year list so the page shell is not held back by it. */
-async function FilterBar() {
-  const overview = await getAnalyticsOverview({ range: "all" });
-  const years = overview.years.length
-    ? overview.years
-    : [new Date().getFullYear().toString()];
-  return <AnalyticsFilter years={years} />;
 }
