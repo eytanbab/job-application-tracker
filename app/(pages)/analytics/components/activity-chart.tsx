@@ -79,7 +79,7 @@ export function ActivityChart({ activity }: { activity: Activity }) {
   return (
     <div className="rounded-xl border border-border/40 bg-card shadow-2xs p-4 sm:p-5 flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div role="radiogroup" aria-label="Chart view" className="flex items-center gap-1 rounded-lg border border-border/40 bg-muted/40 p-0.5">
+        <div role="radiogroup" aria-label="Chart view" className="flex items-center gap-1 rounded-lg border border-border/60 bg-card p-0.5">
           {VIEWS.map((v) => (
             <button
               key={v}
@@ -89,7 +89,7 @@ export function ActivityChart({ activity }: { activity: Activity }) {
               onClick={() => setView(v)}
               className={cn(
                 "h-8 px-3 rounded-md text-xs font-medium cursor-pointer",
-                view === v ? "bg-background text-foreground font-semibold shadow-2xs" : "text-muted-foreground hover:text-foreground",
+                view === v ? "bg-muted text-foreground font-semibold shadow-2xs" : "text-muted-foreground hover:text-foreground",
               )}
             >
               {v === "status" ? "By status" : "Total"}

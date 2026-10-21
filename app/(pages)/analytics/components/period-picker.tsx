@@ -63,7 +63,7 @@ export function PeriodPicker() {
       <div
         role="radiogroup"
         aria-label="Period"
-        className="flex flex-wrap items-center gap-1 rounded-lg border border-border/40 bg-muted/40 p-0.5"
+        className="flex flex-wrap items-center gap-1 rounded-lg border border-border/60 bg-card p-0.5"
       >
         {PRESETS.map((preset, index) => {
           const checked = selected === preset;
@@ -83,7 +83,7 @@ export function PeriodPicker() {
               className={cn(
                 "h-8 px-3 rounded-md text-xs font-medium whitespace-nowrap transition-colors cursor-pointer",
                 checked
-                  ? "bg-background text-foreground font-semibold shadow-2xs"
+                  ? "bg-muted text-foreground font-semibold shadow-2xs"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
