@@ -24,6 +24,9 @@ export default function AnalyticsOverviewLoading() {
             <PanelSkeleton key={i} className="h-28" />
           ))}
         </div>
+        {/* Weekly pace, then the weekly summary */}
+        <PanelSkeleton className="h-60" />
+        <PanelSkeleton className="h-24" />
       </div>
       <div className="flex flex-col gap-3">
         <SectionHeading />

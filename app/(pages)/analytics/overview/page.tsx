@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { requireSignedInUser } from "@/app/actions/_utils/require-signed-in-user";
 import { getAnalyticsOverview } from "@/lib/analytics/load";
 import type { RangeParams } from "@/lib/analytics/range";
 import {
@@ -24,9 +25,13 @@ import { SalaryCard } from "../components/salary-card";
 import { TimeInStage } from "../components/time-in-stage";
 import { WorkModelCard } from "../components/work-model-card";
 import { WeeklyActivity } from "../components/weekly-activity";
+import { WeeklySummaryCard } from "../components/weekly-summary-card";
 import AnalyticsOverviewLoading from "./loading";
 
 export const dynamic = "force-dynamic";
+// Bounds the generateWeeklySummary server action, which retries Gemini for up
+// to SUMMARY_GEMINI_DEADLINE_MS (app/actions/analytics-summary.ts).
+export const maxDuration = 30;
 
 export async function generateMetadata() {
   return {
@@ -35,7 +40,7 @@ export async function generateMetadata() {
 }
 
 async function AnalyticsDashboardContent({ params }: { params: RangeParams }) {
-  const overview = await getAnalyticsOverview(params);
+  const [overview, user] = await Promise.all([getAnalyticsOverview(params), requireSignedInUser()]);
   const { totals } = overview;
 
   if (overview.years.length === 0) return <NoApplicationsState />;
@@ -56,6 +61,7 @@ async function AnalyticsDashboardContent({ params }: { params: RangeParams }) {
         <KpiRow overview={overview} />
         <p className="text-xs text-muted-foreground">{benchmark}</p>
         <WeeklyActivity weeks={overview.weeks} goal={overview.preferences.weeklyApplicationGoal} />
+        <WeeklySummaryCard signedIn={user.ok} />
       </AnalyticsSection>
 
       <AnalyticsSection

@@ -161,4 +161,19 @@ test.describe("Analytics page", () => {
     await expect(section.getByRole("table")).toBeVisible();
     await expect(section.getByRole("columnheader", { name: "Week of" })).toBeVisible();
   });
+
+  test("writes a weekly summary on request", async ({ page }) => {
+    // The demo server has no Gemini key, so the summary comes from rules.
+    await page.goto("/analytics/overview");
+    const section = page.getByRole("region", { name: "How am I doing" });
+    await expect(section.getByRole("heading", { name: "Weekly summary" })).toBeVisible();
+    await expect(section.getByText("What changed")).toHaveCount(0);
+
+    await page.waitForLoadState("networkidle");
+    await section.getByRole("button", { name: "Write my summary" }).click();
+    await expect(section.getByText("What changed")).toBeVisible();
+    await expect(section.getByText(/You sent \d+ applications? in the last 7 days/)).toBeVisible();
+    await expect(section.getByText("Next step")).toBeVisible();
+    await expect(section.getByRole("button", { name: "Refresh summary" })).toBeVisible();
+  });
 });
