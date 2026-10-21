@@ -15,6 +15,7 @@ import {
   FilteredEmptyState,
   NoApplicationsState,
 } from "../components/filtered-empty-state";
+import { InsightsCard } from "../components/insights-card";
 import { KpiRow } from "../components/kpi-row";
 import { NeedsAction } from "../components/needs-action";
 import { PipelineFunnel } from "../components/pipeline-funnel";
@@ -54,6 +55,7 @@ async function AnalyticsDashboardContent({ params }: { params: RangeParams }) {
         description={`${overview.range.label}${overview.range.previous ? ", compared with the period before" : ""}. Each number opens the matching applications.`}
       >
         <KpiRow overview={overview} />
+        <InsightsCard insights={overview.insights} />
         <p className="text-xs text-muted-foreground">{benchmark}</p>
         <WeeklyActivity weeks={overview.weeks} goal={overview.preferences.weeklyApplicationGoal} />
       </AnalyticsSection>

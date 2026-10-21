@@ -161,4 +161,18 @@ test.describe("Analytics page", () => {
     await expect(section.getByRole("table")).toBeVisible();
     await expect(section.getByRole("columnheader", { name: "Week of" })).toBeVisible();
   });
+
+  test("shows insights from the data on load", async ({ page }) => {
+    await page.goto("/analytics/overview");
+    const section = page.getByRole("region", { name: "How am I doing" });
+    await expect(section.getByRole("heading", { name: "Insights" })).toBeVisible();
+    await expect(section.getByText(/You sent \d+ applications? in the last 7 days, against \d+ the week before\./)).toBeVisible();
+
+    // A follow-up insight opens the matching applications in the tracker
+    const followUp = section.getByRole("link", { name: /had no update for 7 days or more/ });
+    await expect(followUp).toHaveAttribute("href", "/applications?status=interview");
+    await page.waitForLoadState("networkidle");
+    await followUp.click();
+    await expect(page).toHaveURL(/\/applications\?status=interview/);
+  });
 });
