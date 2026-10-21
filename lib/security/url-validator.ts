@@ -1,3 +1,6 @@
+import { lookup } from "node:dns/promises";
+import { isIP } from "node:net";
+
 /**
  * SSRF and safe URL validation utility.
  * Protects against internal network scanning, AWS IMDS metadata exfiltration,
@@ -44,6 +47,12 @@ function isPrivateIpv4(ip: string): boolean {
 
   // 0.0.0.0
   if (parts[0] === 0) return true;
+
+  // 100.64.0.0 - 100.127.255.255 (Carrier-grade NAT, used for some cloud metadata)
+  if (parts[0] === 100 && parts[1] >= 64 && parts[1] <= 127) return true;
+
+  // 224.0.0.0 and above (multicast, reserved, broadcast)
+  if (parts[0] >= 224) return true;
 
   return false;
 }
@@ -119,4 +128,83 @@ export function validateSafeUrl(rawUrl: string): { safe: boolean; error?: string
   }
 
   return { safe: true, url: parsed };
+}
+
+export class UnsafeUrlError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "UnsafeUrlError";
+  }
+}
+
+/** True for an IPv4 or IPv6 address (as DNS returns it) in a private or reserved range. */
+function isPrivateAddress(address: string): boolean {
+  const family = isIP(address);
+  if (family === 4) return isPrivateIpv4(address);
+  if (family === 6) {
+    // IPv4-mapped in dotted form, e.g. ::ffff:127.0.0.1
+    const dotted = address.match(/(\d+\.\d+\.\d+\.\d+)$/);
+    if (dotted) return isPrivateIpv4(dotted[1]);
+    return isPrivateIpv6(`[${address}]`);
+  }
+  return true;
+}
+
+type Resolve = (hostname: string) => Promise<{ address: string }[]>;
+
+const resolveAll: Resolve = (hostname) => lookup(hostname, { all: true, verbatim: true });
+
+/**
+ * Rejects a host that is, or resolves to, a private address. The hostname
+ * check in validateSafeUrl cannot see names like 127.0.0.1.nip.io.
+ */
+export async function assertPublicHost(url: URL, resolve: Resolve = resolveAll): Promise<void> {
+  const host = url.hostname.replace(/^\[|\]$/g, "");
+  if (isIP(host)) {
+    if (isPrivateAddress(host)) throw new UnsafeUrlError("Access to private IP addresses is blocked");
+    return;
+  }
+  let records: { address: string }[];
+  try {
+    records = await resolve(host);
+  } catch {
+    throw new UnsafeUrlError("The link's host could not be resolved");
+  }
+  if (records.length === 0 || records.some((r) => isPrivateAddress(r.address))) {
+    throw new UnsafeUrlError("Access to private IP addresses is blocked");
+  }
+}
+
+const MAX_REDIRECTS = 5;
+
+/**
+ * fetch for user-supplied URLs. Each hop is validated and its host resolved
+ * before the request, and redirects are followed by hand so a public URL
+ * cannot bounce the server to an internal one. A DNS answer that changes
+ * between the check and the connection is not covered; pinning the address
+ * needs a custom undici dispatcher.
+ */
+export async function safeFetch(
+  rawUrl: string,
+  init: RequestInit = {},
+  { resolve = resolveAll, maxRedirects = MAX_REDIRECTS }: { resolve?: Resolve; maxRedirects?: number } = {},
+): Promise<Response> {
+  let current = rawUrl;
+  for (let hop = 0; hop <= maxRedirects; hop++) {
+    const validation = validateSafeUrl(current);
+    if (!validation.safe || !validation.url) {
+      throw new UnsafeUrlError(validation.error ?? "Unsafe URL");
+    }
+    await assertPublicHost(validation.url, resolve);
+
+    const response = await fetch(validation.url.toString(), { ...init, redirect: "manual" });
+    const location = response.headers.get("location");
+    if (response.status >= 300 && response.status < 400 && location) {
+      await response.body?.cancel();
+      current = new URL(location, validation.url).toString();
+      continue;
+    }
+    return response;
+  }
+  throw new UnsafeUrlError("Too many redirects");
 }

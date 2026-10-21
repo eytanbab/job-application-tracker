@@ -1,3 +1,4 @@
+import { safeFetch } from "@/lib/security/url-validator";
 /**
  * Utility helpers for platform parsers
  */
@@ -54,7 +55,7 @@ export async function fetchWithTimeout(
 ): Promise<Response> {
   // AbortSignal.timeout stays armed after fetch resolves, so the deadline
   // also covers reading the body, not just receiving the headers.
-  return fetch(url, {
+  return safeFetch(url, {
     ...options,
     signal: AbortSignal.timeout(timeoutMs),
     headers: {

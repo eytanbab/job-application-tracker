@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { validateSafeUrl } from "../url-validator";
+import { mockFetch } from "@/test/fetch-mock";
+import { assertPublicHost, safeFetch, UnsafeUrlError, validateSafeUrl } from "../url-validator";
 
 describe("validateSafeUrl", () => {
   it.each([
@@ -66,5 +67,75 @@ describe("validateSafeUrl", () => {
 
   it.each(["", "http://", "https://exa mple.com"])("rejects malformed input %j", (url) => {
     expect(validateSafeUrl(url).safe).toBe(false);
+  });
+});
+
+const resolvesTo = (...addresses: string[]) => async () => addresses.map((address) => ({ address }));
+const redirect = (location: string) => () => new Response(null, { status: 302, headers: { Location: location } });
+
+describe("assertPublicHost", () => {
+  it.each([
+    ["127.0.0.1"],
+    ["10.1.2.3"],
+    ["169.254.169.254"],
+    ["100.100.100.200"],
+    ["::1"],
+    ["::ffff:127.0.0.1"],
+    ["fd00::1"],
+  ])("rejects a name that resolves to %s", async (address) => {
+    await expect(
+      assertPublicHost(new URL("https://127.0.0.1.nip.io/"), resolvesTo(address)),
+    ).rejects.toBeInstanceOf(UnsafeUrlError);
+  });
+
+  it("rejects when any one of several addresses is private", async () => {
+    await expect(
+      assertPublicHost(new URL("https://jobs.example.com/"), resolvesTo("93.184.216.34", "10.0.0.5")),
+    ).rejects.toThrow(/private/);
+  });
+
+  it("accepts public addresses and treats lookup failures as unsafe", async () => {
+    await expect(
+      assertPublicHost(new URL("https://jobs.example.com/"), resolvesTo("93.184.216.34", "2606:4700::1111")),
+    ).resolves.toBeUndefined();
+    await expect(
+      assertPublicHost(new URL("https://nope.example.com/"), async () => {
+        throw new Error("ENOTFOUND");
+      }),
+    ).rejects.toThrow(/could not be resolved/);
+  });
+});
+
+describe("safeFetch", () => {
+  it("follows a redirect to another public page", async () => {
+    mockFetch({
+      "https://jobs.example.com/a": redirect("/b"),
+      "https://jobs.example.com/b": () => new Response("posting"),
+    });
+    const response = await safeFetch("https://jobs.example.com/a");
+    expect(await response.text()).toBe("posting");
+  });
+
+  it("never requests an internal address a redirect points to", async () => {
+    const fetchMock = mockFetch({
+      "https://attacker.example.com/r": redirect("http://169.254.169.254/latest/meta-data/"),
+    });
+    await expect(safeFetch("https://attacker.example.com/r")).rejects.toBeInstanceOf(UnsafeUrlError);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("checks DNS on every hop", async () => {
+    const fetchMock = mockFetch({ "https://jobs.example.com/": redirect("https://internal.example.net/") });
+    const resolve = async (host: string) => [{ address: host === "internal.example.net" ? "10.0.0.8" : "93.184.216.34" }];
+    await expect(safeFetch("https://jobs.example.com/", {}, { resolve })).rejects.toThrow(/private/);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("gives up after too many redirects", async () => {
+    mockFetch({
+      "https://jobs.example.com/1": redirect("/2"),
+      "https://jobs.example.com/2": redirect("/1"),
+    });
+    await expect(safeFetch("https://jobs.example.com/1", {}, { maxRedirects: 3 })).rejects.toThrow(/Too many redirects/);
   });
 });
