@@ -37,16 +37,12 @@ import {
   cn,
   formatPlatformLabel,
 } from "@/lib/utils";
-
-interface PlatformData {
-  platformName: string;
-  statuses: { status: string; value: number }[];
-  total?: number;
-  interviewCount?: number;
-}
+import type { PlatformSummary } from "@/lib/analytics/summarize";
 
 interface ChannelPerformanceMatrixProps {
-  platforms: PlatformData[];
+  platforms: PlatformSummary[];
+  /** Set only when one platform clearly beats the next (see separates()). */
+  topPlatformKey: string | null;
 }
 
 const getStatusBgColor = (kind: StatusKind) => {
@@ -79,55 +75,33 @@ type SortDirection = "asc" | "desc";
 
 export function ChannelPerformanceMatrix({
   platforms,
+  topPlatformKey,
 }: ChannelPerformanceMatrixProps) {
   const [sortField, setSortField] = useState<SortField>("total");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Enrich platform data with calculated stats
   const enrichedPlatforms = useMemo(() => {
-    return platforms.map((item) => {
-      const total =
-        item.total || item.statuses.reduce((acc, s) => acc + s.value, 0);
-      const interviewCount =
-        item.interviewCount ??
-        item.statuses.reduce((acc, s) => {
-          const kind = getStatusKind(s.status);
-          return kind === "interview" || kind === "accepted"
-            ? acc + s.value
-            : acc;
-        }, 0);
-
-      const respondedCount = item.statuses.reduce((acc, s) => {
-        const kind = getStatusKind(s.status);
-        return kind === "interview" || kind === "accepted" || kind === "rejected"
-          ? acc + s.value
-          : acc;
-      }, 0);
-
-      const interviewRate = total > 0 ? (interviewCount / total) * 100 : 0;
-      const responseRate = total > 0 ? (respondedCount / total) * 100 : 0;
-
-      return {
-        ...item,
-        total,
-        interviewCount,
-        respondedCount,
-        interviewRate,
-        responseRate,
-      };
-    });
+    return platforms.map((item) => ({
+      key: item.key,
+      platformName: item.label,
+      statuses: (Object.entries(item.byKind) as [StatusKind, number][])
+        .filter(([, value]) => value > 0)
+        .sort((a, b) => b[1] - a[1])
+        .map(([status, value]) => ({ status, value })),
+      total: item.total,
+      interviewCount: item.interviewed.k,
+      respondedCount: item.responded.k,
+      interviewRate: item.interviewed.pct * 100,
+      responseRate: item.responded.pct * 100,
+      isEarly: !item.interviewed.enough,
+    }));
   }, [platforms]);
 
-  // Top platform selection with minimum sample size guard (N >= 3)
-  const qualifiedPlatforms = enrichedPlatforms.filter(
-    (p) => p.interviewCount > 0 && p.total >= 3,
-  );
   const topPlatform =
-    [...qualifiedPlatforms].sort(
-      (a, b) => b.interviewRate - a.interviewRate || b.total - a.total,
-    )[0] || null;
+    enrichedPlatforms.find((p) => topPlatformKey !== null && p.key === topPlatformKey) ??
+    null;
 
   // Handle column sorting
   const handleSort = (field: SortField) => {
@@ -317,7 +291,7 @@ export function ChannelPerformanceMatrix({
                         {platform.total} apps
                       </span>
                       <Link
-                        href={`/applications?platform=${encodeURIComponent(platform.platformName)}`}
+                        href={platform.key ? `/applications?platform=${encodeURIComponent(platform.key)}` : "/applications"}
                         className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-0.5"
                       >
                         View
@@ -331,7 +305,7 @@ export function ChannelPerformanceMatrix({
                       <span className="text-[10px] text-muted-foreground block">
                         Interview Rate
                       </span>
-                      {platform.total < 3 && platform.interviewCount > 0 ? (
+                      {platform.isEarly ? (
                         <span className="font-mono text-muted-foreground">
                           {platform.interviewCount}/{platform.total}{" "}
                           <span className="text-[10px] opacity-75">(early)</span>
@@ -437,7 +411,7 @@ export function ChannelPerformanceMatrix({
                         {platform.total}
                       </TableCell>
                       <TableCell className="py-3 px-3 text-center">
-                        {platform.total < 3 && platform.interviewCount > 0 ? (
+                        {platform.isEarly ? (
                           <span className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground">
                             {platform.interviewCount}/{platform.total}{" "}
                             <span className="text-[10px] opacity-75">(early)</span>
@@ -494,7 +468,7 @@ export function ChannelPerformanceMatrix({
                       </TableCell>
                       <TableCell className="py-3 px-3 text-right">
                         <Link
-                          href={`/applications?platform=${encodeURIComponent(platform.platformName)}`}
+                          href={platform.key ? `/applications?platform=${encodeURIComponent(platform.key)}` : "/applications"}
                           className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1 cursor-pointer"
                         >
                           View

@@ -1,16 +1,8 @@
 import { Suspense } from "react";
 import dynamicImport from "next/dynamic";
-import {
-  getApplicationsPerYear,
-  getStasusesPerYear,
-  getYears,
-  getDetailedApplicationBreakdown,
-  getStatusPerPlatform,
-} from "@/app/actions/analytics";
-import {
-  getWorkModeAnalysis,
-  getSalaryInsights,
-} from "../insights/actions";
+import { getAnalyticsOverview } from "@/lib/analytics/load";
+import type { AnalyticsOverview } from "@/lib/analytics/summarize";
+import { statusOptions } from "@/lib/utils";
 
 import { AnalyticsFilter } from "../components/analytics-filter";
 import { KpiSummaryStrip } from "../components/kpi-summary-strip";
@@ -39,103 +31,105 @@ export async function generateMetadata() {
   };
 }
 
+/** Reshapes monthly activity into the series the yearly chart expects. */
+function activitySeries(activity: AnalyticsOverview["activity"]) {
+  const monthName = (month: string) =>
+    new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 1, 1).toLocaleString(
+      "en-US",
+      { month: "long" },
+    );
+  const years = [...new Set(activity.map((b) => b.month.slice(0, 4)))].sort().reverse();
+  const applicationsPerYear = years.flatMap((year) =>
+    Array.from({ length: 12 }, (_, i) => {
+      const key = `${year}-${String(i + 1).padStart(2, "0")}`;
+      return {
+        year,
+        month: monthName(key),
+        numOfApplications: activity.find((b) => b.month === key)?.total ?? 0,
+      };
+    }),
+  );
+  const statusesPerYear = activity.flatMap((bucket) =>
+    statusOptions
+      .filter(({ value }) => bucket.byKind[value] > 0)
+      .map(({ value, label }) => ({
+        year: bucket.month.slice(0, 4),
+        month: String(Number(bucket.month.slice(5, 7))),
+        status: label,
+        statusCount: bucket.byKind[value],
+      })),
+  );
+  return { years, applicationsPerYear, statusesPerYear };
+}
+
 async function AnalyticsDashboardContent({
   month,
   year,
-  availableYears,
 }: {
   month?: string;
   year?: string;
-  availableYears: string[];
 }) {
   const isAllMonths = !month || month === "all";
-
-  // Fetch only the analytics datasets needed
-  const [
-    breakdownData,
-    statusPerPlatform,
-    workModes,
-    salaryInsights,
-    applicationsPerYear,
-    statusesPerYear,
-  ] = await Promise.all([
-    getDetailedApplicationBreakdown(month, year),
-    getStatusPerPlatform(month, year),
-    getWorkModeAnalysis(month, year),
-    getSalaryInsights(month, year),
-    isAllMonths ? getApplicationsPerYear(undefined, year) : Promise.resolve([]),
-    isAllMonths ? getStasusesPerYear(undefined, year) : Promise.resolve([]),
-  ]);
-
-  const totalApplications = breakdownData.total;
-
-  const interviewRate = totalApplications
-    ? breakdownData.stages.interview / totalApplications
-    : 0;
-
-  const interviewConversionRate = breakdownData.stages.interview
-    ? breakdownData.stages.accepted / breakdownData.stages.interview
-    : 0;
-
-  const ghostedCount =
-    breakdownData.breakdown.ghostedResume +
-    breakdownData.breakdown.ghostedInterview;
-
-  const rejectedCount =
-    breakdownData.breakdown.rejectedResume +
-    breakdownData.breakdown.rejectedInterview;
+  // Until the period picker lands, the month/year filter maps to a range and
+  // an unfiltered page shows all time, as before.
+  const overview = await getAnalyticsOverview({ month, year }, "all");
+  const { totals } = overview;
+  const series = activitySeries(overview.activity);
 
   return (
     <div className="flex flex-col gap-6 w-full min-w-0">
       {/* 1. Key Metrics Summary Strip */}
       <section aria-label="Key Performance Indicators">
         <KpiSummaryStrip
-          total={totalApplications}
-          activeCount={breakdownData.breakdown.active}
-          activeStages={breakdownData.breakdown.activeStages}
-          interviewCount={breakdownData.stages.interview}
-          offerCount={breakdownData.stages.accepted}
-          interviewRate={interviewRate}
-          interviewConversionRate={interviewConversionRate}
-          averageResponseDays={breakdownData.averageResponseDays}
+          total={totals.applications}
+          activeCount={totals.active}
+          activeStages={totals.activeByKind}
+          interviewCount={totals.interviewed}
+          offerCount={totals.offers}
+          interviewRate={overview.kpis.interviewRate.rate.pct}
+          interviewConversionRate={overview.kpis.offerRate.rate.pct}
+          averageResponseDays={overview.kpis.daysToFirstUpdate.median}
         />
       </section>
 
       {/* 2. Application Funnel & Outcomes */}
       <section aria-label="Application Funnel and Outcomes">
         <PipelineHealthHero
-          total={totalApplications}
-          activeCount={breakdownData.breakdown.active}
-          activeStages={breakdownData.breakdown.activeStages}
-          interviewCount={breakdownData.stages.interview}
-          offerCount={breakdownData.stages.accepted}
-          ghostedCount={ghostedCount}
-          rejectedCount={rejectedCount}
-          rejectedResumeCount={breakdownData.breakdown.rejectedResume}
-          rejectedInterviewCount={breakdownData.breakdown.rejectedInterview}
-          interviewRate={interviewRate}
-          interviewConversionRate={interviewConversionRate}
-          averageResponseDays={breakdownData.averageResponseDays}
+          total={totals.applications}
+          activeCount={totals.active}
+          activeStages={totals.activeByKind}
+          interviewCount={totals.interviewed}
+          offerCount={totals.offers}
+          ghostedCount={totals.ghosted.total}
+          rejectedCount={totals.rejected.total}
+          rejectedResumeCount={totals.rejected.beforeInterview}
+          rejectedInterviewCount={totals.rejected.afterInterview}
+          interviewRate={overview.kpis.interviewRate.rate.pct}
+          interviewConversionRate={overview.kpis.offerRate.rate.pct}
+          averageResponseDays={overview.kpis.daysToFirstUpdate.median}
         />
       </section>
 
       {/* 3. Platform Breakdown */}
       <section aria-label="Platforms and Application Sources">
-        <ChannelPerformanceMatrix platforms={statusPerPlatform} />
+        <ChannelPerformanceMatrix
+          platforms={overview.platforms}
+          topPlatformKey={overview.topPlatformKey}
+        />
       </section>
 
       {/* 4. Work Model & Compensation */}
       <section aria-label="Work Model and Salary Benchmarks">
-        <MarketRealityMatrix modes={workModes} salary={salaryInsights} />
+        <MarketRealityMatrix modes={overview.workModes} salary={overview.salary} />
       </section>
 
       {/* 5. Activity Over Time (Displayed when viewing all months) */}
       {isAllMonths && (
         <section aria-label="Application Activity Over Time">
           <YearlyTrendsCard
-            years={availableYears}
-            applicationsPerYear={applicationsPerYear}
-            statusesPerYear={statusesPerYear}
+            years={series.years}
+            applicationsPerYear={series.applicationsPerYear}
+            statusesPerYear={series.statusesPerYear}
             globalYear={year}
           />
         </section>
@@ -153,10 +147,6 @@ export default async function Overview(props: {
   const year =
     typeof searchParams.year === "string" ? searchParams.year : undefined;
 
-  const currentYear = new Date().getFullYear().toString();
-  const years = await getYears();
-  const availableYears = years.length > 0 ? years : [currentYear];
-
   return (
     <div className="flex flex-col gap-5 w-full max-w-7xl mx-auto opacity-100 transition-opacity duration-500 pb-12 min-w-0">
       {/* 1. Timeframe Filter Toolbar */}
@@ -165,7 +155,7 @@ export default async function Overview(props: {
           <div className="h-14 w-full bg-card/40 rounded-xl border border-border/30 animate-pulse" />
         }
       >
-        <AnalyticsFilter years={availableYears} />
+        <FilterBar />
       </Suspense>
 
       {/* 2. Reactive Suspense Data Content with Key */}
@@ -173,12 +163,17 @@ export default async function Overview(props: {
         key={`${month || "all"}-${year || "all"}`}
         fallback={<AnalyticsOverviewLoading hideFilter />}
       >
-        <AnalyticsDashboardContent
-          month={month}
-          year={year}
-          availableYears={availableYears}
-        />
+        <AnalyticsDashboardContent month={month} year={year} />
       </Suspense>
     </div>
   );
+}
+
+/** Streams in with the year list so the page shell is not held back by it. */
+async function FilterBar() {
+  const overview = await getAnalyticsOverview({ range: "all" });
+  const years = overview.years.length
+    ? overview.years
+    : [new Date().getFullYear().toString()];
+  return <AnalyticsFilter years={years} />;
 }
