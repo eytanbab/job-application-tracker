@@ -1,0 +1,678 @@
+{
+  "width": 1440,
+  "ok": true,
+  "screenshots": {
+    "fold": ".ux-audit/screenshots/2026-10-21-analytics/1440w-fold.png",
+    "full": ".ux-audit/screenshots/2026-10-21-analytics/1440w.png"
+  },
+  "structure": {
+    "title": "JobTracker | Analytics",
+    "lang": "en",
+    "headings": [
+      {
+        "level": 1,
+        "text": "Analytics"
+      },
+      {
+        "level": 2,
+        "text": "Application Funnel"
+      },
+      {
+        "level": 2,
+        "text": "Platforms & Sources"
+      },
+      {
+        "level": 3,
+        "text": "Work Model Breakdown"
+      },
+      {
+        "level": 3,
+        "text": "Salary & Compensation"
+      },
+      {
+        "level": 3,
+        "text": "Application Activity"
+      }
+    ],
+    "landmarks": [
+      "aside",
+      "nav",
+      "header",
+      "main"
+    ],
+    "horizontal_overflow": false
+  },
+  "axe": {
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "wcag": [
+          "wcag2aa",
+          "wcag143"
+        ],
+        "best_practice_only": false,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=axeAPI",
+        "node_count": 2,
+        "nodes": [
+          {
+            "target": ".hover\\:bg-muted\\/30:nth-child(4) > .text-center:nth-child(3) > .gap-1.inline-flex.font-mono > .opacity-75.text-\\[10px\\]",
+            "html": "<span class=\"text-[10px] opacity-75\">(early)</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.95 (foreground color: #8c93a1, background color: #f9fafb, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".hover\\:bg-muted\\/30:nth-child(5) > .text-center:nth-child(3) > .gap-1.inline-flex.font-mono > .opacity-75.text-\\[10px\\]",
+            "html": "<span class=\"text-[10px] opacity-75\">(early)</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.95 (foreground color: #8c93a1, background color: #f9fafb, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "needs_review": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "wcag": [
+          "wcag2aa",
+          "wcag143"
+        ],
+        "best_practice_only": false,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=axeAPI",
+        "node_count": 19,
+        "nodes": [
+          {
+            "target": ".relative.bg-background\\/50.gap-3:nth-child(2) > div:nth-child(2) > .mt-1\\.5.gap-1\\.5.flex > .px-2.bg-primary\\/10.py-0\\.5 > span",
+            "html": "<span>↳</span>",
+            "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+          },
+          {
+            "target": ".relative.bg-background\\/50.gap-3:nth-child(3) > div:nth-child(2) > .mt-1\\.5.gap-1\\.5.flex > .px-2.bg-primary\\/10.py-0\\.5 > span",
+            "html": "<span>↳</span>",
+            "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+          },
+          {
+            "target": "tspan[x=\"59.625\"][dy=\"0.71em\"]",
+            "html": "<tspan x=\"59.625\" dy=\"0.71em\">Jan</tspan>",
+            "summary": "Fix any of the following:\n  Element's background color could not be determined because element contains an image node"
+          },
+          {
+            "target": "tspan[x=\"148.875\"][dy=\"0.71em\"]",
+            "html": "<tspan x=\"148.875\" dy=\"0.71em\">Feb</tspan>",
+            "summary": "Fix any of the following:\n  Element's background color could not be determined because element contains an image node"
+          },
+          {
+            "target": "tspan[x=\"238.125\"][dy=\"0.71em\"]",
+            "html": "<tspan x=\"238.125\" dy=\"0.71em\">Mar</tspan>",
+            "summary": "Fix any of the following:\n  Element's background color could not be determined because element contains an image node"
+          }
+        ]
+      }
+    ]
+  },
+  "keyboard": {
+    "stops_recorded": 34,
+    "no_visible_focus_change": 3,
+    "obscured_focus": 2,
+    "unnamed_stops": 3,
+    "note": "visible_focus_change=false compares computed outline, box-shadow, border, background, color, and text-decoration. Indicators drawn with pseudo-elements or on a parent are not detected, so confirm with --focus-shots or a screenshot before filing.",
+    "stops": [
+      {
+        "idx": 0,
+        "tag": "a",
+        "role": null,
+        "name": "JobTracker Career Pipeline",
+        "selector": "div.flex.min-h-screen:nth-of-type(3) > aside.sticky.top-0 > div.space-y-6:nth-of-type(1) > a.flex.items-center",
+        "rect": {
+          "x": 16,
+          "y": 16,
+          "w": 223,
+          "h": 49
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 1,
+        "tag": "a",
+        "role": null,
+        "name": "Applications",
+        "selector": "aside.sticky.top-0 > div.space-y-6:nth-of-type(1) > div.space-y-1 > a.flex.items-center:nth-of-type(1)",
+        "rect": {
+          "x": 16,
+          "y": 113,
+          "w": 223,
+          "h": 40
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 2,
+        "tag": "a",
+        "role": null,
+        "name": "Analytics",
+        "selector": "aside.sticky.top-0 > div.space-y-6:nth-of-type(1) > div.space-y-1 > a.flex.items-center:nth-of-type(2)",
+        "rect": {
+          "x": 16,
+          "y": 157,
+          "w": 223,
+          "h": 40
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 3,
+        "tag": "a",
+        "role": null,
+        "name": "ATS Checker",
+        "selector": "aside.sticky.top-0 > div.space-y-6:nth-of-type(1) > div.space-y-1 > a.flex.items-center:nth-of-type(3)",
+        "rect": {
+          "x": 16,
+          "y": 201,
+          "w": 223,
+          "h": 40
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 4,
+        "tag": "a",
+        "role": null,
+        "name": "Documents",
+        "selector": "aside.sticky.top-0 > div.space-y-6:nth-of-type(1) > div.space-y-1 > a.flex.items-center:nth-of-type(4)",
+        "rect": {
+          "x": 16,
+          "y": 245,
+          "w": 223,
+          "h": 40
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 5,
+        "tag": "a",
+        "role": null,
+        "name": "Settings",
+        "selector": "aside.sticky.top-0 > div.space-y-3:nth-of-type(2) > div.space-y-1 > a.flex.items-center",
+        "rect": {
+          "x": 16,
+          "y": 816,
+          "w": 223,
+          "h": 40
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 6,
+        "tag": "a",
+        "role": null,
+        "name": "Privacy",
+        "selector": "aside.sticky.top-0 > div.space-y-3:nth-of-type(2) > nav.hidden.items-center > a.underline-offset-4.transition-colors:nth-of-type(1)",
+        "rect": {
+          "x": 28,
+          "y": 868,
+          "w": 42,
+          "h": 16
+        },
+        "obscured_by": "html.light > body.min-h-screen.antialiased > script:nth-of-type(15) > nextjs-portal",
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 7,
+        "tag": "a",
+        "role": null,
+        "name": "Terms",
+        "selector": "aside.sticky.top-0 > div.space-y-3:nth-of-type(2) > nav.hidden.items-center > a.underline-offset-4.transition-colors:nth-of-type(2)",
+        "rect": {
+          "x": 82,
+          "y": 868,
+          "w": 35,
+          "h": 16
+        },
+        "obscured_by": "html.light > body.min-h-screen.antialiased > script:nth-of-type(15) > nextjs-portal",
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 8,
+        "tag": "a",
+        "role": null,
+        "name": "Analytics",
+        "selector": "header.sticky.top-0 > div.flex.items-center:nth-of-type(1) > div.hidden.items-center > a.text-muted-foreground.font-medium",
+        "rect": {
+          "x": 280,
+          "y": 18,
+          "w": 62,
+          "h": 20
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 9,
+        "tag": "button",
+        "role": null,
+        "name": "Toggle theme",
+        "selector": "button#radix-_R_plblb_",
+        "rect": {
+          "x": 1384,
+          "y": 12,
+          "w": 32,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": false
+      },
+      {
+        "idx": 10,
+        "tag": "button",
+        "role": null,
+        "name": "Sign in",
+        "selector": "main.p-3.w-full > div.mb-4.flex:nth-of-type(1) > div.flex.flex-1 > button.inline-flex.items-center",
+        "rect": {
+          "x": 1296,
+          "y": 93,
+          "w": 63,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": false
+      },
+      {
+        "idx": 11,
+        "tag": "button",
+        "role": null,
+        "name": "Dismiss notice",
+        "selector": "div.flex-1.min-w-0 > main.p-3.w-full > div.mb-4.flex:nth-of-type(1) > button.inline-flex.items-center",
+        "rect": {
+          "x": 1371,
+          "y": 93,
+          "w": 32,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 12,
+        "tag": "button",
+        "role": "combobox",
+        "name": "Filter by month",
+        "selector": "div.flex.flex-col:nth-of-type(2) > div.grid.grid-cols-2 > div.flex.flex-col:nth-of-type(1) > button.flex.items-center",
+        "rect": {
+          "x": 1101,
+          "y": 242,
+          "w": 140,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 13,
+        "tag": "button",
+        "role": "combobox",
+        "name": "Filter by year",
+        "selector": "div.flex.flex-col:nth-of-type(2) > div.grid.grid-cols-2 > div.flex.flex-col:nth-of-type(2) > button.flex.items-center",
+        "rect": {
+          "x": 1289,
+          "y": 242,
+          "w": 110,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 14,
+        "tag": "a",
+        "role": null,
+        "name": "View",
+        "selector": "div.grid.grid-cols-2 > div.p-3.5.rounded-xl:nth-of-type(2) > div.flex.items-center:nth-of-type(1) > a.text-[11px].font-medium",
+        "rect": {
+          "x": 670,
+          "y": 336,
+          "w": 40,
+          "h": 17
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 15,
+        "tag": "a",
+        "role": null,
+        "name": "View in tracker",
+        "selector": "section:nth-of-type(2) > div.w-full.min-w-0 > div.flex.flex-col:nth-of-type(1) > a.text-xs.font-medium",
+        "rect": {
+          "x": 1291,
+          "y": 492,
+          "w": 104,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 16,
+        "tag": "input",
+        "role": null,
+        "name": "Search platforms",
+        "selector": "div.flex.flex-col:nth-of-type(1) > div.flex.items-center:nth-of-type(2) > div.relative.w-44:nth-of-type(1) > input.flex.w-full",
+        "rect": {
+          "x": 1078,
+          "y": 434,
+          "w": 208,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 17,
+        "tag": "button",
+        "role": null,
+        "name": "Channel",
+        "selector": "thead.bg-muted/30 > tr.transition-colors.border-b > th.h-12.align-middle:nth-of-type(1) > button.whitespace-nowrap.ring-offset-background",
+        "rect": {
+          "x": 308,
+          "y": 561,
+          "w": 80,
+          "h": 28
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 18,
+        "tag": "button",
+        "role": null,
+        "name": "Volume",
+        "selector": "thead.bg-muted/30 > tr.transition-colors.border-b > th.h-12.align-middle:nth-of-type(2) > button.whitespace-nowrap.ring-offset-background",
+        "rect": {
+          "x": 570,
+          "y": 561,
+          "w": 76,
+          "h": 28
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 19,
+        "tag": "button",
+        "role": null,
+        "name": "Interview Rate",
+        "selector": "thead.bg-muted/30 > tr.transition-colors.border-b > th.h-12.align-middle:nth-of-type(3) > button.whitespace-nowrap.ring-offset-background",
+        "rect": {
+          "x": 714,
+          "y": 561,
+          "w": 115,
+          "h": 28
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 20,
+        "tag": "button",
+        "role": null,
+        "name": "Response Rate",
+        "selector": "thead.bg-muted/30 > tr.transition-colors.border-b > th.h-12.align-middle:nth-of-type(4) > button.whitespace-nowrap.ring-offset-background",
+        "rect": {
+          "x": 893,
+          "y": 561,
+          "w": 118,
+          "h": 28
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 21,
+        "tag": "a",
+        "role": null,
+        "name": "View",
+        "selector": "tbody.divide-y.divide-border/20 > tr.border-b.border-border/30:nth-of-type(1) > td.p-4.align-middle:nth-of-type(6) > a.text-xs.text-primary",
+        "rect": {
+          "x": 1338,
+          "y": 623,
+          "w": 44,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 22,
+        "tag": "a",
+        "role": null,
+        "name": "View",
+        "selector": "tbody.divide-y.divide-border/20 > tr.border-b.border-border/30:nth-of-type(2) > td.p-4.align-middle:nth-of-type(6) > a.text-xs.text-primary",
+        "rect": {
+          "x": 1338,
+          "y": 687,
+          "w": 44,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 23,
+        "tag": "a",
+        "role": null,
+        "name": "View",
+        "selector": "tbody.divide-y.divide-border/20 > tr.border-b.border-border/30:nth-of-type(3) > td.p-4.align-middle:nth-of-type(6) > a.text-xs.text-primary",
+        "rect": {
+          "x": 1338,
+          "y": 743,
+          "w": 44,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 24,
+        "tag": "a",
+        "role": null,
+        "name": "View",
+        "selector": "tbody.divide-y.divide-border/20 > tr.border-b.border-border/30:nth-of-type(4) > td.p-4.align-middle:nth-of-type(6) > a.text-xs.text-primary",
+        "rect": {
+          "x": 1338,
+          "y": 791,
+          "w": 44,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 25,
+        "tag": "a",
+        "role": null,
+        "name": "View",
+        "selector": "tbody.divide-y.divide-border/20 > tr.border-b.border-border/30:nth-of-type(5) > td.p-4.align-middle:nth-of-type(6) > a.text-xs.text-primary",
+        "rect": {
+          "x": 1338,
+          "y": 840,
+          "w": 44,
+          "h": 16
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 26,
+        "tag": "button",
+        "role": null,
+        "name": "Show All 6 Platforms (1 More)",
+        "selector": "div.w-full.rounded-xl > div.space-y-3:nth-of-type(2) > div.flex.justify-center:nth-of-type(5) > button.inline-flex.items-center",
+        "rect": {
+          "x": 739,
+          "y": 868,
+          "w": 218,
+          "h": 32
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 27,
+        "tag": "a",
+        "role": null,
+        "name": "View Netflix applications in tracker",
+        "selector": "div.space-y-3:nth-of-type(2) > div.p-3.rounded-lg:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > a.inline-flex.items-center",
+        "rect": {
+          "x": 1354,
+          "y": 436,
+          "w": 28,
+          "h": 28
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 28,
+        "tag": "button",
+        "role": null,
+        "name": "By Status",
+        "selector": "div.w-full.min-w-0 > div.flex.flex-col:nth-of-type(1) > div.flex.items-center > button.px-2.5.py-1:nth-of-type(1)",
+        "rect": {
+          "x": 304,
+          "y": 630,
+          "w": 75,
+          "h": 24
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 29,
+        "tag": "button",
+        "role": null,
+        "name": "Total Volume",
+        "selector": "div.w-full.min-w-0 > div.flex.flex-col:nth-of-type(1) > div.flex.items-center > button.px-2.5.py-1:nth-of-type(2)",
+        "rect": {
+          "x": 383,
+          "y": 630,
+          "w": 94,
+          "h": 24
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 30,
+        "tag": "svg",
+        "role": "application",
+        "name": "JanFebMarAprMayJunJulAugSepOctNovDec036912",
+        "selector": "div.recharts-responsive-container > div > div.recharts-wrapper > svg.recharts-surface",
+        "rect": {
+          "x": 301,
+          "y": 660,
+          "w": 1094,
+          "h": 240
+        },
+        "obscured_by": null,
+        "offscreen": false,
+        "visible_focus_change": true
+      },
+      {
+        "idx": 31,
+        "tag": "nextjs-portal",
+        "role": null,
+        "name": "",
+        "selector": "html.light > body.min-h-screen.antialiased > script:nth-of-type(15) > nextjs-portal",
+        "rect": {
+          "x": 0,
+          "y": 1026,
+          "w": 0,
+          "h": 0
+        },
+        "obscured_by": null,
+        "offscreen": true,
+        "visible_focus_change": false
+      },
+      {
+        "idx": 32,
+        "tag": "nextjs-portal",
+        "role": null,
+        "name": "",
+        "selector": "html.light > body.min-h-screen.antialiased > script:nth-of-type(15) > nextjs-portal",
+        "rect": {
+          "x": 0,
+          "y": 1026,
+          "w": 0,
+          "h": 0
+        },
+        "obscured_by": null,
+        "offscreen": true,
+        "visible_focus_change": null
+      },
+      {
+        "idx": 33,
+        "tag": "nextjs-portal",
+        "role": null,
+        "name": "",
+        "selector": "html.light > body.min-h-screen.antialiased > script:nth-of-type(15) > nextjs-portal",
+        "rect": {
+          "x": 0,
+          "y": 1026,
+          "w": 0,
+          "h": 0
+        },
+        "obscured_by": null,
+        "offscreen": true,
+        "visible_focus_change": null
+      },
+      {
+        "idx": 34,
+        "note": "Focus on <body> (left the page content or reached the end)"
+      }
+    ]
+  },
+  "console_errors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 400 ()",
+    "Error: ClerkJS: Something went wrong initializing Clerk in development mode. We were unable to attribute this request to an instance running on Clerk. Make sure that your Clerk Publishable Key is correct.\n    at t5 (https://mock.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:44:24243",
+    "Failed to load resource: the server responded with a status of 400 ()",
+    "Error: ClerkJS: Something went wrong initializing Clerk in development mode. We were unable to attribute this request to an instance running on Clerk. Make sure that your Clerk Publishable Key is correct.\n    at t5 (https://mock.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:44:24243"
+  ]
+}
