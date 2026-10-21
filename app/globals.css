@@ -92,13 +92,16 @@ h6 {
     --chart-4: 151 78% 37%;
     --chart-5: 0 84% 60%;
 
-    --status-ghosted: 220, 12%, 46%;
-    --status-rejected: 0, 84%, 60%;
-    --status-applied: 255, 80%, 60%;
-    --status-accepted: 151, 78%, 37%;
-    --status-review: 199, 89%, 48%;
-    --status-interview: 38, 92%, 50%;
-    --status-other: 220, 12%, 46%;
+    /* Chart and bar colours per status, in stack order. Validated with the
+       dataviz palette checker against the card: colour-blind separation
+       >= 8 between neighbours, >= 3:1 contrast, no two greys. */
+    --status-applied: 271, 81%, 56%; /* #9333ea */
+    --status-review: 192, 91%, 36%; /* #0891b2 */
+    --status-interview: 32, 95%, 44%; /* #d97706 */
+    --status-accepted: 163, 94%, 24%; /* #047857 */
+    --status-rejected: 330, 81%, 60%; /* #ec4899 */
+    --status-ghosted: 32, 81%, 29%; /* #854d0e */
+    --status-other: 295, 72%, 40%; /* #a21caf */
 
     --radius: 0.375rem; /* 6px / rounded-md sharp rectilinear standard */
   }
@@ -143,7 +146,14 @@ h6 {
     --chart-4: 151 74% 45%;
     --chart-5: 0 72% 54%;
 
-    --status-ghosted: 217, 15%, 45%;
+    /* Same checks against the dark card (#14171f) */
+    --status-applied: 258, 90%, 66%; /* #8b5cf6 */
+    --status-review: 192, 91%, 36%; /* #0891b2 */
+    --status-interview: 32, 95%, 44%; /* #d97706 */
+    --status-accepted: 175, 84%, 32%; /* #0d9488 */
+    --status-rejected: 350, 89%, 60%; /* #f43f5e */
+    --status-ghosted: 26, 90%, 37%; /* #b45309 */
+    --status-other: 293, 69%, 49%; /* #c026d3 */
   }
 }
 
