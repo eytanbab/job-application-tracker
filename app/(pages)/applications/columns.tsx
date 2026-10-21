@@ -24,6 +24,7 @@ import {
   StatusKind,
   cn,
   formatPlatformLabel,
+  normalizeJobLink,
 } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -121,11 +122,7 @@ export const columns: ColumnDef<FormValues>[] = [
       const role = row.original.role_name;
       const company = row.original.company_name;
       const link = row.original.link;
-      const href =
-        link &&
-        (link.startsWith("http://") || link.startsWith("https://")
-          ? link
-          : `https://${link}`);
+      const href = normalizeJobLink(link);
       const meta = table.options.meta as CustomColumnMeta | undefined;
       const compact = meta?.density === "compact";
 

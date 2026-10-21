@@ -49,6 +49,7 @@ import {
   isStandardStatus,
   cn,
   formatPlatformLabel,
+  normalizeJobLink,
 } from "@/lib/utils";
 import {
   getApplicationHistory,
@@ -799,11 +800,11 @@ export function ApplicationDetailSheet({
                           autoFocus
                         />
                       </div>
-                    ) : activeApp.link ? (
+                    ) : normalizeJobLink(activeApp.link) ? (
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground group">
                         <Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
                         <a
-                          href={activeApp.link}
+                          href={normalizeJobLink(activeApp.link)!}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-primary hover:underline flex items-center gap-1 truncate max-w-xs sm:max-w-md font-medium"

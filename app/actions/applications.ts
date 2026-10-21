@@ -40,6 +40,7 @@ import {
   statusLabels,
   statusOptions,
   type StatusKind,
+  normalizeJobLink,
 } from "@/lib/utils";
 import {
   emptyStatusCounts,
@@ -78,7 +79,27 @@ function normalizeApplicationStatus(values: FormValues): FormValues {
   };
 }
 
+/**
+ * Server-side checks for create and update. The form validates too, but
+ * inline edits in the detail sheet and direct action calls skip it.
+ */
+function assertValidApplication(values: FormValues) {
+  if (!(values.role_name ?? "").trim()) throw new Error("Enter the role title.");
+  if (!(values.company_name ?? "").trim()) throw new Error("Enter the company name.");
+  const date = values.date_applied as unknown;
+  const parsed = date instanceof Date ? date : new Date(String(date ?? ""));
+  if (!date || Number.isNaN(parsed.getTime())) throw new Error("Enter the date you applied.");
+  // A link with another scheme (javascript:, mailto:) is refused. Other text
+  // that is not a URL ("N/A" in older rows) is kept as typed, so saves that
+  // resend a stored row (board moves, bulk status) never fail on it.
+  const link = (values.link ?? "").trim();
+  if (link && !normalizeJobLink(link) && /^[a-z][a-z0-9+.-]*:(?!\d)/i.test(link)) {
+    throw new Error("Enter a job link that starts with http:// or https://.");
+  }
+}
+
 function extractCleanApplicationFields(values: FormValues) {
+  assertValidApplication(values);
   const normalized = normalizeApplicationStatus(values);
   const formattedDate = safeFormatDate(normalized.date_applied, "yyyy-MM-dd");
   const parsedDate = new Date(`${formattedDate}T12:00:00`);
@@ -89,7 +110,7 @@ function extractCleanApplicationFields(values: FormValues) {
     role_name: (normalized.role_name || "").trim(),
     company_name: (normalized.company_name || "").trim(),
     date_applied: formattedDate,
-    link: (normalized.link || "").trim(),
+    link: normalizeJobLink(normalized.link) ?? (normalized.link || "").trim(),
     // List rows omit description and notes, so saves built from a list row
     // (Kanban moves, bulk status changes) send them as undefined. Leave the
     // stored text alone instead of overwriting it with null.

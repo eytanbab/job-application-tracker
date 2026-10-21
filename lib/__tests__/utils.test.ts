@@ -5,6 +5,7 @@ import {
   getStatusKind,
   isStandardStatus,
   mergeWithDefaultOptions,
+  normalizeJobLink,
   resolveUpdatedStatus,
   safeFormatDate,
   statusLabels,
@@ -166,4 +167,22 @@ describe("mergeWithDefaultOptions", () => {
     expect(mergeWithDefaultOptions(undefined, ["Remote"])).toEqual(["Remote"]);
     expect(mergeWithDefaultOptions()).toEqual([]);
   });
+});
+
+describe("normalizeJobLink", () => {
+  it.each([
+    ["company.com/job", "https://company.com/job"],
+    ["  https://jobs.lever.co/acme/1  ", "https://jobs.lever.co/acme/1"],
+    ["http://example.com/a?b=1", "http://example.com/a?b=1"],
+    ["careers.acme.com:8080/job", "https://careers.acme.com:8080/job"],
+  ])("normalizes %s", (raw, expected) => {
+    expect(normalizeJobLink(raw)).toBe(expected);
+  });
+
+  it.each([[""], [null], ["javascript:alert(1)"], ["mailto:jobs@acme.com"], ["ftp://acme.com/x"], ["https://"], ["https://user:pass@acme.com/"]])(
+    "returns null for %s",
+    (raw) => {
+      expect(normalizeJobLink(raw)).toBeNull();
+    },
+  );
 });

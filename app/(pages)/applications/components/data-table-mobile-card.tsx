@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Building2, Calendar, ExternalLink, MapPin } from "lucide-react";
-import { getStatusDisplay, getStatusKind, isStandardStatus } from "@/lib/utils";
+import { getStatusDisplay, getStatusKind, isStandardStatus, normalizeJobLink } from "@/lib/utils";
 import { formatDate, parseISO } from "date-fns";
 import { cn, formatPlatformLabel } from "@/lib/utils";
 import { stageLabels, statusBadgeClasses } from "./status-badge-classes";
@@ -143,9 +143,9 @@ export function DataTableMobileCard({
               )}
             </div>
 
-            {item.link && (
+            {normalizeJobLink(item.link) && (
               <a
-                href={item.link}
+                href={normalizeJobLink(item.link)!}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="relative z-10 h-11 w-11 -m-3 text-muted-foreground hover:text-foreground inline-flex items-center justify-center rounded-md hover:bg-accent/60 transition-colors"
