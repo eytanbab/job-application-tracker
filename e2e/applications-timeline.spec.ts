@@ -67,35 +67,29 @@ test.describe("Applications Timeline & Status History E2E Suite", () => {
     await page.keyboard.press("Escape");
   });
 
-  test("2. Timeline Entry Deletion Guard with Dialog Confirmation", async ({ page }) => {
-    // Search for the created test app
+  test("2. Timeline Entry Deletion Guard with Inline Confirmation", async ({ page }) => {
+    // Search for the app created in test 1
     const searchInput = page.locator("input[placeholder*='Search']").first();
     await searchInput.fill(testRole);
-    await page.waitForTimeout(500);
+    await expect(page.locator(`tr:has-text('${testRole}')`)).toBeVisible();
 
-    const viewBtn = page.getByTestId("view-details-button").first();
-    if (await viewBtn.isVisible()) {
-      await viewBtn.click({ force: true });
+    await page
+      .locator(`tr:has-text('${testRole}')`)
+      .getByTestId("view-details-button")
+      .first()
+      .click({ force: true });
 
-      const deleteEntryBtn = page
-        .locator("button[aria-label='Delete this timeline entry'], button[title='Delete this timeline entry']")
-        .first();
+    // Deleting a timeline entry asks for an inline confirmation first
+    await page.getByRole("button", { name: "Delete this timeline entry" }).first().click({ force: true });
+    const confirmBtn = page.getByRole("button", { name: "Confirm delete timeline entry" });
+    await expect(confirmBtn).toBeVisible();
 
-      if (await deleteEntryBtn.isVisible()) {
-        await deleteEntryBtn.click({ force: true });
+    // Cancel keeps the entry
+    const entries = await page.getByTestId("timeline-entry").count();
+    await page.getByRole("button", { name: "Cancel delete" }).click();
+    await expect(confirmBtn).not.toBeVisible();
+    await expect(page.getByTestId("timeline-entry")).toHaveCount(entries);
 
-        // Verify confirmation dialog
-        await expect(page.locator("text=Delete Timeline Entry")).toBeVisible();
-        await expect(
-          page.locator("text=Are you sure you want to delete the status entry")
-        ).toBeVisible();
-
-        // Click Cancel
-        await page.click("button:has-text('Cancel')");
-        await expect(page.locator("text=Delete Timeline Entry")).not.toBeVisible();
-      }
-
-      await page.keyboard.press("Escape");
-    }
+    await page.keyboard.press("Escape");
   });
 });
