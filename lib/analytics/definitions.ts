@@ -2,6 +2,7 @@ import { addDays, parseISO } from "date-fns";
 import {
   didReachInterviewStage,
   getStatusKind,
+  INTERVIEW_TEXT_PATTERNS,
   type StatusKind,
 } from "@/lib/utils";
 import type { AnalyticsApp, AnalyticsHistory, WorkMode } from "./types";
@@ -28,6 +29,15 @@ export const RESPONSE_KINDS: readonly StatusKind[] = [
   "accepted",
   "rejected",
 ];
+
+/**
+ * Case-insensitive Postgres regex (`~*`) matching the same interview wording
+ * as didReachInterviewStage. The patterns are plain words, so no escaping.
+ */
+export const INTERVIEW_TEXT_REGEX = INTERVIEW_TEXT_PATTERNS.join("|");
+
+/** Categories that count as reaching an interview. */
+export const INTERVIEW_KINDS: readonly StatusKind[] = ["interview", "accepted"];
 
 type StatusLike = { status: string; statusCategory: string };
 

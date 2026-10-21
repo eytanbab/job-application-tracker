@@ -47,8 +47,15 @@ import {
   normalizeListQuery,
   queryRows,
   type ApplicationListQuery,
+  type ListFilters,
   type StatusCounts,
 } from "@/lib/applications/list-query";
+import {
+  INTERVIEW_KINDS,
+  INTERVIEW_TEXT_REGEX,
+  RESPONSE_KINDS,
+} from "@/lib/analytics/definitions";
+import { groupHistory } from "@/lib/analytics/facts";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema
@@ -276,13 +283,36 @@ function displayGhostedStatus<T extends { status: string; statusCategory: string
   return app;
 }
 
-function listFilterConditions(
-  userId: string,
-  query: Pick<ApplicationListQuery, "search" | "status" | "platform">,
-) {
+/**
+ * The application, or any of its status history, is in one of `kinds` or has
+ * interview wording. Mirrors reachedInterview / responded in
+ * lib/analytics/definitions.ts so tracker counts match the analytics page.
+ */
+function everReached(kinds: readonly StatusKind[]) {
+  const kindList = sql.join(kinds.map((kind) => sql`${kind}`), sql`, `);
+  return or(
+    inArray(jobApplications.statusCategory, [...kinds]),
+    sql`${jobApplications.status} ~* ${INTERVIEW_TEXT_REGEX}`,
+    sql`exists (
+      select 1 from ${applicationStatusHistory}
+      where ${applicationStatusHistory.applicationId} = ${jobApplications.id}
+        and (${applicationStatusHistory.statusCategory} in (${kindList})
+          or ${applicationStatusHistory.status} ~* ${INTERVIEW_TEXT_REGEX})
+    )`,
+  )!;
+}
+
+function listFilterConditions(userId: string, query: ListFilters) {
   const conditions = [eq(jobApplications.userId, userId)];
-  if (query.status) {
-    conditions.push(eq(jobApplications.statusCategory, query.status));
+  if (query.statuses) {
+    conditions.push(inArray(jobApplications.statusCategory, query.statuses));
+  }
+  if (query.from) conditions.push(gte(jobApplications.date_applied, query.from));
+  if (query.to) conditions.push(lte(jobApplications.date_applied, query.to));
+  if (query.stage) {
+    conditions.push(
+      everReached(query.stage === "interviewed" ? INTERVIEW_KINDS : RESPONSE_KINDS),
+    );
   }
   if (query.platform) {
     conditions.push(
@@ -360,6 +390,11 @@ async function queryListRows(userId: string, query: ApplicationListQuery) {
   return { rows: rows.map(displayGhostedStatus), total };
 }
 
+/** Status history per application, for the stage filters in mock mode. */
+function mockHistoryByApp() {
+  return groupHistory(mockStore.getAnalyticsDataset().history);
+}
+
 function mockListRows(userId: string) {
   return mockStore.getApplications(userId).map((app) => {
     const { description: _d, notes: _n, ...row } = app;
@@ -376,7 +411,7 @@ export async function getApplicationsPage(
 
   const run = async () => {
     if (!isMockDb) return queryListRows(userId, query);
-    const result = queryRows(mockStore.getApplications(userId), query);
+    const result = queryRows(mockStore.getApplications(userId), query, mockHistoryByApp());
     const listRows = new Map(mockListRows(userId).map((row) => [row.id, row]));
     return {
       rows: result.rows.map((row) => listRows.get(row.id)!),
@@ -434,13 +469,11 @@ export async function getKanbanColumns(
 ) {
   const userId = await getCurrentUserIdOrThrow();
   const query = normalizeListQuery(rawQuery);
-  const kinds = query.status
-    ? [query.status]
-    : statusOptions.map((option) => option.value);
+  const kinds = query.statuses ?? statusOptions.map((option) => option.value);
 
   const columnQuery = (kind: StatusKind): ApplicationListQuery => ({
     ...query,
-    status: kind,
+    statuses: [kind],
     sort: null,
     page: 1,
     pageSize: KANBAN_PAGE_SIZE,
@@ -448,10 +481,11 @@ export async function getKanbanColumns(
 
   if (isMockDb) {
     const all = mockStore.getApplications(userId);
+    const historyByApp = mockHistoryByApp();
     const listRows = new Map(mockListRows(userId).map((row) => [row.id, row]));
     return Object.fromEntries(
       kinds.map((kind) => {
-        const result = queryRows(all, columnQuery(kind));
+        const result = queryRows(all, columnQuery(kind), historyByApp);
         return [
           kind,
           {
