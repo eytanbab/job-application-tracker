@@ -8,7 +8,7 @@
   ],
   "known_pain_points": "Metric definitions differ between sections, salary parsing, duplicated KPIs, chart legibility, filter model limited to calendar month/year.",
   "reference_product": "Huntr, Teal, LinkedIn Insights",
-  "last_flow": "analytics",
+  "last_flow": "applications",
   "last_updated": "2026-10-21",
   "tech_stack": [
     "Next.js 16 (App Router, Turbopack)",

@@ -1,24 +1,25 @@
 {
   "schema_version": 1,
   "counters": {
-    "DATA": 5,
+    "DATA": 6,
     "COLOR": 6,
     "A11Y": 12,
-    "TRUST": 7,
+    "TRUST": 13,
     "STATE": 2,
     "AFFORD": 3,
     "PERS": 1,
-    "HIER": 9,
-    "FLOW": 2,
-    "FORM": 3,
+    "HIER": 10,
+    "FLOW": 4,
+    "FORM": 4,
     "PLAT": 2,
     "COPY": 4,
     "TYPO": 2,
     "DSYS": 3,
     "ONBD": 1,
-    "COGN": 1,
-    "PERF": 2,
-    "SRCH": 1
+    "COGN": 2,
+    "PERF": 10,
+    "SRCH": 2,
+    "SEC": 3
   },
   "findings": [
     {
@@ -1238,11 +1239,11 @@
       "severity": "medium",
       "confidence": "observed",
       "effort": "quick-win",
-      "status": "resolved",
+      "status": "open",
       "first_flagged": "2026-10-14",
-      "last_seen": "2026-10-14",
-      "resolved_on": "2026-10-14",
-      "status_note": "Fixed on fix/applications-audit; verified in mock mode (axe 0 violations at 375/1440 light+dark, keyboard/focus checks, screenshots)",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "Regressed 2026-10-21: status pill count badges measure 4.16:1 (#677183 on #ebecf0, 12px). The muted tokens have not changed since before the 14 Oct fix, so that fix did not cover these badges.",
       "history": [
         {
           "date": "2026-10-14",
@@ -1254,6 +1255,11 @@
           "date": "2026-10-14",
           "report": "reports/2026-10-14-applications.md",
           "event": "resolved"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "regressed"
         }
       ]
     },
@@ -2352,6 +2358,726 @@
           "date": "2026-10-21",
           "report": "reports/2026-10-21-analytics.md",
           "event": "resolved"
+        }
+      ]
+    },
+    {
+      "id": "SEC-01",
+      "category": "SEC",
+      "rule": "ssrf-redirect-dns",
+      "title": "Job-link autofill follows redirects and never resolves DNS, so the server can be made to fetch internal addresses",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "lib/security/url-validator.ts",
+        "line": 1,
+        "anchor": "hostname-only check; lib/scraper.ts:151 fetch follows redirects"
+      },
+      "severity": "high",
+      "confidence": "code-confirmed",
+      "effort": "medium",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "high"
+        }
+      ]
+    },
+    {
+      "id": "SEC-02",
+      "category": "SEC",
+      "rule": "authz-history-write",
+      "title": "updateApplication writes status history into an application the caller does not own",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/actions/applications.ts",
+        "line": 731,
+        "anchor": "latestHistory filtered only by applicationId; history insert/update unscoped"
+      },
+      "severity": "high",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "high"
+        }
+      ]
+    },
+    {
+      "id": "SEC-03",
+      "category": "SEC",
+      "rule": "authz-client-file-key",
+      "title": "createFile stores any client-supplied S3 key, so a user can sign view/download links for another user's resume",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/actions/documents.ts",
+        "line": 80,
+        "anchor": "createFile(file_key) has no `${userId}/` prefix check; view/download do not check either"
+      },
+      "severity": "high",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "high"
+        }
+      ]
+    },
+    {
+      "id": "TRUST-08",
+      "category": "TRUST",
+      "rule": "ghost-backdated-before-activity",
+      "title": "Ghost sync dates the Ghosted entry 30 days after applying, before later activity, so the timeline and history deletes disagree with the status",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/actions/applications.ts",
+        "line": 206,
+        "anchor": "addDays(appliedDate, 30) milestone; mock-store syncGhostedApplications"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "TRUST-09",
+      "category": "TRUST",
+      "rule": "stale-after-write",
+      "title": "Analytics can show pre-change numbers on the first visit after an edit (revalidateTag 'max' is stale-while-revalidate)",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/actions/applications.ts",
+        "line": 111,
+        "anchor": "revalidateTag(applicationsTag(userId), 'max')"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "TRUST-10",
+      "category": "TRUST",
+      "rule": "status-change-saves-draft",
+      "title": "Changing the stage in the detail sheet also saves unsaved inline edits, and a failed save is not rolled back",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/application-detail-sheet.tsx",
+        "line": 508,
+        "anchor": "payload = { ...activeApp } where activeApp = draftApp || currentApp; catch only toasts"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "TRUST-11",
+      "category": "TRUST",
+      "rule": "stale-response-race",
+      "title": "History responses from a previous application can land after J/K navigation, so the sheet shows and deletes the wrong application's timeline entries",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/application-detail-sheet.tsx",
+        "line": 205,
+        "anchor": "getApplicationHistory effect has no cancellation or id check"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "TRUST-12",
+      "category": "TRUST",
+      "rule": "refresh-wipes-draft",
+      "title": "A background refresh (for example after attaching a resume) resets the detail sheet and discards unsaved inline edits without a guard",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/hooks/use-data-table.ts",
+        "line": 176,
+        "anchor": "setSelectedApp(match) on new data -> reset effect keyed on initialApp object"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "TRUST-13",
+      "category": "TRUST",
+      "rule": "ghost-sync-toctou",
+      "title": "Ghost sync can overwrite a status change made between its select and update, and runs unawaited after create",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/actions/applications.ts",
+        "line": 229,
+        "anchor": "update where inArray(id, qualifyingIds) without re-checking status_category"
+      },
+      "severity": "low",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "low"
+        }
+      ]
+    },
+    {
+      "id": "FORM-04",
+      "category": "FORM",
+      "rule": "no-server-validation",
+      "title": "Create/update accept unvalidated input: inline link edits save bare text that renders as a broken relative link, and a cleared date silently becomes today",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/actions/applications.ts",
+        "line": 61,
+        "anchor": "formSchema defined but unused; application-detail-sheet.tsx:762 inline link"
+      },
+      "severity": "low",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "low"
+        }
+      ]
+    },
+    {
+      "id": "DATA-06",
+      "category": "DATA",
+      "rule": "salary-text-sort",
+      "title": "Salary sorts as text, so \"$90k\" sorts above \"$210,000\"",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/actions/applications.ts",
+        "line": 353,
+        "anchor": "salary: [text(jobApplications.salary)]"
+      },
+      "severity": "low",
+      "confidence": "code-confirmed",
+      "effort": "medium",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "low"
+        }
+      ]
+    },
+    {
+      "id": "PERF-03",
+      "category": "PERF",
+      "rule": "bulk-n-requests",
+      "title": "Bulk delete and bulk status send one server action per row; Next.js runs them one at a time and re-renders the page after each",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/hooks/use-data-table.ts",
+        "line": 335,
+        "anchor": "Promise.allSettled(selectedRows.map(deleteApplication/updateApplication))"
+      },
+      "severity": "high",
+      "confidence": "code-confirmed",
+      "effort": "medium",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "high"
+        }
+      ]
+    },
+    {
+      "id": "PERF-04",
+      "category": "PERF",
+      "rule": "no-optimistic-status",
+      "title": "Status moves (drag, arrows, Move to) and deletes wait for the server round trip and page re-render before the card or row moves",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/applications-kanban.tsx",
+        "line": 241,
+        "anchor": "no useOptimistic; only isPending dims the view"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "medium",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "PERF-05",
+      "category": "PERF",
+      "rule": "kanban-query-fanout",
+      "title": "The first board load runs about 16 database queries (rows + count for each of 7 columns, plus counts and platforms)",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/actions/applications.ts",
+        "line": 499,
+        "anchor": "kinds.map(queryListRows) -> rows + count per column"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "medium",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "PERF-06",
+      "category": "PERF",
+      "rule": "interaction-code-in-first-load",
+      "title": "Detail sheet, edit sheet, attach-resume dialog, form and date picker ship in the first-load bundle, and client files import the Drizzle schema at runtime",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/data-table.tsx",
+        "line": 9,
+        "anchor": "static imports of ApplicationDetailSheet/EditApplicationSheet; columns.tsx:31 insertApplicationSchema"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "PERF-07",
+      "category": "PERF",
+      "rule": "detail-sheet-duplicate-reads",
+      "title": "Opening or saving in the detail sheet makes duplicate history and document reads",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/application-detail-sheet.tsx",
+        "line": 186,
+        "anchor": "effect keyed on initialApp object; explicit refetch at :277; getDocument despite row metadata"
+      },
+      "severity": "low",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "low"
+        }
+      ]
+    },
+    {
+      "id": "PERF-08",
+      "category": "PERF",
+      "rule": "keystroke-rerender",
+      "title": "Each search keystroke re-renders the whole table, with both the desktop table and the mobile cards mounted",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/data-table-toolbar.tsx",
+        "line": 69,
+        "anchor": "input bound to nuqs state; no memoized children"
+      },
+      "severity": "low",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "low"
+        }
+      ]
+    },
+    {
+      "id": "PERF-09",
+      "category": "PERF",
+      "rule": "distinct-options-uncached",
+      "title": "Opening the add or edit form reads every row's location and platform, uncached, with no DISTINCT",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/actions/applications.ts",
+        "line": 992,
+        "anchor": "getDistinctLocationsAndPlatforms"
+      },
+      "severity": "low",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "low"
+        }
+      ]
+    },
+    {
+      "id": "PERF-10",
+      "category": "PERF",
+      "rule": "search-sql-cost",
+      "title": "Search ILIKEs eight columns including the long description, and the platform filter wraps the column in lower(trim()) so no index applies",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/actions/applications.ts",
+        "line": 316,
+        "anchor": "listFilterConditions"
+      },
+      "severity": "low",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "low"
+        }
+      ]
+    },
+    {
+      "id": "HIER-10",
+      "category": "HIER",
+      "rule": "kanban-title-width",
+      "title": "Board card titles get about half the card width, cutting normal titles after two words, while long unbroken titles spill past the card edge",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/kanban-card.tsx",
+        "line": 113,
+        "anchor": "CardHeader flex row; CardTitle line-clamp-2 break-words"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "low",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "FLOW-03",
+      "category": "FLOW",
+      "rule": "page-scoped-selection",
+      "title": "\"Select all\" and the detail sheet's J/K navigation cover only the current page (\"Select all (10)\" and \"6 / 10\" with 23 applications)",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/data-table-grid.tsx",
+        "line": 1,
+        "anchor": "toggleAllPageRowsSelected; detail navigation over page rows"
+      },
+      "severity": "medium",
+      "confidence": "observed",
+      "effort": "medium",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "FLOW-04",
+      "category": "FLOW",
+      "rule": "pill-clears-range",
+      "title": "Picking a status pill drops the date range and stage that came from an analytics link",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/hooks/use-data-table.ts",
+        "line": 123,
+        "anchor": "setStatusFilter sets stage/from/to to null"
+      },
+      "severity": "low",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "low"
+        }
+      ]
+    },
+    {
+      "id": "SRCH-02",
+      "category": "SRCH",
+      "rule": "notes-not-searchable",
+      "title": "Search covers description and salary but not notes, where users put contacts and referrers",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/actions/applications.ts",
+        "line": 324,
+        "anchor": "ilike list omits notes; mock searchableText too"
+      },
+      "severity": "low",
+      "confidence": "code-confirmed",
+      "effort": "quick-win",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "low"
+        }
+      ]
+    },
+    {
+      "id": "COGN-02",
+      "category": "COGN",
+      "rule": "three-edit-models",
+      "title": "One application can be edited three ways (inline fields, the sheet's Edit Details form, a separate edit sheet) and its status five ways, each with its own guard",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/(pages)/applications/components/application-detail-view.tsx",
+        "line": 1,
+        "anchor": "isEditing* inline state; application-detail-sheet isEditing; edit-application-sheet.tsx"
+      },
+      "severity": "medium",
+      "confidence": "code-confirmed",
+      "effort": "high",
+      "status": "open",
+      "first_flagged": "2026-10-21",
+      "last_seen": "2026-10-21",
+      "resolved_on": null,
+      "status_note": "",
+      "history": [
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "medium"
         }
       ]
     }
