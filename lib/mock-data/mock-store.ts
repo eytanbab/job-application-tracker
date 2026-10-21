@@ -14,6 +14,7 @@ import {
   StatusKind,
 } from "@/lib/utils";
 import { differenceInDays, parseISO } from "date-fns";
+import type { AnalyticsDataset } from "@/lib/analytics/types";
 
 class MockStore {
   private applications: MockApplication[] = [];
@@ -816,6 +817,32 @@ class MockStore {
       }
     });
     return count;
+  }
+
+  /** Every application and status change, in the shape the analytics layer reads. */
+  public getAnalyticsDataset(userId?: string): AnalyticsDataset {
+    return {
+      apps: this.getApplications(userId).map((app) => ({
+        id: app.id,
+        role: app.role_name,
+        company: app.company_name,
+        platform: app.platform,
+        status: app.status,
+        statusCategory: app.statusCategory,
+        location: app.location,
+        dateApplied: app.date_applied,
+        createdAt: new Date(app.createdAt).getTime(),
+        salary: app.salary,
+        resumeId: app.resumeId ?? null,
+        resumeTitle: app.resumeTitle ?? null,
+      })),
+      history: this.statusHistory.map((h) => ({
+        applicationId: h.applicationId,
+        status: h.status,
+        statusCategory: h.statusCategory,
+        createdAt: new Date(h.createdAt).getTime(),
+      })),
+    };
   }
 
   public getDistinctLocationsAndPlatforms(userId?: string): {
