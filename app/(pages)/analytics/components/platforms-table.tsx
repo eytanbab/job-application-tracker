@@ -151,7 +151,7 @@ export function PlatformsTable({
       {/* Desktop: sortable table */}
       <div className="hidden lg:block overflow-hidden rounded-lg border border-border/40">
         <table className="w-full text-sm">
-          <thead className="bg-muted/40">
+          <thead className="border-b border-border/40">
             <tr>
               {COLUMNS.map((col) => {
                 const active = psort === col.key;
