@@ -111,17 +111,17 @@ export function KpiSummaryStrip({
           </div>
           <p className="text-[11px] text-muted-foreground mt-1 truncate">
             {interviewCount > 0
-              ? `${formatPercent(interviewConversionRate)} of interviews converted`
+              ? `${formatPercent(interviewConversionRate)} of interviewed applications`
               : "Awaiting interview conversions"}
           </p>
         </div>
       </div>
 
-      {/* 5. Avg. Response Time */}
+      {/* 5. Days to first update */}
       <div className="col-span-2 sm:col-span-1 p-3.5 sm:p-4 rounded-xl border border-border/30 bg-card/60 shadow-2xs backdrop-blur-sm flex flex-col justify-between gap-2 min-w-0">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Avg. Response Time
+            Days to First Update
           </span>
           <Clock className="h-3.5 w-3.5 text-muted-foreground/70" />
         </div>
@@ -133,8 +133,8 @@ export function KpiSummaryStrip({
           </div>
           <p className="text-[11px] text-muted-foreground mt-1 truncate">
             {averageResponseDays !== null
-              ? "From applied to recruiter response"
-              : "Awaiting response timestamps"}
+              ? "Median, applying to your first logged update"
+              : "No replies logged yet"}
           </p>
         </div>
       </div>

@@ -92,8 +92,8 @@ export function PipelineHealthHero({
       pct: interviewPct,
       icon: Users,
       color: "text-amber-700 dark:text-amber-400 bg-amber-500/10 border-amber-500/20",
-      detail: `${interviewCount} reached recruiter or team rounds`,
-      conversionBadge: total > 0 ? `${formatPercent(interviewRate)} yield` : null,
+      detail: `${interviewCount} reached an interview`,
+      conversionBadge: total > 0 ? `${formatPercent(interviewRate)} reached interview` : null,
       conversionDetail: `${interviewCount} of ${total} applied`,
     },
     {
@@ -104,7 +104,7 @@ export function PipelineHealthHero({
       icon: Trophy,
       color: "text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
       detail: `${offerCount} converted to formal offer`,
-      conversionBadge: interviewCount > 0 ? `${formatPercent(interviewConversionRate)} yield` : null,
+      conversionBadge: interviewCount > 0 ? `${formatPercent(interviewConversionRate)} got an offer` : null,
       conversionDetail: `${offerCount} of ${interviewCount || 0} interviews`,
     },
   ];
@@ -208,7 +208,7 @@ export function PipelineHealthHero({
           </div>
           <p className="text-[10px] text-muted-foreground mt-0.5">
             {interviewCount > 0
-              ? `${offerCount} of ${interviewCount} interview rounds converted`
+              ? `${offerCount} of ${interviewCount} interviewed applications became an offer`
               : "No interviews in this timeframe"}
           </p>
         </div>
@@ -216,7 +216,7 @@ export function PipelineHealthHero({
         {/* 2. Unresponsive / No Response */}
         <div className="p-3.5 rounded-xl bg-background/40 border border-border/25 flex flex-col justify-between gap-1.5 min-w-0">
           <span className="text-muted-foreground font-medium text-[11px] uppercase tracking-wider">
-            No Response (30+ Days)
+            Ghosted
           </span>
           <div className="flex items-baseline justify-between gap-1 flex-wrap">
             <span className="text-2xl font-bold font-mono text-foreground">
@@ -227,7 +227,7 @@ export function PipelineHealthHero({
             </span>
           </div>
           <p className="text-[10px] text-muted-foreground mt-0.5">
-            Applications with no status update after 30+ days
+            No reply; marked ghosted after 30 quiet days
           </p>
         </div>
 

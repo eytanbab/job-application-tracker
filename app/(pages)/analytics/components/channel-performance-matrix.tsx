@@ -66,6 +66,7 @@ const getStatusBgColor = (kind: StatusKind) => {
 
 const formatStatusText = (status: string) => {
   const kind = getStatusKind(status);
+  if (kind === "accepted") return "Offer";
   if (statusLabels[kind]) return statusLabels[kind];
   return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 };
@@ -232,7 +233,7 @@ export function ChannelPerformanceMatrix({
             <div className="p-3 rounded-lg bg-background/50 border border-border/30 text-xs text-muted-foreground">
               <span className="text-foreground">
                 <strong className="font-semibold text-primary">{formatPlatformLabel(topPlatform.platformName)}</strong> is
-                your top-performing source with an{" "}
+                your best platform so far, with an{" "}
                 <strong className="font-semibold font-mono text-emerald-700 dark:text-emerald-400">
                   {topPlatform.interviewRate.toFixed(1)}% interview rate
                 </strong>{" "}
@@ -369,7 +370,7 @@ export function ChannelPerformanceMatrix({
               <TableHeader className="bg-muted/30">
                 <TableRow className="border-b border-border/30 hover:bg-transparent">
                   <TableHead className="w-[22%] py-2.5 px-3 text-left">
-                    {renderSortHeader("channel", "Channel", "left")}
+                    {renderSortHeader("channel", "Platform", "left")}
                   </TableHead>
                   <TableHead className="w-[12%] py-2.5 px-3 text-center">
                     {renderSortHeader("total", "Volume", "center")}
