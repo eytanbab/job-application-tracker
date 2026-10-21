@@ -4,7 +4,7 @@ import Link from "next/link";
 import { parseAsBoolean, parseAsStringLiteral, useQueryStates } from "nuqs";
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatPct } from "@/lib/analytics/format";
+import { formatPct, statusLabel } from "@/lib/analytics/format";
 import { trackerHref } from "@/lib/analytics/links";
 import type { PlatformSummary } from "@/lib/analytics/summarize";
 import type { DateRange, Rate } from "@/lib/analytics/types";
@@ -56,7 +56,7 @@ function RateCell({ rate }: { rate: Rate }) {
 
 function StatusMix({ platform }: { platform: PlatformSummary }) {
   const parts = statusOptions.filter(({ value }) => platform.byKind[value] > 0);
-  const summary = parts.map(({ value, label }) => `${platform.byKind[value]} ${label}`).join(", ");
+  const summary = parts.map(({ value }) => `${platform.byKind[value]} ${statusLabel(value)}`).join(", ");
   return (
     <div className="flex h-2 w-full min-w-16 overflow-hidden rounded-full bg-muted" role="img" aria-label={summary}>
       {parts.map(({ value }) => (

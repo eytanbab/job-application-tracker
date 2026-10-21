@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeDelta, formatDays, formatPct, rateHeadline } from "../format";
+import { describeDelta, formatDays, formatPct, rateHeadline, statusLabel } from "../format";
 import { rate } from "../stats";
 
 describe("formatPct / formatDays", () => {
@@ -46,5 +46,12 @@ describe("describeDelta", () => {
       "No change vs previous period",
     );
     expect(describeDelta(null, "count", "previous period")).toBeNull();
+  });
+});
+
+describe("statusLabel", () => {
+  it("says Offer for accepted applications", () => {
+    expect(statusLabel("accepted")).toBe("Offer");
+    expect(statusLabel("review")).toBe("In Review");
   });
 });
