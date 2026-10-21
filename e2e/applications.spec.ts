@@ -151,31 +151,21 @@ test.describe("Applications Page E2E Suite", () => {
     await page.keyboard.press("Escape");
   });
 
-  test("5. Happy Path - Application Timeline & Delete Modal Confirmation", async ({ page }) => {
+  test("5. Happy Path - Timeline Entry Delete Confirmation", async ({ page }) => {
     await ensureTestApplicationExists(page);
 
     // Click view details button on first row
     const viewBtn = page.getByTestId("view-details-button").first();
     await viewBtn.click({ force: true });
 
-    // Check timeline section
-    const timelineHeader = page.locator("text=Application Timeline");
-    if (await timelineHeader.isVisible()) {
-      const deleteTimelineBtn = page.locator("button[title='Delete this timeline entry']").first();
-      if (await deleteTimelineBtn.isVisible()) {
-        await deleteTimelineBtn.click({ force: true });
+    // Deleting a timeline entry asks for an inline confirmation first
+    await page.getByRole("button", { name: "Delete this timeline entry" }).first().click({ force: true });
+    const confirmBtn = page.getByRole("button", { name: "Confirm delete timeline entry" });
+    await expect(confirmBtn).toBeVisible();
 
-        // Confirmation modal MUST be visible
-        await expect(page.locator("text=Delete Timeline Entry")).toBeVisible();
-        await expect(
-          page.locator("text=Are you sure you want to delete the status entry")
-        ).toBeVisible();
-
-        // Click Cancel in modal
-        await page.click("button:has-text('Cancel')");
-        await expect(page.locator("text=Delete Timeline Entry")).not.toBeVisible();
-      }
-    }
+    // Cancel keeps the entry
+    await page.getByRole("button", { name: "Cancel delete" }).click();
+    await expect(confirmBtn).not.toBeVisible();
 
     // Close detail sheet
     await page.keyboard.press("Escape");
@@ -256,7 +246,7 @@ test.describe("Applications Page E2E Suite", () => {
     await expect(searchInput).toHaveValue("__E2E_TEST__");
   });
 
-  test("10. Error Handling - Form Validation Errors (Role Title)", async ({ page }) => {
+  test("10. Error Handling - Required Role Title", async ({ page }) => {
     const addBtn = page.getByTestId("add-application-button").first();
     await addBtn.click();
     await expect(page.locator("text=New Job Application")).toBeVisible();
@@ -266,14 +256,12 @@ test.describe("Applications Page E2E Suite", () => {
       await enterManuallyBtn.click();
     }
 
-    // Type 1-character role title
-    await page.fill("input[name='role_name']", "A");
+    // Submit without a role title
+    await page.fill("input[name='company_name']", "Valid Company");
     await page.click("button[type='submit']:has-text('Add Application')");
 
     // Expect Zod validation error message
-    await expect(
-      page.locator("text=Role name must be at least 2 characters.")
-    ).toBeVisible();
+    await expect(page.getByText("Enter the role title.")).toBeVisible();
 
     await page.keyboard.press("Escape");
   });
@@ -293,22 +281,20 @@ test.describe("Applications Page E2E Suite", () => {
     await page.keyboard.press("Escape");
   });
 
-  test("12. Error Handling - Short Company Name Validation", async ({ page }) => {
+  test("12. Error Handling - Required Company Name", async ({ page }) => {
     const addBtn = page.getByTestId("add-application-button").first();
     await addBtn.click();
     const enterManuallyBtn = page.getByTestId("enter-manually-button");
     if (await enterManuallyBtn.isVisible().catch(() => false)) {
       await enterManuallyBtn.click();
     }
+    // Submit without a company name
     await page.fill("input[name='role_name']", "Valid Role");
-    await page.fill("input[name='company_name']", "X");
 
     await page.click("button[type='submit']:has-text('Add Application')");
 
     // Expect company validation error message
-    await expect(
-      page.locator("text=Company name must be at least 2 characters.")
-    ).toBeVisible();
+    await expect(page.getByText("Enter the company name.")).toBeVisible();
 
     await page.keyboard.press("Escape");
   });
@@ -336,21 +322,18 @@ test.describe("Applications Page E2E Suite", () => {
   test("14. Happy Path - Confirm Application Deletion", async ({ page }) => {
     await ensureTestApplicationExists(page);
 
-    const actionsBtn = page.getByTestId("row-actions-button").first();
-    if (await actionsBtn.isVisible()) {
-      await actionsBtn.click();
-      await page.getByTestId("delete-application-button").click();
+    await page.getByTestId("row-actions-button").first().click();
+    await page.getByTestId("delete-application-button").click();
 
-      // Expect deletion confirmation modal
-      await expect(page.locator("text=Are you absolutely sure?")).toBeVisible();
+    // Expect deletion confirmation modal
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText("Are you absolutely sure?")).toBeVisible();
 
-      // Click Delete to confirm
-      const confirmBtn = page.locator("button:has-text('Delete')");
-      await confirmBtn.click();
+    // Confirm the deletion
+    await dialog.getByRole("button", { name: "Delete Application" }).click();
 
-      // Expect success message
-      await expect(page.locator("text=Successfully deleted application!").first()).toBeVisible();
-    }
+    // Expect success message
+    await expect(page.getByText("Application deleted.").first()).toBeVisible();
   });
 
   test("15. UI State - Empty Table and Reset Filters", async ({ page }) => {
