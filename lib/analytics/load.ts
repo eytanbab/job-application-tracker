@@ -16,6 +16,7 @@ import { getCurrentUserIdOrThrow } from "@/app/actions/_utils/user-context";
 import { mockStore } from "@/lib/mock-data/mock-store";
 import { getPreferences, type UserPreferences } from "@/lib/preferences";
 import { resolveRange, type RangeParams, type RangePreset } from "./range";
+import { buildInsights, type Insight } from "./insights";
 import { summarizeOverview, type AnalyticsOverview } from "./summarize";
 import type { AnalyticsDataset } from "./types";
 
@@ -91,7 +92,7 @@ export const getAnalyticsDataset = cache(
 export async function getAnalyticsOverview(
   params: RangeParams,
   defaultPreset?: RangePreset,
-): Promise<AnalyticsOverview & { preferences: UserPreferences }> {
+): Promise<AnalyticsOverview & { preferences: UserPreferences; insights: Insight[] }> {
   const userId = await getCurrentUserIdOrThrow();
   const [dataset, preferences] = await Promise.all([
     getAnalyticsDataset(userId),
@@ -101,5 +102,9 @@ export async function getAnalyticsOverview(
   const overview = summarizeOverview(dataset, resolveRange(params, today, defaultPreset), today, {
     preferredCurrency: preferences.salaryCurrency,
   });
-  return { ...overview, preferences };
+  return {
+    ...overview,
+    preferences,
+    insights: buildInsights(overview, preferences.weeklyApplicationGoal, today),
+  };
 }

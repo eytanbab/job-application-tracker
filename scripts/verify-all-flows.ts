@@ -144,7 +144,12 @@ async function runAllFlowChecks() {
   const groups = Object.values(overview.needsAction);
   assert(groups.every((g) => g.items.length <= g.total), `Needs action lists ${groups.reduce((sum, g) => sum + g.total, 0)} applications`);
 
-  // 2.4 A shorter period never counts more than all time
+  // 2.4 Insights: weekly pace first, at most five, links point at the tracker
+  assert(overview.insights[0]?.id === "weekly-pace", `First insight: "${overview.insights[0]?.text}"`);
+  assert(overview.insights.length <= 5, `${overview.insights.length} insights: ${overview.insights.map((i) => i.id).join(", ")}`);
+  assert(overview.insights.every((i) => !i.href || i.href.startsWith("/applications")), "Insight links open the tracker");
+
+  // 2.5 A shorter period never counts more than all time
   const last30 = await getAnalyticsOverview({ range: "30d" });
   assert(last30.totals.applications <= totals.applications, `Last 30 days: ${last30.totals.applications} applications`);
   console.log("  ✅ Analytics Overview Flow passed!\n");
