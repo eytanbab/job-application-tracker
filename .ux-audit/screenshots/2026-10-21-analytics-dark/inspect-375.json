@@ -1,0 +1,303 @@
+{
+  "width": 375,
+  "ok": true,
+  "screenshots": {
+    "fold": ".ux-audit/screenshots/2026-10-21-analytics-dark/375w-fold.png",
+    "full": ".ux-audit/screenshots/2026-10-21-analytics-dark/375w.png"
+  },
+  "structure": {
+    "title": "JobTracker | Analytics",
+    "lang": "en",
+    "headings": [
+      {
+        "level": 1,
+        "text": "Analytics"
+      },
+      {
+        "level": 2,
+        "text": "Application Funnel"
+      },
+      {
+        "level": 2,
+        "text": "Platforms & Sources"
+      },
+      {
+        "level": 3,
+        "text": "Work Model Breakdown"
+      },
+      {
+        "level": 3,
+        "text": "Salary & Compensation"
+      },
+      {
+        "level": 3,
+        "text": "Application Activity"
+      }
+    ],
+    "landmarks": [
+      "aside",
+      "nav",
+      "header",
+      "main"
+    ],
+    "horizontal_overflow": false
+  },
+  "axe": {
+    "violations": [],
+    "needs_review": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "wcag": [
+          "wcag2aa",
+          "wcag143"
+        ],
+        "best_practice_only": false,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=axeAPI",
+        "node_count": 15,
+        "nodes": [
+          {
+            "target": ".relative.bg-background\\/50.gap-3:nth-child(2) > div:nth-child(2) > .mt-1\\.5.gap-1\\.5.flex > .px-2.bg-primary\\/10.py-0\\.5 > span",
+            "html": "<span>↳</span>",
+            "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+          },
+          {
+            "target": ".relative.bg-background\\/50.gap-3:nth-child(3) > div:nth-child(2) > .mt-1\\.5.gap-1\\.5.flex > .px-2.bg-primary\\/10.py-0\\.5 > span",
+            "html": "<span>↳</span>",
+            "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+          },
+          {
+            "target": "tspan[x=\"27.25\"][dy=\"0.71em\"]",
+            "html": "<tspan x=\"27.25\" dy=\"0.71em\">Jan</tspan>",
+            "summary": "Fix any of the following:\n  Element's background color could not be determined because element contains an image node"
+          },
+          {
+            "target": "tspan[x=\"76.25\"][dy=\"0.71em\"]",
+            "html": "<tspan x=\"76.25\" dy=\"0.71em\">Mar</tspan>",
+            "summary": "Fix any of the following:\n  Element's background color could not be determined because element contains an image node"
+          },
+          {
+            "target": "tspan[x=\"100.75\"][dy=\"0.71em\"]",
+            "html": "<tspan x=\"100.75\" dy=\"0.71em\">Apr</tspan>",
+            "summary": "Fix any of the following:\n  Element's background color could not be determined because element contains an image node"
+          }
+        ]
+      }
+    ]
+  },
+  "targets": {
+    "interactive_elements": 21,
+    "below_44px": 20,
+    "failing_wcag_2_5_8": 0,
+    "items": [
+      {
+        "selector": "div.p-3.rounded-lg:nth-of-type(1) > div.flex.items-center:nth-of-type(1) > div.flex.items-center > a.text-xs.text-primary",
+        "name": "View",
+        "width": 42,
+        "height": 16,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": true,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.p-3.rounded-lg:nth-of-type(2) > div.flex.items-center:nth-of-type(1) > div.flex.items-center > a.text-xs.text-primary",
+        "name": "View",
+        "width": 42,
+        "height": 16,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": true,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.p-3.rounded-lg:nth-of-type(3) > div.flex.items-center:nth-of-type(1) > div.flex.items-center > a.text-xs.text-primary",
+        "name": "View",
+        "width": 42,
+        "height": 16,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": true,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.p-3.rounded-lg:nth-of-type(4) > div.flex.items-center:nth-of-type(1) > div.flex.items-center > a.text-xs.text-primary",
+        "name": "View",
+        "width": 42,
+        "height": 16,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": true,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.p-3.rounded-lg:nth-of-type(5) > div.flex.items-center:nth-of-type(1) > div.flex.items-center > a.text-xs.text-primary",
+        "name": "View",
+        "width": 42,
+        "height": 16,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": true,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.grid.grid-cols-2 > div.p-3.5.rounded-xl:nth-of-type(2) > div.flex.items-center:nth-of-type(1) > a.text-[11px].font-medium",
+        "name": "View",
+        "width": 40,
+        "height": 17,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": true,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.space-y-3:nth-of-type(2) > div.p-3.rounded-lg:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > a.inline-flex.items-center",
+        "name": "View Netflix applications in tracker",
+        "width": 28,
+        "height": 28,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "button#radix-_R_plblb_",
+        "name": "Toggle theme",
+        "width": 32,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex-1.min-w-0 > main.p-3.w-full > div.mb-4.flex:nth-of-type(1) > button.inline-flex.items-center",
+        "name": "Dismiss notice",
+        "width": 32,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "header.sticky.top-0 > div.flex.items-center:nth-of-type(2) > div > button.inline-flex.items-center",
+        "name": "Open navigation menu",
+        "width": 36,
+        "height": 36,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "section:nth-of-type(2) > div.w-full.min-w-0 > div.flex.flex-col:nth-of-type(1) > a.text-xs.font-medium",
+        "name": "View in tracker",
+        "width": 104,
+        "height": 16,
+        "below_24": true,
+        "inline_link_exception": false,
+        "spacing_exception": true,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.w-full.min-w-0 > div.flex.flex-col:nth-of-type(1) > div.flex.items-center > button.px-2.5.py-1:nth-of-type(1)",
+        "name": "By Status",
+        "width": 75,
+        "height": 24,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "main.p-3.w-full > div.mb-4.flex:nth-of-type(1) > div.flex.flex-1 > button.inline-flex.items-center",
+        "name": "Sign in",
+        "width": 63,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.w-full.min-w-0 > div.flex.flex-col:nth-of-type(1) > div.flex.items-center > button.px-2.5.py-1:nth-of-type(2)",
+        "name": "Total Volume",
+        "width": 94,
+        "height": 24,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex-1.flex > header.sticky.top-0 > div.flex.items-center:nth-of-type(1) > a.flex.items-center",
+        "name": "JobTracker",
+        "width": 124,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex.flex-col:nth-of-type(1) > div.flex.items-center:nth-of-type(2) > div.relative.w-44:nth-of-type(1) > input.flex.w-full",
+        "name": "Search platforms",
+        "width": 176,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.w-full.rounded-xl > div.space-y-3:nth-of-type(2) > div.flex.items-center:nth-of-type(2) > button.flex.items-center",
+        "name": "Sort platforms by",
+        "width": 176,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex.flex-col:nth-of-type(2) > div.grid.grid-cols-2 > div.flex.flex-col:nth-of-type(1) > button.flex.items-center",
+        "name": "Filter by month",
+        "width": 159,
+        "height": 36,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.flex.flex-col:nth-of-type(2) > div.grid.grid-cols-2 > div.flex.flex-col:nth-of-type(2) > button.flex.items-center",
+        "name": "Filter by year",
+        "width": 159,
+        "height": 36,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      },
+      {
+        "selector": "div.w-full.rounded-xl > div.space-y-3:nth-of-type(2) > div.flex.justify-center:nth-of-type(5) > button.inline-flex.items-center",
+        "name": "Show All 6 Platforms (1 More)",
+        "width": 218,
+        "height": 32,
+        "below_24": false,
+        "inline_link_exception": false,
+        "spacing_exception": false,
+        "fails_2_5_8": false
+      }
+    ]
+  },
+  "console_errors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 400 ()",
+    "Error: ClerkJS: Something went wrong initializing Clerk in development mode. We were unable to attribute this request to an instance running on Clerk. Make sure that your Clerk Publishable Key is correct.\n    at t5 (https://mock.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:44:24243",
+    "Failed to load resource: the server responded with a status of 400 ()",
+    "Error: ClerkJS: Something went wrong initializing Clerk in development mode. We were unable to attribute this request to an instance running on Clerk. Make sure that your Clerk Publishable Key is correct.\n    at t5 (https://mock.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:44:24243"
+  ]
+}

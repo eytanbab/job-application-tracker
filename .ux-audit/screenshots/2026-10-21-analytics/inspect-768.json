@@ -1,0 +1,121 @@
+{
+  "width": 768,
+  "ok": true,
+  "screenshots": {
+    "fold": ".ux-audit/screenshots/2026-10-21-analytics/768w-fold.png",
+    "full": ".ux-audit/screenshots/2026-10-21-analytics/768w.png"
+  },
+  "structure": {
+    "title": "JobTracker | Analytics",
+    "lang": "en",
+    "headings": [
+      {
+        "level": 1,
+        "text": "Analytics"
+      },
+      {
+        "level": 2,
+        "text": "Application Funnel"
+      },
+      {
+        "level": 2,
+        "text": "Platforms & Sources"
+      },
+      {
+        "level": 3,
+        "text": "Work Model Breakdown"
+      },
+      {
+        "level": 3,
+        "text": "Salary & Compensation"
+      },
+      {
+        "level": 3,
+        "text": "Application Activity"
+      }
+    ],
+    "landmarks": [
+      "aside",
+      "nav",
+      "header",
+      "main"
+    ],
+    "horizontal_overflow": false
+  },
+  "axe": {
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "wcag": [
+          "wcag2aa",
+          "wcag143"
+        ],
+        "best_practice_only": false,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=axeAPI",
+        "node_count": 2,
+        "nodes": [
+          {
+            "target": ".hover\\:bg-muted\\/30:nth-child(4) > .text-center:nth-child(3) > .gap-1.inline-flex.font-mono > .opacity-75.text-\\[10px\\]",
+            "html": "<span class=\"text-[10px] opacity-75\">(early)</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.95 (foreground color: #8c93a1, background color: #f9fafb, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".hover\\:bg-muted\\/30:nth-child(5) > .text-center:nth-child(3) > .gap-1.inline-flex.font-mono > .opacity-75.text-\\[10px\\]",
+            "html": "<span class=\"text-[10px] opacity-75\">(early)</span>",
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.95 (foreground color: #8c93a1, background color: #f9fafb, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "needs_review": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "wcag": [
+          "wcag2aa",
+          "wcag143"
+        ],
+        "best_practice_only": false,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "help_url": "https://dequeuniversity.com/rules/axe/4.12/color-contrast?application=axeAPI",
+        "node_count": 19,
+        "nodes": [
+          {
+            "target": ".relative.bg-background\\/50.gap-3:nth-child(2) > div:nth-child(2) > .mt-1\\.5.gap-1\\.5.flex > .px-2.bg-primary\\/10.py-0\\.5 > span",
+            "html": "<span>↳</span>",
+            "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+          },
+          {
+            "target": ".relative.bg-background\\/50.gap-3:nth-child(3) > div:nth-child(2) > .mt-1\\.5.gap-1\\.5.flex > .px-2.bg-primary\\/10.py-0\\.5 > span",
+            "html": "<span>↳</span>",
+            "summary": "Fix any of the following:\n  Element content contains only non-text characters"
+          },
+          {
+            "target": "tspan[x=\"39.625\"][dy=\"0.71em\"]",
+            "html": "<tspan x=\"39.625\" dy=\"0.71em\">Jan</tspan>",
+            "summary": "Fix any of the following:\n  Element's background color could not be determined because element contains an image node"
+          },
+          {
+            "target": "tspan[x=\"88.875\"][dy=\"0.71em\"]",
+            "html": "<tspan x=\"88.875\" dy=\"0.71em\">Feb</tspan>",
+            "summary": "Fix any of the following:\n  Element's background color could not be determined because element contains an image node"
+          },
+          {
+            "target": "tspan[x=\"138.125\"][dy=\"0.71em\"]",
+            "html": "<tspan x=\"138.125\" dy=\"0.71em\">Mar</tspan>",
+            "summary": "Fix any of the following:\n  Element's background color could not be determined because element contains an image node"
+          }
+        ]
+      }
+    ]
+  },
+  "console_errors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 400 ()",
+    "Error: ClerkJS: Something went wrong initializing Clerk in development mode. We were unable to attribute this request to an instance running on Clerk. Make sure that your Clerk Publishable Key is correct.\n    at t5 (https://mock.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:44:24243",
+    "Failed to load resource: the server responded with a status of 400 ()",
+    "Error: ClerkJS: Something went wrong initializing Clerk in development mode. We were unable to attribute this request to an instance running on Clerk. Make sure that your Clerk Publishable Key is correct.\n    at t5 (https://mock.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js:44:24243"
+  ]
+}
