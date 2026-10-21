@@ -172,8 +172,9 @@ function timing(values: (number | null)[]): StageTiming {
   return { median: median(usable), n: usable.length };
 }
 
+/** Days from start to end; null unless end comes strictly after start. */
 function gapDays(start: number | null, end: number | null): number | null {
-  if (start === null || end === null || end < start) return null;
+  if (start === null || end === null || end <= start) return null;
   return Math.round((end - start) / DAY_MS);
 }
 
