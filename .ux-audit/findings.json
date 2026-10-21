@@ -387,11 +387,11 @@
       "severity": "low",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-12",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "Resolved during analytics UX/UI audit remediation",
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 4/6: platform sort/expansion and chart view are kept in the URL (psort, pdir, pall, view). Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-12",
@@ -409,6 +409,11 @@
           "report": "reports/2026-10-21-analytics.md",
           "event": "regressed",
           "note": "Platform ROI dashboard was replaced by ChannelPerformanceMatrix, which keeps view state in useState again"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -1723,17 +1728,22 @@
       "severity": "high",
       "confidence": "observed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 1: lib/analytics/salary.ts detects currency, drops bonus/401k/%, annualises hourly/daily/monthly; salary.test.ts. Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "high"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -1753,11 +1763,11 @@
       "severity": "high",
       "confidence": "observed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 1: one definition set in lib/analytics/definitions.ts feeds every section; summarize.test.ts invariants. Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-21",
@@ -1770,6 +1780,11 @@
           "report": "reports/2026-10-21-analytics.md",
           "event": "seen",
           "note": "Observed on demo data: work model sums to 7 interviewed, funnel shows 8"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -1789,17 +1804,22 @@
       "severity": "medium",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 1/4: labels now say what is measured (got a reply, reached an interview, days to first reply from when you logged it). Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -1819,17 +1839,22 @@
       "severity": "medium",
       "confidence": "observed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 4: platform sort headers carry aria-sort; early label uses muted-foreground, axe 0 contrast violations. Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -1849,17 +1874,22 @@
       "severity": "medium",
       "confidence": "observed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 2: FilteredEmptyState with Show all time and Previous period; e2e covers it. Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -1879,17 +1909,22 @@
       "severity": "medium",
       "confidence": "observed",
       "effort": "medium",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 4: each metric appears once in the KPI row; funnel is one compact panel. Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -1909,17 +1944,22 @@
       "severity": "medium",
       "confidence": "observed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 6: new activity chart, no negative margin, non-zero tooltip rows, Other included, 2px segment gaps. Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -1939,11 +1979,11 @@
       "severity": "medium",
       "confidence": "observed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 6: one statusColor palette from --status-* tokens, validated light and dark (all marks >= 3:1 on card). Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-21",
@@ -1956,6 +1996,11 @@
           "report": "reports/2026-10-21-analytics.md",
           "event": "seen",
           "note": "dataviz validator: Rejected vs Offer deltaE 5.6 (deutan), two greys below chroma floor, dashed grid"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -1975,17 +2020,22 @@
       "severity": "medium",
       "confidence": "observed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 4: no 10-11px text or monospace prose left in analytics; captions wrap on mobile. Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2005,17 +2055,22 @@
       "severity": "medium",
       "confidence": "code-confirmed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 3/4: KPI tiles, funnel stages and needs-action rows link to the matching tracker view (stage/status/from/to). Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2035,17 +2090,22 @@
       "severity": "medium",
       "confidence": "code-confirmed",
       "effort": "medium",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 1: one cached dataset load (two queries) replaces the readers; getYears removed. Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2065,17 +2125,22 @@
       "severity": "medium",
       "confidence": "code-confirmed",
       "effort": "medium",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 2: period picker with 7d/30d/90d/ytd/all/custom; legacy month/year links redirect to a date range. Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2095,17 +2160,22 @@
       "severity": "low",
       "confidence": "observed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 4: one h2 per section (How am I doing, Where is it stuck, What works, Activity). Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "low"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2125,17 +2195,22 @@
       "severity": "high",
       "confidence": "observed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 1/4: rates under n=10 show as k of n (early); a top platform is named only when intervals separate. Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "high"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2155,17 +2230,22 @@
       "severity": "high",
       "confidence": "observed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 6: chart is role=img with a summary label, sr-only table plus Show as table, view toggle is a radiogroup. Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "high"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2185,17 +2265,22 @@
       "severity": "medium",
       "confidence": "observed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 4: platforms render as cards below lg; 768px screenshot shows no overlap or word-by-word wrapping. Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2215,17 +2300,22 @@
       "severity": "medium",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 1/4: Platform, Offer, On-site and sentence case used throughout. Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2246,17 +2336,22 @@
       "severity": "medium",
       "confidence": "observed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
       "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": null,
+      "resolved_on": "2026-10-21",
+      "status_note": "Phase 6: guest notice rendered on the server from a cookie; CLS 0. Verified 2026-10-21: axe 0 violations and no overflow at 320/375/768/1440 light and dark.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-analytics.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-21",
+          "report": "reports/2026-10-21-analytics.md",
+          "event": "resolved"
         }
       ]
     }

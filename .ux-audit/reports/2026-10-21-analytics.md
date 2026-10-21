@@ -87,6 +87,8 @@ Status colours are hex in the chart, Tailwind palette classes in the platform ba
 
 Of the 12 analytics findings from 2026-10-12 (`DATA-01`, `DATA-02`, `COLOR-01`, `A11Y-01`-`03`, `TRUST-01`, `TRUST-02`, `STATE-01`, `AFFORD-01`, `PERS-01`, `HIER-01`), 11 stay resolved: filter selects keep their `aria-label`s, the page has an h1, and the top-platform threshold is one rule. **`PERS-01` has regressed**: the Platform ROI dashboard that persisted its view was replaced by `ChannelPerformanceMatrix`, which keeps sort, search and expansion in `useState` again.
 
+**Update, same day, after the redesign (Phases 1-6):** all 19 findings in this report are resolved, `PERS-01` included. Checked by re-running `inspect_page.js` at 320/375/768/1440 in light and dark (axe 0 violations, no horizontal overflow), by the 10 analytics e2e tests, and by the unit tests for each metric. Each ledger entry's `status_note` names the change that fixed it.
+
 ---
 
 ## Findings
