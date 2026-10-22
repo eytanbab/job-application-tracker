@@ -259,24 +259,30 @@ function listOrderBy(query: Pick<ApplicationListQuery, "sort" | "desc">) {
 
 async function queryListRows(userId: string, query: ApplicationListQuery) {
   const where = listFilterConditions(userId, query);
-  const [rows, [{ total }]] = await Promise.all([
-    db
-      .select(listRowFields)
-      .from(jobApplications)
-      .leftJoin(
-        documents,
-        and(
-          eq(jobApplications.resumeId, documents.id),
-          eq(documents.userId, userId),
-        ),
-      )
-      .where(where)
-      .orderBy(...listOrderBy(query))
-      .limit(query.pageSize)
-      .offset((query.page - 1) * query.pageSize),
-    db.select({ total: count() }).from(jobApplications).where(where),
-  ]);
-  return { rows: rows.map(displayGhostedStatus), total };
+  // The total rides along on each row (count over the filtered rows, taken
+  // before limit and offset), so a page is one query.
+  const rows = await db
+    .select({ ...listRowFields, total: sql<string>`count(*) over ()` })
+    .from(jobApplications)
+    .leftJoin(
+      documents,
+      and(
+        eq(jobApplications.resumeId, documents.id),
+        eq(documents.userId, userId),
+      ),
+    )
+    .where(where)
+    .orderBy(...listOrderBy(query))
+    .limit(query.pageSize)
+    .offset((query.page - 1) * query.pageSize);
+  // A page past the end has no rows to carry the total; count separately
+  // so the caller can clamp to the real last page.
+  const total = rows.length
+    ? Number(rows[0].total)
+    : query.page > 1
+      ? (await db.select({ total: count() }).from(jobApplications).where(where))[0].total
+      : 0;
+  return { rows: rows.map(({ total: _total, ...row }) => displayGhostedStatus(row)), total };
 }
 
 /** Status history per application, for the stage filters in mock mode. */
@@ -386,15 +392,42 @@ export async function getKanbanColumns(
     ) as Partial<Record<StatusKind, { rows: ApplicationListRow[]; total: number }>>;
   }
 
-  const columns = await Promise.all(
-    kinds.map(
-      async (kind) =>
-        [kind, await queryListRows(userId, columnQuery(kind))] as const,
-    ),
-  );
-  return Object.fromEntries(columns) as Partial<
+  // One query for every column: rank rows within their status, keep the
+  // first page of each, and count each status with a window over the same
+  // filtered rows.
+  const order = sql.join(listOrderBy({ sort: null, desc: false }), sql`, `);
+  const ranked = db
+    .select({
+      ...listRowFields,
+      columnRank: sql<number>`row_number() over (partition by ${jobApplications.statusCategory} order by ${order})`.as("column_rank"),
+      columnTotal: sql<string>`count(*) over (partition by ${jobApplications.statusCategory})`.as("column_total"),
+    })
+    .from(jobApplications)
+    .leftJoin(
+      documents,
+      and(
+        eq(jobApplications.resumeId, documents.id),
+        eq(documents.userId, userId),
+      ),
+    )
+    .where(listFilterConditions(userId, { ...query, statuses: kinds }))
+    .as("ranked");
+  const rows = await db
+    .select()
+    .from(ranked)
+    .where(lte(ranked.columnRank, KANBAN_PAGE_SIZE))
+    .orderBy(asc(ranked.columnRank));
+
+  const columns: Partial<
     Record<StatusKind, { rows: ApplicationListRow[]; total: number }>
-  >;
+  > = Object.fromEntries(kinds.map((kind) => [kind, { rows: [], total: 0 }]));
+  for (const { columnRank: _rank, columnTotal, ...row } of rows) {
+    const column = columns[row.statusCategory as StatusKind];
+    if (!column) continue;
+    column.rows.push(displayGhostedStatus(row));
+    column.total = Number(columnTotal);
+  }
+  return columns;
 }
 
 export type KanbanColumns = Awaited<ReturnType<typeof getKanbanColumns>>;
