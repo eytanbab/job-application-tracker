@@ -220,6 +220,7 @@ function listFilterConditions(userId: string, query: ListFilters) {
         ilike(jobApplications.statusCategory, pattern),
         ilike(jobApplications.salary, pattern),
         ilike(jobApplications.description, pattern),
+        ilike(jobApplications.notes, pattern),
       )!,
     );
   }

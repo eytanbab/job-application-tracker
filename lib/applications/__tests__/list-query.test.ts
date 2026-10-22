@@ -144,6 +144,12 @@ describe("queryRows", () => {
     expect(result.rows[0].company_name).toBe("Globex");
   });
 
+  it("matches search text inside notes", () => {
+    const withNotes = [...rows, row({ company_name: "Hooli", notes: "Referred by Dana Levi" })];
+    const result = queryRows(withNotes, { ...base, search: "dana" });
+    expect(result.rows.map((r) => r.company_name)).toEqual(["Hooli"]);
+  });
+
   it("filters by status and platform", () => {
     expect(queryRows(rows, { ...base, statuses: ["rejected"] }).total).toBe(1);
     expect(queryRows(rows, { ...base, statuses: ["rejected", "applied"] }).total).toBe(3);
