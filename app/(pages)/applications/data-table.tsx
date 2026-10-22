@@ -7,13 +7,9 @@ import { StatusFilterPills } from "./components/status-filter-pills";
 import { AnalyticsFilterChip } from "./components/analytics-filter-chip";
 import { ApplicationsKanban } from "./components/applications-kanban";
 import { OptimisticChangeContext } from "./hooks/optimistic-changes";
-import { ApplicationDetailSheet } from "./components/application-detail-sheet";
-import { EditApplicationSheet } from "@/app/_components/edit-application-sheet";
-import {
-  ApplicationForm,
-  type ApplicationFormHandle,
-} from "@/app/_components/application-form";
+import type { ApplicationFormHandle } from "@/app/_components/application-form";
 import { useRef } from "react";
+import { useLazyModule } from "./hooks/use-lazy-module";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +30,13 @@ import { ApplicationsEmptyState } from "./components/applications-empty-state";
 import { useDataTable, ApplicationRow } from "./hooks/use-data-table";
 import type { KanbanColumns } from "@/app/actions/applications";
 import type { StatusCounts } from "@/lib/applications/list-query";
+
+// The sheets and the add form are only needed once a row or the add button
+// is used, so they load in their own chunks, fetched when the browser is idle
+// (and on demand if the user is quicker).
+const loadDetailSheet = () => import("./components/application-detail-sheet");
+const loadEditSheet = () => import("@/app/_components/edit-application-sheet");
+const loadApplicationForm = () => import("@/app/_components/application-form");
 
 interface DataTableProps<TData extends ApplicationRow, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -120,6 +123,19 @@ export function DataTable<TData extends ApplicationRow, TValue>({
 
   const createFormRef = useRef<ApplicationFormHandle>(null);
 
+  const ApplicationDetailSheet = useLazyModule(loadDetailSheet, {
+    needed: isDetailOpen,
+    preloadWhenIdle: true,
+  })?.ApplicationDetailSheet;
+  const EditApplicationSheet = useLazyModule(loadEditSheet, {
+    needed: !!editingApp,
+    preloadWhenIdle: true,
+  })?.EditApplicationSheet;
+  const ApplicationForm = useLazyModule(loadApplicationForm, {
+    needed: isCreateOpen,
+    preloadWhenIdle: true,
+  })?.ApplicationForm;
+
   // A brand-new account gets onboarding instead of an empty table and
   // seven zero-count filters
   const isFirstRun = statusCounts.all === 0 && !hasActiveFilters;
@@ -190,7 +206,6 @@ export function DataTable<TData extends ApplicationRow, TValue>({
                 onDensityChange={setDensity}
               />
             )}
-
           </>
         )}
 
@@ -216,7 +231,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
         </button>
 
         <Dialog
-          open={isCreateOpen}
+          open={isCreateOpen && !!ApplicationForm}
           onOpenChange={(open) => {
             // Esc, outside click and the close button go through the form's
             // unsaved-changes guard instead of closing immediately.
@@ -237,50 +252,54 @@ export function DataTable<TData extends ApplicationRow, TValue>({
               </DialogDescription>
             </DialogHeader>
             <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-              <ApplicationForm
-                ref={createFormRef}
-                defaultValues={defaultCreateValues}
-                aiRequiresSignIn={aiRequiresSignIn}
-                onClose={() => setIsCreateOpen(false)}
-                onSubmit={async (values) => {
-                  try {
-                    await createApplication(values);
-                    toast({ description: "Application created successfully!" });
-                    setIsCreateOpen(false);
-                  } catch (err) {
-                    toast({
-                      description: "Failed to create application",
-                      variant: "destructive",
-                    });
-                    throw err;
-                  }
-                }}
-              />
+              {ApplicationForm && (
+                <ApplicationForm
+                  ref={createFormRef}
+                  defaultValues={defaultCreateValues}
+                  aiRequiresSignIn={aiRequiresSignIn}
+                  onClose={() => setIsCreateOpen(false)}
+                  onSubmit={async (values) => {
+                    try {
+                      await createApplication(values);
+                      toast({ description: "Application created successfully!" });
+                      setIsCreateOpen(false);
+                    } catch (err) {
+                      toast({
+                        description: "Failed to create application",
+                        variant: "destructive",
+                      });
+                      throw err;
+                    }
+                  }}
+                />
+              )}
             </div>
           </DialogContent>
         </Dialog>
 
-        <ApplicationDetailSheet
-          application={selectedApp}
-          open={isDetailOpen}
-          onOpenChange={(open) => {
-            if (!open) {
-              handleCloseDetail();
-            } else {
-              setIsDetailOpen(true);
-            }
-          }}
-          onEditClick={(app) => setEditingApp(app as TData)}
-          onDeleteClick={handleDelete}
-          hasPrevious={hasPreviousApp}
-          hasNext={hasNextApp}
-          onPrevious={goToPreviousApp}
-          onNext={goToNextApp}
-          currentIndex={currentIndex}
-          totalApps={totalApps}
-        />
+        {ApplicationDetailSheet && (
+          <ApplicationDetailSheet
+            application={selectedApp}
+            open={isDetailOpen}
+            onOpenChange={(open) => {
+              if (!open) {
+                handleCloseDetail();
+              } else {
+                setIsDetailOpen(true);
+              }
+            }}
+            onEditClick={(app) => setEditingApp(app as TData)}
+            onDeleteClick={handleDelete}
+            hasPrevious={hasPreviousApp}
+            hasNext={hasNextApp}
+            onPrevious={goToPreviousApp}
+            onNext={goToNextApp}
+            currentIndex={currentIndex}
+            totalApps={totalApps}
+          />
+        )}
 
-        {editingApp && (
+        {editingApp && EditApplicationSheet && (
           <EditApplicationSheet
             open={!!editingApp}
             onOpenChange={(open) => {

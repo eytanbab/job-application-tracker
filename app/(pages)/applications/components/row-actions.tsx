@@ -22,7 +22,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { EditApplicationSheet } from "@/app/_components/edit-application-sheet";
 import {
   deleteApplication,
   updateApplication,
@@ -32,6 +31,11 @@ import { useAddOptimisticChange } from "../hooks/optimistic-changes";
 import { cn, resolveUpdatedStatus, type StatusKind } from "@/lib/utils";
 import { stageLabels } from "./status-badge-classes";
 import type { FormValues } from "../columns";
+
+import { useLazyModule } from "../hooks/use-lazy-module";
+
+// Loaded the first time a row's Edit is chosen (the table preloads it)
+const loadEditSheet = () => import("@/app/_components/edit-application-sheet");
 
 const STAGES: StatusKind[] = [
   "applied",
@@ -54,6 +58,10 @@ export function RowActions({
   onView?: () => void;
 }) {
   const [isEditOpen, setIsEditOpen] = useState(false);
+  // Stays mounted once loaded, so closing animates
+  const EditApplicationSheet = useLazyModule(loadEditSheet, {
+    needed: isEditOpen,
+  })?.EditApplicationSheet;
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [, startTransition] = useTransition();
   const addOptimisticChange = useAddOptimisticChange();
@@ -158,25 +166,27 @@ export function RowActions({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <EditApplicationSheet
-        open={isEditOpen}
-        onOpenChange={setIsEditOpen}
-        showTrigger={false}
-        returnFocusRef={triggerRef}
-        row={{ original: application }}
-        onSubmit={async (values) => {
-          try {
-            await updateApplication(values);
-            toast({ description: "Application updated successfully!" });
-          } catch (err) {
-            toast({
-              description: "Failed to update application.",
-              variant: "destructive",
-            });
-            throw err;
-          }
-        }}
-      />
+      {EditApplicationSheet && (
+        <EditApplicationSheet
+          open={isEditOpen}
+          onOpenChange={setIsEditOpen}
+          showTrigger={false}
+          returnFocusRef={triggerRef}
+          row={{ original: application }}
+          onSubmit={async (values) => {
+            try {
+              await updateApplication(values);
+              toast({ description: "Application updated successfully!" });
+            } catch (err) {
+              toast({
+                description: "Failed to update application.",
+                variant: "destructive",
+              });
+              throw err;
+            }
+          }}
+        />
+      )}
 
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <DialogContent
@@ -190,7 +200,9 @@ export function RowActions({
             <DialogDescription>
               This action cannot be undone. This will permanently delete your
               application for{" "}
-              <strong className="text-foreground">{application.role_name}</strong>{" "}
+              <strong className="text-foreground">
+                {application.role_name}
+              </strong>{" "}
               at{" "}
               <strong className="text-foreground">
                 {application.company_name}
@@ -200,7 +212,11 @@ export function RowActions({
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
             <DialogClose asChild>
-              <Button type="button" variant="outline" className="cursor-pointer">
+              <Button
+                type="button"
+                variant="outline"
+                className="cursor-pointer"
+              >
                 Cancel
               </Button>
             </DialogClose>
