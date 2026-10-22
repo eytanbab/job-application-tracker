@@ -29,6 +29,11 @@ import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { KanbanCard, KanbanItem } from "./kanban-card";
+import {
+  applyOptimisticChanges,
+  useAddOptimisticChange,
+  type OptimisticChange,
+} from "../hooks/optimistic-changes";
 
 export type { KanbanItem };
 
@@ -48,6 +53,8 @@ interface ApplicationsKanbanProps {
   onSelectApplication: (app: KanbanItem) => void;
   onEditApplication: (app: KanbanItem) => void;
   onDeleteApplication: (id: string) => void;
+  /** Moves and deletes not yet confirmed by the server. */
+  optimisticChanges?: readonly OptimisticChange[];
 }
 
 const BASE_KANBAN_COLUMNS: {
@@ -104,8 +111,10 @@ export function ApplicationsKanban({
   onSelectApplication,
   onEditApplication,
   onDeleteApplication,
+  optimisticChanges = [],
 }: ApplicationsKanbanProps) {
   const [, startTransition] = useTransition();
+  const addOptimisticChange = useAddOptimisticChange();
   const [dragOverCol, setDragOverCol] = useState<StatusKind | null>(null);
   const [activeMobileCol, setActiveMobileCol] = useState<StatusKind>("applied");
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -147,7 +156,8 @@ export function ApplicationsKanban({
   }>({ source: columns, rows: {} });
   const [loadingColumn, setLoadingColumn] = useState<StatusKind | null>(null);
 
-  const groupedData = useMemo(() => {
+  // Cards as the server sent them, then with pending moves and deletes applied.
+  const serverGroups = useMemo(() => {
     const moreRows = extraRows.source === columns ? extraRows.rows : {};
     const map = {} as Record<StatusKind, KanbanItem[]>;
     for (const option of [...BASE_KANBAN_COLUMNS, { id: "other" as const }]) {
@@ -159,7 +169,37 @@ export function ApplicationsKanban({
     return map;
   }, [columns, extraRows]);
 
-  const columnTotal = (kind: StatusKind) => columns[kind]?.total ?? 0;
+  const { groupedData, totalDelta } = useMemo(() => {
+    const delta: Partial<Record<StatusKind, number>> = {};
+    if (optimisticChanges.length === 0) return { groupedData: serverGroups, totalDelta: delta };
+    const kinds = Object.keys(serverGroups) as StatusKind[];
+    const all = kinds.flatMap((kind) => serverGroups[kind].map((item) => ({ item, kind })));
+    const map = {} as Record<StatusKind, KanbanItem[]>;
+    for (const kind of kinds) map[kind] = [];
+    // A moved card goes to the top of its new column, as the server sorts
+    // the newest change first.
+    const moved: { item: KanbanItem; kind: StatusKind }[] = [];
+    for (const { item, kind } of all) {
+      const [next] = applyOptimisticChanges([item], optimisticChanges);
+      if (!next) {
+        delta[kind] = (delta[kind] ?? 0) - 1;
+        continue;
+      }
+      const nextKind = getStatusKind(next.status, next.statusCategory);
+      if (nextKind === kind) {
+        map[kind].push(next);
+      } else {
+        delta[kind] = (delta[kind] ?? 0) - 1;
+        delta[nextKind] = (delta[nextKind] ?? 0) + 1;
+        moved.push({ item: next, kind: nextKind });
+      }
+    }
+    for (const { item, kind } of moved) (map[kind] ??= []).unshift(item);
+    return { groupedData: map, totalDelta: delta };
+  }, [serverGroups, optimisticChanges]);
+
+  const columnTotal = (kind: StatusKind) =>
+    (columns[kind]?.total ?? 0) + (totalDelta[kind] ?? 0);
 
   const loadMore = async (kind: StatusKind) => {
     const source = columns;
@@ -244,6 +284,7 @@ export function ApplicationsKanban({
     const previousCategory = item.statusCategory || getStatusKind(item.status);
     const updatedStatus = resolveUpdatedStatus(item.status, cat);
     startTransition(async () => {
+      addOptimisticChange({ kind: "move", id: item.id!, statusCategory: cat, status: updatedStatus });
       try {
         await updateApplication({
           ...item,

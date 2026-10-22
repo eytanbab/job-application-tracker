@@ -14,6 +14,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useOptimistic,
   useTransition,
 } from "react";
 import {
@@ -35,6 +36,10 @@ import {
   updateApplicationsStatus,
 } from "@/app/actions/applications";
 import { toast } from "@/hooks/use-toast";
+import {
+  applyOptimisticChanges,
+  type OptimisticChange,
+} from "./optimistic-changes";
 import { format } from "date-fns";
 import {
   applicationsSearchParams,
@@ -239,6 +244,17 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
   );
   const [isBulkPending, startBulkTransition] = useTransition();
 
+  // Moves and deletes show at once; see optimistic-changes.ts.
+  const [optimisticChanges, addOptimisticChange] = useOptimistic<
+    OptimisticChange[],
+    OptimisticChange
+  >([], (changes, change) => [...changes, change]);
+  const displayedData = useMemo(
+    () => applyOptimisticChanges(data, optimisticChanges),
+    [data, optimisticChanges],
+  );
+  const [, startDeleteTransition] = useTransition();
+
   const sorting: SortingState = useMemo(
     () => (sort ? [{ id: sort, desc: dir === "desc" }] : []),
     [sort, dir],
@@ -263,23 +279,26 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     setAppIdParam("");
   }, [setAppIdParam]);
 
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteApplication(id);
-      toast({ description: "Application deleted successfully." });
-      if (selectedApp?.id === id || appIdParam === id) {
-        handleCloseDetail();
-      }
-    } catch {
-      toast({
-        description: "Failed to delete application.",
-        variant: "destructive",
-      });
+  const handleDelete = (id: string) => {
+    if (selectedApp?.id === id || appIdParam === id) {
+      handleCloseDetail();
     }
+    startDeleteTransition(async () => {
+      addOptimisticChange({ kind: "delete", id });
+      try {
+        await deleteApplication(id);
+        toast({ description: "Application deleted successfully." });
+      } catch {
+        toast({
+          description: "Failed to delete application.",
+          variant: "destructive",
+        });
+      }
+    });
   };
 
   const table = useReactTable({
-    data,
+    data: displayedData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getRowId: (row, index) => row.id ?? String(index),
@@ -449,7 +468,7 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
   };
 
   // J/K move through the rows of the current page
-  const currentList = data;
+  const currentList = displayedData;
   const activeAppIndex = useMemo(
     () =>
       selectedApp?.id
@@ -515,6 +534,8 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     defaultCreateValues,
     handleSelectRow,
     handleDelete,
+    optimisticChanges,
+    addOptimisticChange,
     setRowSelection,
     hasPreviousApp,
     hasNextApp,

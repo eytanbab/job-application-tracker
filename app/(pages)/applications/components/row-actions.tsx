@@ -28,6 +28,7 @@ import {
   updateApplication,
 } from "@/app/actions/applications";
 import { toast } from "@/hooks/use-toast";
+import { useAddOptimisticChange } from "../hooks/optimistic-changes";
 import { cn, resolveUpdatedStatus, type StatusKind } from "@/lib/utils";
 import { stageLabels } from "./status-badge-classes";
 import type { FormValues } from "../columns";
@@ -55,18 +56,21 @@ export function RowActions({
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [, startTransition] = useTransition();
+  const addOptimisticChange = useAddOptimisticChange();
   // Dialogs open from a menu item that unmounts, so send focus back to
   // the ⋯ button when they close
   const triggerRef = useRef<HTMLButtonElement>(null);
   const label = `${application.role_name} at ${application.company_name}`;
 
   const moveTo = (stage: StatusKind) => {
+    const status = resolveUpdatedStatus(application.status, stage);
     startTransition(async () => {
+      if (application.id) addOptimisticChange({ kind: "move", id: application.id, statusCategory: stage, status });
       try {
         await updateApplication({
           ...application,
           statusCategory: stage,
-          status: resolveUpdatedStatus(application.status, stage),
+          status,
         });
         toast({ description: `Moved to ${stageLabels[stage]}` });
       } catch (err) {
@@ -79,18 +83,22 @@ export function RowActions({
     });
   };
 
-  const remove = async () => {
-    if (!application.id) return;
-    try {
-      await deleteApplication(application.id);
-      toast({ description: "Application deleted." });
-    } catch (err) {
-      console.error(err);
-      toast({
-        description: "Failed to delete application",
-        variant: "destructive",
-      });
-    }
+  const remove = () => {
+    const id = application.id;
+    if (!id) return;
+    startTransition(async () => {
+      addOptimisticChange({ kind: "delete", id });
+      try {
+        await deleteApplication(id);
+        toast({ description: "Application deleted." });
+      } catch (err) {
+        console.error(err);
+        toast({
+          description: "Failed to delete application",
+          variant: "destructive",
+        });
+      }
+    });
   };
 
   return (

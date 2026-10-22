@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { StatusFilterPills } from "./components/status-filter-pills";
 import { AnalyticsFilterChip } from "./components/analytics-filter-chip";
 import { ApplicationsKanban } from "./components/applications-kanban";
+import { OptimisticChangeContext } from "./hooks/optimistic-changes";
 import { ApplicationDetailSheet } from "./components/application-detail-sheet";
 import { EditApplicationSheet } from "@/app/_components/edit-application-sheet";
 import {
@@ -96,6 +97,8 @@ export function DataTable<TData extends ApplicationRow, TValue>({
     handleSelectRow,
     handleCloseDetail,
     handleDelete,
+    optimisticChanges,
+    addOptimisticChange,
     setRowSelection,
     hasPreviousApp,
     hasNextApp,
@@ -122,182 +125,185 @@ export function DataTable<TData extends ApplicationRow, TValue>({
   const isFirstRun = statusCounts.all === 0 && !hasActiveFilters;
 
   return (
-    <div className="w-full space-y-4">
-      {/* The visible title is in the top bar, which is hidden on phones */}
-      <h1 className="sr-only">Job applications</h1>
-      {isFirstRun ? (
-        <ApplicationsEmptyState onOpenCreate={() => setIsCreateOpen(true)} />
-      ) : (
-        <>
-          <DataTableToolbar
-            topRow={
-              viewMode !== "kanban" && (
-                <StatusFilterPills
-                  counts={statusCounts}
-                  statusFilter={statusFilter}
-                  onStatusFilterChange={setStatusFilter}
-                />
-              )
-            }
-            globalFilter={globalFilter}
-            setGlobalFilter={setGlobalFilter}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            platformFilter={platformFilter}
-            setPlatformFilter={setPlatformFilter}
-            uniquePlatforms={uniquePlatforms}
-            hasActiveFilters={hasActiveFilters}
-            clearFilters={clearFilters}
-            isMobileFilterOpen={isMobileFilterOpen}
-            setIsMobileFilterOpen={setIsMobileFilterOpen}
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            onOpenCreate={() => setIsCreateOpen(true)}
-          />
-
-          {hasAnalyticsFilter && (
-            <AnalyticsFilterChip {...analyticsFilter} onClear={clearAnalyticsFilter} />
-          )}
-
-          {viewMode === "kanban" ? (
-            <ApplicationsKanban
-              columns={kanbanColumns ?? {}}
-              searchFilter={globalFilter}
+    <OptimisticChangeContext.Provider value={addOptimisticChange}>
+      <div className="w-full space-y-4">
+        {/* The visible title is in the top bar, which is hidden on phones */}
+        <h1 className="sr-only">Job applications</h1>
+        {isFirstRun ? (
+          <ApplicationsEmptyState onOpenCreate={() => setIsCreateOpen(true)} />
+        ) : (
+          <>
+            <DataTableToolbar
+              topRow={
+                viewMode !== "kanban" && (
+                  <StatusFilterPills
+                    counts={statusCounts}
+                    statusFilter={statusFilter}
+                    onStatusFilterChange={setStatusFilter}
+                  />
+                )
+              }
+              globalFilter={globalFilter}
+              setGlobalFilter={setGlobalFilter}
               statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
               platformFilter={platformFilter}
-              stageFilter={analyticsFilter.stage}
-              fromFilter={analyticsFilter.from}
-              toFilter={analyticsFilter.to}
-              isPending={isPending}
-              onSelectApplication={(app) => handleSelectRow(app as TData)}
-              onEditApplication={(app) => setEditingApp(app as TData)}
-              onDeleteApplication={handleDelete}
-            />
-          ) : (
-            <DataTableGrid
-              table={table}
-              columnsCount={columns.length}
+              setPlatformFilter={setPlatformFilter}
+              uniquePlatforms={uniquePlatforms}
               hasActiveFilters={hasActiveFilters}
               clearFilters={clearFilters}
-              onSelectRow={handleSelectRow}
-              isPending={isPending}
-              density={density}
-              onDensityChange={setDensity}
+              isMobileFilterOpen={isMobileFilterOpen}
+              setIsMobileFilterOpen={setIsMobileFilterOpen}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              onOpenCreate={() => setIsCreateOpen(true)}
             />
-          )}
 
-        </>
-      )}
+            {hasAnalyticsFilter && (
+              <AnalyticsFilterChip {...analyticsFilter} onClear={clearAnalyticsFilter} />
+            )}
 
-      <DataTableBulkActions
-        selectedCount={selectedCount}
-        isPending={isBulkPending}
-        onDeselectAll={() => setRowSelection({})}
-        onBulkStatusChange={handleBulkStatusChange}
-        onBulkDelete={handleBulkDelete}
-      />
+            {viewMode === "kanban" ? (
+              <ApplicationsKanban
+                columns={kanbanColumns ?? {}}
+                searchFilter={globalFilter}
+                statusFilter={statusFilter}
+                platformFilter={platformFilter}
+                stageFilter={analyticsFilter.stage}
+                fromFilter={analyticsFilter.from}
+                toFilter={analyticsFilter.to}
+                isPending={isPending}
+                onSelectApplication={(app) => handleSelectRow(app as TData)}
+                onEditApplication={(app) => setEditingApp(app as TData)}
+                onDeleteApplication={handleDelete}
+                optimisticChanges={optimisticChanges}
+              />
+            ) : (
+              <DataTableGrid
+                table={table}
+                columnsCount={columns.length}
+                hasActiveFilters={hasActiveFilters}
+                clearFilters={clearFilters}
+                onSelectRow={handleSelectRow}
+                isPending={isPending}
+                density={density}
+                onDensityChange={setDensity}
+              />
+            )}
 
-      <button
-        type="button"
-        onClick={() => setIsCreateOpen(true)}
-        className={cn(
-          "fixed right-5 z-40 lg:hidden h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer ring-4 ring-background/50 bottom-[calc(1.5rem+env(safe-area-inset-bottom))]",
-          selectedCount > 0 && "hidden",
+          </>
         )}
-        aria-label="Add Application"
-        title="Add Application"
-      >
-        <Plus className="h-6 w-6" />
-      </button>
 
-      <Dialog
-        open={isCreateOpen}
-        onOpenChange={(open) => {
-          // Esc, outside click and the close button go through the form's
-          // unsaved-changes guard instead of closing immediately.
-          if (!open && createFormRef.current) {
-            createFormRef.current.requestClose();
-          } else {
-            setIsCreateOpen(open);
-          }
-        }}
-      >
-        <DialogContent className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-md md:max-w-lg p-0 overflow-hidden flex flex-col max-h-[85dvh] sm:max-h-[90vh] rounded-2xl border border-border/40 bg-card shadow-2xl">
-          <DialogHeader className="text-left px-4 sm:px-6 pt-5 pb-3 border-b border-border/30 shrink-0">
-            <DialogTitle className="text-xl font-bold">
-              New Job Application
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-              Paste a job link to autofill, or enter details manually.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            <ApplicationForm
-              ref={createFormRef}
-              defaultValues={defaultCreateValues}
-              aiRequiresSignIn={aiRequiresSignIn}
-              onClose={() => setIsCreateOpen(false)}
-              onSubmit={async (values) => {
-                try {
-                  await createApplication(values);
-                  toast({ description: "Application created successfully!" });
-                  setIsCreateOpen(false);
-                } catch (err) {
-                  toast({
-                    description: "Failed to create application",
-                    variant: "destructive",
-                  });
-                  throw err;
-                }
-              }}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+        <DataTableBulkActions
+          selectedCount={selectedCount}
+          isPending={isBulkPending}
+          onDeselectAll={() => setRowSelection({})}
+          onBulkStatusChange={handleBulkStatusChange}
+          onBulkDelete={handleBulkDelete}
+        />
 
-      <ApplicationDetailSheet
-        application={selectedApp}
-        open={isDetailOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            handleCloseDetail();
-          } else {
-            setIsDetailOpen(true);
-          }
-        }}
-        onEditClick={(app) => setEditingApp(app as TData)}
-        onDeleteClick={handleDelete}
-        hasPrevious={hasPreviousApp}
-        hasNext={hasNextApp}
-        onPrevious={goToPreviousApp}
-        onNext={goToNextApp}
-        currentIndex={currentIndex}
-        totalApps={totalApps}
-      />
+        <button
+          type="button"
+          onClick={() => setIsCreateOpen(true)}
+          className={cn(
+            "fixed right-5 z-40 lg:hidden h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer ring-4 ring-background/50 bottom-[calc(1.5rem+env(safe-area-inset-bottom))]",
+            selectedCount > 0 && "hidden",
+          )}
+          aria-label="Add Application"
+          title="Add Application"
+        >
+          <Plus className="h-6 w-6" />
+        </button>
 
-      {editingApp && (
-        <EditApplicationSheet
-          open={!!editingApp}
+        <Dialog
+          open={isCreateOpen}
           onOpenChange={(open) => {
-            if (!open) setEditingApp(null);
-          }}
-          showTrigger={false}
-          row={{ original: editingApp as unknown as FormValues }}
-          onSubmit={async (values) => {
-            try {
-              await updateApplication(values);
-              toast({ description: "Application updated successfully!" });
-              setEditingApp(null);
-            } catch (err) {
-              toast({
-                description: "Failed to update application",
-                variant: "destructive",
-              });
-              throw err;
+            // Esc, outside click and the close button go through the form's
+            // unsaved-changes guard instead of closing immediately.
+            if (!open && createFormRef.current) {
+              createFormRef.current.requestClose();
+            } else {
+              setIsCreateOpen(open);
             }
           }}
+        >
+          <DialogContent className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-md md:max-w-lg p-0 overflow-hidden flex flex-col max-h-[85dvh] sm:max-h-[90vh] rounded-2xl border border-border/40 bg-card shadow-2xl">
+            <DialogHeader className="text-left px-4 sm:px-6 pt-5 pb-3 border-b border-border/30 shrink-0">
+              <DialogTitle className="text-xl font-bold">
+                New Job Application
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                Paste a job link to autofill, or enter details manually.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              <ApplicationForm
+                ref={createFormRef}
+                defaultValues={defaultCreateValues}
+                aiRequiresSignIn={aiRequiresSignIn}
+                onClose={() => setIsCreateOpen(false)}
+                onSubmit={async (values) => {
+                  try {
+                    await createApplication(values);
+                    toast({ description: "Application created successfully!" });
+                    setIsCreateOpen(false);
+                  } catch (err) {
+                    toast({
+                      description: "Failed to create application",
+                      variant: "destructive",
+                    });
+                    throw err;
+                  }
+                }}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <ApplicationDetailSheet
+          application={selectedApp}
+          open={isDetailOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              handleCloseDetail();
+            } else {
+              setIsDetailOpen(true);
+            }
+          }}
+          onEditClick={(app) => setEditingApp(app as TData)}
+          onDeleteClick={handleDelete}
+          hasPrevious={hasPreviousApp}
+          hasNext={hasNextApp}
+          onPrevious={goToPreviousApp}
+          onNext={goToNextApp}
+          currentIndex={currentIndex}
+          totalApps={totalApps}
         />
-      )}
-    </div>
+
+        {editingApp && (
+          <EditApplicationSheet
+            open={!!editingApp}
+            onOpenChange={(open) => {
+              if (!open) setEditingApp(null);
+            }}
+            showTrigger={false}
+            row={{ original: editingApp as unknown as FormValues }}
+            onSubmit={async (values) => {
+              try {
+                await updateApplication(values);
+                toast({ description: "Application updated successfully!" });
+                setEditingApp(null);
+              } catch (err) {
+                toast({
+                  description: "Failed to update application",
+                  variant: "destructive",
+                });
+                throw err;
+              }
+            }}
+          />
+        )}
+      </div>
+    </OptimisticChangeContext.Provider>
   );
 }
