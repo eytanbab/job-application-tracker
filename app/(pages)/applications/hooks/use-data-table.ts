@@ -19,7 +19,6 @@ import {
 import {
   statusLabels,
   type StatusKind,
-  resolveUpdatedStatus,
   isStatusKind,
 } from "@/lib/utils";
 import {
@@ -32,11 +31,11 @@ import {
 } from "nuqs";
 import {
   deleteApplication,
-  updateApplication,
+  deleteApplications,
+  updateApplicationsStatus,
 } from "@/app/actions/applications";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { type FormValues } from "../columns";
 import {
   applicationsSearchParams,
   DEFAULT_PAGE_SIZE,
@@ -329,109 +328,78 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
   const selectedRows = table.getSelectedRowModel().rows;
   const selectedCount = selectedRows.length;
 
+  /**
+   * Toasts the outcome of a bulk action and keeps only the rows that failed
+   * selected, so the user can retry them.
+   */
+  const finishBulkAction = (
+    succeededRowIds: Set<string>,
+    messages: { all: string; none: string; some: (done: number, failed: number) => string },
+  ) => {
+    const succeededCount = succeededRowIds.size;
+    const failedCount = selectedCount - succeededCount;
+    if (failedCount === 0) {
+      toast({ description: messages.all });
+      setRowSelection({});
+    } else if (succeededCount === 0) {
+      toast({ description: messages.none, variant: "destructive" });
+    } else {
+      toast({ description: messages.some(succeededCount, failedCount), variant: "destructive" });
+      setRowSelection((prev) => {
+        const next: RowSelectionState = {};
+        Object.keys(prev).forEach((rowKey) => {
+          if (!succeededRowIds.has(rowKey)) next[rowKey] = true;
+        });
+        return next;
+      });
+    }
+  };
+
+  /** Selected rows by application id, for mapping a bulk action's result back to rows. */
+  const selectedRowIdsByAppId = () =>
+    new Map(
+      selectedRows
+        .filter((row) => row.original.id)
+        .map((row) => [row.original.id as string, row.id] as const),
+    );
+
+  // One request for the whole selection (see deleteApplications).
   const handleBulkDelete = () => {
     if (selectedCount === 0) return;
+    const rowIds = selectedRowIdsByAppId();
     startBulkTransition(async () => {
-      const results = await Promise.allSettled(
-        selectedRows.map(async (row) => {
-          if (row.original.id) {
-            await deleteApplication(row.original.id);
-            return row.id;
-          }
-          return row.id;
-        }),
-      );
-      const successfulIds = new Set(
-        results
-          .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
-          .map((r) => r.value),
-      );
-      const succeededCount = successfulIds.size;
-      const failedCount = selectedCount - succeededCount;
-
-      if (failedCount === 0) {
-        toast({
-          description: `Successfully deleted ${succeededCount} application(s).`,
-        });
-        setRowSelection({});
-      } else if (succeededCount === 0) {
-        toast({
-          description: "Failed to delete applications.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          description: `Deleted ${succeededCount} of ${selectedCount} application(s). ${failedCount} failed.`,
-          variant: "destructive",
-        });
-        setRowSelection((prev) => {
-          const next: RowSelectionState = {};
-          Object.keys(prev).forEach((rowKey) => {
-            if (!successfulIds.has(rowKey)) {
-              next[rowKey] = true;
-            }
-          });
-          return next;
-        });
+      let succeeded = new Set<string>();
+      try {
+        const { deleted } = await deleteApplications([...rowIds.keys()]);
+        succeeded = new Set(deleted.flatMap((id) => rowIds.get(id) ?? []));
+      } catch (err) {
+        console.error("Bulk delete failed:", err);
       }
+      finishBulkAction(succeeded, {
+        all: `Successfully deleted ${succeeded.size} application(s).`,
+        none: "Failed to delete applications.",
+        some: (done, failed) => `Deleted ${done} of ${selectedCount} application(s). ${failed} failed.`,
+      });
     });
   };
 
   const handleBulkStatusChange = (newCategory: string) => {
     if (selectedCount === 0) return;
     const cat = (isStatusKind(newCategory) ? newCategory : "other") as StatusKind;
+    const rowIds = selectedRowIdsByAppId();
     startBulkTransition(async () => {
-      const results = await Promise.allSettled(
-        selectedRows.map(async (row) => {
-          if (row.original.id) {
-            const updatedStatusText = resolveUpdatedStatus(
-              row.original.status,
-              cat,
-            );
-            await updateApplication({
-              ...row.original,
-              id: row.original.id,
-              statusCategory: cat,
-              status: updatedStatusText.trim(),
-            } as unknown as FormValues);
-            return row.id;
-          }
-          return row.id;
-        }),
-      );
-      const successfulIds = new Set(
-        results
-          .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
-          .map((r) => r.value),
-      );
-      const succeededCount = successfulIds.size;
-      const failedCount = selectedCount - succeededCount;
-
-      if (failedCount === 0) {
-        toast({
-          description: `Updated status for ${succeededCount} application(s) to ${statusLabels[cat] || cat}.`,
-        });
-        setRowSelection({});
-      } else if (succeededCount === 0) {
-        toast({
-          description: "Failed to update application statuses.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          description: `Updated ${succeededCount} of ${selectedCount} application(s). ${failedCount} failed.`,
-          variant: "destructive",
-        });
-        setRowSelection((prev) => {
-          const next: RowSelectionState = {};
-          Object.keys(prev).forEach((rowKey) => {
-            if (!successfulIds.has(rowKey)) {
-              next[rowKey] = true;
-            }
-          });
-          return next;
-        });
+      let succeeded = new Set<string>();
+      try {
+        const { updated } = await updateApplicationsStatus([...rowIds.keys()], cat);
+        succeeded = new Set(updated.flatMap((id) => rowIds.get(id) ?? []));
+      } catch (err) {
+        console.error("Bulk status change failed:", err);
       }
+      finishBulkAction(succeeded, {
+        all: `Updated status for ${succeeded.size} application(s) to ${statusLabels[cat] || cat}.`,
+        none: "Failed to update application statuses.",
+        some: (done, failed) => `Updated ${done} of ${selectedCount} application(s). ${failed} failed.`,
+      });
     });
   };
 
