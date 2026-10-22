@@ -58,28 +58,57 @@ function isPrivateIpv4(ip: string): boolean {
 }
 
 /**
- * Checks a bracketed IPv6 hostname as WHATWG URL serializes it (e.g. "[::1]",
- * "[::ffff:7f00:1]"). Blocks loopback, unspecified, unique local (fc00::/7),
- * link-local (fe80::/10) and IPv4-mapped/compatible addresses of private IPv4s.
+ * Checks a bracketed IPv6 address ("[::1]", "[::ffff:7f00:1]"). Blocks
+ * loopback, unspecified, unique local (fc00::/7), link-local (fe80::/10),
+ * site-local (fec0::/10) and multicast (ff00::/8), and any address that embeds
+ * a private IPv4: mapped/compatible (::ffff:a.b.c.d), NAT64 (64:ff9b::) and
+ * 6to4 (2002::).
  */
 function isPrivateIpv6(hostname: string): boolean {
   if (!hostname.startsWith("[") || !hostname.endsWith("]")) return false;
-  const ip = hostname.slice(1, -1).toLowerCase();
+  const groups = expandIpv6(hostname.slice(1, -1));
+  if (!groups) return true; // unparseable: refuse rather than guess
 
-  if (ip === "::" || ip === "::1") return true;
-  if (/^f[cd][0-9a-f]{0,2}:/.test(ip)) return true;
-  if (/^fe[89ab][0-9a-f]?:/.test(ip)) return true;
+  const embeddedIpv4 = (high: number, low: number) =>
+    [high >> 8, high & 0xff, low >> 8, low & 0xff].join(".");
+  const [g0, g1, g2, g3, g4, g5, g6, g7] = groups;
+  const upperZero = [g0, g1, g2, g3, g4].every((g) => g === 0);
 
-  // IPv4-mapped (::ffff:a.b.c.d) is serialized as two hex groups: ::ffff:7f00:1
-  const mapped = ip.match(/^::(?:ffff:)?([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
-  if (mapped) {
-    const high = parseInt(mapped[1], 16);
-    const low = parseInt(mapped[2], 16);
-    const ipv4 = [high >> 8, high & 0xff, low >> 8, low & 0xff].join(".");
-    return isPrivateIpv4(ipv4);
-  }
-
+  // :: and ::1
+  if (upperZero && g5 === 0 && g6 === 0 && (g7 === 0 || g7 === 1)) return true;
+  // IPv4-mapped ::ffff:a.b.c.d and IPv4-compatible ::a.b.c.d
+  if (upperZero && (g5 === 0xffff || g5 === 0)) return isPrivateIpv4(embeddedIpv4(g6, g7));
+  // NAT64 64:ff9b::/96 and 64:ff9b:1::/48 carry the IPv4 in the last 32 bits
+  if (g0 === 0x64 && g1 === 0xff9b) return isPrivateIpv4(embeddedIpv4(g6, g7));
+  // 6to4 2002::/16 carries the IPv4 in bits 16-47
+  if (g0 === 0x2002) return isPrivateIpv4(embeddedIpv4(g1, g2));
+  // Unique local fc00::/7, link-local fe80::/10, site-local fec0::/10, multicast ff00::/8
+  if ((g0 & 0xfe00) === 0xfc00) return true;
+  if ((g0 & 0xffc0) === 0xfe80 || (g0 & 0xffc0) === 0xfec0) return true;
+  if ((g0 & 0xff00) === 0xff00) return true;
   return false;
+}
+
+/** The eight 16-bit groups of an IPv6 address (dotted IPv4 tail allowed), or null. */
+function expandIpv6(raw: string): number[] | null {
+  let ip = raw.toLowerCase().split("%")[0];
+  const dotted = ip.match(/(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (dotted) {
+    const bytes = dotted.slice(1).map(Number);
+    if (bytes.some((b) => b > 255)) return null;
+    ip = ip.slice(0, -dotted[0].length) +
+      `${((bytes[0] << 8) | bytes[1]).toString(16)}:${((bytes[2] << 8) | bytes[3]).toString(16)}`;
+  }
+  const halves = ip.split("::");
+  if (halves.length > 2) return null;
+  const parse = (part: string) => (part ? part.split(":") : []);
+  const head = parse(halves[0]);
+  const tail = halves.length === 2 ? parse(halves[1]) : [];
+  const missing = 8 - head.length - tail.length;
+  if (halves.length === 1 ? missing !== 0 : missing < 1) return null;
+  const all = [...head, ...Array(halves.length === 2 ? missing : 0).fill("0"), ...tail];
+  if (all.some((g) => !/^[0-9a-f]{1,4}$/.test(g))) return null;
+  return all.map((g) => parseInt(g, 16));
 }
 
 export function validateSafeUrl(rawUrl: string): { safe: boolean; error?: string; url?: URL } {
@@ -141,12 +170,7 @@ export class UnsafeUrlError extends Error {
 function isPrivateAddress(address: string): boolean {
   const family = isIP(address);
   if (family === 4) return isPrivateIpv4(address);
-  if (family === 6) {
-    // IPv4-mapped in dotted form, e.g. ::ffff:127.0.0.1
-    const dotted = address.match(/(\d+\.\d+\.\d+\.\d+)$/);
-    if (dotted) return isPrivateIpv4(dotted[1]);
-    return isPrivateIpv6(`[${address}]`);
-  }
+  if (family === 6) return isPrivateIpv6(`[${address}]`);
   return true;
 }
 

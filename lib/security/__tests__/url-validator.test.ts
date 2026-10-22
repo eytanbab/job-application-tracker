@@ -82,6 +82,13 @@ describe("assertPublicHost", () => {
     ["::1"],
     ["::ffff:127.0.0.1"],
     ["fd00::1"],
+    ["64:ff9b::a9fe:a9fe"],
+    ["64:ff9b::169.254.169.254"],
+    ["2002:a9fe:a9fe::"],
+    ["2002:0a00:0001::1"],
+    ["fec0::1"],
+    ["ff02::1"],
+    ["::"],
   ])("rejects a name that resolves to %s", async (address) => {
     await expect(
       assertPublicHost(new URL("https://127.0.0.1.nip.io/"), resolvesTo(address)),
@@ -92,6 +99,12 @@ describe("assertPublicHost", () => {
     await expect(
       assertPublicHost(new URL("https://jobs.example.com/"), resolvesTo("93.184.216.34", "10.0.0.5")),
     ).rejects.toThrow(/private/);
+  });
+
+  it("accepts NAT64 and 6to4 addresses that embed a public IPv4", async () => {
+    await expect(
+      assertPublicHost(new URL("https://jobs.example.com/"), resolvesTo("64:ff9b::808:808", "2002:808:808::1")),
+    ).resolves.toBeUndefined();
   });
 
   it("accepts public addresses and treats lookup failures as unsafe", async () => {
