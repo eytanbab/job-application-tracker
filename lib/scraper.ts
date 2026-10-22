@@ -2,7 +2,7 @@
  * Production-ready high performance scraper.
  * Prioritizes fast direct fetch + JSON-LD / Meta extraction, with timed Jina Reader and Playwright fallbacks.
  */
-import { safeFetch, validateSafeUrl } from "./security/url-validator";
+import { safeFetch, UnsafeUrlError, validateSafeUrl } from "./security/url-validator";
 
 // Helper to extract JSON-LD JobPosting schema from raw HTML
 function extractJsonLdJob(html: string): string | null {
@@ -183,6 +183,12 @@ export const scraper = async (url: string): Promise<string> => {
       }
     }
   } catch (err) {
+    // A link that resolves or redirects to a private address is not handed
+    // to the fallbacks below, which would fetch it without these checks.
+    if (err instanceof UnsafeUrlError) {
+      console.warn(`[Scraper] Blocked unsafe target URL: ${url} (${err.message})`);
+      return "";
+    }
     if (isDevelopment) {
       console.log("[Scraper] Direct HTML fetch skipped or timed out:", err);
     }
