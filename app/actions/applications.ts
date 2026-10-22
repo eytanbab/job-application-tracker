@@ -644,8 +644,9 @@ export async function updateApplicationsStatus(
   const userId = await getCurrentUserIdOrThrow();
   if (ids.length === 0) return { updated: [] };
 
+  const idSet = new Set(ids);
   const current = isMockDb
-    ? mockStore.getApplications(userId).filter((a) => ids.includes(a.id))
+    ? mockStore.getApplications(userId).filter((a) => idSet.has(a.id))
     : await db
         .select({
           id: jobApplications.id,
