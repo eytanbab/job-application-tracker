@@ -99,6 +99,9 @@ const BASE_KANBAN_COLUMNS: {
   },
 ];
 
+// A stable default, so the board's memo does not recompute every render
+const NO_CHANGES: readonly OptimisticChange[] = [];
+
 export function ApplicationsKanban({
   columns,
   searchFilter,
@@ -111,7 +114,7 @@ export function ApplicationsKanban({
   onSelectApplication,
   onEditApplication,
   onDeleteApplication,
-  optimisticChanges = [],
+  optimisticChanges = NO_CHANGES,
 }: ApplicationsKanbanProps) {
   const [, startTransition] = useTransition();
   const addOptimisticChange = useAddOptimisticChange();
