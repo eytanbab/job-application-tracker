@@ -35,8 +35,8 @@ vi.mock("@/app/db", () => ({
       writes.push("delete");
       return query();
     },
-    batch: async () => {
-      writes.push("batch");
+    batch: async (items: unknown[]) => {
+      writes.push(`batch:${items.length}`);
       return [];
     },
   },
@@ -54,7 +54,7 @@ vi.mock("next/cache", () => ({
 }));
 
 const applicationActions = await import("../applications");
-const { updateApplication } = applicationActions;
+const { updateApplication, deleteApplications, updateApplicationsStatus } = applicationActions;
 const { createFile, getViewUrl, getDownloadUrl } = await import("../documents");
 
 const GUEST_ID = "6f9c2a1e-3b4d-4c5e-8f70-1a2b3c4d5e6f";
@@ -112,5 +112,17 @@ describe("server actions only touch the caller's own records", () => {
     // Every export of a "use server" file is callable by any client, and the
     // sync takes a user id; it lives in lib/applications/ghost-sync.ts.
     expect(applicationActions).not.toHaveProperty("syncGhostedApplications");
+  });
+
+  it("bulk delete only reports the caller's rows the database deleted", async () => {
+    results.push([{ id: "mine" }]); // delete ... where user_id = caller ... returning
+    expect(await deleteApplications(["mine", "someone-elses"])).toEqual({ deleted: ["mine"] });
+  });
+
+  it("bulk status change only touches the caller's rows, in one transaction", async () => {
+    results.push([{ id: "mine", status: "Applied", statusCategory: "applied" }]); // user-scoped select
+    expect(await updateApplicationsStatus(["mine", "someone-elses"], "rejected")).toEqual({ updated: ["mine"] });
+    // One batch: the history insert plus one update per resulting status text
+    expect(writes.filter((w) => w.startsWith("batch"))).toEqual(["batch:2"]);
   });
 });

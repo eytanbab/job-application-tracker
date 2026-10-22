@@ -1,6 +1,7 @@
 "use server";
 
 import { after } from "next/server";
+import { unstable_cache } from "next/cache";
 
 import { db, isMockDb } from "@/app/db";
 import { mockStore } from "@/lib/mock-data/mock-store";
@@ -32,10 +33,12 @@ import { format } from "date-fns";
 import { purgeApplicationCaches } from "@/lib/applications/purge-caches";
 import { syncGhostedApplications } from "@/lib/applications/ghost-sync";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
+import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import {
   getStatusDisplay,
   getStatusKind,
   isStatusKind,
+  resolveUpdatedStatus,
   safeFormatDate,
   statusLabels,
   statusOptions,
@@ -154,6 +157,11 @@ const listRowFields = {
   resumeFileSize: documents.file_size,
 };
 
+/** The row's resume, only when it belongs to the same user. */
+function resumeJoin(userId: string) {
+  return and(eq(jobApplications.resumeId, documents.id), eq(documents.userId, userId));
+}
+
 function displayGhostedStatus<T extends { status: string; statusCategory: string | null }>(
   app: T,
 ): T {
@@ -219,6 +227,7 @@ function listFilterConditions(userId: string, query: ListFilters) {
         ilike(jobApplications.statusCategory, pattern),
         ilike(jobApplications.salary, pattern),
         ilike(jobApplications.description, pattern),
+        ilike(jobApplications.notes, pattern),
       )!,
     );
   }
@@ -258,24 +267,23 @@ function listOrderBy(query: Pick<ApplicationListQuery, "sort" | "desc">) {
 
 async function queryListRows(userId: string, query: ApplicationListQuery) {
   const where = listFilterConditions(userId, query);
-  const [rows, [{ total }]] = await Promise.all([
-    db
-      .select(listRowFields)
-      .from(jobApplications)
-      .leftJoin(
-        documents,
-        and(
-          eq(jobApplications.resumeId, documents.id),
-          eq(documents.userId, userId),
-        ),
-      )
-      .where(where)
-      .orderBy(...listOrderBy(query))
-      .limit(query.pageSize)
-      .offset((query.page - 1) * query.pageSize),
-    db.select({ total: count() }).from(jobApplications).where(where),
-  ]);
-  return { rows: rows.map(displayGhostedStatus), total };
+  // The total rides along on each row (count over the filtered rows, taken
+  // before limit and offset), so a page is one query.
+  const rows = await db
+    .select({ ...listRowFields, total: sql<string>`count(*) over ()` })
+    .from(jobApplications)
+    .leftJoin(documents, resumeJoin(userId))
+    .where(where)
+    .orderBy(...listOrderBy(query))
+    .limit(query.pageSize)
+    .offset((query.page - 1) * query.pageSize);
+  const pageRows = rows.map(({ total: _total, ...row }) => displayGhostedStatus(row));
+  if (rows.length) return { rows: pageRows, total: Number(rows[0].total) };
+  if (query.page === 1) return { rows: pageRows, total: 0 };
+  // A page past the end has no rows to carry the total; count separately
+  // so the caller can clamp to the real last page.
+  const [{ total }] = await db.select({ total: count() }).from(jobApplications).where(where);
+  return { rows: pageRows, total };
 }
 
 /** Status history per application, for the stage filters in mock mode. */
@@ -359,15 +367,14 @@ export async function getKanbanColumns(
   const query = normalizeListQuery(rawQuery);
   const kinds = query.statuses ?? statusOptions.map((option) => option.value);
 
-  const columnQuery = (kind: StatusKind): ApplicationListQuery => ({
-    ...query,
-    statuses: [kind],
-    sort: null,
-    page: 1,
-    pageSize: KANBAN_PAGE_SIZE,
-  });
-
   if (isMockDb) {
+    const columnQuery = (kind: StatusKind): ApplicationListQuery => ({
+      ...query,
+      statuses: [kind],
+      sort: null,
+      page: 1,
+      pageSize: KANBAN_PAGE_SIZE,
+    });
     const all = mockStore.getApplications(userId);
     const historyByApp = mockHistoryByApp();
     const listRows = new Map(mockListRows(userId).map((row) => [row.id, row]));
@@ -385,15 +392,36 @@ export async function getKanbanColumns(
     ) as Partial<Record<StatusKind, { rows: ApplicationListRow[]; total: number }>>;
   }
 
-  const columns = await Promise.all(
-    kinds.map(
-      async (kind) =>
-        [kind, await queryListRows(userId, columnQuery(kind))] as const,
-    ),
-  );
-  return Object.fromEntries(columns) as Partial<
+  // One query for every column: rank rows within their status, keep the
+  // first page of each, and count each status with a window over the same
+  // filtered rows.
+  const order = sql.join(listOrderBy({ sort: null, desc: false }), sql`, `);
+  const ranked = db
+    .select({
+      ...listRowFields,
+      columnRank: sql<number>`row_number() over (partition by ${jobApplications.statusCategory} order by ${order})`.as("column_rank"),
+      columnTotal: sql<string>`count(*) over (partition by ${jobApplications.statusCategory})`.as("column_total"),
+    })
+    .from(jobApplications)
+    .leftJoin(documents, resumeJoin(userId))
+    .where(listFilterConditions(userId, { ...query, statuses: kinds }))
+    .as("ranked");
+  const rows = await db
+    .select()
+    .from(ranked)
+    .where(lte(ranked.columnRank, KANBAN_PAGE_SIZE))
+    .orderBy(asc(ranked.columnRank));
+
+  const columns: Partial<
     Record<StatusKind, { rows: ApplicationListRow[]; total: number }>
-  >;
+  > = Object.fromEntries(kinds.map((kind) => [kind, { rows: [], total: 0 }]));
+  for (const { columnRank: _rank, columnTotal, ...row } of rows) {
+    const column = columns[row.statusCategory as StatusKind];
+    if (!column) continue;
+    column.rows.push(displayGhostedStatus(row));
+    column.total = Number(columnTotal);
+  }
+  return columns;
 }
 
 export type KanbanColumns = Awaited<ReturnType<typeof getKanbanColumns>>;
@@ -411,13 +439,7 @@ export async function getApplicationListItem(
   const [row] = await db
     .select(listRowFields)
     .from(jobApplications)
-    .leftJoin(
-      documents,
-      and(
-        eq(jobApplications.resumeId, documents.id),
-        eq(documents.userId, userId),
-      ),
-    )
+    .leftJoin(documents, resumeJoin(userId))
     .where(
       and(
         eq(jobApplications.userId, userId),
@@ -459,18 +481,32 @@ export async function getApplicationDetails(
   return row ?? null;
 }
 
+/**
+ * Distinct location and platform pairs, shared by the filter menu and the
+ * form suggestions, cached until the user's applications change.
+ */
+function distinctLocationsAndPlatforms(userId: string) {
+  return unstable_cache(
+    () =>
+      db
+        .selectDistinct({
+          location: jobApplications.location,
+          platform: jobApplications.platform,
+        })
+        .from(jobApplications)
+        .where(eq(jobApplications.userId, userId)),
+    ["applications", "locations-platforms", userId],
+    { revalidate: CACHE_REVALIDATE_SECONDS, tags: [applicationsTag(userId)] },
+  )();
+}
+
 /** Distinct platforms the user has applied through, for the filter menu. */
 export async function getUserPlatforms(): Promise<string[]> {
   const userId = await getCurrentUserIdOrThrow();
 
   const platforms = isMockDb
     ? mockStore.getApplications(userId).map((app) => app.platform)
-    : (
-        await db
-          .selectDistinct({ platform: jobApplications.platform })
-          .from(jobApplications)
-          .where(eq(jobApplications.userId, userId))
-      ).map((row) => row.platform);
+    : (await distinctLocationsAndPlatforms(userId)).map((row) => row.platform);
 
   const unique = new Set(
     platforms.map((p) => (p ?? "").trim().toLowerCase()).filter(Boolean),
@@ -561,6 +597,99 @@ export async function deleteApplication(id: string) {
     .where(and(eq(jobApplications.userId, userId), eq(jobApplications.id, id)));
 
   purgeApplicationCaches(userId);
+}
+
+// Bulk actions take a list of ids so a multi-row change is one request:
+// Next.js runs server actions one at a time per client, and each single-row
+// action re-renders the page.
+const MAX_BULK_IDS = 500;
+
+function assertBulkIds(ids: unknown): asserts ids is string[] {
+  if (!Array.isArray(ids) || ids.length > MAX_BULK_IDS || ids.some((id) => typeof id !== "string")) {
+    throw new Error("Invalid selection");
+  }
+}
+
+/** Deletes the caller's applications among `ids`; returns the ids it deleted. */
+export async function deleteApplications(ids: string[]): Promise<{ deleted: string[] }> {
+  assertBulkIds(ids);
+  const userId = await getCurrentUserIdOrThrow();
+  if (ids.length === 0) return { deleted: [] };
+
+  let deleted: string[];
+  if (isMockDb) {
+    deleted = ids.filter((id) => mockStore.deleteApplication(userId, id));
+  } else {
+    const rows = await db
+      .delete(jobApplications)
+      .where(and(eq(jobApplications.userId, userId), inArray(jobApplications.id, ids)))
+      .returning({ id: jobApplications.id });
+    deleted = rows.map((r) => r.id);
+  }
+
+  purgeApplicationCaches(userId);
+  return { deleted };
+}
+
+/**
+ * Moves the caller's applications among `ids` to `category`, recording a
+ * history row for each one that changed; returns the ids it updated.
+ */
+export async function updateApplicationsStatus(
+  ids: string[],
+  category: string,
+): Promise<{ updated: string[] }> {
+  assertBulkIds(ids);
+  if (!isStatusKind(category)) throw new Error("Invalid status");
+  const userId = await getCurrentUserIdOrThrow();
+  if (ids.length === 0) return { updated: [] };
+
+  const idSet = new Set(ids);
+  const current = isMockDb
+    ? mockStore.getApplications(userId).filter((a) => idSet.has(a.id))
+    : await db
+        .select({
+          id: jobApplications.id,
+          status: jobApplications.status,
+          statusCategory: jobApplications.statusCategory,
+        })
+        .from(jobApplications)
+        .where(and(eq(jobApplications.userId, userId), inArray(jobApplications.id, ids)));
+
+  // Keep a custom stage label where it still fits, as single updates do.
+  const changes = current
+    .map((app) => ({ id: app.id, status: resolveUpdatedStatus(app.status, category).trim() }))
+    .filter((c, i) => c.status !== current[i].status || category !== current[i].statusCategory);
+
+  if (changes.length > 0) {
+    if (isMockDb) {
+      for (const c of changes) {
+        mockStore.updateApplication(userId, c.id, { status: c.status, statusCategory: category });
+      }
+    } else {
+      const now = new Date();
+      const byStatus = new Map<string, string[]>();
+      for (const c of changes) byStatus.set(c.status, [...(byStatus.get(c.status) ?? []), c.id]);
+      const updates = [...byStatus].map(([status, groupIds]) =>
+        db
+          .update(jobApplications)
+          .set({ status, statusCategory: category })
+          .where(and(eq(jobApplications.userId, userId), inArray(jobApplications.id, groupIds))),
+      );
+      const history = db.insert(applicationStatusHistory).values(
+        changes.map((c) => ({
+          applicationId: c.id,
+          status: c.status,
+          statusCategory: category,
+          createdAt: now,
+        })),
+      );
+      await db.batch([history, ...updates]);
+    }
+  }
+
+  purgeApplicationCaches(userId);
+  return { updated: current.map((a) => a.id) };
 }
 
 // Update an application of current user
@@ -911,25 +1040,14 @@ export async function getDistinctLocationsAndPlatforms() {
     return mockStore.getDistinctLocationsAndPlatforms(userId);
   }
 
-  const apps = await db
-    .select({
-      location: jobApplications.location,
-      platform: jobApplications.platform,
-    })
-    .from(jobApplications)
-    .where(eq(jobApplications.userId, userId));
+  const apps = await distinctLocationsAndPlatforms(userId);
 
-  const rawLocations = apps
-    .map((a) => a.location?.trim())
-    .filter((loc): loc is string => Boolean(loc));
-
-  const rawPlatforms = apps
-    .map((a) => a.platform?.trim())
-    .filter((plat): plat is string => Boolean(plat));
-
-  // Capitalize nicely or preserve exact unique values
-  const userLocations = Array.from(new Set(rawLocations));
-  const userPlatforms = Array.from(new Set(rawPlatforms));
+  const userLocations = Array.from(
+    new Set(apps.map((a) => a.location?.trim()).filter((loc): loc is string => Boolean(loc))),
+  );
+  const userPlatforms = Array.from(
+    new Set(apps.map((a) => a.platform?.trim()).filter((plat): plat is string => Boolean(plat))),
+  );
 
   return { userLocations, userPlatforms };
 }

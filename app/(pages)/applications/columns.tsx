@@ -28,16 +28,15 @@ import {
 } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
-import { z } from "zod";
-import { insertApplicationSchema } from "@/app/db/schema";
+import type { z } from "zod";
+import type { insertApplicationSchema } from "@/app/db/schema";
 import {
   stageLabels,
   statusBadgeClasses,
 } from "./components/status-badge-classes";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const columnsSchema = insertApplicationSchema.omit({ userId: true });
-export type FormValues = z.input<typeof columnsSchema>;
+// Type-only, so Drizzle and the schema stay out of the browser bundle
+export type FormValues = Omit<z.input<typeof insertApplicationSchema>, "userId">;
 
 export interface CustomColumnMeta {
   onSelectApplication?: (app: FormValues) => void;

@@ -18,13 +18,10 @@ import {
   useApplicationDetails,
 } from "@/hooks/use-application-details";
 import { cn } from "@/lib/utils";
-import { insertApplicationSchema } from "../db/schema";
-import { z } from "zod";
+import type { insertApplicationSchema } from "../db/schema";
+import type { z } from "zod";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const editApplicationSchema = insertApplicationSchema.omit({ userId: true });
-
-type FormValues = z.input<typeof editApplicationSchema>;
+type FormValues = Omit<z.input<typeof insertApplicationSchema>, "userId">;
 
 type Row = {
   row: {

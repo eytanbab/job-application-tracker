@@ -169,6 +169,7 @@ type QueryableRow = {
   statusCategory?: string | null;
   salary?: string | null;
   description?: string | null;
+  notes?: string | null;
   createdAt?: Date | string | null;
 };
 
@@ -182,6 +183,7 @@ function searchableText(row: QueryableRow): string[] {
     row.statusCategory ?? "",
     row.salary ?? "",
     row.description ?? "",
+    row.notes ?? "",
   ];
 }
 

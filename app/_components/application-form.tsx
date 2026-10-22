@@ -1,7 +1,7 @@
 "use client";
 
 import { z } from "zod";
-import { insertApplicationSchema } from "../db/schema";
+import type { insertApplicationSchema } from "../db/schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
@@ -40,13 +40,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const createApplicationSchema = insertApplicationSchema.omit({
-  userId: true,
-  id: true,
-});
-
-export type FormValues = z.input<typeof createApplicationSchema>;
+// Type-only, so Drizzle and the schema stay out of the browser bundle
+export type FormValues = Omit<z.input<typeof insertApplicationSchema>, "userId" | "id">;
 
 export type ApplicationFormHandle = {
   // Closes the form, asking for discard confirmation first when there are
