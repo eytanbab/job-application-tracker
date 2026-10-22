@@ -18,26 +18,7 @@ import {
 } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 import { asciiFileName, contentDisposition } from "@/lib/utils";
-import { isGuestOwnerId } from "@/lib/account-data";
-
-/**
- * True when an S3 key lies in the user's own folder. Keys come from the
- * client after upload, so every action that stores or signs one checks it.
- */
-function isOwnFileKey(userId: string, fileKey: string): boolean {
-  return fileKey.startsWith(`${userId}/`) && !fileKey.includes("..");
-}
-
-/**
- * Keys that may be signed or deleted for a document row the user owns: their
- * own folder, or a guest folder, because signing in moves a guest's rows to
- * the new account without moving the S3 objects (migrate-user-data.ts).
- */
-function isSignableFileKey(userId: string, fileKey: string): boolean {
-  if (isOwnFileKey(userId, fileKey)) return true;
-  const folder = fileKey.split("/")[0];
-  return isGuestOwnerId(folder) && !fileKey.includes("..");
-}
+import { isOwnFileKey, isSignableFileKey } from "@/lib/security/file-keys";
 
 /** A signed document URL, or why one could not be made. */
 export type SignedUrlResult =

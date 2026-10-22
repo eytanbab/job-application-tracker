@@ -18,6 +18,7 @@ import {
 } from "@/lib/gemini";
 import { groundBulletOptimizations } from "@/lib/ats-grounding";
 import { s3Client } from "@/lib/s3-client";
+import { isSignableFileKey } from "@/lib/security/file-keys";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 
 export interface AtsAnalysisResult {
@@ -230,6 +231,12 @@ export async function analyzeResumeWithAts(
       }
 
       const fileKey = doc[0].file_key;
+      if (!isSignableFileKey(userId, fileKey)) {
+        return {
+          success: false,
+          error: "Selected document not found in your library.",
+        };
+      }
       const bucketName = process.env.NEXT_AWS_S3_BUCKET_NAME || "";
 
       if (!bucketName) {
