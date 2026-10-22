@@ -1,10 +1,9 @@
-import { and, eq, gte, inArray, lte } from "drizzle-orm";
+import { and, eq, inArray, lte, sql } from "drizzle-orm";
 import { format, subDays } from "date-fns";
 import { db, isMockDb } from "@/app/db";
 import { applicationStatusHistory, jobApplications } from "@/app/db/schema";
 import { ghostsAt } from "@/lib/analytics/definitions";
 import { mockStore } from "@/lib/mock-data/mock-store";
-import { getStatusKind } from "@/lib/utils";
 import { purgeApplicationCaches } from "./purge-caches";
 
 // Server-only, deliberately outside the "use server" actions file: an
@@ -47,96 +46,73 @@ export async function syncGhostedApplications(userId?: string) {
     return 0;
   }
 
-  // 2. Query recent status history to avoid ghosting applications with recent activity in the last 30 days
+  // 2. One history read decides the rest: the due date counts the latest
+  // activity (ghostsAt), and an existing Ghosted entry is not duplicated.
   const candidateIds = candidates.map((c) => c.id);
-  const recentHistory = await db
-    .select({
-      applicationId: applicationStatusHistory.applicationId,
-      createdAt: applicationStatusHistory.createdAt,
-    })
-    .from(applicationStatusHistory)
-    .where(
-      and(
-        inArray(applicationStatusHistory.applicationId, candidateIds),
-        gte(applicationStatusHistory.createdAt, thirtyDaysAgo),
-      ),
-    );
-
-  const recentlyActiveAppIds = new Set(
-    recentHistory.map((h) => h.applicationId),
-  );
-
-  // 3. Filter candidates: ensure kind is applied or review, and no recent activity
-  const qualifyingApps = candidates.filter((app) => {
-    if (recentlyActiveAppIds.has(app.id)) return false;
-    const kind = getStatusKind(app.status, app.statusCategory);
-    return kind === "applied" || kind === "review";
-  });
-
-  if (qualifyingApps.length === 0) {
-    return 0;
-  }
-
-  const qualifyingIds = qualifyingApps.map((a) => a.id);
-
-  // 4. Load their history: an existing Ghosted entry is not duplicated, and
-  // the new one is dated after the last activity, like ghostsAt.
-  const qualifyingHistory = await db
+  const history = await db
     .select({
       applicationId: applicationStatusHistory.applicationId,
       statusCategory: applicationStatusHistory.statusCategory,
       createdAt: applicationStatusHistory.createdAt,
     })
     .from(applicationStatusHistory)
-    .where(inArray(applicationStatusHistory.applicationId, qualifyingIds));
+    .where(inArray(applicationStatusHistory.applicationId, candidateIds));
   const historyByApp = new Map<string, { createdAt: number }[]>();
   const appsWithGhostedHistory = new Set<string>();
-  for (const h of qualifyingHistory) {
+  for (const h of history) {
     if (h.statusCategory === "ghosted") appsWithGhostedHistory.add(h.applicationId);
     const list = historyByApp.get(h.applicationId) ?? [];
     list.push({ createdAt: new Date(h.createdAt).getTime() });
     historyByApp.set(h.applicationId, list);
   }
 
-  // 5. Ghost them, re-checking the category so a status change made since
-  // the select above is not overwritten, then record history for exactly
-  // the rows that changed.
-  const ghosted = await db
-    .update(jobApplications)
-    .set({
-      status: "Ghosted",
-      statusCategory: "ghosted",
-    })
-    .where(
-      and(
-        inArray(jobApplications.id, qualifyingIds),
-        inArray(jobApplications.statusCategory, ["applied", "review"]),
-      ),
-    )
-    .returning({ id: jobApplications.id });
-  const ghostedIds = new Set(ghosted.map((g) => g.id));
-
   const now = Date.now();
-  const historyEntries = qualifyingApps
-    .filter((app) => ghostedIds.has(app.id) && !appsWithGhostedHistory.has(app.id))
-    .map((app) => {
-      const due = ghostsAt(
+  const due = candidates
+    .map((app) => ({
+      app,
+      at: ghostsAt(
         { status: app.status, statusCategory: app.statusCategory, dateApplied: app.date_applied },
         historyByApp.get(app.id) ?? [],
-      );
-      return {
-        applicationId: app.id,
-        status: "Ghosted",
-        statusCategory: "ghosted",
-        createdAt: new Date(Math.min(due ?? now, now)),
-      };
-    });
-
-  if (historyEntries.length > 0) {
-    await db.insert(applicationStatusHistory).values(historyEntries);
+      ),
+    }))
+    .filter((d): d is { app: (typeof candidates)[number]; at: number } => d.at !== null && d.at <= now);
+  if (due.length === 0) {
+    return 0;
   }
+  const dueIds = due.map((d) => d.app.id);
+  const qualifyingApps = due.map((d) => d.app);
 
-  // 6. Purge caches for affected users
+  // 3. Write the Ghosted entries and ghost the rows in one transaction. Both
+  // statements re-check the category, so a status change made since the
+  // reads above is kept and gets no Ghosted entry.
+  const stillOpen = inArray(jobApplications.statusCategory, ["applied", "review"]);
+  const newEntries = due.filter((d) => !appsWithGhostedHistory.has(d.app.id));
+  const ghostRows = db
+    .update(jobApplications)
+    .set({ status: "Ghosted", statusCategory: "ghosted" })
+    .where(and(inArray(jobApplications.id, dueIds), stillOpen))
+    .returning({ id: jobApplications.id });
+
+  let ghosted: { id: string }[];
+  if (newEntries.length > 0) {
+    // Columns in table order: id, application_id, status, status_category, created_at.
+    const values = sql.join(
+      newEntries.map((d) => sql`(${d.app.id}::uuid, ${new Date(d.at).toISOString()}::timestamp)`),
+      sql`, `,
+    );
+    const insertEntries = db.insert(applicationStatusHistory).select(
+      sql`select gen_random_uuid(), v.id, 'Ghosted', 'ghosted', v.at
+          from (values ${values}) as v(id, at)
+          join ${jobApplications} on ${jobApplications.id} = v.id
+          where ${stillOpen}`,
+    );
+    [, ghosted] = await db.batch([insertEntries, ghostRows]);
+  } else {
+    ghosted = await ghostRows;
+  }
+  const ghostedIds = new Set(ghosted.map((g) => g.id));
+
+  // 4. Purge caches for affected users
   if (userId) {
     purgeApplicationCaches(userId);
   } else {
