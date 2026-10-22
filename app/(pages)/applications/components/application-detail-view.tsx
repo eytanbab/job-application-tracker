@@ -166,6 +166,8 @@ export function ApplicationDetailView({
   useEffect(() => {
     let isMounted = true;
     if (currentApp.resumeId) {
+      // List rows already carry the resume's details; fetch only when they
+      // are missing (a row built outside the list query).
       if (currentApp.resumeTitle) {
         setResumeInfo({
           id: currentApp.resumeId,
@@ -173,6 +175,7 @@ export function ApplicationDetailView({
           fileName: currentApp.resumeFileName || null,
           fileSize: currentApp.resumeFileSize || null,
         });
+        return;
       }
       getDocument(currentApp.resumeId)
         .then((doc) => {
