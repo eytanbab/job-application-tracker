@@ -1,6 +1,7 @@
 "use server";
 
 import { after } from "next/server";
+import { unstable_cache } from "next/cache";
 
 import { db, isMockDb } from "@/app/db";
 import { mockStore } from "@/lib/mock-data/mock-store";
@@ -32,6 +33,7 @@ import { format } from "date-fns";
 import { purgeApplicationCaches } from "@/lib/applications/purge-caches";
 import { syncGhostedApplications } from "@/lib/applications/ghost-sync";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
+import { applicationsTag, CACHE_REVALIDATE_SECONDS } from "./_utils/cache-tags";
 import {
   getStatusDisplay,
   getStatusKind,
@@ -501,10 +503,15 @@ export async function getUserPlatforms(): Promise<string[]> {
   const platforms = isMockDb
     ? mockStore.getApplications(userId).map((app) => app.platform)
     : (
-        await db
-          .selectDistinct({ platform: jobApplications.platform })
-          .from(jobApplications)
-          .where(eq(jobApplications.userId, userId))
+        await unstable_cache(
+          () =>
+            db
+              .selectDistinct({ platform: jobApplications.platform })
+              .from(jobApplications)
+              .where(eq(jobApplications.userId, userId)),
+          ["applications", "platforms", userId],
+          { revalidate: CACHE_REVALIDATE_SECONDS, tags: [applicationsTag(userId)] },
+        )()
       ).map((row) => row.platform);
 
   const unique = new Set(
@@ -1038,25 +1045,26 @@ export async function getDistinctLocationsAndPlatforms() {
     return mockStore.getDistinctLocationsAndPlatforms(userId);
   }
 
-  const apps = await db
-    .select({
-      location: jobApplications.location,
-      platform: jobApplications.platform,
-    })
-    .from(jobApplications)
-    .where(eq(jobApplications.userId, userId));
+  // Distinct pairs, cached until the user's applications change
+  const apps = await unstable_cache(
+    () =>
+      db
+        .selectDistinct({
+          location: jobApplications.location,
+          platform: jobApplications.platform,
+        })
+        .from(jobApplications)
+        .where(eq(jobApplications.userId, userId)),
+    ["applications", "locations-platforms", userId],
+    { revalidate: CACHE_REVALIDATE_SECONDS, tags: [applicationsTag(userId)] },
+  )();
 
-  const rawLocations = apps
-    .map((a) => a.location?.trim())
-    .filter((loc): loc is string => Boolean(loc));
-
-  const rawPlatforms = apps
-    .map((a) => a.platform?.trim())
-    .filter((plat): plat is string => Boolean(plat));
-
-  // Capitalize nicely or preserve exact unique values
-  const userLocations = Array.from(new Set(rawLocations));
-  const userPlatforms = Array.from(new Set(rawPlatforms));
+  const userLocations = Array.from(
+    new Set(apps.map((a) => a.location?.trim()).filter((loc): loc is string => Boolean(loc))),
+  );
+  const userPlatforms = Array.from(
+    new Set(apps.map((a) => a.platform?.trim()).filter((plat): plat is string => Boolean(plat))),
+  );
 
   return { userLocations, userPlatforms };
 }
