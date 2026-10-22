@@ -83,23 +83,32 @@ function normalizeApplicationStatus(values: FormValues): FormValues {
  * Server-side checks for create and update. The form validates too, but
  * inline edits in the detail sheet and direct action calls skip it.
  */
-function assertValidApplication(values: FormValues) {
-  if (!(values.role_name ?? "").trim()) throw new Error("Enter the role title.");
-  if (!(values.company_name ?? "").trim()) throw new Error("Enter the company name.");
+function assertValidApplication(
+  values: FormValues,
+  require: { role: boolean; company: boolean } = { role: true, company: true },
+) {
+  if (require.role && !(values.role_name ?? "").trim()) throw new Error("Enter the role title.");
+  if (require.company && !(values.company_name ?? "").trim()) throw new Error("Enter the company name.");
   const date = values.date_applied as unknown;
   const parsed = date instanceof Date ? date : new Date(String(date ?? ""));
   if (!date || Number.isNaN(parsed.getTime())) throw new Error("Enter the date you applied.");
   // A link with another scheme (javascript:, mailto:) is refused. Other text
-  // that is not a URL ("N/A" in older rows) is kept as typed, so saves that
-  // resend a stored row (board moves, bulk status) never fail on it.
+  // that is not a URL ("N/A", "Remote: see notes" in older rows) is kept as
+  // typed, so saves that resend a stored row (board moves, bulk status) never
+  // fail on it; it is never rendered as a link.
   const link = (values.link ?? "").trim();
-  if (link && !normalizeJobLink(link) && /^[a-z][a-z0-9+.-]*:(?!\d)/i.test(link)) {
+  const dangerous = /^(javascript|data|vbscript|file|blob):/i.test(link);
+  const otherScheme = !/\s/.test(link) && /^[a-z][a-z0-9+.-]*:/i.test(link);
+  if (link && !normalizeJobLink(link) && (dangerous || otherScheme)) {
     throw new Error("Enter a job link that starts with http:// or https://.");
   }
 }
 
-function extractCleanApplicationFields(values: FormValues) {
-  assertValidApplication(values);
+function extractCleanApplicationFields(
+  values: FormValues,
+  require?: { role: boolean; company: boolean },
+) {
+  assertValidApplication(values, require);
   const normalized = normalizeApplicationStatus(values);
   const formattedDate = safeFormatDate(normalized.date_applied, "yyyy-MM-dd");
   const parsedDate = new Date(`${formattedDate}T12:00:00`);
@@ -561,7 +570,39 @@ export async function updateApplication(values: FormValues) {
   }
   const userId = await getCurrentUserIdOrThrow();
   const applicationId = values.id;
-  const fields = extractCleanApplicationFields(values);
+
+  // Every write below, including the history row, must target the caller's
+  // own application; the history table has no user column of its own.
+  const currentApp = isMockDb
+    ? mockStore.getApplications(userId).filter((a) => a.id === applicationId)
+    : await db
+        .select({
+          role_name: jobApplications.role_name,
+          company_name: jobApplications.company_name,
+          status: jobApplications.status,
+          statusCategory: jobApplications.statusCategory,
+        })
+        .from(jobApplications)
+        .where(
+          and(
+            eq(jobApplications.userId, userId),
+            eq(jobApplications.id, applicationId),
+          ),
+        )
+        .limit(1);
+  if (!currentApp[0]) {
+    throw new Error("Application not found");
+  }
+
+  // Saves rebuilt from a stored row (board moves, bulk status) resend its
+  // names as they are, so an older row with an empty one still moves; the
+  // names are only required when this save changes them.
+  const changed = (next: string | null | undefined, stored: string | null | undefined) =>
+    (next ?? "").trim() !== (stored ?? "").trim();
+  const fields = extractCleanApplicationFields(values, {
+    role: changed(values.role_name, currentApp[0].role_name),
+    company: changed(values.company_name, currentApp[0].company_name),
+  });
 
   // Validate resume ownership if resumeId is provided
   if (fields.resumeId) {
@@ -593,26 +634,6 @@ export async function updateApplication(values: FormValues) {
     mockStore.updateApplication(userId, applicationId, fields as any);
     purgeApplicationCaches(userId);
     return;
-  }
-
-  const currentApp = await db
-    .select({
-      status: jobApplications.status,
-      statusCategory: jobApplications.statusCategory,
-    })
-    .from(jobApplications)
-    .where(
-      and(
-        eq(jobApplications.userId, userId),
-        eq(jobApplications.id, applicationId),
-      ),
-    )
-    .limit(1);
-
-  // Every write below, including the history row, must target the caller's
-  // own application; the history table has no user column of its own.
-  if (!currentApp[0]) {
-    throw new Error("Application not found");
   }
 
   const statusChanged =
