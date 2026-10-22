@@ -81,6 +81,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
     setIsMobileFilterOpen,
     globalFilter,
     setGlobalFilter,
+    searchResetKey,
     statusFilter,
     setStatusFilter,
     platformFilter,
@@ -161,6 +162,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
               }
               globalFilter={globalFilter}
               setGlobalFilter={setGlobalFilter}
+              searchResetKey={searchResetKey}
               statusFilter={statusFilter}
               setStatusFilter={setStatusFilter}
               platformFilter={platformFilter}

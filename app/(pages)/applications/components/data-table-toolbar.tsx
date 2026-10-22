@@ -37,25 +37,24 @@ function SearchInput({
   onSearch: (value: string) => void;
 }) {
   const [text, setText] = useState(value);
-  const [lastValue, setLastValue] = useState(value);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   // What this input last sent, so its own search arriving back (while the
   // user may have typed more) never replaces the text
-  const [sent, setSent] = useState(value);
+  const sent = useRef(value);
 
-  // A change from outside (Clear filters, back navigation) replaces the text
-  if (value !== lastValue) {
-    setLastValue(value);
-    if (value !== sent) {
-      setText(value);
-      setSent(value);
-    }
-  }
+  // A change from outside (back navigation, a link) replaces the text and
+  // drops any search still waiting to be sent
+  useEffect(() => {
+    if (value === sent.current) return;
+    clearTimeout(timer.current);
+    sent.current = value;
+    setText(value);
+  }, [value]);
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const send = (next: string) => {
-    setSent(next);
+    sent.current = next;
     onSearch(next);
   };
 
@@ -92,6 +91,8 @@ function SearchInput({
 interface DataTableToolbarProps {
   globalFilter: string;
   setGlobalFilter: (val: string) => void;
+  /** Changes when filters are reset, to clear the box. */
+  searchResetKey: number;
   statusFilter: string | null;
   setStatusFilter: (val: string | null) => void;
   platformFilter: string | null;
@@ -111,6 +112,7 @@ interface DataTableToolbarProps {
 export function DataTableToolbar({
   globalFilter,
   setGlobalFilter,
+  searchResetKey,
   statusFilter,
   setStatusFilter,
   platformFilter,
@@ -131,7 +133,11 @@ export function DataTableToolbar({
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
         {/* 1. Search Bar (Full-width on mobile) */}
         <div className="relative flex-1">
-          <SearchInput value={globalFilter} onSearch={setGlobalFilter} />
+          <SearchInput
+            key={searchResetKey}
+            value={globalFilter}
+            onSearch={setGlobalFilter}
+          />
         </div>
 
         {/* 2. Controls Row: Platform Filter + View Mode Switcher */}

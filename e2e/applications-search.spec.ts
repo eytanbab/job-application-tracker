@@ -37,6 +37,20 @@ test.describe("Applications search box", () => {
     await expect(search).toHaveValue("");
   });
 
+  test("resetting filters drops a search that was still waiting to be sent", async ({ page }) => {
+    await page.goto("/applications?view=table&status=applied");
+    await page.waitForLoadState("networkidle");
+    const search = page.getByPlaceholder("Search applications...");
+
+    await search.pressSequentially("acme", { delay: 20 });
+    await page.getByRole("button", { name: "Reset all filters" }).first().click();
+    await expect(page).not.toHaveURL(/status=/);
+    // Longer than the debounce: the typed search must not come back
+    await page.waitForTimeout(700);
+    expect(page.url()).not.toContain("q=");
+    await expect(search).toHaveValue("");
+  });
+
   test("the clear button empties the box and the search at once", async ({ page }) => {
     await page.goto("/applications?view=table&q=acme");
     await page.waitForLoadState("networkidle");

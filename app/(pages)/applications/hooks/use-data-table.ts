@@ -435,7 +435,10 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     hasAnalyticsFilter,
   );
 
+  // Remounts the search box, dropping typing it has not sent yet
+  const [searchResetKey, setSearchResetKey] = useState(0);
   const clearFilters = () => {
+    setSearchResetKey((key) => key + 1);
     setParams({
       q: null,
       status: null,
@@ -511,6 +514,7 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     setIsMobileFilterOpen,
     globalFilter,
     setGlobalFilter,
+    searchResetKey,
     statusFilter,
     setStatusFilter,
     platformFilter,
