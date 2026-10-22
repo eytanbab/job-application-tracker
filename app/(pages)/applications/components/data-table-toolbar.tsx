@@ -20,6 +20,74 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { cn, formatPlatformLabel } from "@/lib/utils";
+import { useEffect, useRef, useState } from "react";
+
+/** Wait for a pause in typing before querying the server. */
+const SEARCH_DEBOUNCE_MS = 300;
+
+/**
+ * The search box keeps what is typed in local state and passes it on after a
+ * pause, so a keystroke re-renders only this input, not the table and cards.
+ */
+function SearchInput({
+  value,
+  onSearch,
+}: {
+  value: string;
+  onSearch: (value: string) => void;
+}) {
+  const [text, setText] = useState(value);
+  const [lastValue, setLastValue] = useState(value);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // What this input last sent, so its own search arriving back (while the
+  // user may have typed more) never replaces the text
+  const [sent, setSent] = useState(value);
+
+  // A change from outside (Clear filters, back navigation) replaces the text
+  if (value !== lastValue) {
+    setLastValue(value);
+    if (value !== sent) {
+      setText(value);
+      setSent(value);
+    }
+  }
+
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const send = (next: string) => {
+    setSent(next);
+    onSearch(next);
+  };
+
+  const update = (next: string) => {
+    setText(next);
+    clearTimeout(timer.current);
+    if (!next) send("");
+    else timer.current = setTimeout(() => send(next), SEARCH_DEBOUNCE_MS);
+  };
+
+  return (
+    <>
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+      <Input
+        placeholder="Search applications..."
+        value={text}
+        onChange={(e) => update(e.target.value)}
+        className="pl-9 pr-8 w-full h-9 text-xs bg-background/60"
+      />
+      {text.length > 0 && (
+        <button
+          type="button"
+          aria-label="Clear search filter"
+          onClick={() => update("")}
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 cursor-pointer"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </>
+  );
+}
 
 interface DataTableToolbarProps {
   globalFilter: string;
@@ -63,23 +131,7 @@ export function DataTableToolbar({
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
         {/* 1. Search Bar (Full-width on mobile) */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-          <Input
-            placeholder="Search applications..."
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(String(e.target.value))}
-            className="pl-9 pr-8 w-full h-9 text-xs bg-background/60"
-          />
-          {globalFilter.length > 0 && (
-            <button
-              type="button"
-              aria-label="Clear search filter"
-              onClick={() => setGlobalFilter("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 cursor-pointer"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
+          <SearchInput value={globalFilter} onSearch={setGlobalFilter} />
         </div>
 
         {/* 2. Controls Row: Platform Filter + View Mode Switcher */}

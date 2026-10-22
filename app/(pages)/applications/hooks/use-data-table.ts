@@ -28,7 +28,6 @@ import {
   parseAsString,
   parseAsBoolean,
   parseAsStringLiteral,
-  debounce,
 } from "nuqs";
 import {
   deleteApplication,
@@ -113,12 +112,8 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
   );
   // Every filter change starts again from page 1
   const setGlobalFilter = useCallback(
-    (value: string) =>
-      setParams(
-        { q: value || null, page: null },
-        // Wait for a pause in typing before querying the server
-        value ? { limitUrlUpdates: debounce(300) } : undefined,
-      ),
+    // The search input debounces its own typing
+    (value: string) => setParams({ q: value || null, page: null }),
     [setParams],
   );
   // Picking a status replaces any filter that came from an analytics link
