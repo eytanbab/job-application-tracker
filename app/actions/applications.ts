@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 
 import { db, isMockDb } from "@/app/db";
@@ -29,8 +28,9 @@ import {
   sql,
 } from "drizzle-orm";
 
-import { format, subDays } from "date-fns";
-import { applicationsTag, expireTag } from "./_utils/cache-tags";
+import { format } from "date-fns";
+import { purgeApplicationCaches } from "@/lib/applications/purge-caches";
+import { syncGhostedApplications } from "@/lib/applications/ghost-sync";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 import {
   getStatusDisplay,
@@ -129,152 +129,6 @@ function extractCleanApplicationFields(values: FormValues) {
   };
 }
 
-function purgeCaches(userId: string) {
-  try {
-    expireTag(applicationsTag(userId));
-    revalidatePath("/applications");
-    revalidatePath("/analytics/overview");
-  } catch {
-    // Gracefully ignore when invoked outside Next.js request context (e.g. testing scripts)
-  }
-}
-
-// Automatically transition applications older than 30 days without rejection or acceptance to Ghosted
-export async function syncGhostedApplications(userId?: string) {
-  if (isMockDb) {
-    return mockStore.syncGhostedApplications(userId);
-  }
-
-  const thirtyDaysAgo = subDays(new Date(), 30);
-  const thresholdDateStr = format(thirtyDaysAgo, "yyyy-MM-dd");
-
-  const whereConditions = [
-    lte(jobApplications.date_applied, thresholdDateStr),
-    inArray(jobApplications.statusCategory, ["applied", "review"]),
-  ];
-
-  if (userId) {
-    whereConditions.push(eq(jobApplications.userId, userId));
-  }
-
-  // 1. Query applications that are older than 30 days and not in terminal/ghosted categories
-  const candidates = await db
-    .select({
-      id: jobApplications.id,
-      userId: jobApplications.userId,
-      status: jobApplications.status,
-      statusCategory: jobApplications.statusCategory,
-      date_applied: jobApplications.date_applied,
-      createdAt: jobApplications.createdAt,
-    })
-    .from(jobApplications)
-    .where(and(...whereConditions));
-
-  if (candidates.length === 0) {
-    return 0;
-  }
-
-  // 2. Query recent status history to avoid ghosting applications with recent activity in the last 30 days
-  const candidateIds = candidates.map((c) => c.id);
-  const recentHistory = await db
-    .select({
-      applicationId: applicationStatusHistory.applicationId,
-      createdAt: applicationStatusHistory.createdAt,
-    })
-    .from(applicationStatusHistory)
-    .where(
-      and(
-        inArray(applicationStatusHistory.applicationId, candidateIds),
-        gte(applicationStatusHistory.createdAt, thirtyDaysAgo),
-      ),
-    );
-
-  const recentlyActiveAppIds = new Set(
-    recentHistory.map((h) => h.applicationId),
-  );
-
-  // 3. Filter candidates: ensure kind is applied or review, and no recent activity
-  const qualifyingApps = candidates.filter((app) => {
-    if (recentlyActiveAppIds.has(app.id)) return false;
-    const kind = getStatusKind(app.status, app.statusCategory);
-    return kind === "applied" || kind === "review";
-  });
-
-  if (qualifyingApps.length === 0) {
-    return 0;
-  }
-
-  const qualifyingIds = qualifyingApps.map((a) => a.id);
-
-  // 4. Load their history: an existing Ghosted entry is not duplicated, and
-  // the new one is dated after the last activity, like ghostsAt.
-  const qualifyingHistory = await db
-    .select({
-      applicationId: applicationStatusHistory.applicationId,
-      statusCategory: applicationStatusHistory.statusCategory,
-      createdAt: applicationStatusHistory.createdAt,
-    })
-    .from(applicationStatusHistory)
-    .where(inArray(applicationStatusHistory.applicationId, qualifyingIds));
-  const historyByApp = new Map<string, { createdAt: number }[]>();
-  const appsWithGhostedHistory = new Set<string>();
-  for (const h of qualifyingHistory) {
-    if (h.statusCategory === "ghosted") appsWithGhostedHistory.add(h.applicationId);
-    const list = historyByApp.get(h.applicationId) ?? [];
-    list.push({ createdAt: new Date(h.createdAt).getTime() });
-    historyByApp.set(h.applicationId, list);
-  }
-
-  // 5. Ghost them, re-checking the category so a status change made since
-  // the select above is not overwritten, then record history for exactly
-  // the rows that changed.
-  const ghosted = await db
-    .update(jobApplications)
-    .set({
-      status: "Ghosted",
-      statusCategory: "ghosted",
-    })
-    .where(
-      and(
-        inArray(jobApplications.id, qualifyingIds),
-        inArray(jobApplications.statusCategory, ["applied", "review"]),
-      ),
-    )
-    .returning({ id: jobApplications.id });
-  const ghostedIds = new Set(ghosted.map((g) => g.id));
-
-  const now = Date.now();
-  const historyEntries = qualifyingApps
-    .filter((app) => ghostedIds.has(app.id) && !appsWithGhostedHistory.has(app.id))
-    .map((app) => {
-      const due = ghostsAt(
-        { status: app.status, statusCategory: app.statusCategory, dateApplied: app.date_applied },
-        historyByApp.get(app.id) ?? [],
-      );
-      return {
-        applicationId: app.id,
-        status: "Ghosted",
-        statusCategory: "ghosted",
-        createdAt: new Date(Math.min(due ?? now, now)),
-      };
-    });
-
-  if (historyEntries.length > 0) {
-    await db.insert(applicationStatusHistory).values(historyEntries);
-  }
-
-  // 6. Purge caches for affected users
-  if (userId) {
-    purgeCaches(userId);
-  } else {
-    const affectedUserIds = Array.from(new Set(qualifyingApps.map((a) => a.userId)));
-    for (const uid of affectedUserIds) {
-      purgeCaches(uid);
-    }
-  }
-
-  return ghostedIds.size;
-}
 
 // List rows carry every column except the long-text ones (job description
 // and notes), which only the detail panel needs: getApplicationDetails.
@@ -648,7 +502,7 @@ export async function createApplication(values: FormValues) {
 
   if (isMockDb) {
     const newApp = mockStore.createApplication(userId, fields as any);
-    purgeCaches(userId);
+    purgeApplicationCaches(userId);
     return [{ insertedId: newApp.id }];
   }
 
@@ -679,7 +533,7 @@ export async function createApplication(values: FormValues) {
     void sync();
   }
 
-  purgeCaches(userId);
+  purgeApplicationCaches(userId);
   return [{ insertedId: applicationId }];
 }
 
@@ -689,7 +543,7 @@ export async function deleteApplication(id: string) {
 
   if (isMockDb) {
     mockStore.deleteApplication(userId, id);
-    purgeCaches(userId);
+    purgeApplicationCaches(userId);
     return;
   }
 
@@ -697,7 +551,7 @@ export async function deleteApplication(id: string) {
     .delete(jobApplications)
     .where(and(eq(jobApplications.userId, userId), eq(jobApplications.id, id)));
 
-  purgeCaches(userId);
+  purgeApplicationCaches(userId);
 }
 
 // Update an application of current user
@@ -737,7 +591,7 @@ export async function updateApplication(values: FormValues) {
 
   if (isMockDb) {
     mockStore.updateApplication(userId, applicationId, fields as any);
-    purgeCaches(userId);
+    purgeApplicationCaches(userId);
     return;
   }
 
@@ -825,7 +679,7 @@ export async function updateApplication(values: FormValues) {
       );
   }
 
-  purgeCaches(userId);
+  purgeApplicationCaches(userId);
 }
 
 // Update only the attached resume of an application without altering other fields
@@ -858,7 +712,7 @@ export async function updateApplicationResume(
 
   if (isMockDb) {
     mockStore.updateApplication(userId, applicationId, { resumeId });
-    purgeCaches(userId);
+    purgeApplicationCaches(userId);
     return;
   }
 
@@ -872,7 +726,7 @@ export async function updateApplicationResume(
       ),
     );
 
-  purgeCaches(userId);
+  purgeApplicationCaches(userId);
 }
 
 // Delete individual status history entry (Timeline correction)
@@ -881,7 +735,7 @@ export async function deleteStatusHistoryEntry(historyId: string) {
 
   if (isMockDb) {
     const res = mockStore.deleteStatusHistoryEntry(userId, historyId);
-    purgeCaches(userId);
+    purgeApplicationCaches(userId);
     return res;
   }
 
@@ -936,7 +790,7 @@ export async function deleteStatusHistoryEntry(historyId: string) {
     })
     .where(eq(jobApplications.id, applicationId));
 
-  purgeCaches(userId);
+  purgeApplicationCaches(userId);
 
   return { status: newStatus, statusCategory: newCategory };
 }

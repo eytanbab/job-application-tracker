@@ -28,7 +28,6 @@ vi.mock("@/app/db", () => ({
   isMockDb: false,
   db: { select: () => query(), insert: () => query(), update: () => query(), batch: async () => [] },
 }));
-vi.mock("../_utils/user-context", () => ({ getCurrentUserIdOrThrow: async () => "user_a" }));
 vi.mock("next/cache", () => ({
   revalidatePath: () => undefined,
   revalidateTag: () => undefined,
@@ -36,7 +35,7 @@ vi.mock("next/cache", () => ({
   unstable_cache: (fn: () => unknown) => fn,
 }));
 
-const { syncGhostedApplications } = await import("../applications");
+const { syncGhostedApplications } = await import("../ghost-sync");
 
 const day = (n: number) => format(subDays(new Date(), n), "yyyy-MM-dd");
 const at = (n: number) => subDays(new Date(), n);

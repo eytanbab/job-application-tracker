@@ -53,7 +53,8 @@ vi.mock("next/cache", () => ({
   unstable_cache: (fn: () => unknown) => fn,
 }));
 
-const { updateApplication } = await import("../applications");
+const applicationActions = await import("../applications");
+const { updateApplication } = applicationActions;
 const { createFile, getViewUrl, getDownloadUrl } = await import("../documents");
 
 const GUEST_ID = "6f9c2a1e-3b4d-4c5e-8f70-1a2b3c4d5e6f";
@@ -105,5 +106,11 @@ describe("server actions only touch the caller's own records", () => {
     expect(result.error).toBeUndefined();
     expect(result.url).toContain(`${GUEST_ID}/123-cv.pdf`);
     vi.unstubAllEnvs();
+  });
+
+  it("does not expose the ghost sync as a server action", () => {
+    // Every export of a "use server" file is callable by any client, and the
+    // sync takes a user id; it lives in lib/applications/ghost-sync.ts.
+    expect(applicationActions).not.toHaveProperty("syncGhostedApplications");
   });
 });

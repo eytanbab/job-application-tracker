@@ -11,8 +11,8 @@ import {
   getApplicationHistory,
   deleteStatusHistoryEntry,
   getDistinctLocationsAndPlatforms,
-  syncGhostedApplications,
 } from "../app/actions/applications";
+import { syncGhostedApplications } from "../lib/applications/ghost-sync";
 
 import { getAnalyticsOverview } from "../lib/analytics/load";
 
