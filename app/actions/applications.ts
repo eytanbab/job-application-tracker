@@ -36,6 +36,7 @@ import {
   getStatusDisplay,
   getStatusKind,
   isStatusKind,
+  resolveUpdatedStatus,
   safeFormatDate,
   statusLabels,
   statusOptions,
@@ -561,6 +562,98 @@ export async function deleteApplication(id: string) {
     .where(and(eq(jobApplications.userId, userId), eq(jobApplications.id, id)));
 
   purgeApplicationCaches(userId);
+}
+
+// Bulk actions take a list of ids so a multi-row change is one request:
+// Next.js runs server actions one at a time per client, and each single-row
+// action re-renders the page.
+const MAX_BULK_IDS = 500;
+
+function assertBulkIds(ids: unknown): asserts ids is string[] {
+  if (!Array.isArray(ids) || ids.length > MAX_BULK_IDS || ids.some((id) => typeof id !== "string")) {
+    throw new Error("Invalid selection");
+  }
+}
+
+/** Deletes the caller's applications among `ids`; returns the ids it deleted. */
+export async function deleteApplications(ids: string[]): Promise<{ deleted: string[] }> {
+  assertBulkIds(ids);
+  const userId = await getCurrentUserIdOrThrow();
+  if (ids.length === 0) return { deleted: [] };
+
+  let deleted: string[];
+  if (isMockDb) {
+    deleted = ids.filter((id) => mockStore.deleteApplication(userId, id));
+  } else {
+    const rows = await db
+      .delete(jobApplications)
+      .where(and(eq(jobApplications.userId, userId), inArray(jobApplications.id, ids)))
+      .returning({ id: jobApplications.id });
+    deleted = rows.map((r) => r.id);
+  }
+
+  purgeApplicationCaches(userId);
+  return { deleted };
+}
+
+/**
+ * Moves the caller's applications among `ids` to `category`, recording a
+ * history row for each one that changed; returns the ids it updated.
+ */
+export async function updateApplicationsStatus(
+  ids: string[],
+  category: string,
+): Promise<{ updated: string[] }> {
+  assertBulkIds(ids);
+  if (!isStatusKind(category)) throw new Error("Invalid status");
+  const userId = await getCurrentUserIdOrThrow();
+  if (ids.length === 0) return { updated: [] };
+
+  const current = isMockDb
+    ? mockStore.getApplications(userId).filter((a) => ids.includes(a.id))
+    : await db
+        .select({
+          id: jobApplications.id,
+          status: jobApplications.status,
+          statusCategory: jobApplications.statusCategory,
+        })
+        .from(jobApplications)
+        .where(and(eq(jobApplications.userId, userId), inArray(jobApplications.id, ids)));
+
+  // Keep a custom stage label where it still fits, as single updates do.
+  const changes = current
+    .map((app) => ({ id: app.id, status: resolveUpdatedStatus(app.status, category).trim() }))
+    .filter((c, i) => c.status !== current[i].status || category !== current[i].statusCategory);
+
+  if (changes.length > 0) {
+    if (isMockDb) {
+      for (const c of changes) {
+        mockStore.updateApplication(userId, c.id, { status: c.status, statusCategory: category });
+      }
+    } else {
+      const now = new Date();
+      const byStatus = new Map<string, string[]>();
+      for (const c of changes) byStatus.set(c.status, [...(byStatus.get(c.status) ?? []), c.id]);
+      const updates = [...byStatus].map(([status, groupIds]) =>
+        db
+          .update(jobApplications)
+          .set({ status, statusCategory: category })
+          .where(and(eq(jobApplications.userId, userId), inArray(jobApplications.id, groupIds))),
+      );
+      const history = db.insert(applicationStatusHistory).values(
+        changes.map((c) => ({
+          applicationId: c.id,
+          status: c.status,
+          statusCategory: category,
+          createdAt: now,
+        })),
+      );
+      await db.batch([history, ...updates]);
+    }
+  }
+
+  purgeApplicationCaches(userId);
+  return { updated: current.map((a) => a.id) };
 }
 
 // Update an application of current user

@@ -104,7 +104,7 @@ class MockStore {
 
     if (statusChanged) {
       this.statusHistory.unshift({
-        id: `hist-${Date.now()}`,
+        id: `hist-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         applicationId: id,
         status: updatedApp.status,
         statusCategory: updatedApp.statusCategory,
