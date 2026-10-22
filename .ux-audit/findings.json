@@ -2757,17 +2757,22 @@
       "severity": "high",
       "confidence": "code-confirmed",
       "effort": "medium",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "deleteApplications and updateApplicationsStatus run each bulk edit as one action and one db.batch (791afe7, 7a6003a). e2e: deleting 3 rows sends 1 action request.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "high"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2787,17 +2792,22 @@
       "severity": "medium",
       "confidence": "code-confirmed",
       "effort": "medium",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "Board moves, Move to and delete show at once through useOptimistic and roll back on failure (ddfe046). e2e covers move, delete and rollback.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2817,17 +2827,22 @@
       "severity": "medium",
       "confidence": "code-confirmed",
       "effort": "medium",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "The board loads in one query (row_number and count windows per status), and a table page in one query with count(*) over () (9e7e750). Checked on a local Postgres: 1 query each, same rows and totals. Board page load is 3 queries, 1 board plus cached counts and platforms.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2847,17 +2862,22 @@
       "severity": "medium",
       "confidence": "code-confirmed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "The detail sheet, edit sheets and add form load on demand (a sheet or dialog opens once its code is loaded) and preload when the browser is idle; schema-derived types are type-only (df2a0a2 and the next commit). Production build, scripts referenced by the /applications HTML: 1.81 MB before, 1.35 MB after (uncompressed), with no detail view, react-day-picker, form, attach-resume or Drizzle code.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2877,17 +2897,22 @@
       "severity": "low",
       "confidence": "code-confirmed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "Saving refetches history once (the refresh path skips the reload since phase 1), and opening a row no longer calls getDocument when the row has the resume details (c0d9366).",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "low"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2907,17 +2932,22 @@
       "severity": "low",
       "confidence": "code-confirmed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "The search box keeps typed text locally and sends it after 300 ms (0f6ecad). e2e covers slow typing, fast typing, Reset all filters and the clear button.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "low"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2937,17 +2967,22 @@
       "severity": "low",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "Locations and platforms use selectDistinct, cached under the applications tag (bbd37c7).",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "low"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2967,17 +3002,22 @@
       "severity": "low",
       "confidence": "code-confirmed",
       "effort": "low",
-      "status": "open",
+      "status": "wont-fix",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
+      "last_seen": "2026-10-22",
       "resolved_on": null,
-      "status_note": "",
+      "status_note": "Not worth its code now. eq(platform) needs a data migration first, since older rows were saved before platforms were lowercased, and there is no platform index for it to use. Dropping description and status_category from search would remove features users rely on (description search has its own test; ghosted rows show \"Ghosted\" over a stored \"Applied\"). Revisit with a pg_trgm index if accounts grow.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "low"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "wont-fix"
         }
       ]
     },
@@ -3087,17 +3127,22 @@
       "severity": "low",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "Notes are searched in both the SQL and mock paths (7a72ba8).",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "low"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     },
