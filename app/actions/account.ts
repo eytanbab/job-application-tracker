@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 
 import { deleteUserData } from "@/lib/account-data";
 import { getClerkUserId } from "@/lib/auth/clerk-session";
-import { applicationsTag, documentsTag, expireTag } from "./_utils/cache-tags";
+import { applicationsTag, documentsTag, expireTag, preferencesTag } from "./_utils/cache-tags";
 import { getCurrentUserIdOrThrow } from "./_utils/user-context";
 
 // Must match the phrase the settings dialog asks the user to type.
@@ -44,6 +44,7 @@ export async function deleteAccount(
 
   expireTag(applicationsTag(userId));
   expireTag(documentsTag(userId));
+  expireTag(preferencesTag(userId));
   revalidatePath("/", "layout");
 
   if (signedIn) {
