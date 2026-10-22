@@ -61,6 +61,7 @@ export function RowActions({
   // Stays mounted once loaded, so closing animates
   const EditApplicationSheet = useLazyModule(loadEditSheet, {
     needed: isEditOpen,
+    onFailed: () => setIsEditOpen(false),
   })?.EditApplicationSheet;
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [, startTransition] = useTransition();

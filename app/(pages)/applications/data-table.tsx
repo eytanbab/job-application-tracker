@@ -127,14 +127,17 @@ export function DataTable<TData extends ApplicationRow, TValue>({
   const ApplicationDetailSheet = useLazyModule(loadDetailSheet, {
     needed: isDetailOpen,
     preloadWhenIdle: true,
+    onFailed: handleCloseDetail,
   })?.ApplicationDetailSheet;
   const EditApplicationSheet = useLazyModule(loadEditSheet, {
     needed: !!editingApp,
     preloadWhenIdle: true,
+    onFailed: () => setEditingApp(null),
   })?.EditApplicationSheet;
   const ApplicationForm = useLazyModule(loadApplicationForm, {
     needed: isCreateOpen,
     preloadWhenIdle: true,
+    onFailed: () => setIsCreateOpen(false),
   })?.ApplicationForm;
 
   // A brand-new account gets onboarding instead of an empty table and
