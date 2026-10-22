@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { syncGhostedApplications } from "@/app/actions/applications";
+import { syncGhostedApplications } from "@/lib/applications/ghost-sync";
 import { rejectUnauthorizedCron } from "@/lib/security/cron-auth";
 
 export const dynamic = "force-dynamic";
