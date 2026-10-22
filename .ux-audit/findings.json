@@ -19,7 +19,7 @@
     "COGN": 2,
     "PERF": 10,
     "SRCH": 2,
-    "SEC": 3
+    "SEC": 4
   },
   "findings": [
     {
@@ -2377,17 +2377,22 @@
       "severity": "high",
       "confidence": "code-confirmed",
       "effort": "medium",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "safeFetch resolves each hop and follows redirects by hand; NAT64/6to4 IPv6 forms blocked; scraper stops instead of falling back (d54afa0, 05da9df, 4eb9c95). Verified with unit tests and e2e on the demo server.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "high"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2407,17 +2412,22 @@
       "severity": "high",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "updateApplication throws before any write when the user-scoped lookup finds nothing (6961584, 8aebf33). Verified with unit tests and e2e on the demo server.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "high"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2437,17 +2447,22 @@
       "severity": "high",
       "confidence": "code-confirmed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "Keys must be in the caller's folder when stored; signing accepts own or guest folder; ATS read checked too (98c9d2e, e367aab). Verified with unit tests and e2e on the demo server.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "high"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2467,17 +2482,22 @@
       "severity": "medium",
       "confidence": "code-confirmed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "Ghost entries dated with ghostsAt in DB, mock and synthetic history (e7f6ec5). Verified with unit tests and e2e on the demo server.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2497,17 +2517,22 @@
       "severity": "medium",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "expireTag: updateTag in actions, revalidateTag expire:0 elsewhere (cb89f5c). Verified with unit tests and e2e on the demo server.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2527,17 +2552,22 @@
       "severity": "medium",
       "confidence": "code-confirmed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "Stage change saves only the status from the saved copy and rolls back on failure (836de80). Verified with unit tests and e2e on the demo server.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2557,17 +2587,22 @@
       "severity": "medium",
       "confidence": "code-confirmed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "Timeline responses and entry deletes apply only to the application on screen (836de80). Verified with unit tests and e2e on the demo server.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2587,17 +2622,22 @@
       "severity": "medium",
       "confidence": "code-confirmed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "A refresh of the row on screen never overwrites a dirty draft (836de80). Verified with unit tests and e2e on the demo server.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "medium"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2617,17 +2657,22 @@
       "severity": "low",
       "confidence": "code-confirmed",
       "effort": "quick-win",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "Update re-checks the category in one atomic batch with the history insert; post-create sync in after() (e7f6ec5, fe704e9). Verified with unit tests and e2e on the demo server.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "low"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     },
@@ -2647,17 +2692,22 @@
       "severity": "low",
       "confidence": "code-confirmed",
       "effort": "low",
-      "status": "open",
+      "status": "resolved",
       "first_flagged": "2026-10-21",
-      "last_seen": "2026-10-21",
-      "resolved_on": null,
-      "status_note": "",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "Server-side checks for role, company, date and link schemes; normalizeJobLink on save and render (39d67c3, 8aebf33). Verified with unit tests and e2e on the demo server.",
       "history": [
         {
           "date": "2026-10-21",
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "low"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     },
@@ -3078,6 +3128,41 @@
           "report": "reports/2026-10-21-applications.md",
           "event": "new",
           "severity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "SEC-04",
+      "category": "SEC",
+      "rule": "unauthenticated-action",
+      "title": "syncGhostedApplications was an exported server action with no auth, so any client could ghost every user's applications",
+      "flows": [
+        "applications"
+      ],
+      "location": {
+        "file": "app/actions/applications.ts",
+        "line": 143,
+        "anchor": "export async function syncGhostedApplications(userId?)"
+      },
+      "severity": "high",
+      "confidence": "code-confirmed",
+      "effort": "low",
+      "status": "resolved",
+      "first_flagged": "2026-10-22",
+      "last_seen": "2026-10-22",
+      "resolved_on": "2026-10-22",
+      "status_note": "Moved to server-only lib/applications/ghost-sync.ts; the actions file no longer exports it (9d2297d). Verified with unit tests and e2e on the demo server.",
+      "history": [
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "new",
+          "severity": "high"
+        },
+        {
+          "date": "2026-10-22",
+          "report": "reports/2026-10-21-applications.md",
+          "event": "resolved"
         }
       ]
     }
