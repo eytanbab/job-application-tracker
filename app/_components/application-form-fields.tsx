@@ -571,7 +571,10 @@ export function ApplicationFormFields({
 
   return (
     <>
-      {/* 1. Essential Fields */}
+      {/* 1. Essential fields. When editing, the stage is usually what
+          changes, so it comes first. */}
+      {isEditing && <StatusFormFields form={form} />}
+
       <FormField
         control={form.control}
         name="role_name"
@@ -615,7 +618,30 @@ export function ApplicationFormFields({
         )}
       />
 
-      <StatusFormFields form={form} />
+      <FormField
+        control={form.control}
+        name="location"
+        render={({ field }) => (
+          <FormItem className="space-y-1 col-span-full sm:col-span-1">
+            <FormLabel className="text-xs font-semibold">
+              Location
+              <span className="text-destructive ml-1">*</span>
+            </FormLabel>
+            <FormControl>
+              <ComboboxInput
+                {...field}
+                options={mergedLocations}
+                placeholder="e.g. Remote / New York"
+                value={field.value || ""}
+                onChange={(val) => field.onChange(val)}
+                onBlur={field.onBlur}
+                className="h-9"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
       <FormField
         control={form.control}
@@ -642,32 +668,9 @@ export function ApplicationFormFields({
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="location"
-        render={({ field }) => (
-          <FormItem className="space-y-1 col-span-full sm:col-span-1">
-            <FormLabel className="text-xs font-semibold">
-              Location
-              <span className="text-destructive ml-1">*</span>
-            </FormLabel>
-            <FormControl>
-              <ComboboxInput
-                {...field}
-                options={mergedLocations}
-                placeholder="e.g. Remote / New York"
-                value={field.value || ""}
-                onChange={(val) => field.onChange(val)}
-                onBlur={field.onBlur}
-                className="h-9"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
       <DateAppliedFormField form={form} />
+
+      {!isEditing && <StatusFormFields form={form} />}
 
       {/* 2. Collapsible Progressive Disclosure for Optional Fields */}
       <div className="col-span-full pt-1">
@@ -700,13 +703,6 @@ export function ApplicationFormFields({
                 </button>
               )}
             </div>
-
-            <ResumePicker
-              form={form}
-              disabled={isPending}
-              onUploadingChange={onUploadingResumeChange}
-              onDocumentUploaded={onDocumentUploaded}
-            />
 
             <FormField
               control={form.control}
@@ -744,6 +740,13 @@ export function ApplicationFormFields({
                   <FormMessage />
                 </FormItem>
               )}
+            />
+
+            <ResumePicker
+              form={form}
+              disabled={isPending}
+              onUploadingChange={onUploadingResumeChange}
+              onDocumentUploaded={onDocumentUploaded}
             />
 
             <FormField
