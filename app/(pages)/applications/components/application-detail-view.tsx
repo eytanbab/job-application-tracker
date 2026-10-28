@@ -741,17 +741,8 @@ export function ApplicationDetailView({
           type="email"
           className="col-span-2"
           inputValue={currentApp.contactEmail ?? ""}
-          display={
-            currentApp.contactEmail ? (
-              <a
-                href={`mailto:${currentApp.contactEmail}`}
-                onClick={(e) => e.stopPropagation()}
-                className="text-primary hover:underline"
-              >
-                {currentApp.contactEmail}
-              </a>
-            ) : null
-          }
+          display={currentApp.contactEmail || null}
+          href={currentApp.contactEmail ? `mailto:${currentApp.contactEmail}` : undefined}
           placeholder="e.g. dana@acme.com"
           onCommit={onCommitDraft}
           onChange={

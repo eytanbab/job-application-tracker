@@ -798,12 +798,11 @@ export async function updateApplicationsStatus(
     .filter((c, i) => c.status !== current[i].status || category !== current[i].statusCategory);
 
   // Saved jobs moved to a sent status were applied to today.
-  const sentToday =
+  const sentToday = new Set(
     category === "saved"
       ? []
-      : current
-          .filter((app) => app.statusCategory === "saved")
-          .map((app) => app.id);
+      : current.filter((app) => app.statusCategory === "saved").map((app) => app.id),
+  );
   const today = new Date();
   const todayFields = {
     date_applied: format(today, "yyyy-MM-dd"),
@@ -817,7 +816,7 @@ export async function updateApplicationsStatus(
         mockStore.updateApplication(userId, c.id, {
           status: c.status,
           statusCategory: category,
-          ...(sentToday.includes(c.id) && todayFields),
+          ...(sentToday.has(c.id) && todayFields),
         });
       }
     } else {
@@ -838,12 +837,12 @@ export async function updateApplicationsStatus(
           createdAt: now,
         })),
       );
-      const dates = sentToday.length
+      const dates = sentToday.size
         ? [
             db
               .update(jobApplications)
               .set(todayFields)
-              .where(and(eq(jobApplications.userId, userId), inArray(jobApplications.id, sentToday))),
+              .where(and(eq(jobApplications.userId, userId), inArray(jobApplications.id, [...sentToday]))),
           ]
         : [];
       await db.batch([history, ...updates, ...dates]);

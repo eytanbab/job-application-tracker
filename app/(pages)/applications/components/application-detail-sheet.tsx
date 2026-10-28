@@ -317,15 +317,16 @@ export function ApplicationDetailSheet({
   // Handle draft field changes
   const handleUpdateDraftField = useCallback(
     (field: string, value: unknown) => {
-      setDraftApp((prev) => {
-        if (!prev) return prev;
-        const next = { ...prev, [field]: value };
-        const dirty = checkIsDirty(next, currentApp);
-        isDirtyRef.current = dirty;
-        draftRef.current = next;
-        setIsDirty(dirty);
-        return next;
-      });
+      // Built from the ref, not inside a state updater, so the refs that
+      // blur handlers read are current before the next render.
+      const prev = draftRef.current;
+      if (!prev) return;
+      const next = { ...prev, [field]: value };
+      const dirty = checkIsDirty(next, currentApp);
+      draftRef.current = next;
+      isDirtyRef.current = dirty;
+      setDraftApp(next);
+      setIsDirty(dirty);
     },
     [checkIsDirty, currentApp],
   );

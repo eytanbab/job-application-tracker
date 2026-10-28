@@ -13,6 +13,8 @@ interface InlineDetailFieldProps {
   inputValue: string;
   /** What the panel shows when not editing; null shows a dash. */
   display: ReactNode | null;
+  /** Shows the value as this link; editing then goes through Edit only. */
+  href?: string;
   type?: "text" | "email" | "date" | "datetime-local";
   placeholder?: string;
   /** Turns the input text back into the stored value. */
@@ -31,6 +33,7 @@ export function InlineDetailField({
   icon: Icon,
   inputValue,
   display,
+  href,
   type = "text",
   placeholder,
   onChange,
@@ -85,15 +88,25 @@ export function InlineDetailField({
           className="h-8 text-xs bg-background"
           autoFocus
         />
-      ) : (
-        <div
-          onClick={startEditing}
-          className={cn(
-            "font-medium text-foreground text-xs sm:text-sm truncate",
-            editable && "cursor-pointer hover:text-primary transition-colors",
-          )}
-          title={editable ? `Click to edit ${label.toLowerCase()}` : undefined}
+      ) : href && display !== null ? (
+        <a
+          href={href}
+          className="block font-medium text-primary text-xs sm:text-sm truncate hover:underline"
         >
+          {display}
+        </a>
+      ) : editable ? (
+        <button
+          type="button"
+          onClick={startEditing}
+          className="block w-full text-left font-medium text-foreground text-xs sm:text-sm truncate cursor-pointer hover:text-primary transition-colors"
+          title={`Click to edit ${label.toLowerCase()}`}
+          aria-label={display === null ? `Add ${label.toLowerCase()}` : undefined}
+        >
+          {display ?? "-"}
+        </button>
+      ) : (
+        <div className="font-medium text-foreground text-xs sm:text-sm truncate">
           {display ?? "-"}
         </div>
       )}
