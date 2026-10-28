@@ -158,6 +158,13 @@ export const ApplicationForm = ({
       ...defaultValues,
       platform: formatPlatformLabel(defaultValues.platform),
       resumeId: defaultValues.resumeId ?? null,
+      // Fields that only some rows carry, for the same reason
+      followUpDate: defaultValues.followUpDate ?? null,
+      interviewAt: defaultValues.interviewAt ?? null,
+      contactName: defaultValues.contactName ?? null,
+      contactEmail: defaultValues.contactEmail ?? null,
+      referredBy: defaultValues.referredBy ?? null,
+      statusChangedAt: null,
     },
   });
 
