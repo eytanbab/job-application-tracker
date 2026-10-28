@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { LinkAutofillBar } from "./link-autofill-bar";
 import { ApplicationFormFields } from "./application-form-fields";
+import { SimilarApplicationsNotice } from "./similar-applications-notice";
 import { getDistinctLocationsAndPlatforms } from "@/app/actions/applications";
 import { deleteFile } from "@/app/actions/documents";
 import {
@@ -417,6 +418,14 @@ export const ApplicationForm = ({
                   </div>
                 )}
               </>
+            )}
+
+            {!isEditing && (
+              <SimilarApplicationsNotice
+                link={form.watch("link")}
+                roleName={form.watch("role_name")}
+                companyName={form.watch("company_name")}
+              />
             )}
 
             <div className="grid grid-cols-2 w-full gap-3">
