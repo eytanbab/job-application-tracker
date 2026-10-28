@@ -23,6 +23,7 @@ import {
   updateApplication,
 } from "@/app/actions/applications";
 import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { DataTableToolbar } from "./components/data-table-toolbar";
 import { DataTableGrid } from "./components/data-table-grid";
 import { DataTableBulkActions } from "./components/data-table-bulk-actions";
@@ -99,6 +100,7 @@ export function DataTable<TData extends ApplicationRow, TValue>({
     clearFilters,
     defaultCreateValues,
     handleSelectRow,
+    openApplicationById,
     handleCloseDetail,
     handleDelete,
     optimisticChanges,
@@ -265,8 +267,18 @@ export function DataTable<TData extends ApplicationRow, TValue>({
                   onClose={() => setIsCreateOpen(false)}
                   onSubmit={async (values) => {
                     try {
-                      await createApplication(values);
-                      toast({ description: "Application created successfully!" });
+                      const [{ insertedId }] = await createApplication(values);
+                      toast({
+                        description: `Added ${values.role_name} at ${values.company_name}.`,
+                        action: insertedId ? (
+                          <ToastAction
+                            altText="Open the new application"
+                            onClick={() => openApplicationById(insertedId)}
+                          >
+                            View
+                          </ToastAction>
+                        ) : undefined,
+                      });
                       setIsCreateOpen(false);
                     } catch (err) {
                       toast({

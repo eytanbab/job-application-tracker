@@ -268,6 +268,17 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     [setAppIdParam],
   );
 
+  /**
+   * Opens an application by id, such as one just created. Not shallow, so
+   * the server loads it when it isn't on the current page.
+   */
+  const openApplicationById = useCallback(
+    (id: string) => {
+      void setAppIdParam(id, { shallow: false });
+    },
+    [setAppIdParam],
+  );
+
   const handleCloseDetail = useCallback(() => {
     setIsDetailOpen(false);
     setSelectedApp(null);
@@ -532,6 +543,7 @@ export function useDataTable<TData extends ApplicationRow, TValue>({
     clearFilters,
     defaultCreateValues,
     handleSelectRow,
+    openApplicationById,
     handleDelete,
     optimisticChanges,
     addOptimisticChange,
