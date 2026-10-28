@@ -43,6 +43,7 @@ import { useMemo, useState, useEffect } from "react";
 import { FormValues } from "./application-form";
 import { ComboboxInput } from "@/components/ui/combobox-input";
 import { ResumePicker } from "./resume-picker";
+import { SalaryFormField } from "./salary-form-field";
 
 const DEFAULT_EMPTY_ARRAY: string[] = [];
 
@@ -704,24 +705,7 @@ export function ApplicationFormFields({
               )}
             </div>
 
-            <FormField
-              control={form.control}
-              name="salary"
-              render={({ field }) => (
-                <FormItem className="space-y-1">
-                  <FormLabel className="text-xs font-semibold">Salary</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="e.g. $100k - $120k"
-                      {...field}
-                      value={field.value || ""}
-                      className="h-9"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <SalaryFormField form={form} />
 
             <FormField
               control={form.control}
