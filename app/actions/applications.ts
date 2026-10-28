@@ -106,6 +106,51 @@ function assertValidApplication(
   if (link && !normalizeJobLink(link) && (dangerous || otherScheme)) {
     throw new Error("Enter a job link that starts with http:// or https://.");
   }
+  const email = (values.contactEmail ?? "").trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new Error("Enter a valid contact email.");
+  }
+}
+
+const optionalText = (value: string | null | undefined) => value?.trim() || null;
+
+/** A `YYYY-MM-DD` day, or null for anything else. */
+function optionalDay(value: unknown): string | null {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : format(value, "yyyy-MM-dd");
+  }
+  const text = String(value ?? "").trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : null;
+}
+
+function optionalInstant(value: unknown): Date | null {
+  if (value === null || value === undefined || value === "") return null;
+  const date = value instanceof Date ? value : new Date(String(value));
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/**
+ * Follow-up, interview and contact fields. Like description and notes, a
+ * field the caller leaves out (undefined) keeps its stored value.
+ */
+function cleanPlanningFields(values: FormValues) {
+  return {
+    ...(values.followUpDate !== undefined && {
+      followUpDate: optionalDay(values.followUpDate),
+    }),
+    ...(values.interviewAt !== undefined && {
+      interviewAt: optionalInstant(values.interviewAt),
+    }),
+    ...(values.contactName !== undefined && {
+      contactName: optionalText(values.contactName),
+    }),
+    ...(values.contactEmail !== undefined && {
+      contactEmail: optionalText(values.contactEmail),
+    }),
+    ...(values.referredBy !== undefined && {
+      referredBy: optionalText(values.referredBy),
+    }),
+  };
 }
 
 function extractCleanApplicationFields(
@@ -137,6 +182,7 @@ function extractCleanApplicationFields(
     statusCategory: normalized.statusCategory ?? "applied",
     salary: normalized.salary ? normalized.salary.trim() : null,
     resumeId: normalized.resumeId || null,
+    ...cleanPlanningFields(normalized),
     month,
     year,
   };
@@ -229,6 +275,8 @@ function listFilterConditions(userId: string, query: ListFilters) {
         ilike(jobApplications.salary, pattern),
         ilike(jobApplications.description, pattern),
         ilike(jobApplications.notes, pattern),
+        ilike(jobApplications.contactName, pattern),
+        ilike(jobApplications.referredBy, pattern),
       )!,
     );
   }

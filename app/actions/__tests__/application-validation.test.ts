@@ -67,3 +67,51 @@ describe("create/update input checks (mock store)", () => {
     await expect(updateApplication({ ...valid, id: other, company_name: " " } as never)).rejects.toThrow("Enter the company name.");
   });
 });
+
+describe("follow-up, interview and contact fields (mock store)", () => {
+  beforeEach(() => {
+    mockStore.reset();
+  });
+
+  const stored = (id: string) => mockStore.getApplications().find((a) => a.id === id)!;
+
+  it("cleans and stores them", async () => {
+    const interviewAt = new Date("2026-11-03T14:30:00Z");
+    const [{ insertedId }] = await createApplication({
+      ...valid,
+      followUpDate: "2026-11-01",
+      interviewAt,
+      contactName: "  Dana Levi ",
+      contactEmail: "dana@acme.com",
+      referredBy: "",
+    } as never);
+    expect(stored(insertedId!)).toMatchObject({
+      followUpDate: "2026-11-01",
+      interviewAt,
+      contactName: "Dana Levi",
+      contactEmail: "dana@acme.com",
+      referredBy: null,
+    });
+  });
+
+  it("drops a follow-up date that is not a day", async () => {
+    const [{ insertedId }] = await createApplication({ ...valid, followUpDate: "soon" } as never);
+    expect(stored(insertedId!).followUpDate).toBeNull();
+  });
+
+  it("refuses a malformed contact email", async () => {
+    await expect(
+      createApplication({ ...valid, contactEmail: "dana at acme" } as never),
+    ).rejects.toThrow("Enter a valid contact email.");
+  });
+
+  it("keeps them when a save leaves them out", async () => {
+    const [{ insertedId }] = await createApplication({
+      ...valid,
+      followUpDate: "2026-11-01",
+      contactName: "Dana",
+    } as never);
+    await updateApplication({ ...valid, id: insertedId, status: "Interview", statusCategory: "interview" } as never);
+    expect(stored(insertedId!)).toMatchObject({ followUpDate: "2026-11-01", contactName: "Dana" });
+  });
+});
