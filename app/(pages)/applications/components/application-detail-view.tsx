@@ -470,7 +470,8 @@ export function ApplicationDetailView({
         <div className="space-y-1">
           <span className="text-xs text-muted-foreground flex items-center justify-between font-medium">
             <span className="flex items-center gap-1">
-              <Calendar className="h-3.5 w-3.5" /> Date Applied
+              <Calendar className="h-3.5 w-3.5" />{" "}
+              {currentKind === "saved" ? "Date Saved" : "Date Applied"}
             </span>
             {onUpdateDraftField && !isEditingDate && (
               <button
