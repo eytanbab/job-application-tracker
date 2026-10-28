@@ -56,6 +56,28 @@ export type ApplicationFormHandle = {
   requestClose: (afterClose?: () => void) => void;
 };
 
+type EntryMode = "link" | "manual";
+
+// The way the user last chose to add an application, so people who never
+// paste links skip that step. A per-browser convenience only.
+const ENTRY_MODE_KEY = "jobtracker:entry-mode";
+
+function readEntryMode(): EntryMode {
+  try {
+    return localStorage.getItem(ENTRY_MODE_KEY) === "manual" ? "manual" : "link";
+  } catch {
+    return "link";
+  }
+}
+
+function rememberEntryMode(mode: EntryMode) {
+  try {
+    localStorage.setItem(ENTRY_MODE_KEY, mode);
+  } catch {
+    // Storage blocked (private mode): the link step stays the default
+  }
+}
+
 type Props = {
   defaultValues: FormValues & { id?: string };
   onSubmit: (values: FormValues) => Promise<void>;
@@ -203,9 +225,14 @@ export const ApplicationForm = ({
   useImperativeHandle(ref, () => ({ requestClose }));
 
   const isEditing = Boolean(defaultValues?.id);
-  const [entryMode, setEntryMode] = useState<"link" | "manual">(
-    isEditing ? "manual" : "link",
+  const [entryMode, setEntryMode] = useState<EntryMode>(() =>
+    isEditing ? "manual" : readEntryMode(),
   );
+  /** Switches the step the user picked, and remembers it for next time. */
+  const chooseEntryMode = (mode: EntryMode) => {
+    rememberEntryMode(mode);
+    setEntryMode(mode);
+  };
   const [extractedFromDomain, setExtractedFromDomain] = useState<string | null>(
     null,
   );
@@ -235,6 +262,7 @@ export const ApplicationForm = ({
       autoFillValues,
     ) as (keyof FormValues)[];
     setExtractedFromDomain(domain);
+    rememberEntryMode("link");
     setEntryMode("manual");
   };
 
@@ -246,7 +274,7 @@ export const ApplicationForm = ({
         shouldTouch: true,
       });
     }
-    setEntryMode("manual");
+    chooseEntryMode("manual");
   };
 
   const handleExtractionFailed = (url: string) => {
@@ -406,7 +434,7 @@ export const ApplicationForm = ({
                     </div>
                     <button
                       type="button"
-                      onClick={() => setEntryMode("link")}
+                      onClick={() => chooseEntryMode("link")}
                       className="text-[11px] font-medium text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer shrink-0 ml-2"
                     >
                       Paste different link
@@ -416,7 +444,7 @@ export const ApplicationForm = ({
                   <div className="flex items-center justify-between pb-0.5">
                     <button
                       type="button"
-                      onClick={() => setEntryMode("link")}
+                      onClick={() => chooseEntryMode("link")}
                       className="text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 cursor-pointer transition-colors"
                     >
                       <ArrowLeft className="h-3.5 w-3.5" />
