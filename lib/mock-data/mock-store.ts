@@ -6,6 +6,7 @@ import {
 } from "./mock-applications";
 import { SEED_DOCUMENTS, MockDocument } from "./mock-documents";
 import { ghostsAt } from "@/lib/analytics/definitions";
+import { clampBetweenNeighbours } from "@/lib/applications/history";
 import type { AnalyticsDataset } from "@/lib/analytics/types";
 import type { UserPreferences } from "@/lib/preference-options";
 
@@ -58,6 +59,8 @@ class MockStore {
   public createApplication(
     userId: string,
     data: Omit<MockApplication, "id" | "userId" | "createdAt">,
+    /** When the first status was reached; defaults to now. */
+    statusAt?: Date,
   ): MockApplication {
     const id = `app-mock-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const now = new Date();
@@ -75,7 +78,7 @@ class MockStore {
       applicationId: id,
       status: data.status,
       statusCategory: data.statusCategory || "applied",
-      createdAt: now,
+      createdAt: statusAt ?? now,
     });
 
     return newApp;
@@ -85,6 +88,8 @@ class MockStore {
     userId: string,
     id: string,
     updates: Partial<MockApplication>,
+    /** When a status change happened; defaults to now. */
+    statusAt?: Date,
   ): MockApplication | null {
     const index = this.applications.findIndex((a) => a.id === id);
     if (index === -1) return null;
@@ -108,7 +113,7 @@ class MockStore {
         applicationId: id,
         status: updatedApp.status,
         statusCategory: updatedApp.statusCategory,
-        createdAt: new Date(),
+        createdAt: statusAt ?? new Date(),
       });
     }
 
@@ -148,6 +153,20 @@ class MockStore {
     }
 
     return hist.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  public updateStatusHistoryDate(
+    userId: string,
+    historyId: string,
+    requested: Date,
+  ): { createdAt: Date } {
+    const entry = this.statusHistory.find((h) => h.id === historyId);
+    if (!entry) throw new Error("Timeline entry not found or unauthorized");
+    const siblings = this.statusHistory.filter(
+      (h) => h.applicationId === entry.applicationId,
+    );
+    entry.createdAt = clampBetweenNeighbours(siblings, historyId, requested);
+    return { createdAt: entry.createdAt };
   }
 
   public deleteStatusHistoryEntry(

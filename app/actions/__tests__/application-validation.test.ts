@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { mockStore } from "@/lib/mock-data/mock-store";
-import { createApplication, updateApplication } from "../applications";
+import {
+  createApplication,
+  getApplicationHistory,
+  updateApplication,
+  updateStatusHistoryDate,
+} from "../applications";
 
 const valid = {
   role_name: "Engineer",
@@ -113,5 +118,63 @@ describe("follow-up, interview and contact fields (mock store)", () => {
     } as never);
     await updateApplication({ ...valid, id: insertedId, status: "Interview", statusCategory: "interview" } as never);
     expect(stored(insertedId!)).toMatchObject({ followUpDate: "2026-11-01", contactName: "Dana" });
+  });
+});
+
+describe("status change dates (mock store)", () => {
+  beforeEach(() => {
+    mockStore.reset();
+  });
+
+  const latestEntry = async (id: string) => (await getApplicationHistory(id))[0];
+
+  it("keeps a back-dated change after the previous timeline entry", async () => {
+    const [{ insertedId }] = await createApplication(valid as never);
+    const day = new Date();
+    day.setDate(day.getDate() - 3);
+    await updateApplication({
+      ...valid,
+      id: insertedId,
+      status: "Interview",
+      statusCategory: "interview",
+      statusChangedAt: day,
+    } as never);
+    const entry = await latestEntry(insertedId!);
+    expect(entry.statusCategory).toBe("interview");
+    // Held after the Applied entry created a moment ago
+    expect(new Date(entry.createdAt).getTime()).toBeGreaterThan(Date.now() - 60_000);
+  });
+
+  it("dates a new application's first stage", async () => {
+    const day = new Date("2026-10-05T12:00:00");
+    const [{ insertedId }] = await createApplication({
+      ...valid,
+      status: "Interview",
+      statusCategory: "interview",
+      statusChangedAt: day,
+    } as never);
+    expect(new Date((await latestEntry(insertedId!)).createdAt)).toEqual(day);
+  });
+
+  it("moves a timeline entry without reordering it", async () => {
+    const [{ insertedId }] = await createApplication({
+      ...valid,
+      statusChangedAt: new Date("2026-10-02T12:00:00"),
+    } as never);
+    await updateApplication({ ...valid, id: insertedId, status: "In Review", statusCategory: "review" } as never);
+    const [review, applied] = await getApplicationHistory(insertedId!);
+
+    await updateStatusHistoryDate(review.id, new Date("2026-10-08T12:00:00"));
+    expect(new Date((await latestEntry(insertedId!)).createdAt)).toEqual(new Date("2026-10-08T12:00:00"));
+
+    // Before the Applied entry: held just after it
+    await updateStatusHistoryDate(review.id, new Date("2026-09-01T12:00:00"));
+    expect(new Date((await latestEntry(insertedId!)).createdAt).getTime()).toBe(
+      new Date(applied.createdAt).getTime() + 1000,
+    );
+
+    await expect(
+      updateStatusHistoryDate(review.id, new Date(Date.now() + 86_400_000)),
+    ).rejects.toThrow("Pick a date that isn't in the future.");
   });
 });

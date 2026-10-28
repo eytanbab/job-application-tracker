@@ -63,13 +63,17 @@ import {
 } from "@/lib/analytics/definitions";
 import { groupHistory } from "@/lib/analytics/facts";
 import { dateAfterStatusChange } from "@/lib/applications/saved";
+import { clampBetweenNeighbours, statusChangeTime } from "@/lib/applications/history";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema
   .omit({ userId: true })
   .partial({ month: true, year: true });
 
-type FormValues = z.input<typeof formSchema>;
+type FormValues = z.input<typeof formSchema> & {
+  /** When the status in this save was reached, if not now. */
+  statusChangedAt?: Date | string | null;
+};
 
 function normalizeApplicationStatus(values: FormValues): FormValues {
   const statusCategory = getStatusKind(values.status, values.statusCategory);
@@ -594,8 +598,12 @@ export async function createApplication(values: FormValues) {
     }
   }
 
+  const statusAt = statusChangeTime(optionalInstant(values.statusChangedAt), {
+    after: new Date(`${fields.date_applied}T00:00:00`),
+  });
+
   if (isMockDb) {
-    const newApp = mockStore.createApplication(userId, fields as any);
+    const newApp = mockStore.createApplication(userId, fields as any, statusAt);
     purgeApplicationCaches(userId);
     return [{ insertedId: newApp.id }];
   }
@@ -613,7 +621,7 @@ export async function createApplication(values: FormValues) {
       applicationId,
       status: fields.status,
       statusCategory: fields.statusCategory ?? "applied",
-      createdAt: new Date(),
+      createdAt: statusAt,
     }),
   ]);
 
@@ -808,11 +816,13 @@ export async function updateApplication(values: FormValues) {
     role: changed(values.role_name, currentApp[0].role_name),
     company: changed(values.company_name, currentApp[0].company_name),
   });
+  const requestedStatusAt = optionalInstant(values.statusChangedAt);
   const date = dateAfterStatusChange({
     previousCategory: currentApp[0].statusCategory,
     nextCategory: fields.statusCategory,
     storedDate: currentApp[0].date_applied,
     nextDate: fields.date_applied,
+    today: requestedStatusAt ?? undefined,
   });
   if (date !== fields.date_applied) {
     const parsed = new Date(`${date}T12:00:00`);
@@ -848,7 +858,15 @@ export async function updateApplication(values: FormValues) {
   }
 
   if (isMockDb) {
-    mockStore.updateApplication(userId, applicationId, fields as any);
+    const latest = mockStore
+      .getApplicationHistory(userId, applicationId)
+      .find((h) => h.id)?.createdAt;
+    mockStore.updateApplication(
+      userId,
+      applicationId,
+      fields as any,
+      statusChangeTime(requestedStatusAt, { after: latest }),
+    );
     purgeApplicationCaches(userId);
     return;
   }
@@ -876,20 +894,28 @@ export async function updateApplication(values: FormValues) {
       latestHistory[0].createdAt &&
       now.getTime() - new Date(latestHistory[0].createdAt).getTime() <
         15 * 60 * 1000;
+    // A quick correction replaces the latest entry, so it only has to stay
+    // after the day applied; a new entry stays after the latest one.
+    const statusAt = statusChangeTime(requestedStatusAt, {
+      now,
+      after: isRecentSameCategoryUpdate
+        ? new Date(`${fields.date_applied}T00:00:00`)
+        : latestHistory[0]?.createdAt,
+    });
 
     const historyOperation = isRecentSameCategoryUpdate
       ? db
           .update(applicationStatusHistory)
           .set({
             status: fields.status,
-            createdAt: now,
+            createdAt: statusAt,
           })
           .where(eq(applicationStatusHistory.id, latestHistory[0].id))
       : db.insert(applicationStatusHistory).values({
           applicationId,
           status: fields.status,
           statusCategory: fields.statusCategory ?? "applied",
-          createdAt: now,
+          createdAt: statusAt,
         });
 
     // Execute both the application update and the status history entry atomically in a single batch
@@ -1031,6 +1057,64 @@ export async function deleteStatusHistoryEntry(historyId: string) {
   purgeApplicationCaches(userId);
 
   return { status: newStatus, statusCategory: newCategory };
+}
+
+/**
+ * Moves a timeline entry to the day the change really happened. The entry
+ * keeps its place among the others, so the current status doesn't change:
+ * the time is held between its older and newer neighbours.
+ */
+export async function updateStatusHistoryDate(historyId: string, when: Date | string) {
+  const userId = await getCurrentUserIdOrThrow();
+  const requested = optionalInstant(when);
+  if (!requested || requested.getTime() > Date.now()) {
+    throw new Error("Pick a date that isn't in the future.");
+  }
+
+  if (isMockDb) {
+    const res = mockStore.updateStatusHistoryDate(userId, historyId, requested);
+    purgeApplicationCaches(userId);
+    return res;
+  }
+
+  const entry = await db
+    .select({
+      id: applicationStatusHistory.id,
+      applicationId: applicationStatusHistory.applicationId,
+      createdAt: applicationStatusHistory.createdAt,
+    })
+    .from(applicationStatusHistory)
+    .innerJoin(
+      jobApplications,
+      eq(jobApplications.id, applicationStatusHistory.applicationId),
+    )
+    .where(
+      and(
+        eq(applicationStatusHistory.id, historyId),
+        eq(jobApplications.userId, userId),
+      ),
+    )
+    .limit(1);
+  if (!entry.length) {
+    throw new Error("Timeline entry not found or unauthorized");
+  }
+
+  const siblings = await db
+    .select({
+      id: applicationStatusHistory.id,
+      createdAt: applicationStatusHistory.createdAt,
+    })
+    .from(applicationStatusHistory)
+    .where(eq(applicationStatusHistory.applicationId, entry[0].applicationId));
+  const createdAt = clampBetweenNeighbours(siblings, historyId, requested);
+
+  await db
+    .update(applicationStatusHistory)
+    .set({ createdAt })
+    .where(eq(applicationStatusHistory.id, historyId));
+
+  purgeApplicationCaches(userId);
+  return { createdAt };
 }
 
 // Get status history for a single application
