@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, ChevronDown, Loader2 } from "lucide-react";
 import { addWeeks, format, endOfDay, subDays } from "date-fns";
 import {
   cn,
@@ -198,8 +198,6 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
         )}
       </div>
 
-      <StatusChangedOnField form={form} />
-
       {/* Progressive Disclosure Toggle when custom stage is hidden */}
       {!showCustomStage && (
         <button
@@ -208,11 +206,13 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
           onClick={() => {
             setShowCustomStage(true);
           }}
-          className="text-[11px] font-medium text-primary hover:underline inline-flex items-center gap-1 cursor-pointer pt-0.5"
+          className="text-[11px] text-muted-foreground hover:text-foreground hover:underline inline-flex items-center gap-1 cursor-pointer pt-0.5"
         >
-          <span>+ Add custom stage name (e.g. Round 2 Technical)</span>
+          <span>+ Custom stage name</span>
         </button>
       )}
+
+      <StatusChangedOnField form={form} />
     </div>
   );
 }
@@ -674,10 +674,15 @@ export function ApplicationFormFields({
         {!showMoreDetails ? (
           <button
             type="button"
+            aria-expanded={false}
             onClick={() => setShowMoreDetails(true)}
-            className="text-xs font-semibold text-primary hover:underline flex items-center gap-1.5 py-1 cursor-pointer"
+            className="w-full flex items-center justify-between gap-2 rounded-lg border border-dashed border-border px-3 py-2 text-left text-xs hover:border-primary/40 hover:bg-muted/30 cursor-pointer transition-colors"
           >
-            <span>+ Add More Details (Resume, Salary, URL, Description, Notes)</span>
+            <span className="font-semibold text-foreground">More details</span>
+            <span className="flex items-center gap-1 text-muted-foreground truncate">
+              Salary, link, resume, notes, follow-up
+              <ChevronDown className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            </span>
           </button>
         ) : (
           <div className="space-y-3 pt-2 border-t border-border/40">
@@ -708,7 +713,7 @@ export function ApplicationFormFields({
               name="salary"
               render={({ field }) => (
                 <FormItem className="space-y-1">
-                  <FormLabel className="text-xs font-semibold">Salary (Optional)</FormLabel>
+                  <FormLabel className="text-xs font-semibold">Salary</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="e.g. $100k - $120k"
@@ -727,7 +732,7 @@ export function ApplicationFormFields({
               name="link"
               render={({ field }) => (
                 <FormItem className="space-y-1">
-                  <FormLabel className="text-xs font-semibold">Job Posting URL (Optional)</FormLabel>
+                  <FormLabel className="text-xs font-semibold">Job Posting URL</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="https://www.linkedin.com/jobs/view/..."
@@ -746,13 +751,13 @@ export function ApplicationFormFields({
               name="description"
               render={({ field }) => (
                 <FormItem className="space-y-1">
-                  <FormLabel className="text-xs font-semibold">Job Description (Optional)</FormLabel>
+                  <FormLabel className="text-xs font-semibold">Job Description</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Role responsibilities, requirements, or posting text..."
                       {...field}
                       value={field.value || ""}
-                      className="min-h-[70px] max-h-40"
+                      className="min-h-[120px] max-h-80 resize-y"
                     />
                   </FormControl>
                   <FormMessage />
@@ -765,13 +770,13 @@ export function ApplicationFormFields({
               name="notes"
               render={({ field }) => (
                 <FormItem className="space-y-1">
-                  <FormLabel className="text-xs font-semibold">Personal Candidate Notes (Optional)</FormLabel>
+                  <FormLabel className="text-xs font-semibold">Notes</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Interview feedback, questions to ask, anything else to remember..."
                       {...field}
                       value={field.value || ""}
-                      className="min-h-[70px] max-h-40"
+                      className="min-h-[90px] max-h-60 resize-y"
                     />
                   </FormControl>
                   <FormMessage />

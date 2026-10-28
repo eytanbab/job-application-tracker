@@ -328,7 +328,7 @@ export function ResumePicker({
           <div className="flex items-center justify-between">
             <FormLabel className="text-xs font-semibold flex items-center gap-1.5">
               <Paperclip className="h-3.5 w-3.5 text-primary" />
-              Applied Resume (Optional)
+              Resume Sent
             </FormLabel>
             {!showUploadMode && (
               <Button
