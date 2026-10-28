@@ -11,12 +11,16 @@ interface TrackerLink {
   search?: string;
 }
 
-/** Link to the tracker showing exactly the applications behind a number. */
+/**
+ * Link to the tracker showing exactly the applications behind a number.
+ * Analytics leaves saved jobs out, so a link without a status does too.
+ */
 export function trackerHref({ range, stage, status, platform, appId, search }: TrackerLink): string {
   const params = new URLSearchParams();
   if (appId) params.set("appId", appId);
   if (search) params.set("q", search);
   if (status) params.set("status", status);
+  else if (!appId) params.set("status", "submitted");
   if (stage) params.set("stage", stage);
   if (platform) params.set("platform", platform);
   if (range?.from) params.set("from", range.from);

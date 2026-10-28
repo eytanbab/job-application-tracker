@@ -21,7 +21,10 @@ export async function GET(req: Request) {
 
   const today = new Date();
   const { current } = resolveRange(loadAnalyticsSearchParams(req), today);
-  const applications = await collectApplications(userId, current);
+  // Saved jobs aren't applications yet, and the analytics page leaves them out
+  const applications = (await collectApplications(userId, current)).filter(
+    (a) => a.statusCategory !== "saved",
+  );
 
   const span =
     current.from || current.to

@@ -132,9 +132,12 @@ class MockStore {
 
     // Backfill initial applied history if missing
     const hasApplied = hist.some(
-      (h) => h.statusCategory === "applied" || h.status.toLowerCase().includes("applied"),
+      (h) =>
+        h.statusCategory === "applied" ||
+        h.statusCategory === "saved" ||
+        h.status.toLowerCase().includes("applied"),
     );
-    if (!hasApplied && app.date_applied) {
+    if (!hasApplied && app.date_applied && app.statusCategory !== "saved") {
       hist.push({
         id: `hist-applied-${app.id}`,
         applicationId,

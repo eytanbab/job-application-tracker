@@ -13,6 +13,7 @@ interface StatusFilterPillsProps {
 
 const PILL_OPTIONS: { id: StatusKind | "all"; label: string }[] = [
   { id: "all", label: "All" },
+  { id: "saved", label: "Saved" },
   { id: "applied", label: "Applied" },
   { id: "review", label: "In Review" },
   { id: "interview", label: "Interviewing" },

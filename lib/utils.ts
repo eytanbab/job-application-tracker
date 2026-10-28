@@ -7,6 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 const predefinedColors: Record<string, string> = {
+  saved: "hsl(var(--status-saved))",
   ghosted: "hsl(var(--status-ghosted))",
   rejected: "hsl(var(--status-rejected))",
   applied: "hsl(var(--status-applied))",
@@ -17,6 +18,7 @@ const predefinedColors: Record<string, string> = {
 };
 
 export type StatusKind =
+  | "saved"
   | "ghosted"
   | "rejected"
   | "accepted"
@@ -26,6 +28,7 @@ export type StatusKind =
   | "other";
 
 export const statusOptions: { value: StatusKind; label: string }[] = [
+  { value: "saved", label: "Saved" },
   { value: "applied", label: "Applied" },
   { value: "review", label: "In Review" },
   { value: "interview", label: "Interview" },
@@ -47,6 +50,7 @@ export const isStatusKind = (status: string): status is StatusKind =>
   statusOptions.some((option) => option.value === status);
 
 const STANDARD_STATUS_STRINGS = new Set([
+  "saved",
   "applied",
   "review",
   "in review",
@@ -108,7 +112,9 @@ export const getStatusKind = (
 
   const normalizedStatus = (status ?? "").toLowerCase();
 
-  if (normalizedStatus.includes("ghost")) {
+  if (normalizedStatus === "saved" || normalizedStatus.includes("wishlist")) {
+    return "saved";
+  } else if (normalizedStatus.includes("ghost")) {
     return "ghosted";
   } else if (normalizedStatus.includes("reject")) {
     return "rejected";

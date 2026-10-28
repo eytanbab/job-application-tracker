@@ -7,6 +7,7 @@ import {
   subWeeks,
 } from "date-fns";
 import { statusOptions, type StatusKind } from "@/lib/utils";
+import { SUBMITTED_KINDS } from "./definitions";
 import { buildFacts } from "./facts";
 import { inRange, type ResolvedRange } from "./range";
 import { summarizeSalaries, type SalarySummary } from "./salary";
@@ -393,7 +394,7 @@ export function summarizeOverview(
   today: Date,
   options: SummarizeOptions = {},
 ): AnalyticsOverview {
-  const allFacts = buildFacts(dataset);
+  const allFacts = buildFacts(dataset).filter((f) => SUBMITTED_KINDS.includes(f.kind));
   const facts = allFacts.filter((f) => inRange(f.app.dateApplied, range.current));
   const prevFacts = range.previous
     ? allFacts.filter((f) => inRange(f.app.dateApplied, range.previous!))

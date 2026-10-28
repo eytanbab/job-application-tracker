@@ -95,6 +95,15 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
                   const prevStatus = form.getValues("status");
                   const prevCat = getStatusKind(prevStatus, field.value);
 
+                  // Sending a saved job: it was applied to today, not on
+                  // the day it was saved. The date stays editable.
+                  if (prevCat === "saved" && nextCategory !== "saved") {
+                    form.setValue("date_applied", format(new Date(), "yyyy-MM-dd"), {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    });
+                  }
+
                   if (
                     prevCat !== nextCategory ||
                     !showCustomStage ||
@@ -208,6 +217,7 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
 
 function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
   const [isOpen, setIsOpen] = useState(false);
+  const isSaved = form.watch("statusCategory") === "saved";
 
   return (
     <FormField
@@ -239,7 +249,7 @@ function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
         return (
           <FormItem className="space-y-1 col-span-full">
             <FormLabel className="text-xs font-semibold">
-              Date Applied
+              {isSaved ? "Date Saved" : "Date Applied"}
               <span className="text-destructive ml-1">*</span>
             </FormLabel>
             <Popover open={isOpen} onOpenChange={setIsOpen}>

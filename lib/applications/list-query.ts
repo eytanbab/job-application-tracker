@@ -7,6 +7,7 @@ import {
 import { getStatusKind, isStatusKind, type StatusKind } from "@/lib/utils";
 import {
   ACTIVE_KINDS,
+  SUBMITTED_KINDS,
   reachedInterview,
   responded,
 } from "@/lib/analytics/definitions";
@@ -35,9 +36,11 @@ export type SortField = (typeof SORT_FIELDS)[number];
 const MAX_SEARCH_LENGTH = 200;
 
 /** Named groups the `status` param accepts besides single statuses. */
-export const STATUS_GROUPS: Record<"active" | "closed", readonly StatusKind[]> = {
+export const STATUS_GROUPS: Record<"active" | "closed" | "submitted", readonly StatusKind[]> = {
   active: ACTIVE_KINDS,
   closed: ["accepted", "rejected", "ghosted"],
+  // Everything but saved jobs: what the analytics page counts
+  submitted: SUBMITTED_KINDS,
 };
 
 /** History-based filters used by links from the analytics page. */
@@ -149,6 +152,7 @@ export type StatusCounts = Record<StatusKind | "all", number>;
 export function emptyStatusCounts(): StatusCounts {
   return {
     all: 0,
+    saved: 0,
     applied: 0,
     review: 0,
     interview: 0,

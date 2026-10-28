@@ -62,6 +62,7 @@ import {
   RESPONSE_KINDS,
 } from "@/lib/analytics/definitions";
 import { groupHistory } from "@/lib/analytics/facts";
+import { dateAfterStatusChange } from "@/lib/applications/saved";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema
@@ -661,10 +662,28 @@ export async function updateApplicationsStatus(
     .map((app) => ({ id: app.id, status: resolveUpdatedStatus(app.status, category).trim() }))
     .filter((c, i) => c.status !== current[i].status || category !== current[i].statusCategory);
 
+  // Saved jobs moved to a sent status were applied to today.
+  const sentToday =
+    category === "saved"
+      ? []
+      : current
+          .filter((app) => app.statusCategory === "saved")
+          .map((app) => app.id);
+  const today = new Date();
+  const todayFields = {
+    date_applied: format(today, "yyyy-MM-dd"),
+    month: format(today, "M"),
+    year: format(today, "yyyy"),
+  };
+
   if (changes.length > 0) {
     if (isMockDb) {
       for (const c of changes) {
-        mockStore.updateApplication(userId, c.id, { status: c.status, statusCategory: category });
+        mockStore.updateApplication(userId, c.id, {
+          status: c.status,
+          statusCategory: category,
+          ...(sentToday.includes(c.id) && todayFields),
+        });
       }
     } else {
       const now = new Date();
@@ -684,7 +703,15 @@ export async function updateApplicationsStatus(
           createdAt: now,
         })),
       );
-      await db.batch([history, ...updates]);
+      const dates = sentToday.length
+        ? [
+            db
+              .update(jobApplications)
+              .set(todayFields)
+              .where(and(eq(jobApplications.userId, userId), inArray(jobApplications.id, sentToday))),
+          ]
+        : [];
+      await db.batch([history, ...updates, ...dates]);
     }
   }
 
@@ -710,6 +737,7 @@ export async function updateApplication(values: FormValues) {
           company_name: jobApplications.company_name,
           status: jobApplications.status,
           statusCategory: jobApplications.statusCategory,
+          date_applied: jobApplications.date_applied,
         })
         .from(jobApplications)
         .where(
@@ -732,6 +760,18 @@ export async function updateApplication(values: FormValues) {
     role: changed(values.role_name, currentApp[0].role_name),
     company: changed(values.company_name, currentApp[0].company_name),
   });
+  const date = dateAfterStatusChange({
+    previousCategory: currentApp[0].statusCategory,
+    nextCategory: fields.statusCategory,
+    storedDate: currentApp[0].date_applied,
+    nextDate: fields.date_applied,
+  });
+  if (date !== fields.date_applied) {
+    const parsed = new Date(`${date}T12:00:00`);
+    fields.date_applied = date;
+    fields.month = format(parsed, "M");
+    fields.year = format(parsed, "yyyy");
+  }
 
   // Validate resume ownership if resumeId is provided
   if (fields.resumeId) {
@@ -985,10 +1025,11 @@ export async function getApplicationHistory(applicationId: string) {
   const hasAppliedEntry = sanitizedHistory.some(
     (h) =>
       h.statusCategory === "applied" ||
+      h.statusCategory === "saved" ||
       (h.status && h.status.toLowerCase().includes("applied")),
   );
 
-  if (!hasAppliedEntry && app[0].date_applied) {
+  if (!hasAppliedEntry && app[0].date_applied && app[0].statusCategory !== "saved") {
     sanitizedHistory.push({
       id: "",
       applicationId,

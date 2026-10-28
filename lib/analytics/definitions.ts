@@ -14,6 +14,20 @@ import type { AnalyticsApp, AnalyticsHistory, WorkMode } from "./types";
 /** Applied or in-review applications with no activity for this long are ghosted. */
 export const GHOST_AFTER_DAYS = 30;
 
+/**
+ * Statuses of jobs the user actually applied to. Saved jobs are not sent
+ * yet, so analytics leaves them out entirely.
+ */
+export const SUBMITTED_KINDS: readonly StatusKind[] = [
+  "applied",
+  "review",
+  "interview",
+  "accepted",
+  "rejected",
+  "ghosted",
+  "other",
+];
+
 /** Current statuses that are still open. */
 export const ACTIVE_KINDS: readonly StatusKind[] = [
   "applied",

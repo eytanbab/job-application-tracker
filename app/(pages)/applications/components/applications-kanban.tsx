@@ -63,6 +63,11 @@ const BASE_KANBAN_COLUMNS: {
   headerBg: string;
 }[] = [
   {
+    id: "saved",
+    label: "Saved",
+    headerBg: "bg-background text-muted-foreground border-dashed border-border",
+  },
+  {
     id: "applied",
     label: "Applied",
     headerBg: "bg-primary/10 text-primary border-primary/25",
@@ -122,7 +127,7 @@ export function ApplicationsKanban({
   const [activeMobileCol, setActiveMobileCol] = useState<StatusKind>("applied");
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
-  // Six columns don't fit beside the sidebar on most laptops, so the board
+  // Seven columns don't fit beside the sidebar on most laptops, so the board
   // scrolls sideways. Show fading edges and arrow buttons while there's
   // more to see, so the Rejected and Ghosted columns aren't missed.
   const boardRef = useRef<HTMLDivElement>(null);
