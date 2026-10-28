@@ -18,6 +18,11 @@ export interface MockApplication {
   createdAt: Date;
   salary: string | null;
   resumeId?: string | null;
+  followUpDate?: string | null;
+  interviewAt?: Date | null;
+  contactName?: string | null;
+  contactEmail?: string | null;
+  referredBy?: string | null;
 }
 
 export interface MockStatusHistory {

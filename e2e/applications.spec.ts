@@ -66,7 +66,7 @@ test.describe("Applications Page E2E Suite", () => {
     await page.fill("input[name='platform']", testApp.platform);
 
     // Expand additional details
-    const moreDetailsBtn = page.locator("button:has-text('Add More Details')").first();
+    const moreDetailsBtn = page.locator("button:has-text('More details')").first();
     if (await moreDetailsBtn.isVisible().catch(() => false)) {
       await moreDetailsBtn.click();
     }

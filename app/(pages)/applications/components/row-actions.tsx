@@ -38,6 +38,7 @@ import { useLazyModule } from "../hooks/use-lazy-module";
 const loadEditSheet = () => import("@/app/_components/edit-application-sheet");
 
 const STAGES: StatusKind[] = [
+  "saved",
   "applied",
   "review",
   "interview",

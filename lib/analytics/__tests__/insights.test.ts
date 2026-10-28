@@ -136,7 +136,7 @@ describe("buildInsights", () => {
     expect(top).toMatchObject({
       tone: "good",
       text: "LinkedIn leads to an interview most often in this period: 60% (12 of 20), against 5% on Indeed.",
-      href: `/applications?platform=linkedin&from=${overview.range.current.from}&to=2026-10-21`,
+      href: `/applications?status=submitted&platform=linkedin&from=${overview.range.current.from}&to=2026-10-21`,
     });
     expectGrounded(buildInsights(overview, null, TODAY), overview, null);
 

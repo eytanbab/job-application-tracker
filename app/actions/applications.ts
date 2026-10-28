@@ -62,13 +62,24 @@ import {
   RESPONSE_KINDS,
 } from "@/lib/analytics/definitions";
 import { groupHistory } from "@/lib/analytics/facts";
+import { dateAfterStatusChange } from "@/lib/applications/saved";
+import { clampBetweenNeighbours, statusChangeTime } from "@/lib/applications/history";
+import {
+  duplicateReason,
+  jobLinkPath,
+  nameKey,
+  type DuplicateReason,
+} from "@/lib/applications/duplicates";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema
   .omit({ userId: true })
   .partial({ month: true, year: true });
 
-type FormValues = z.input<typeof formSchema>;
+type FormValues = z.input<typeof formSchema> & {
+  /** When the status in this save was reached, if not now. */
+  statusChangedAt?: Date | string | null;
+};
 
 function normalizeApplicationStatus(values: FormValues): FormValues {
   const statusCategory = getStatusKind(values.status, values.statusCategory);
@@ -105,6 +116,51 @@ function assertValidApplication(
   if (link && !normalizeJobLink(link) && (dangerous || otherScheme)) {
     throw new Error("Enter a job link that starts with http:// or https://.");
   }
+  const email = (values.contactEmail ?? "").trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new Error("Enter a valid contact email.");
+  }
+}
+
+const optionalText = (value: string | null | undefined) => value?.trim() || null;
+
+/** A `YYYY-MM-DD` day, or null for anything else. */
+function optionalDay(value: unknown): string | null {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : format(value, "yyyy-MM-dd");
+  }
+  const text = String(value ?? "").trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : null;
+}
+
+function optionalInstant(value: unknown): Date | null {
+  if (value === null || value === undefined || value === "") return null;
+  const date = value instanceof Date ? value : new Date(String(value));
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/**
+ * Follow-up, interview and contact fields. Like description and notes, a
+ * field the caller leaves out (undefined) keeps its stored value.
+ */
+function cleanPlanningFields(values: FormValues) {
+  return {
+    ...(values.followUpDate !== undefined && {
+      followUpDate: optionalDay(values.followUpDate),
+    }),
+    ...(values.interviewAt !== undefined && {
+      interviewAt: optionalInstant(values.interviewAt),
+    }),
+    ...(values.contactName !== undefined && {
+      contactName: optionalText(values.contactName),
+    }),
+    ...(values.contactEmail !== undefined && {
+      contactEmail: optionalText(values.contactEmail),
+    }),
+    ...(values.referredBy !== undefined && {
+      referredBy: optionalText(values.referredBy),
+    }),
+  };
 }
 
 function extractCleanApplicationFields(
@@ -136,6 +192,7 @@ function extractCleanApplicationFields(
     statusCategory: normalized.statusCategory ?? "applied",
     salary: normalized.salary ? normalized.salary.trim() : null,
     resumeId: normalized.resumeId || null,
+    ...cleanPlanningFields(normalized),
     month,
     year,
   };
@@ -228,6 +285,8 @@ function listFilterConditions(userId: string, query: ListFilters) {
         ilike(jobApplications.salary, pattern),
         ilike(jobApplications.description, pattern),
         ilike(jobApplications.notes, pattern),
+        ilike(jobApplications.contactName, pattern),
+        ilike(jobApplications.referredBy, pattern),
       )!,
     );
   }
@@ -514,6 +573,79 @@ export async function getUserPlatforms(): Promise<string[]> {
   return Array.from(unique).sort((a, b) => a.localeCompare(b));
 }
 
+export interface SimilarApplication {
+  id: string;
+  role_name: string;
+  company_name: string;
+  date_applied: string;
+  status: string;
+  statusCategory: string;
+  reason: DuplicateReason;
+}
+
+/**
+ * The caller's applications that look like the one being entered: the same
+ * job link, or the same role at the same company. At most three.
+ */
+export async function findSimilarApplications(entry: {
+  link?: string | null;
+  role_name?: string | null;
+  company_name?: string | null;
+  excludeId?: string | null;
+}): Promise<SimilarApplication[]> {
+  const userId = await getCurrentUserIdOrThrow();
+  const path = jobLinkPath(entry.link);
+  const company = nameKey(entry.company_name);
+  if (!path && !(company && nameKey(entry.role_name))) return [];
+
+  const candidates = isMockDb
+    ? mockStore.getApplications(userId)
+    : await db
+        .select({
+          id: jobApplications.id,
+          role_name: jobApplications.role_name,
+          company_name: jobApplications.company_name,
+          link: jobApplications.link,
+          date_applied: jobApplications.date_applied,
+          status: jobApplications.status,
+          statusCategory: jobApplications.statusCategory,
+        })
+        .from(jobApplications)
+        .where(
+          and(
+            eq(jobApplications.userId, userId),
+            or(
+              company
+                ? sql`regexp_replace(lower(${jobApplications.company_name}), '[^[:alnum:]]+', '', 'g') = ${company}`
+                : undefined,
+              path
+                ? ilike(jobApplications.link, `%${escapeLikePattern(path)}%`)
+                : undefined,
+            ),
+          ),
+        )
+        .orderBy(desc(jobApplications.date_applied))
+        .limit(50);
+
+  const similar: SimilarApplication[] = [];
+  for (const row of candidates) {
+    if (row.id === entry.excludeId) continue;
+    const reason = duplicateReason(entry, row);
+    if (!reason) continue;
+    similar.push({
+      id: row.id,
+      role_name: row.role_name,
+      company_name: row.company_name,
+      date_applied: row.date_applied,
+      status: getStatusDisplay(row.status, row.statusCategory),
+      statusCategory: getStatusKind(row.status, row.statusCategory),
+      reason,
+    });
+    if (similar.length === 3) break;
+  }
+  return similar;
+}
+
 // Create a new application for the current user
 export async function createApplication(values: FormValues) {
   const userId = await getCurrentUserIdOrThrow();
@@ -545,8 +677,12 @@ export async function createApplication(values: FormValues) {
     }
   }
 
+  const statusAt = statusChangeTime(optionalInstant(values.statusChangedAt), {
+    after: new Date(`${fields.date_applied}T00:00:00`),
+  });
+
   if (isMockDb) {
-    const newApp = mockStore.createApplication(userId, fields as any);
+    const newApp = mockStore.createApplication(userId, fields as any, statusAt);
     purgeApplicationCaches(userId);
     return [{ insertedId: newApp.id }];
   }
@@ -564,7 +700,7 @@ export async function createApplication(values: FormValues) {
       applicationId,
       status: fields.status,
       statusCategory: fields.statusCategory ?? "applied",
-      createdAt: new Date(),
+      createdAt: statusAt,
     }),
   ]);
 
@@ -661,10 +797,27 @@ export async function updateApplicationsStatus(
     .map((app) => ({ id: app.id, status: resolveUpdatedStatus(app.status, category).trim() }))
     .filter((c, i) => c.status !== current[i].status || category !== current[i].statusCategory);
 
+  // Saved jobs moved to a sent status were applied to today.
+  const sentToday = new Set(
+    category === "saved"
+      ? []
+      : current.filter((app) => app.statusCategory === "saved").map((app) => app.id),
+  );
+  const today = new Date();
+  const todayFields = {
+    date_applied: format(today, "yyyy-MM-dd"),
+    month: format(today, "M"),
+    year: format(today, "yyyy"),
+  };
+
   if (changes.length > 0) {
     if (isMockDb) {
       for (const c of changes) {
-        mockStore.updateApplication(userId, c.id, { status: c.status, statusCategory: category });
+        mockStore.updateApplication(userId, c.id, {
+          status: c.status,
+          statusCategory: category,
+          ...(sentToday.has(c.id) && todayFields),
+        });
       }
     } else {
       const now = new Date();
@@ -684,7 +837,15 @@ export async function updateApplicationsStatus(
           createdAt: now,
         })),
       );
-      await db.batch([history, ...updates]);
+      const dates = sentToday.size
+        ? [
+            db
+              .update(jobApplications)
+              .set(todayFields)
+              .where(and(eq(jobApplications.userId, userId), inArray(jobApplications.id, [...sentToday]))),
+          ]
+        : [];
+      await db.batch([history, ...updates, ...dates]);
     }
   }
 
@@ -710,6 +871,7 @@ export async function updateApplication(values: FormValues) {
           company_name: jobApplications.company_name,
           status: jobApplications.status,
           statusCategory: jobApplications.statusCategory,
+          date_applied: jobApplications.date_applied,
         })
         .from(jobApplications)
         .where(
@@ -732,6 +894,20 @@ export async function updateApplication(values: FormValues) {
     role: changed(values.role_name, currentApp[0].role_name),
     company: changed(values.company_name, currentApp[0].company_name),
   });
+  const requestedStatusAt = optionalInstant(values.statusChangedAt);
+  const date = dateAfterStatusChange({
+    previousCategory: currentApp[0].statusCategory,
+    nextCategory: fields.statusCategory,
+    storedDate: currentApp[0].date_applied,
+    nextDate: fields.date_applied,
+    today: requestedStatusAt ?? undefined,
+  });
+  if (date !== fields.date_applied) {
+    const parsed = new Date(`${date}T12:00:00`);
+    fields.date_applied = date;
+    fields.month = format(parsed, "M");
+    fields.year = format(parsed, "yyyy");
+  }
 
   // Validate resume ownership if resumeId is provided
   if (fields.resumeId) {
@@ -760,7 +936,15 @@ export async function updateApplication(values: FormValues) {
   }
 
   if (isMockDb) {
-    mockStore.updateApplication(userId, applicationId, fields as any);
+    const latest = mockStore
+      .getApplicationHistory(userId, applicationId)
+      .find((h) => h.id)?.createdAt;
+    mockStore.updateApplication(
+      userId,
+      applicationId,
+      fields as any,
+      statusChangeTime(requestedStatusAt, { after: latest }),
+    );
     purgeApplicationCaches(userId);
     return;
   }
@@ -788,20 +972,28 @@ export async function updateApplication(values: FormValues) {
       latestHistory[0].createdAt &&
       now.getTime() - new Date(latestHistory[0].createdAt).getTime() <
         15 * 60 * 1000;
+    // A quick correction replaces the latest entry, so it only has to stay
+    // after the day applied; a new entry stays after the latest one.
+    const statusAt = statusChangeTime(requestedStatusAt, {
+      now,
+      after: isRecentSameCategoryUpdate
+        ? new Date(`${fields.date_applied}T00:00:00`)
+        : latestHistory[0]?.createdAt,
+    });
 
     const historyOperation = isRecentSameCategoryUpdate
       ? db
           .update(applicationStatusHistory)
           .set({
             status: fields.status,
-            createdAt: now,
+            createdAt: statusAt,
           })
           .where(eq(applicationStatusHistory.id, latestHistory[0].id))
       : db.insert(applicationStatusHistory).values({
           applicationId,
           status: fields.status,
           statusCategory: fields.statusCategory ?? "applied",
-          createdAt: now,
+          createdAt: statusAt,
         });
 
     // Execute both the application update and the status history entry atomically in a single batch
@@ -945,6 +1137,64 @@ export async function deleteStatusHistoryEntry(historyId: string) {
   return { status: newStatus, statusCategory: newCategory };
 }
 
+/**
+ * Moves a timeline entry to the day the change really happened. The entry
+ * keeps its place among the others, so the current status doesn't change:
+ * the time is held between its older and newer neighbours.
+ */
+export async function updateStatusHistoryDate(historyId: string, when: Date | string) {
+  const userId = await getCurrentUserIdOrThrow();
+  const requested = optionalInstant(when);
+  if (!requested || requested.getTime() > Date.now()) {
+    throw new Error("Pick a date that isn't in the future.");
+  }
+
+  if (isMockDb) {
+    const res = mockStore.updateStatusHistoryDate(userId, historyId, requested);
+    purgeApplicationCaches(userId);
+    return res;
+  }
+
+  const entry = await db
+    .select({
+      id: applicationStatusHistory.id,
+      applicationId: applicationStatusHistory.applicationId,
+      createdAt: applicationStatusHistory.createdAt,
+    })
+    .from(applicationStatusHistory)
+    .innerJoin(
+      jobApplications,
+      eq(jobApplications.id, applicationStatusHistory.applicationId),
+    )
+    .where(
+      and(
+        eq(applicationStatusHistory.id, historyId),
+        eq(jobApplications.userId, userId),
+      ),
+    )
+    .limit(1);
+  if (!entry.length) {
+    throw new Error("Timeline entry not found or unauthorized");
+  }
+
+  const siblings = await db
+    .select({
+      id: applicationStatusHistory.id,
+      createdAt: applicationStatusHistory.createdAt,
+    })
+    .from(applicationStatusHistory)
+    .where(eq(applicationStatusHistory.applicationId, entry[0].applicationId));
+  const createdAt = clampBetweenNeighbours(siblings, historyId, requested);
+
+  await db
+    .update(applicationStatusHistory)
+    .set({ createdAt })
+    .where(eq(applicationStatusHistory.id, historyId));
+
+  purgeApplicationCaches(userId);
+  return { createdAt };
+}
+
 // Get status history for a single application
 export async function getApplicationHistory(applicationId: string) {
   const userId = await getCurrentUserIdOrThrow();
@@ -985,10 +1235,11 @@ export async function getApplicationHistory(applicationId: string) {
   const hasAppliedEntry = sanitizedHistory.some(
     (h) =>
       h.statusCategory === "applied" ||
+      h.statusCategory === "saved" ||
       (h.status && h.status.toLowerCase().includes("applied")),
   );
 
-  if (!hasAppliedEntry && app[0].date_applied) {
+  if (!hasAppliedEntry && app[0].date_applied && app[0].statusCategory !== "saved") {
     sanitizedHistory.push({
       id: "",
       applicationId,

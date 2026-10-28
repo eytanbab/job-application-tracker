@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { LinkAutofillBar } from "./link-autofill-bar";
 import { ApplicationFormFields } from "./application-form-fields";
+import { SimilarApplicationsNotice } from "./similar-applications-notice";
 import { getDistinctLocationsAndPlatforms } from "@/app/actions/applications";
 import { deleteFile } from "@/app/actions/documents";
 import {
@@ -41,13 +42,41 @@ import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
 
 // Type-only, so Drizzle and the schema stay out of the browser bundle
-export type FormValues = Omit<z.input<typeof insertApplicationSchema>, "userId" | "id">;
+export type FormValues = Omit<z.input<typeof insertApplicationSchema>, "userId" | "id"> & {
+  /**
+   * When the status was reached, if not now. A `YYYY-MM-DD` day in the
+   * form; sent to the server as a Date, and only when the status changed.
+   */
+  statusChangedAt?: Date | string | null;
+};
 
 export type ApplicationFormHandle = {
   // Closes the form, asking for discard confirmation first when there are
   // unsaved changes. `afterClose` runs only once the form actually closes.
   requestClose: (afterClose?: () => void) => void;
 };
+
+type EntryMode = "link" | "manual";
+
+// The way the user last chose to add an application, so people who never
+// paste links skip that step. A per-browser convenience only.
+const ENTRY_MODE_KEY = "jobtracker:entry-mode";
+
+function readEntryMode(): EntryMode {
+  try {
+    return localStorage.getItem(ENTRY_MODE_KEY) === "manual" ? "manual" : "link";
+  } catch {
+    return "link";
+  }
+}
+
+function rememberEntryMode(mode: EntryMode) {
+  try {
+    localStorage.setItem(ENTRY_MODE_KEY, mode);
+  } catch {
+    // Storage blocked (private mode): the link step stays the default
+  }
+}
 
 type Props = {
   defaultValues: FormValues & { id?: string };
@@ -103,6 +132,19 @@ const formSchema = z.object({
   year: z.string().optional(),
   salary: z.string().nullable().optional(),
   resumeId: z.string().nullable().optional(),
+  followUpDate: z.string().nullable().optional(),
+  interviewAt: z.union([z.date(), z.string()]).nullable().optional(),
+  contactName: z.string().nullable().optional(),
+  contactEmail: z
+    .string()
+    .trim()
+    .nullable()
+    .optional()
+    .refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+      message: "Enter a valid email.",
+    }),
+  referredBy: z.string().nullable().optional(),
+  statusChangedAt: z.union([z.date(), z.string()]).nullable().optional(),
 });
 
 export const ApplicationForm = ({
@@ -138,6 +180,13 @@ export const ApplicationForm = ({
       ...defaultValues,
       platform: formatPlatformLabel(defaultValues.platform),
       resumeId: defaultValues.resumeId ?? null,
+      // Fields that only some rows carry, for the same reason
+      followUpDate: defaultValues.followUpDate ?? null,
+      interviewAt: defaultValues.interviewAt ?? null,
+      contactName: defaultValues.contactName ?? null,
+      contactEmail: defaultValues.contactEmail ?? null,
+      referredBy: defaultValues.referredBy ?? null,
+      statusChangedAt: null,
     },
   });
 
@@ -176,16 +225,26 @@ export const ApplicationForm = ({
   useImperativeHandle(ref, () => ({ requestClose }));
 
   const isEditing = Boolean(defaultValues?.id);
-  const [entryMode, setEntryMode] = useState<"link" | "manual">(
-    isEditing ? "manual" : "link",
+  const [entryMode, setEntryMode] = useState<EntryMode>(() =>
+    isEditing ? "manual" : readEntryMode(),
   );
+  /** Switches the step the user picked, and remembers it for next time. */
+  const chooseEntryMode = (mode: EntryMode) => {
+    rememberEntryMode(mode);
+    setEntryMode(mode);
+  };
   const [extractedFromDomain, setExtractedFromDomain] = useState<string | null>(
     null,
   );
 
+  // Fields the last autofill came back without, to point them out instead of
+  // flagging them as errors before the user has typed anything.
+  const [missingFromPosting, setMissingFromPosting] = useState<
+    ReadonlySet<keyof FormValues>
+  >(() => new Set());
+
   // Fields autofilled while the link step is showing aren't mounted yet, so
-  // their validation is deferred until the manual form renders. This flags
-  // anything the extraction couldn't find (e.g. an empty location).
+  // their validation is deferred until the manual form renders.
   const pendingValidationRef = useRef<(keyof FormValues)[] | null>(null);
   useEffect(() => {
     if (entryMode === "manual" && pendingValidationRef.current) {
@@ -204,10 +263,13 @@ export const ApplicationForm = ({
         shouldTouch: true,
       });
     });
-    pendingValidationRef.current = Object.keys(
-      autoFillValues,
-    ) as (keyof FormValues)[];
+    const keys = Object.keys(autoFillValues) as (keyof FormValues)[];
+    const isEmpty = (key: keyof FormValues) =>
+      !String(autoFillValues[key] ?? "").trim();
+    pendingValidationRef.current = keys.filter((key) => !isEmpty(key));
+    setMissingFromPosting(new Set(keys.filter(isEmpty)));
     setExtractedFromDomain(domain);
+    rememberEntryMode("link");
     setEntryMode("manual");
   };
 
@@ -219,7 +281,7 @@ export const ApplicationForm = ({
         shouldTouch: true,
       });
     }
-    setEntryMode("manual");
+    chooseEntryMode("manual");
   };
 
   const handleExtractionFailed = (url: string) => {
@@ -233,7 +295,27 @@ export const ApplicationForm = ({
     setEntryMode("manual");
   };
 
-  const handleSubmit = (values: FormValues) => {
+  // Bumped to remount the fields with fresh state for the next application
+  const [entryCount, setEntryCount] = useState(0);
+
+  /** Clears the form for another application after one was added. */
+  const startAnother = () => {
+    form.reset();
+    setSessionUploadedDocIds([]);
+    setExtractedFromDomain(null);
+    setMissingFromPosting(new Set());
+    setEntryCount((count) => count + 1);
+    setEntryMode(readEntryMode());
+  };
+
+  // Put the cursor in the first field of the fresh form. The link step
+  // focuses its own input.
+  useEffect(() => {
+    if (entryCount > 0 && entryMode === "manual") form.setFocus("role_name");
+  }, [entryCount, entryMode, form]);
+
+  const handleSubmit = (values: FormValues, addAnother = false) => {
+    form.clearErrors("root");
     const formattedDate = safeFormatDate(values.date_applied, "yyyy-MM-dd");
     const cat = (
       values.statusCategory && isStatusKind(values.statusCategory)
@@ -241,6 +323,17 @@ export const ApplicationForm = ({
         : getStatusKind(values.status)
     ) as StatusKind;
     const resolvedStatus = resolveUpdatedStatus(values.status, cat);
+    const initial = form.formState.defaultValues;
+    const statusChanged = isEditing
+      ? cat !== initial?.statusCategory || resolvedStatus !== initial?.status
+      : true;
+    // Today means "now", which keeps the time of day
+    const changedOn =
+      statusChanged &&
+      typeof values.statusChangedAt === "string" &&
+      values.statusChangedAt !== format(new Date(), "yyyy-MM-dd")
+        ? new Date(`${values.statusChangedAt}T12:00:00`)
+        : null;
 
     values = {
       ...values,
@@ -255,19 +348,32 @@ export const ApplicationForm = ({
       status: resolvedStatus,
       salary: values.salary?.trim() || "",
       resumeId: values.resumeId || null,
+      followUpDate: values.followUpDate || null,
+      interviewAt: values.interviewAt || null,
+      contactName: values.contactName?.trim() || null,
+      contactEmail: values.contactEmail?.trim() || null,
+      referredBy: values.referredBy?.trim() || null,
+      statusChangedAt: changedOn,
     };
 
     startTransition(async () => {
       try {
         await onSubmit(values);
-        onClose();
+        if (addAnother) startAnother();
+        else onClose();
       } catch (err) {
         console.error("Failed to save application:", err);
+        form.setError("root", {
+          message: "Couldn't save the application. Your entries are still here, so you can try again.",
+        });
       }
     });
   };
 
   const { isDirty } = form.formState;
+  const stillMissing = [...missingFromPosting].filter(
+    (key) => !String(form.watch(key) ?? "").trim(),
+  ).length;
   const isSaveDisabled =
     isPending || isUploadingResume || (isEditing && !isDirty);
 
@@ -342,7 +448,7 @@ export const ApplicationForm = ({
     <div className="flex-1 flex flex-col min-h-0 w-full overflow-hidden">
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit(handleSubmit)}
+          onSubmit={form.handleSubmit((values) => handleSubmit(values))}
           className="flex-1 flex flex-col min-h-0 w-full justify-between"
         >
           {/* Scrollable form body */}
@@ -358,11 +464,13 @@ export const ApplicationForm = ({
                         <strong className="font-semibold text-emerald-800 dark:text-emerald-200">
                           {extractedFromDomain}
                         </strong>
+                        {stillMissing > 0 &&
+                          ` · ${stillMissing} ${stillMissing === 1 ? "field" : "fields"} to fill in`}
                       </span>
                     </div>
                     <button
                       type="button"
-                      onClick={() => setEntryMode("link")}
+                      onClick={() => chooseEntryMode("link")}
                       className="text-[11px] font-medium text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer shrink-0 ml-2"
                     >
                       Paste different link
@@ -372,7 +480,7 @@ export const ApplicationForm = ({
                   <div className="flex items-center justify-between pb-0.5">
                     <button
                       type="button"
-                      onClick={() => setEntryMode("link")}
+                      onClick={() => chooseEntryMode("link")}
                       className="text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 cursor-pointer transition-colors"
                     >
                       <ArrowLeft className="h-3.5 w-3.5" />
@@ -383,8 +491,17 @@ export const ApplicationForm = ({
               </>
             )}
 
+            {!isEditing && (
+              <SimilarApplicationsNotice
+                link={form.watch("link")}
+                roleName={form.watch("role_name")}
+                companyName={form.watch("company_name")}
+              />
+            )}
+
             <div className="grid grid-cols-2 w-full gap-3">
               <ApplicationFormFields
+                key={entryCount}
                 form={form}
                 isPending={isPending}
                 userLocations={userOptions.userLocations}
@@ -393,9 +510,19 @@ export const ApplicationForm = ({
                 onDocumentUploaded={(id) =>
                   setSessionUploadedDocIds((prev) => [...prev, id])
                 }
+                missingFromPosting={extractedFromDomain ? missingFromPosting : undefined}
               />
             </div>
           </div>
+
+          {form.formState.errors.root?.message && (
+            <p
+              role="alert"
+              className="px-4 sm:px-6 pt-2 text-xs text-destructive shrink-0"
+            >
+              {form.formState.errors.root.message}
+            </p>
+          )}
 
           {/* Grounded bottom action bar */}
           <div className="px-4 sm:px-6 py-3 border-t border-border/30 bg-card shrink-0 flex flex-col sm:flex-row gap-2 w-full z-10">
@@ -404,14 +531,26 @@ export const ApplicationForm = ({
               variant="outline"
               onClick={() => requestClose()}
               disabled={isPending || isUploadingResume}
-              className="h-10 text-xs rounded-xl cursor-pointer order-2 sm:order-1 w-full sm:w-1/3"
+              className="h-10 text-xs rounded-xl cursor-pointer order-3 sm:order-1 w-full sm:w-auto sm:px-5"
             >
               Cancel
             </Button>
+            {!isEditing && (
+              <Button
+                type="button"
+                variant="outline"
+                data-testid="add-another-button"
+                onClick={form.handleSubmit((values) => handleSubmit(values, true))}
+                disabled={isSaveDisabled}
+                className="h-10 text-xs rounded-xl cursor-pointer order-2 w-full sm:w-auto sm:px-4"
+              >
+                Add & Start Another
+              </Button>
+            )}
             <Button
               type="submit"
               disabled={isSaveDisabled}
-              className="h-10 text-xs font-semibold rounded-xl shadow-xs cursor-pointer order-1 sm:order-2 w-full sm:flex-1"
+              className="h-10 text-xs font-semibold rounded-xl shadow-xs cursor-pointer order-1 sm:order-3 w-full sm:flex-1"
               title={isEditing && !isDirty ? "No changes to save" : undefined}
             >
               {isPending ? (

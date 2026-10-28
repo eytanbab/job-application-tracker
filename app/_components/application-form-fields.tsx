@@ -24,8 +24,8 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarIcon, Loader2 } from "lucide-react";
-import { format, endOfDay, subDays } from "date-fns";
+import { CalendarIcon, ChevronDown, Loader2 } from "lucide-react";
+import { addWeeks, format, endOfDay, subDays } from "date-fns";
 import {
   cn,
   getStatusKind,
@@ -43,6 +43,8 @@ import { useMemo, useState, useEffect } from "react";
 import { FormValues } from "./application-form";
 import { ComboboxInput } from "@/components/ui/combobox-input";
 import { ResumePicker } from "./resume-picker";
+import { SalaryFormField } from "./salary-form-field";
+import { FillFromLinkButton } from "./fill-from-link-button";
 
 const DEFAULT_EMPTY_ARRAY: string[] = [];
 
@@ -53,6 +55,20 @@ interface ApplicationFormFieldsProps {
   userPlatforms?: string[];
   onUploadingResumeChange?: (isUploading: boolean) => void;
   onDocumentUploaded?: (docId: string) => void;
+  /** Fields the link autofill didn't find, to point out while still empty. */
+  missingFromPosting?: ReadonlySet<keyof FormValues>;
+}
+
+const NO_MISSING_FIELDS: ReadonlySet<keyof FormValues> = new Set();
+
+/** Says a field is empty because the posting didn't give it, not by mistake. */
+function NotInPostingHint({ show }: { show: boolean }) {
+  if (!show) return null;
+  return (
+    <p className="text-[11px] text-amber-700 dark:text-amber-300">
+      Not found in the posting. Fill it in here.
+    </p>
+  );
 }
 
 function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
@@ -94,6 +110,15 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
                     statusLabels[nextCategory] || "";
                   const prevStatus = form.getValues("status");
                   const prevCat = getStatusKind(prevStatus, field.value);
+
+                  // Sending a saved job: it was applied to today, not on
+                  // the day it was saved. The date stays editable.
+                  if (prevCat === "saved" && nextCategory !== "saved") {
+                    form.setValue("date_applied", format(new Date(), "yyyy-MM-dd"), {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    });
+                  }
 
                   if (
                     prevCat !== nextCategory ||
@@ -197,17 +222,73 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
           onClick={() => {
             setShowCustomStage(true);
           }}
-          className="text-[11px] font-medium text-primary hover:underline inline-flex items-center gap-1 cursor-pointer pt-0.5"
+          className="text-[11px] text-muted-foreground hover:text-foreground hover:underline inline-flex items-center gap-1 cursor-pointer pt-0.5"
         >
-          <span>+ Add custom stage name (e.g. Round 2 Technical)</span>
+          <span>+ Custom stage name</span>
         </button>
       )}
+
+      <StatusChangedOnField form={form} />
     </div>
+  );
+}
+
+/**
+ * When the status was reached. Shown when an edit changes the status, or
+ * when a new application starts past Applied (logging an older one).
+ */
+function StatusChangedOnField({ form }: { form: UseFormReturn<FormValues> }) {
+  const initial = form.formState.defaultValues;
+  const isEditing = Boolean(form.getValues("id" as keyof FormValues));
+  const category = form.watch("statusCategory");
+  const status = form.watch("status");
+  const show = isEditing
+    ? category !== initial?.statusCategory || status !== initial?.status
+    : Boolean(category) && category !== "applied" && category !== "saved";
+  if (!show) return null;
+
+  const leavingSaved = initial?.statusCategory === "saved" && category !== "saved";
+  const today = format(new Date(), "yyyy-MM-dd");
+  return (
+    <FormField
+      control={form.control}
+      name="statusChangedAt"
+      render={({ field }) => (
+        <FormItem className="space-y-1 pt-1.5 sm:max-w-[50%]">
+          <FormLabel className="text-xs font-semibold">
+            {isEditing ? "Changed On" : "Reached This Stage On"}
+          </FormLabel>
+          <FormControl>
+            <Input
+              type="date"
+              name={field.name}
+              ref={field.ref}
+              onBlur={field.onBlur}
+              max={today}
+              value={typeof field.value === "string" && field.value ? field.value : today}
+              onChange={(e) => {
+                field.onChange(e.target.value || null);
+                // A saved job was applied to on the day it was sent
+                if (leavingSaved && e.target.value) {
+                  form.setValue("date_applied", e.target.value, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                }
+              }}
+              className="h-9"
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   );
 }
 
 function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
   const [isOpen, setIsOpen] = useState(false);
+  const isSaved = form.watch("statusCategory") === "saved";
 
   return (
     <FormField
@@ -239,7 +320,7 @@ function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
         return (
           <FormItem className="space-y-1 col-span-full">
             <FormLabel className="text-xs font-semibold">
-              Date Applied
+              {isSaved ? "Date Saved" : "Date Applied"}
               <span className="text-destructive ml-1">*</span>
             </FormLabel>
             <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -310,6 +391,155 @@ function DateAppliedFormField({ form }: { form: UseFormReturn<FormValues> }) {
   );
 }
 
+/** `<input type="datetime-local">` text for a stored instant, in local time. */
+function toLocalInputValue(value: unknown): string {
+  if (!value) return "";
+  const date = value instanceof Date ? value : new Date(String(value));
+  return Number.isNaN(date.getTime()) ? "" : format(date, "yyyy-MM-dd'T'HH:mm");
+}
+
+function PlanningFormFields({ form }: { form: UseFormReturn<FormValues> }) {
+  const isInterview = form.watch("statusCategory") === "interview";
+  const hasInterview = Boolean(form.watch("interviewAt"));
+  const setFollowUp = (date: Date) =>
+    form.setValue("followUpDate", format(date, "yyyy-MM-dd"), {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+
+  return (
+    <div className="space-y-3">
+      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        Next Steps & Contacts
+      </span>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <FormField
+          control={form.control}
+          name="followUpDate"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <FormLabel className="text-xs font-semibold">Follow Up On</FormLabel>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFollowUp(addWeeks(new Date(), 1))}
+                    className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    In 1 week
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFollowUp(addWeeks(new Date(), 2))}
+                    className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    In 2 weeks
+                  </button>
+                </div>
+              </div>
+              <FormControl>
+                <Input
+                  type="date"
+                  {...field}
+                  value={field.value || ""}
+                  onChange={(e) => field.onChange(e.target.value || null)}
+                  className="h-9"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {(isInterview || hasInterview) && (
+          <FormField
+            control={form.control}
+            name="interviewAt"
+            render={({ field }) => (
+              <FormItem className="space-y-1">
+                <FormLabel className="text-xs font-semibold">Next Interview</FormLabel>
+                <FormControl>
+                  <Input
+                    type="datetime-local"
+                    name={field.name}
+                    ref={field.ref}
+                    onBlur={field.onBlur}
+                    value={toLocalInputValue(field.value)}
+                    onChange={(e) =>
+                      field.onChange(e.target.value ? new Date(e.target.value) : null)
+                    }
+                    className="h-9"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        <FormField
+          control={form.control}
+          name="contactName"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel className="text-xs font-semibold">Contact Name</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="e.g. Dana Levi, recruiter"
+                  {...field}
+                  value={field.value || ""}
+                  className="h-9"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="contactEmail"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel className="text-xs font-semibold">Contact Email</FormLabel>
+              <FormControl>
+                <Input
+                  type="email"
+                  placeholder="e.g. dana@acme.com"
+                  {...field}
+                  value={field.value || ""}
+                  className="h-9"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="referredBy"
+          render={({ field }) => (
+            <FormItem className="space-y-1 sm:col-span-2">
+              <FormLabel className="text-xs font-semibold">Referred By</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Leave empty if you applied without a referral"
+                  {...field}
+                  value={field.value || ""}
+                  className="h-9"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function ApplicationFormFields({
   form,
   isPending,
@@ -317,7 +547,10 @@ export function ApplicationFormFields({
   userPlatforms = DEFAULT_EMPTY_ARRAY,
   onUploadingResumeChange,
   onDocumentUploaded,
+  missingFromPosting = NO_MISSING_FIELDS,
 }: ApplicationFormFieldsProps) {
+  const notInPosting = (name: keyof FormValues, value: unknown) =>
+    missingFromPosting.has(name) && !String(value ?? "").trim();
   const mergedLocations = useMemo(
     () => mergeWithDefaultOptions(userLocations, locationOptions),
     [userLocations],
@@ -337,7 +570,12 @@ export function ApplicationFormFields({
       form.watch("link") ||
       form.watch("description") ||
       form.watch("notes") ||
-      form.watch("resumeId"),
+      form.watch("resumeId") ||
+      form.watch("followUpDate") ||
+      form.watch("interviewAt") ||
+      form.watch("contactName") ||
+      form.watch("contactEmail") ||
+      form.watch("referredBy"),
   );
 
   const [showMoreDetails, setShowMoreDetails] = useState(
@@ -352,7 +590,10 @@ export function ApplicationFormFields({
 
   return (
     <>
-      {/* 1. Essential Fields */}
+      {/* 1. Essential fields. When editing, the stage is usually what
+          changes, so it comes first. */}
+      {isEditing && <StatusFormFields form={form} />}
+
       <FormField
         control={form.control}
         name="role_name"
@@ -371,6 +612,7 @@ export function ApplicationFormFields({
               />
             </FormControl>
             <FormMessage />
+            <NotInPostingHint show={notInPosting("role_name", field.value)} />
           </FormItem>
         )}
       />
@@ -392,33 +634,7 @@ export function ApplicationFormFields({
               />
             </FormControl>
             <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <StatusFormFields form={form} />
-
-      <FormField
-        control={form.control}
-        name="platform"
-        render={({ field }) => (
-          <FormItem className="space-y-1 col-span-full sm:col-span-1">
-            <FormLabel className="text-xs font-semibold">
-              Platform
-              <span className="text-destructive ml-1">*</span>
-            </FormLabel>
-            <FormControl>
-              <ComboboxInput
-                {...field}
-                options={mergedPlatforms}
-                placeholder="e.g. LinkedIn / Indeed"
-                value={field.value || ""}
-                onChange={(val) => field.onChange(val)}
-                onBlur={field.onBlur}
-                className="h-9"
-              />
-            </FormControl>
-            <FormMessage />
+            <NotInPostingHint show={notInPosting("company_name", field.value)} />
           </FormItem>
         )}
       />
@@ -444,21 +660,55 @@ export function ApplicationFormFields({
               />
             </FormControl>
             <FormMessage />
+            <NotInPostingHint show={notInPosting("location", field.value)} />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="platform"
+        render={({ field }) => (
+          <FormItem className="space-y-1 col-span-full sm:col-span-1">
+            <FormLabel className="text-xs font-semibold">
+              Platform
+              <span className="text-destructive ml-1">*</span>
+            </FormLabel>
+            <FormControl>
+              <ComboboxInput
+                {...field}
+                options={mergedPlatforms}
+                placeholder="e.g. LinkedIn / Indeed"
+                value={field.value || ""}
+                onChange={(val) => field.onChange(val)}
+                onBlur={field.onBlur}
+                className="h-9"
+              />
+            </FormControl>
+            <FormMessage />
+            <NotInPostingHint show={notInPosting("platform", field.value)} />
           </FormItem>
         )}
       />
 
       <DateAppliedFormField form={form} />
 
+      {!isEditing && <StatusFormFields form={form} />}
+
       {/* 2. Collapsible Progressive Disclosure for Optional Fields */}
       <div className="col-span-full pt-1">
         {!showMoreDetails ? (
           <button
             type="button"
+            aria-expanded={false}
             onClick={() => setShowMoreDetails(true)}
-            className="text-xs font-semibold text-primary hover:underline flex items-center gap-1.5 py-1 cursor-pointer"
+            className="w-full flex items-center justify-between gap-2 rounded-lg border border-dashed border-border px-3 py-2 text-left text-xs hover:border-primary/40 hover:bg-muted/30 cursor-pointer transition-colors"
           >
-            <span>+ Add More Details (Resume, Salary, URL, Description, Notes)</span>
+            <span className="font-semibold text-foreground">More details</span>
+            <span className="flex items-center gap-1 text-muted-foreground truncate">
+              Salary, link, resume, notes, follow-up
+              <ChevronDown className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            </span>
           </button>
         ) : (
           <div className="space-y-3 pt-2 border-t border-border/40">
@@ -477,30 +727,9 @@ export function ApplicationFormFields({
               )}
             </div>
 
-            <ResumePicker
+            <SalaryFormField
               form={form}
-              disabled={isPending}
-              onUploadingChange={onUploadingResumeChange}
-              onDocumentUploaded={onDocumentUploaded}
-            />
-
-            <FormField
-              control={form.control}
-              name="salary"
-              render={({ field }) => (
-                <FormItem className="space-y-1">
-                  <FormLabel className="text-xs font-semibold">Salary (Optional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="e.g. $100k - $120k"
-                      {...field}
-                      value={field.value || ""}
-                      className="h-9"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              hint={<NotInPostingHint show={notInPosting("salary", form.watch("salary"))} />}
             />
 
             <FormField
@@ -508,7 +737,10 @@ export function ApplicationFormFields({
               name="link"
               render={({ field }) => (
                 <FormItem className="space-y-1">
-                  <FormLabel className="text-xs font-semibold">Job Posting URL (Optional)</FormLabel>
+                  <div className="flex items-center justify-between gap-2">
+                    <FormLabel className="text-xs font-semibold">Job Posting URL</FormLabel>
+                    {isEditing && <FillFromLinkButton form={form} />}
+                  </div>
                   <FormControl>
                     <Input
                       placeholder="https://www.linkedin.com/jobs/view/..."
@@ -522,18 +754,25 @@ export function ApplicationFormFields({
               )}
             />
 
+            <ResumePicker
+              form={form}
+              disabled={isPending}
+              onUploadingChange={onUploadingResumeChange}
+              onDocumentUploaded={onDocumentUploaded}
+            />
+
             <FormField
               control={form.control}
               name="description"
               render={({ field }) => (
                 <FormItem className="space-y-1">
-                  <FormLabel className="text-xs font-semibold">Job Description (Optional)</FormLabel>
+                  <FormLabel className="text-xs font-semibold">Job Description</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Role responsibilities, requirements, or posting text..."
                       {...field}
                       value={field.value || ""}
-                      className="min-h-[70px] max-h-40"
+                      className="min-h-[120px] max-h-80 resize-y"
                     />
                   </FormControl>
                   <FormMessage />
@@ -546,19 +785,21 @@ export function ApplicationFormFields({
               name="notes"
               render={({ field }) => (
                 <FormItem className="space-y-1">
-                  <FormLabel className="text-xs font-semibold">Personal Candidate Notes (Optional)</FormLabel>
+                  <FormLabel className="text-xs font-semibold">Notes</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Interview feedback, recruiter contact info, referral notes..."
+                      placeholder="Interview feedback, questions to ask, anything else to remember..."
                       {...field}
                       value={field.value || ""}
-                      className="min-h-[70px] max-h-40"
+                      className="min-h-[90px] max-h-60 resize-y"
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            <PlanningFormFields form={form} />
           </div>
         )}
       </div>

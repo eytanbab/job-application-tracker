@@ -13,6 +13,7 @@ const STAGE_LABELS: Record<Stage, string> = {
 const GROUP_LABELS: Record<string, string> = {
   active: "Still open",
   closed: "Closed",
+  submitted: "Excluding saved",
 };
 
 interface AnalyticsFilterChipProps {

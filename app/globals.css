@@ -95,6 +95,7 @@ h6 {
     /* Chart and bar colours per status, in stack order. Validated with the
        dataviz palette checker against the card: colour-blind separation
        >= 8 between neighbours, >= 3:1 contrast, no two greys. */
+    --status-saved: 215, 16%, 47%; /* #64748b */
     --status-applied: 271, 81%, 56%; /* #9333ea */
     --status-review: 192, 91%, 36%; /* #0891b2 */
     --status-interview: 32, 95%, 44%; /* #d97706 */
@@ -147,6 +148,7 @@ h6 {
     --chart-5: 0 72% 54%;
 
     /* Same checks against the dark card (#14171f) */
+    --status-saved: 215, 20%, 65%; /* #94a3b8 */
     --status-applied: 258, 90%, 66%; /* #8b5cf6 */
     --status-review: 192, 91%, 36%; /* #0891b2 */
     --status-interview: 32, 95%, 44%; /* #d97706 */

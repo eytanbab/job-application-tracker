@@ -6,6 +6,7 @@ import type { StatusKind } from "@/lib/utils";
  * "Technical Screen") is shown separately.
  */
 export const stageLabels: Record<StatusKind, string> = {
+  saved: "Saved",
   applied: "Applied",
   review: "In Review",
   interview: "Interviewing",
@@ -17,6 +18,9 @@ export const stageLabels: Record<StatusKind, string> = {
 
 /** Badge colours per pipeline stage, shared by the table, cards and panel. */
 export const statusBadgeClasses: Record<StatusKind, string> = {
+  // Dashed: not applied yet, so not part of the pipeline proper
+  saved:
+    "bg-background text-muted-foreground border-dashed border-border rounded-md font-semibold",
   applied:
     "bg-primary/10 text-primary border-primary/25 rounded-md font-semibold",
   accepted:

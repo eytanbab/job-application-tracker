@@ -23,6 +23,11 @@ import {
   Trash2,
   Plus,
   RefreshCw,
+  BellRing,
+  CalendarClock,
+  UserRound,
+  Mail,
+  Handshake,
 } from "lucide-react";
 import {
   Select,
@@ -31,7 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatDate, parseISO } from "date-fns";
+import { format, formatDate, isBefore, parseISO, startOfToday } from "date-fns";
 import {
   statusOptions,
   statusLabels,
@@ -51,6 +56,7 @@ import {
   AttachResumeDialog,
   ResumeMeta,
 } from "./attach-resume-dialog";
+import { InlineDetailField } from "./inline-detail-field";
 
 export interface ApplicationDetailViewProps {
   currentApp: {
@@ -70,6 +76,11 @@ export interface ApplicationDetailViewProps {
     resumeTitle?: string | null;
     resumeFileName?: string | null;
     resumeFileSize?: string | null;
+    followUpDate?: string | null;
+    interviewAt?: Date | string | null;
+    contactName?: string | null;
+    contactEmail?: string | null;
+    referredBy?: string | null;
     [key: string]: unknown;
   };
   currentKind: StatusKind;
@@ -80,8 +91,11 @@ export interface ApplicationDetailViewProps {
   history: TimelineEntry[];
   isLoadingHistory: boolean;
   onDeleteTimelineEntry: (id: string) => void;
+  onUpdateTimelineDate?: (id: string, day: string) => Promise<void>;
   onUpdateNotes?: (notes: string) => Promise<void>;
   onUpdateDraftField?: (field: string, value: unknown) => void;
+  /** Saves inline edits; called when the user leaves a field. */
+  onCommitDraft?: () => void;
   onEdit?: () => void;
   onAttachResume?: (resumeId: string, meta: ResumeMeta) => Promise<void>;
   onDetachResume?: () => Promise<void>;
@@ -101,8 +115,10 @@ export function ApplicationDetailView({
   history,
   isLoadingHistory,
   onDeleteTimelineEntry,
+  onUpdateTimelineDate,
   onUpdateNotes,
   onUpdateDraftField,
+  onCommitDraft,
   onEdit,
   onAttachResume,
   onDetachResume,
@@ -348,6 +364,13 @@ export function ApplicationDetailView({
     }
   };
 
+  const interviewAt = currentApp.interviewAt
+    ? new Date(currentApp.interviewAt)
+    : null;
+  const hasInterviewAt = interviewAt !== null && !Number.isNaN(interviewAt.getTime());
+  const followUp = currentApp.followUpDate ? parseISO(currentApp.followUpDate) : null;
+  const isFollowUpDue = followUp !== null && !isBefore(startOfToday(), followUp);
+
   const formattedAppliedDate = currentApp.date_applied
     ? formatDate(parseISO(currentApp.date_applied), "MMM d, yyyy")
     : "Unknown date";
@@ -362,10 +385,16 @@ export function ApplicationDetailView({
           <span className="text-xs font-semibold text-foreground tracking-wide">
             Stage & Status
           </span>
-          {isSaving && (
+          {isSaving ? (
             <span className="text-[11px] text-primary flex items-center gap-1 font-medium animate-pulse">
               <Loader2 className="h-3 w-3 animate-spin" /> Saving changes...
             </span>
+          ) : (
+            onUpdateDraftField && (
+              <span className="text-[11px] text-muted-foreground">
+                Changes save as you go
+              </span>
+            )
           )}
         </div>
 
@@ -443,7 +472,8 @@ export function ApplicationDetailView({
         <div className="space-y-1">
           <span className="text-xs text-muted-foreground flex items-center justify-between font-medium">
             <span className="flex items-center gap-1">
-              <Calendar className="h-3.5 w-3.5" /> Date Applied
+              <Calendar className="h-3.5 w-3.5" />{" "}
+              {currentKind === "saved" ? "Date Saved" : "Date Applied"}
             </span>
             {onUpdateDraftField && !isEditingDate && (
               <button
@@ -464,7 +494,13 @@ export function ApplicationDetailView({
                 setDateValue(e.target.value);
                 onUpdateDraftField?.("date_applied", e.target.value);
               }}
-              onBlur={() => setIsEditingDate(false)}
+              onBlur={() => {
+                setIsEditingDate(false);
+                onCommitDraft?.();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+              }}
               className="h-8 text-xs bg-background"
               autoFocus
             />
@@ -509,9 +545,12 @@ export function ApplicationDetailView({
                 setPlatformValue(e.target.value);
                 onUpdateDraftField?.("platform", e.target.value);
               }}
-              onBlur={() => setIsEditingPlatform(false)}
+              onBlur={() => {
+                setIsEditingPlatform(false);
+                onCommitDraft?.();
+              }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") setIsEditingPlatform(false);
+                if (e.key === "Enter") e.currentTarget.blur();
               }}
               placeholder="e.g. LinkedIn, Indeed"
               className="h-8 text-xs bg-background"
@@ -558,9 +597,12 @@ export function ApplicationDetailView({
                 setLocationValue(e.target.value);
                 onUpdateDraftField?.("location", e.target.value);
               }}
-              onBlur={() => setIsEditingLocation(false)}
+              onBlur={() => {
+                setIsEditingLocation(false);
+                onCommitDraft?.();
+              }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") setIsEditingLocation(false);
+                if (e.key === "Enter") e.currentTarget.blur();
               }}
               placeholder="e.g. Remote / New York"
               className="h-8 text-xs bg-background"
@@ -607,9 +649,12 @@ export function ApplicationDetailView({
                 setSalaryValue(e.target.value);
                 onUpdateDraftField?.("salary", e.target.value);
               }}
-              onBlur={() => setIsEditingSalary(false)}
+              onBlur={() => {
+                setIsEditingSalary(false);
+                onCommitDraft?.();
+              }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") setIsEditingSalary(false);
+                if (e.key === "Enter") e.currentTarget.blur();
               }}
               placeholder="e.g. $120,000"
               className="h-8 text-xs bg-background"
@@ -631,6 +676,80 @@ export function ApplicationDetailView({
             </p>
           )}
         </div>
+      </div>
+
+      {/* Next steps and the people involved */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm bg-card p-3.5 border border-border/30 rounded-xl">
+        <InlineDetailField
+          label="Follow Up On"
+          icon={BellRing}
+          type="date"
+          inputValue={currentApp.followUpDate ?? ""}
+          display={
+            followUp ? (
+              <span className={cn(isFollowUpDue && "text-amber-700 dark:text-amber-300")}>
+                {formatDate(followUp, "MMM d, yyyy")}
+                {isFollowUpDue && " (due)"}
+              </span>
+            ) : null
+          }
+          onCommit={onCommitDraft}
+          onChange={
+            onUpdateDraftField &&
+            ((value) => onUpdateDraftField("followUpDate", value || null))
+          }
+        />
+        <InlineDetailField
+          label="Next Interview"
+          icon={CalendarClock}
+          type="datetime-local"
+          inputValue={hasInterviewAt ? format(interviewAt!, "yyyy-MM-dd'T'HH:mm") : ""}
+          display={hasInterviewAt ? formatDate(interviewAt!, "MMM d, yyyy, h:mm a") : null}
+          onCommit={onCommitDraft}
+          onChange={
+            onUpdateDraftField &&
+            ((value) => onUpdateDraftField("interviewAt", value ? new Date(value) : null))
+          }
+        />
+        <InlineDetailField
+          label="Referred By"
+          icon={Handshake}
+          inputValue={currentApp.referredBy ?? ""}
+          display={currentApp.referredBy || null}
+          placeholder="Name of the referrer"
+          onCommit={onCommitDraft}
+          onChange={
+            onUpdateDraftField &&
+            ((value) => onUpdateDraftField("referredBy", value))
+          }
+        />
+        <InlineDetailField
+          label="Contact"
+          icon={UserRound}
+          inputValue={currentApp.contactName ?? ""}
+          display={currentApp.contactName || null}
+          placeholder="e.g. Dana Levi, recruiter"
+          onCommit={onCommitDraft}
+          onChange={
+            onUpdateDraftField &&
+            ((value) => onUpdateDraftField("contactName", value))
+          }
+        />
+        <InlineDetailField
+          label="Contact Email"
+          icon={Mail}
+          type="email"
+          className="col-span-2"
+          inputValue={currentApp.contactEmail ?? ""}
+          display={currentApp.contactEmail || null}
+          href={currentApp.contactEmail ? `mailto:${currentApp.contactEmail}` : undefined}
+          placeholder="e.g. dana@acme.com"
+          onCommit={onCommitDraft}
+          onChange={
+            onUpdateDraftField &&
+            ((value) => onUpdateDraftField("contactEmail", value))
+          }
+        />
       </div>
 
       {/* Applied Resume Section */}
@@ -829,6 +948,7 @@ export function ApplicationDetailView({
                   setJdValue(e.target.value);
                   onUpdateDraftField?.("description", e.target.value);
                 }}
+                onBlur={() => onCommitDraft?.()}
                 placeholder="Paste the full job posting requirements and role description..."
                 className="text-xs min-h-[140px] max-h-80 resize-y rounded-xl"
                 autoFocus
@@ -841,6 +961,7 @@ export function ApplicationDetailView({
                   onClick={() => {
                     setJdValue(currentApp.description || "");
                     setIsEditingJd(false);
+                    onCommitDraft?.();
                   }}
                   className="h-7 text-xs px-2.5 cursor-pointer"
                 >
@@ -933,6 +1054,7 @@ export function ApplicationDetailView({
                   setNotesValue(e.target.value);
                   onUpdateDraftField?.("notes", e.target.value);
                 }}
+                onBlur={() => onCommitDraft?.()}
                 placeholder="Add referral contacts, interview notes, questions to ask..."
                 className="text-xs min-h-[140px] max-h-80 resize-y rounded-xl"
                 autoFocus
@@ -945,6 +1067,7 @@ export function ApplicationDetailView({
                   onClick={() => {
                     setNotesValue(currentApp.notes || "");
                     setIsEditingNotes(false);
+                    onCommitDraft?.();
                   }}
                   className="h-7 text-xs px-2.5 cursor-pointer"
                 >
@@ -981,6 +1104,7 @@ export function ApplicationDetailView({
         history={history}
         isLoadingHistory={isLoadingHistory}
         onDeleteEntry={onDeleteTimelineEntry}
+        onUpdateEntryDate={onUpdateTimelineDate}
       />
 
       {/* Attach Resume Dialog */}

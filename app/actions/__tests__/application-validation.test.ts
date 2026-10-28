@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { mockStore } from "@/lib/mock-data/mock-store";
-import { createApplication, updateApplication } from "../applications";
+import {
+  createApplication,
+  findSimilarApplications,
+  getApplicationHistory,
+  updateApplication,
+  updateStatusHistoryDate,
+} from "../applications";
 
 const valid = {
   role_name: "Engineer",
@@ -65,5 +71,135 @@ describe("create/update input checks (mock store)", () => {
 
     const [{ insertedId: other }] = await createApplication(valid as never);
     await expect(updateApplication({ ...valid, id: other, company_name: " " } as never)).rejects.toThrow("Enter the company name.");
+  });
+});
+
+describe("follow-up, interview and contact fields (mock store)", () => {
+  beforeEach(() => {
+    mockStore.reset();
+  });
+
+  const stored = (id: string) => mockStore.getApplications().find((a) => a.id === id)!;
+
+  it("cleans and stores them", async () => {
+    const interviewAt = new Date("2026-11-03T14:30:00Z");
+    const [{ insertedId }] = await createApplication({
+      ...valid,
+      followUpDate: "2026-11-01",
+      interviewAt,
+      contactName: "  Dana Levi ",
+      contactEmail: "dana@acme.com",
+      referredBy: "",
+    } as never);
+    expect(stored(insertedId!)).toMatchObject({
+      followUpDate: "2026-11-01",
+      interviewAt,
+      contactName: "Dana Levi",
+      contactEmail: "dana@acme.com",
+      referredBy: null,
+    });
+  });
+
+  it("drops a follow-up date that is not a day", async () => {
+    const [{ insertedId }] = await createApplication({ ...valid, followUpDate: "soon" } as never);
+    expect(stored(insertedId!).followUpDate).toBeNull();
+  });
+
+  it("refuses a malformed contact email", async () => {
+    await expect(
+      createApplication({ ...valid, contactEmail: "dana at acme" } as never),
+    ).rejects.toThrow("Enter a valid contact email.");
+  });
+
+  it("keeps them when a save leaves them out", async () => {
+    const [{ insertedId }] = await createApplication({
+      ...valid,
+      followUpDate: "2026-11-01",
+      contactName: "Dana",
+    } as never);
+    await updateApplication({ ...valid, id: insertedId, status: "Interview", statusCategory: "interview" } as never);
+    expect(stored(insertedId!)).toMatchObject({ followUpDate: "2026-11-01", contactName: "Dana" });
+  });
+});
+
+describe("status change dates (mock store)", () => {
+  beforeEach(() => {
+    mockStore.reset();
+  });
+
+  const latestEntry = async (id: string) => (await getApplicationHistory(id))[0];
+
+  it("keeps a back-dated change after the previous timeline entry", async () => {
+    const [{ insertedId }] = await createApplication(valid as never);
+    const day = new Date();
+    day.setDate(day.getDate() - 3);
+    await updateApplication({
+      ...valid,
+      id: insertedId,
+      status: "Interview",
+      statusCategory: "interview",
+      statusChangedAt: day,
+    } as never);
+    const entry = await latestEntry(insertedId!);
+    expect(entry.statusCategory).toBe("interview");
+    // Held after the Applied entry created a moment ago
+    expect(new Date(entry.createdAt).getTime()).toBeGreaterThan(Date.now() - 60_000);
+  });
+
+  it("dates a new application's first stage", async () => {
+    const day = new Date("2026-10-05T12:00:00");
+    const [{ insertedId }] = await createApplication({
+      ...valid,
+      status: "Interview",
+      statusCategory: "interview",
+      statusChangedAt: day,
+    } as never);
+    expect(new Date((await latestEntry(insertedId!)).createdAt)).toEqual(day);
+  });
+
+  it("moves a timeline entry without reordering it", async () => {
+    const [{ insertedId }] = await createApplication({
+      ...valid,
+      statusChangedAt: new Date("2026-10-02T12:00:00"),
+    } as never);
+    await updateApplication({ ...valid, id: insertedId, status: "In Review", statusCategory: "review" } as never);
+    const [review, applied] = await getApplicationHistory(insertedId!);
+
+    await updateStatusHistoryDate(review.id, new Date("2026-10-08T12:00:00"));
+    expect(new Date((await latestEntry(insertedId!)).createdAt)).toEqual(new Date("2026-10-08T12:00:00"));
+
+    // Before the Applied entry: held just after it
+    await updateStatusHistoryDate(review.id, new Date("2026-09-01T12:00:00"));
+    expect(new Date((await latestEntry(insertedId!)).createdAt).getTime()).toBe(
+      new Date(applied.createdAt).getTime() + 1000,
+    );
+
+    await expect(
+      updateStatusHistoryDate(review.id, new Date(Date.now() + 86_400_000)),
+    ).rejects.toThrow("Pick a date that isn't in the future.");
+  });
+});
+
+describe("findSimilarApplications (mock store)", () => {
+  beforeEach(() => {
+    mockStore.reset();
+  });
+
+  it("finds the same link or the same role at the same company", async () => {
+    const [{ insertedId }] = await createApplication({
+      ...valid,
+      role_name: "Platform Engineer",
+      company_name: "Zeta Labs",
+      link: "https://zeta.dev/jobs/9",
+    } as never);
+
+    const byLink = await findSimilarApplications({ link: "zeta.dev/jobs/9/?utm_source=x" });
+    expect(byLink).toMatchObject([{ id: insertedId, reason: "link" }]);
+
+    const byName = await findSimilarApplications({ role_name: "platform engineer", company_name: "Zeta Labs." });
+    expect(byName).toMatchObject([{ id: insertedId, reason: "role" }]);
+
+    expect(await findSimilarApplications({ role_name: "Designer", company_name: "Zeta Labs" })).toEqual([]);
+    expect(await findSimilarApplications({ link: "zeta.dev/jobs/9", excludeId: insertedId })).toEqual([]);
   });
 });

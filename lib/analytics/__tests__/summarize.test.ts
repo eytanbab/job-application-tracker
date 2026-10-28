@@ -19,6 +19,17 @@ describe("summarizeOverview", () => {
     expect(o.totals.active).toBe(5);
   });
 
+  it("leaves saved jobs out of every count", () => {
+    const dataset = sampleDataset();
+    dataset.apps.push(
+      app({ id: "s1", status: "Saved", statusCategory: "saved", dateApplied: "2026-10-01" }),
+    );
+    const withSaved = summarizeOverview(dataset, september, TODAY);
+    expect(withSaved.totals).toEqual(o.totals);
+    expect(withSaved.needsAction).toEqual(o.needsAction);
+    expect(withSaved.weekly).toEqual(o.weekly);
+  });
+
   it("keeps the sections consistent with each other", () => {
     const platformInterviews = o.platforms.reduce((sum, p) => sum + p.interviewed.k, 0);
     const workModeTotal = o.workModes.reduce((sum, m) => sum + m.total, 0);

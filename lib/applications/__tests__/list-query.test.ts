@@ -104,6 +104,8 @@ describe("parseStatuses", () => {
     expect(parseStatuses("rejected, ghosted,bogus")).toEqual(["rejected", "ghosted"]);
     expect(parseStatuses("active")).toEqual(["applied", "review", "interview", "other"]);
     expect(parseStatuses("closed")).toEqual(["accepted", "rejected", "ghosted"]);
+    expect(parseStatuses("submitted")).not.toContain("saved");
+    expect(parseStatuses("submitted")).toHaveLength(7);
     expect(parseStatuses("")).toBeNull();
     expect(parseStatuses("bogus")).toBeNull();
   });

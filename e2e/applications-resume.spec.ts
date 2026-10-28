@@ -26,7 +26,7 @@ test.describe("Resume Attachment, Deduplication & Safety Guard E2E Suite", () =>
     }
 
     // Expand optional fields
-    const moreDetailsBtn = page.locator("button:has-text('+ Add More Details')");
+    const moreDetailsBtn = page.locator("button:has-text('More details')");
     if (await moreDetailsBtn.isVisible().catch(() => false)) {
       await moreDetailsBtn.click();
     }
@@ -83,7 +83,7 @@ test.describe("Resume Attachment, Deduplication & Safety Guard E2E Suite", () =>
       await enterManuallyBtn.click();
     }
 
-    const moreDetailsBtn2 = page.locator("button:has-text('+ Add More Details')");
+    const moreDetailsBtn2 = page.locator("button:has-text('More details')");
     if (await moreDetailsBtn2.isVisible().catch(() => false)) {
       await moreDetailsBtn2.click();
     }

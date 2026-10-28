@@ -15,6 +15,7 @@ import {
 describe("statusOptions", () => {
   it("lists every pipeline stage once, in pipeline order", () => {
     expect(statusOptions.map((option) => option.value)).toEqual([
+      "saved",
       "applied",
       "review",
       "interview",
@@ -60,6 +61,8 @@ describe("getStatusKind", () => {
     ["Phone interview", "interview"],
     ["In Review", "review"],
     ["Applied", "applied"],
+    ["Saved", "saved"],
+    ["Wishlist", "saved"],
     ["Recruiter call", "other"],
     ["", "other"],
   ] as const)("infers %j as %s", (status, kind) => {
