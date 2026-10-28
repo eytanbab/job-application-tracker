@@ -279,7 +279,6 @@ export function DataTable<TData extends ApplicationRow, TValue>({
                           </ToastAction>
                         ) : undefined,
                       });
-                      setIsCreateOpen(false);
                     } catch (err) {
                       toast({
                         description: "Failed to create application",

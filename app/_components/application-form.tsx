@@ -295,7 +295,26 @@ export const ApplicationForm = ({
     setEntryMode("manual");
   };
 
-  const handleSubmit = (values: FormValues) => {
+  // Bumped to remount the fields with fresh state for the next application
+  const [entryCount, setEntryCount] = useState(0);
+
+  /** Clears the form for another application after one was added. */
+  const startAnother = () => {
+    form.reset();
+    setSessionUploadedDocIds([]);
+    setExtractedFromDomain(null);
+    setMissingFromPosting(new Set());
+    setEntryCount((count) => count + 1);
+    setEntryMode(readEntryMode());
+  };
+
+  // Put the cursor in the first field of the fresh form. The link step
+  // focuses its own input.
+  useEffect(() => {
+    if (entryCount > 0 && entryMode === "manual") form.setFocus("role_name");
+  }, [entryCount, entryMode, form]);
+
+  const handleSubmit = (values: FormValues, addAnother = false) => {
     form.clearErrors("root");
     const formattedDate = safeFormatDate(values.date_applied, "yyyy-MM-dd");
     const cat = (
@@ -340,7 +359,8 @@ export const ApplicationForm = ({
     startTransition(async () => {
       try {
         await onSubmit(values);
-        onClose();
+        if (addAnother) startAnother();
+        else onClose();
       } catch (err) {
         console.error("Failed to save application:", err);
         form.setError("root", {
@@ -428,7 +448,7 @@ export const ApplicationForm = ({
     <div className="flex-1 flex flex-col min-h-0 w-full overflow-hidden">
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit(handleSubmit)}
+          onSubmit={form.handleSubmit((values) => handleSubmit(values))}
           className="flex-1 flex flex-col min-h-0 w-full justify-between"
         >
           {/* Scrollable form body */}
@@ -481,6 +501,7 @@ export const ApplicationForm = ({
 
             <div className="grid grid-cols-2 w-full gap-3">
               <ApplicationFormFields
+                key={entryCount}
                 form={form}
                 isPending={isPending}
                 userLocations={userOptions.userLocations}
@@ -510,14 +531,26 @@ export const ApplicationForm = ({
               variant="outline"
               onClick={() => requestClose()}
               disabled={isPending || isUploadingResume}
-              className="h-10 text-xs rounded-xl cursor-pointer order-2 sm:order-1 w-full sm:w-1/3"
+              className="h-10 text-xs rounded-xl cursor-pointer order-3 sm:order-1 w-full sm:w-auto sm:px-5"
             >
               Cancel
             </Button>
+            {!isEditing && (
+              <Button
+                type="button"
+                variant="outline"
+                data-testid="add-another-button"
+                onClick={form.handleSubmit((values) => handleSubmit(values, true))}
+                disabled={isSaveDisabled}
+                className="h-10 text-xs rounded-xl cursor-pointer order-2 w-full sm:w-auto sm:px-4"
+              >
+                Add & Start Another
+              </Button>
+            )}
             <Button
               type="submit"
               disabled={isSaveDisabled}
-              className="h-10 text-xs font-semibold rounded-xl shadow-xs cursor-pointer order-1 sm:order-2 w-full sm:flex-1"
+              className="h-10 text-xs font-semibold rounded-xl shadow-xs cursor-pointer order-1 sm:order-3 w-full sm:flex-1"
               title={isEditing && !isDirty ? "No changes to save" : undefined}
             >
               {isPending ? (
