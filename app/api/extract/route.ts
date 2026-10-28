@@ -140,6 +140,7 @@ Return JSON with exact details:
 - platform: Inferred platform (e.g. LinkedIn, Greenhouse, Lever, Indeed, Company Site)
 - status: "Applied"
 - location: Job location (e.g. "San Francisco, CA" or "Remote")
+- salary: Pay range exactly as the posting states it (e.g. "$120,000 - $150,000"). Leave empty if the posting gives no pay.
 - description: Full plain text job description including About the job, Responsibilities, and Requirements. Use simple line breaks for lists and do not use markdown symbols (*, #, _).
 
 If no clear job listing is found, set status to 'fail'.
@@ -174,6 +175,7 @@ ${webpage}`;
                 status: { type: "string" },
                 description: { type: "string" },
                 location: { type: "string" },
+                salary: { type: "string" },
               },
               required: [
                 "role_name",

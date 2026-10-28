@@ -153,6 +153,7 @@ export function LinkAutofillBar({
         // the user, rather than presenting a guess as extracted data.
         location: aiData.application.location || "",
         description: aiData.application.description || "",
+        salary: aiData.application.salary?.trim() || "",
         status: "Applied",
         statusCategory: "applied",
       };
