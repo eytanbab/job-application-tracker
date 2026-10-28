@@ -1,7 +1,8 @@
 import { test, expect, type Page } from "@playwright/test";
 
-// The detail sheet keeps a saved copy and an unsaved draft. These tests cover
-// the cases where the two used to get mixed up.
+// The detail sheet keeps a saved copy and a draft that saves when the user
+// leaves a field. These tests cover the cases where the two used to get
+// mixed up.
 test.describe("Application detail sheet state", () => {
   const stamp = Date.now();
 
@@ -31,30 +32,25 @@ test.describe("Application detail sheet state", () => {
     await page.getByRole("option", { name: label, exact: true }).click();
   }
 
-  test("changing the stage saves only the stage and keeps unsaved edits", async ({ page }) => {
+  test("an inline edit saves on leaving the field, and a stage change after it keeps the edit", async ({ page }) => {
     const role = `__DETAIL__ Draft Engineer ${stamp}`;
     await addApplication(page, role);
     await openApplication(page, role);
     const dialog = page.getByRole("dialog");
 
-    // An unsaved inline edit to the title
+    // Enter leaves the field, which saves it
     await dialog.getByTitle("Click to edit role name").click();
     await dialog.getByPlaceholder("Role title").fill(`${role} EDITED`);
     await dialog.getByPlaceholder("Role title").press("Enter");
-    await expect(dialog.getByText("You have unsaved changes")).toBeVisible();
 
-    // The stage change saves, and the page refreshes behind the sheet
+    // A stage change right away must not send the old title back
     await chooseStage(page, "In Review");
     await expect(page.getByText(/Status updated/).first()).toBeVisible();
     await page.waitForLoadState("networkidle");
+    await expect(dialog.getByText("Couldn't save your changes")).toHaveCount(0);
 
-    // The draft survives the refresh and is still unsaved
-    await expect(dialog.getByText(`${role} EDITED`)).toBeVisible();
-    await expect(dialog.getByText("You have unsaved changes")).toBeVisible();
-
-    // On the server, only the stage changed
-    await openApplication(page, role);
-    await expect(page.getByRole("dialog").getByText(`${role} EDITED`)).toHaveCount(0);
+    // On the server, both changed
+    await openApplication(page, `${role} EDITED`);
     await expect(page.locator("#quick-status-select")).toContainText("In Review");
   });
 

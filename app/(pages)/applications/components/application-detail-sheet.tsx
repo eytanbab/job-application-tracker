@@ -141,6 +141,8 @@ export function ApplicationDetailSheet({
     initialApp ? { ...initialApp } : null,
   );
   const [isDirty, setIsDirty] = useState(false);
+  // Set when saving an inline edit failed; the edit stays as a draft
+  const [saveFailed, setSaveFailed] = useState(false);
   const [showGuardDialog, setShowGuardDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<
     "close" | "prev" | "next" | null
@@ -181,6 +183,17 @@ export function ApplicationDetailSheet({
   useEffect(() => {
     isDirtyRef.current = isDirty;
   }, [isDirty]);
+  // The latest draft and the save in flight, for saves started from blur
+  // handlers and navigation, which may run before a re-render.
+  const draftRef = useRef(draftApp);
+  useEffect(() => {
+    draftRef.current = draftApp;
+  }, [draftApp]);
+  const savingRef = useRef<Promise<boolean> | null>(null);
+  const savedRef = useRef(currentApp);
+  useEffect(() => {
+    savedRef.current = currentApp;
+  }, [currentApp]);
 
   /** Reloads the timeline, ignoring the answer if another application is shown by then. */
   const refreshHistory = useCallback(async (appId: string) => {
@@ -238,6 +251,7 @@ export function ApplicationDetailSheet({
     setCurrentApp(initialApp);
     setDraftApp(initialApp ? { ...initialApp } : null);
     setIsDirty(false);
+    setSaveFailed(false);
     setRoleValue(initialApp?.role_name || "");
     setCompanyValue(initialApp?.company_name || "");
     setLinkValue(initialApp?.link || "");
@@ -305,49 +319,75 @@ export function ApplicationDetailSheet({
       setDraftApp((prev) => {
         if (!prev) return prev;
         const next = { ...prev, [field]: value };
-        setIsDirty(checkIsDirty(next, currentApp));
+        const dirty = checkIsDirty(next, currentApp);
+        isDirtyRef.current = dirty;
+        draftRef.current = next;
+        setIsDirty(dirty);
         return next;
       });
     },
     [checkIsDirty, currentApp],
   );
 
-  // Save changes explicitly
+  // Inline edits save when the user leaves the field, like the stage and
+  // resume controls. Returns false when the save failed.
   const handleSaveChanges = useCallback(async (): Promise<boolean> => {
-    if (!draftApp?.id) return false;
-    return new Promise((resolve) => {
+    // Let a save already under way finish, then save anything typed since.
+    if (savingRef.current) await savingRef.current;
+    const draft = draftRef.current;
+    if (!draft?.id || !isDirtyRef.current) return true;
+    const save = new Promise<boolean>((resolve) => {
       startSaveTransition(async () => {
         try {
-          await updateApplication(draftApp as unknown as FormValues);
-          setCurrentApp(draftApp);
-          rememberSavedDetails(draftApp);
-          setIsDirty(false);
-          setIsEditingRole(false);
-          setIsEditingCompany(false);
-          setIsEditingLink(false);
-          toast({ description: "Application updated successfully!" });
-          if (draftApp.id) await refreshHistory(draftApp.id);
+          await updateApplication(draft as unknown as FormValues);
+          savedRef.current = draft;
+          setCurrentApp(draft);
+          rememberSavedDetails(draft);
+          // Only clean if nothing changed while the save ran
+          if (draftRef.current === draft) {
+            isDirtyRef.current = false;
+            setIsDirty(false);
+          }
+          setSaveFailed(false);
+          toast({ description: "Changes saved." });
+          if (draft.id) await refreshHistory(draft.id);
           resolve(true);
         } catch (err) {
           console.error(err);
+          setSaveFailed(true);
           toast({
-            description: "Failed to update application",
+            description:
+              err instanceof Error && err.message.startsWith("Enter ")
+                ? err.message
+                : "Couldn't save your changes. They're kept here so you can try again.",
             variant: "destructive",
           });
           resolve(false);
         }
       });
     });
-  }, [draftApp, rememberSavedDetails, refreshHistory]);
+    savingRef.current = save;
+    const ok = await save;
+    if (savingRef.current === save) savingRef.current = null;
+    return ok;
+  }, [rememberSavedDetails, refreshHistory]);
+
+  /** Saves the draft once the user leaves an inline field. */
+  const commitDraft = useCallback(() => {
+    if (isDirtyRef.current) void handleSaveChanges();
+  }, [handleSaveChanges]);
 
   // Discard changes
   const handleDiscardChanges = useCallback(() => {
     if (currentApp) {
       setDraftApp({ ...currentApp });
+      draftRef.current = { ...currentApp };
       setRoleValue(currentApp.role_name || "");
       setCompanyValue(currentApp.company_name || "");
       setLinkValue(currentApp.link || "");
+      isDirtyRef.current = false;
       setIsDirty(false);
+      setSaveFailed(false);
       setIsEditingRole(false);
       setIsEditingCompany(false);
       setIsEditingLink(false);
@@ -421,47 +461,47 @@ export function ApplicationDetailSheet({
     [isEditing],
   );
 
-  // Navigation requests intercepted when dirty
+  // Leaving the application saves an unsaved inline edit first; the guard
+  // dialog only appears when that save fails.
+  const leaveAfterSaving = useCallback(
+    (action: "close" | "prev" | "next", proceed: () => void) => {
+      runAfterEditForm(async () => {
+        if (isDirtyRef.current || savingRef.current) {
+          const ok = await handleSaveChanges();
+          if (!ok) {
+            setPendingAction(action);
+            setShowGuardDialog(true);
+            return;
+          }
+        }
+        proceed();
+      });
+    },
+    [runAfterEditForm, handleSaveChanges],
+  );
+
   const requestClose = useCallback(() => {
-    runAfterEditForm(() => {
-      if (isDirty) {
-        setPendingAction("close");
-        setShowGuardDialog(true);
-      } else {
-        onOpenChange(false);
-      }
-    });
-  }, [runAfterEditForm, isDirty, onOpenChange]);
+    leaveAfterSaving("close", () => onOpenChange(false));
+  }, [leaveAfterSaving, onOpenChange]);
 
   const requestPrevious = useCallback(() => {
-    runAfterEditForm(() => {
-      if (isDirty) {
-        setPendingAction("prev");
-        setShowGuardDialog(true);
-      } else if (onPrevious) {
-        onPrevious();
-      }
-    });
-  }, [runAfterEditForm, isDirty, onPrevious]);
+    leaveAfterSaving("prev", () => onPrevious?.());
+  }, [leaveAfterSaving, onPrevious]);
 
   const requestNext = useCallback(() => {
-    runAfterEditForm(() => {
-      if (isDirty) {
-        setPendingAction("next");
-        setShowGuardDialog(true);
-      } else if (onNext) {
-        onNext();
-      }
-    });
-  }, [runAfterEditForm, isDirty, onNext]);
+    leaveAfterSaving("next", () => onNext?.());
+  }, [leaveAfterSaving, onNext]);
 
   const handleConfirmDiscard = useCallback(() => {
     if (currentApp) {
       setDraftApp({ ...currentApp });
+      draftRef.current = { ...currentApp };
       setRoleValue(currentApp.role_name || "");
       setCompanyValue(currentApp.company_name || "");
       setLinkValue(currentApp.link || "");
+      isDirtyRef.current = false;
       setIsDirty(false);
+      setSaveFailed(false);
       setIsEditingRole(false);
       setIsEditingCompany(false);
       setIsEditingLink(false);
@@ -555,12 +595,11 @@ export function ApplicationDetailSheet({
       return;
     }
 
-    // Save only the stage, on top of the saved copy: unsaved inline edits
-    // stay a draft.
+    // Save only the stage, on top of the saved copy: an inline edit that
+    // hasn't saved stays a draft.
     const saved = currentApp ?? activeApp;
     const previous = { status: saved.status, statusCategory: saved.statusCategory };
     const previousText = quickStatusText;
-    const payload: ApplicationDetail = { ...saved, statusCategory: cat, status: updatedStatus };
     const appId = saved.id as string;
     const applyStatus = (next: { status: string; statusCategory: string }) => {
       setCurrentApp((prev) => (prev ? { ...prev, ...next } : prev));
@@ -572,6 +611,11 @@ export function ApplicationDetailSheet({
 
     startSaveTransition(async () => {
       try {
+        // An inline edit saving right now goes first; build on its result
+        // so this save doesn't send the old values back.
+        if (savingRef.current) await savingRef.current;
+        const base = savedRef.current ?? saved;
+        const payload: ApplicationDetail = { ...base, statusCategory: cat, status: updatedStatus };
         await updateApplication(payload as unknown as FormValues);
         toast({
           description: `Status updated to ${statusLabels[cat] || cat}`,
@@ -745,9 +789,12 @@ export function ApplicationDetailSheet({
                           setRoleValue(e.target.value);
                           handleUpdateDraftField("role_name", e.target.value);
                         }}
-                        onBlur={() => setIsEditingRole(false)}
+                        onBlur={() => {
+                          setIsEditingRole(false);
+                          commitDraft();
+                        }}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") setIsEditingRole(false);
+                          if (e.key === "Enter") e.currentTarget.blur();
                         }}
                         placeholder="Role title"
                         className="h-9 text-lg sm:text-xl font-bold bg-background"
@@ -777,9 +824,12 @@ export function ApplicationDetailSheet({
                             e.target.value,
                           );
                         }}
-                        onBlur={() => setIsEditingCompany(false)}
+                        onBlur={() => {
+                          setIsEditingCompany(false);
+                          commitDraft();
+                        }}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") setIsEditingCompany(false);
+                          if (e.key === "Enter") e.currentTarget.blur();
                         }}
                         placeholder="Company name"
                         className="h-8 text-sm font-medium bg-background"
@@ -808,9 +858,12 @@ export function ApplicationDetailSheet({
                             setLinkValue(e.target.value);
                             handleUpdateDraftField("link", e.target.value);
                           }}
-                          onBlur={() => setIsEditingLink(false)}
+                          onBlur={() => {
+                            setIsEditingLink(false);
+                            commitDraft();
+                          }}
                           onKeyDown={(e) => {
-                            if (e.key === "Enter") setIsEditingLink(false);
+                            if (e.key === "Enter") e.currentTarget.blur();
                           }}
                           placeholder="https://company.com/jobs/..."
                           className="h-7 text-xs bg-background"
@@ -937,7 +990,10 @@ export function ApplicationDetailSheet({
                     } as ApplicationDetail;
                     setCurrentApp(updated);
                     setDraftApp(updated);
+                    draftRef.current = updated;
+                    isDirtyRef.current = false;
                     setIsDirty(false);
+                    setSaveFailed(false);
                     setQuickStatusText(
                       isStandardStatus(updated.status)
                         ? ""
@@ -964,6 +1020,7 @@ export function ApplicationDetailSheet({
                 quickStatusText={quickStatusText}
                 setQuickStatusText={setQuickStatusText}
                 handleQuickStatusChange={handleQuickStatusChange}
+                onCommitDraft={commitDraft}
                 isSaving={isSaving}
                 history={history}
                 isLoadingHistory={isLoadingHistory}
@@ -980,8 +1037,8 @@ export function ApplicationDetailSheet({
             )}
           </div>
 
-          {/* Floating Docked "Unsaved Changes" Action Bar */}
-          {isDirty && !isEditing && (
+          {/* Shown when saving an inline edit failed */}
+          {isDirty && saveFailed && !isEditing && (
             <div className="sticky bottom-0 z-30 border-t border-border/40 bg-card/95 backdrop-blur-md p-3 sm:p-4 px-4 sm:px-6 shadow-2xl flex items-center justify-between gap-3 animate-in slide-in-from-bottom duration-200">
               <div className="flex items-center gap-2">
                 <span className="relative flex h-2.5 w-2.5">
@@ -989,7 +1046,7 @@ export function ApplicationDetailSheet({
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
                 </span>
                 <span className="text-xs sm:text-sm font-medium text-foreground">
-                  You have unsaved changes
+                  Couldn&apos;t save your changes
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -1015,14 +1072,14 @@ export function ApplicationDetailSheet({
                   ) : (
                     <Check className="h-3.5 w-3.5" />
                   )}
-                  Save Changes
+                  Try Again
                 </Button>
               </div>
             </div>
           )}
 
-          {/* Footer Actions (When not editing and no dirty bar active) */}
-          {!isEditing && !isDirty && (
+          {/* Footer Actions (When not editing and no failed-save bar) */}
+          {!isEditing && !(isDirty && saveFailed) && (
             <div className="p-4 sm:p-6 py-3 border-t border-border/40 bg-card/95 backdrop-blur-sm flex items-center justify-between gap-3 shrink-0">
               {isConfirmingDelete ? (
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-2 p-2.5 bg-destructive/10 border border-destructive/20 rounded-xl animate-in fade-in duration-150">
@@ -1090,10 +1147,10 @@ export function ApplicationDetailSheet({
       <Dialog open={showGuardDialog} onOpenChange={setShowGuardDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Unsaved Changes</DialogTitle>
+            <DialogTitle>Couldn&apos;t Save Your Changes</DialogTitle>
             <DialogDescription>
-              You have unsaved changes to this application. If you leave now,
-              your changes will be discarded.
+              Your last edit to this application didn&apos;t save. Try again,
+              keep editing to fix it, or discard it and leave.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
@@ -1125,7 +1182,7 @@ export function ApplicationDetailSheet({
               {isSaving && (
                 <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
               )}
-              Save & Continue
+              Try Again
             </Button>
           </DialogFooter>
         </DialogContent>

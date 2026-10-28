@@ -93,6 +93,8 @@ export interface ApplicationDetailViewProps {
   onDeleteTimelineEntry: (id: string) => void;
   onUpdateNotes?: (notes: string) => Promise<void>;
   onUpdateDraftField?: (field: string, value: unknown) => void;
+  /** Saves inline edits; called when the user leaves a field. */
+  onCommitDraft?: () => void;
   onEdit?: () => void;
   onAttachResume?: (resumeId: string, meta: ResumeMeta) => Promise<void>;
   onDetachResume?: () => Promise<void>;
@@ -114,6 +116,7 @@ export function ApplicationDetailView({
   onDeleteTimelineEntry,
   onUpdateNotes,
   onUpdateDraftField,
+  onCommitDraft,
   onEdit,
   onAttachResume,
   onDetachResume,
@@ -380,10 +383,16 @@ export function ApplicationDetailView({
           <span className="text-xs font-semibold text-foreground tracking-wide">
             Stage & Status
           </span>
-          {isSaving && (
+          {isSaving ? (
             <span className="text-[11px] text-primary flex items-center gap-1 font-medium animate-pulse">
               <Loader2 className="h-3 w-3 animate-spin" /> Saving changes...
             </span>
+          ) : (
+            onUpdateDraftField && (
+              <span className="text-[11px] text-muted-foreground">
+                Changes save as you go
+              </span>
+            )
           )}
         </div>
 
@@ -482,7 +491,13 @@ export function ApplicationDetailView({
                 setDateValue(e.target.value);
                 onUpdateDraftField?.("date_applied", e.target.value);
               }}
-              onBlur={() => setIsEditingDate(false)}
+              onBlur={() => {
+                setIsEditingDate(false);
+                onCommitDraft?.();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+              }}
               className="h-8 text-xs bg-background"
               autoFocus
             />
@@ -527,9 +542,12 @@ export function ApplicationDetailView({
                 setPlatformValue(e.target.value);
                 onUpdateDraftField?.("platform", e.target.value);
               }}
-              onBlur={() => setIsEditingPlatform(false)}
+              onBlur={() => {
+                setIsEditingPlatform(false);
+                onCommitDraft?.();
+              }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") setIsEditingPlatform(false);
+                if (e.key === "Enter") e.currentTarget.blur();
               }}
               placeholder="e.g. LinkedIn, Indeed"
               className="h-8 text-xs bg-background"
@@ -576,9 +594,12 @@ export function ApplicationDetailView({
                 setLocationValue(e.target.value);
                 onUpdateDraftField?.("location", e.target.value);
               }}
-              onBlur={() => setIsEditingLocation(false)}
+              onBlur={() => {
+                setIsEditingLocation(false);
+                onCommitDraft?.();
+              }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") setIsEditingLocation(false);
+                if (e.key === "Enter") e.currentTarget.blur();
               }}
               placeholder="e.g. Remote / New York"
               className="h-8 text-xs bg-background"
@@ -625,9 +646,12 @@ export function ApplicationDetailView({
                 setSalaryValue(e.target.value);
                 onUpdateDraftField?.("salary", e.target.value);
               }}
-              onBlur={() => setIsEditingSalary(false)}
+              onBlur={() => {
+                setIsEditingSalary(false);
+                onCommitDraft?.();
+              }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") setIsEditingSalary(false);
+                if (e.key === "Enter") e.currentTarget.blur();
               }}
               placeholder="e.g. $120,000"
               className="h-8 text-xs bg-background"
@@ -666,6 +690,7 @@ export function ApplicationDetailView({
               </span>
             ) : null
           }
+          onCommit={onCommitDraft}
           onChange={
             onUpdateDraftField &&
             ((value) => onUpdateDraftField("followUpDate", value || null))
@@ -677,6 +702,7 @@ export function ApplicationDetailView({
           type="datetime-local"
           inputValue={hasInterviewAt ? format(interviewAt!, "yyyy-MM-dd'T'HH:mm") : ""}
           display={hasInterviewAt ? formatDate(interviewAt!, "MMM d, yyyy, h:mm a") : null}
+          onCommit={onCommitDraft}
           onChange={
             onUpdateDraftField &&
             ((value) => onUpdateDraftField("interviewAt", value ? new Date(value) : null))
@@ -688,6 +714,7 @@ export function ApplicationDetailView({
           inputValue={currentApp.referredBy ?? ""}
           display={currentApp.referredBy || null}
           placeholder="Name of the referrer"
+          onCommit={onCommitDraft}
           onChange={
             onUpdateDraftField &&
             ((value) => onUpdateDraftField("referredBy", value))
@@ -699,6 +726,7 @@ export function ApplicationDetailView({
           inputValue={currentApp.contactName ?? ""}
           display={currentApp.contactName || null}
           placeholder="e.g. Dana Levi, recruiter"
+          onCommit={onCommitDraft}
           onChange={
             onUpdateDraftField &&
             ((value) => onUpdateDraftField("contactName", value))
@@ -722,6 +750,7 @@ export function ApplicationDetailView({
             ) : null
           }
           placeholder="e.g. dana@acme.com"
+          onCommit={onCommitDraft}
           onChange={
             onUpdateDraftField &&
             ((value) => onUpdateDraftField("contactEmail", value))
@@ -925,6 +954,7 @@ export function ApplicationDetailView({
                   setJdValue(e.target.value);
                   onUpdateDraftField?.("description", e.target.value);
                 }}
+                onBlur={() => onCommitDraft?.()}
                 placeholder="Paste the full job posting requirements and role description..."
                 className="text-xs min-h-[140px] max-h-80 resize-y rounded-xl"
                 autoFocus
@@ -937,6 +967,7 @@ export function ApplicationDetailView({
                   onClick={() => {
                     setJdValue(currentApp.description || "");
                     setIsEditingJd(false);
+                    onCommitDraft?.();
                   }}
                   className="h-7 text-xs px-2.5 cursor-pointer"
                 >
@@ -1029,6 +1060,7 @@ export function ApplicationDetailView({
                   setNotesValue(e.target.value);
                   onUpdateDraftField?.("notes", e.target.value);
                 }}
+                onBlur={() => onCommitDraft?.()}
                 placeholder="Add referral contacts, interview notes, questions to ask..."
                 className="text-xs min-h-[140px] max-h-80 resize-y rounded-xl"
                 autoFocus
@@ -1041,6 +1073,7 @@ export function ApplicationDetailView({
                   onClick={() => {
                     setNotesValue(currentApp.notes || "");
                     setIsEditingNotes(false);
+                    onCommitDraft?.();
                   }}
                   className="h-7 text-xs px-2.5 cursor-pointer"
                 >
