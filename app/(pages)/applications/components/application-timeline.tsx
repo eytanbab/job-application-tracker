@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { History, X, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { formatDate } from "date-fns";
+import { Input } from "@/components/ui/input";
+import { format, formatDate } from "date-fns";
 import { getStatusDisplay, getStatusKind, statusLabels } from "@/lib/utils";
 
 export interface TimelineEntry {
@@ -17,14 +18,19 @@ interface ApplicationTimelineProps {
   history: TimelineEntry[];
   isLoadingHistory: boolean;
   onDeleteEntry: (id: string) => void;
+  /** Moves an entry to the day the change really happened. */
+  onUpdateEntryDate?: (id: string, day: string) => Promise<void>;
 }
 
 export function ApplicationTimeline({
   history,
   isLoadingHistory,
   onDeleteEntry,
+  onUpdateEntryDate,
 }: ApplicationTimelineProps) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [editingDateId, setEditingDateId] = useState<string | null>(null);
+  const today = format(new Date(), "yyyy-MM-dd");
 
   return (
     <div className="space-y-3 pt-2">
@@ -108,9 +114,43 @@ export function ApplicationTimeline({
                       </div>
                     ) : (
                       <>
-                        <span className="text-muted-foreground text-[11px]">
-                          {formattedTime}
-                        </span>
+                        {editingDateId === item.id ? (
+                          <Input
+                            type="date"
+                            autoFocus
+                            max={today}
+                            aria-label={`Date of ${displayTitle}`}
+                            defaultValue={format(new Date(item.createdAt), "yyyy-MM-dd")}
+                            onBlur={async (e) => {
+                              const day = e.target.value;
+                              setEditingDateId(null);
+                              if (day && day !== format(new Date(item.createdAt), "yyyy-MM-dd")) {
+                                await onUpdateEntryDate?.(item.id, day);
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") e.currentTarget.blur();
+                              if (e.key === "Escape") {
+                                e.stopPropagation();
+                                setEditingDateId(null);
+                              }
+                            }}
+                            className="h-6 w-36 text-[11px] px-1.5"
+                          />
+                        ) : item.id && onUpdateEntryDate ? (
+                          <button
+                            type="button"
+                            onClick={() => setEditingDateId(item.id)}
+                            className="text-muted-foreground text-[11px] hover:text-primary hover:underline cursor-pointer"
+                            title="Change the date of this step"
+                          >
+                            {formattedTime}
+                          </button>
+                        ) : (
+                          <span className="text-muted-foreground text-[11px]">
+                            {formattedTime}
+                          </span>
+                        )}
                         {item.id && (
                           <button
                             type="button"

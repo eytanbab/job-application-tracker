@@ -56,6 +56,7 @@ import {
   updateApplication,
   updateApplicationResume,
   deleteStatusHistoryEntry,
+  updateStatusHistoryDate,
 } from "@/app/actions/applications";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -658,6 +659,23 @@ export function ApplicationDetailSheet({
     }
   };
 
+  const handleUpdateTimelineDate = async (entryId: string, day: string) => {
+    const appId = shownIdRef.current;
+    try {
+      await updateStatusHistoryDate(entryId, new Date(`${day}T12:00:00`));
+      if (appId) await refreshHistory(appId);
+      toast({ description: "Timeline date updated." });
+    } catch (err) {
+      toast({
+        description:
+          err instanceof Error && err.message.startsWith("Pick ")
+            ? err.message
+            : "Couldn't change the date. Try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleUpdateNotes = async (newNotes: string) => {
     handleUpdateDraftField("notes", newNotes);
   };
@@ -983,9 +1001,11 @@ export function ApplicationDetailSheet({
                   try {
                     await updateApplication(values);
                     rememberSavedDetails(values);
+                    // The change date belongs to this save only
+                    const { statusChangedAt: _changedAt, ...saved } = values;
                     const updated = {
                       ...activeApp,
-                      ...values,
+                      ...saved,
                       id: activeApp.id,
                     } as ApplicationDetail;
                     setCurrentApp(updated);
@@ -1021,6 +1041,7 @@ export function ApplicationDetailSheet({
                 setQuickStatusText={setQuickStatusText}
                 handleQuickStatusChange={handleQuickStatusChange}
                 onCommitDraft={commitDraft}
+                onUpdateTimelineDate={handleUpdateTimelineDate}
                 isSaving={isSaving}
                 history={history}
                 isLoadingHistory={isLoadingHistory}

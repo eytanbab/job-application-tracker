@@ -41,7 +41,13 @@ import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
 
 // Type-only, so Drizzle and the schema stay out of the browser bundle
-export type FormValues = Omit<z.input<typeof insertApplicationSchema>, "userId" | "id">;
+export type FormValues = Omit<z.input<typeof insertApplicationSchema>, "userId" | "id"> & {
+  /**
+   * When the status was reached, if not now. A `YYYY-MM-DD` day in the
+   * form; sent to the server as a Date, and only when the status changed.
+   */
+  statusChangedAt?: Date | string | null;
+};
 
 export type ApplicationFormHandle = {
   // Closes the form, asking for discard confirmation first when there are
@@ -115,6 +121,7 @@ const formSchema = z.object({
       message: "Enter a valid email.",
     }),
   referredBy: z.string().nullable().optional(),
+  statusChangedAt: z.union([z.date(), z.string()]).nullable().optional(),
 });
 
 export const ApplicationForm = ({
@@ -253,6 +260,17 @@ export const ApplicationForm = ({
         : getStatusKind(values.status)
     ) as StatusKind;
     const resolvedStatus = resolveUpdatedStatus(values.status, cat);
+    const initial = form.formState.defaultValues;
+    const statusChanged = isEditing
+      ? cat !== initial?.statusCategory || resolvedStatus !== initial?.status
+      : true;
+    // Today means "now", which keeps the time of day
+    const changedOn =
+      statusChanged &&
+      typeof values.statusChangedAt === "string" &&
+      values.statusChangedAt !== format(new Date(), "yyyy-MM-dd")
+        ? new Date(`${values.statusChangedAt}T12:00:00`)
+        : null;
 
     values = {
       ...values,
@@ -272,6 +290,7 @@ export const ApplicationForm = ({
       contactName: values.contactName?.trim() || null,
       contactEmail: values.contactEmail?.trim() || null,
       referredBy: values.referredBy?.trim() || null,
+      statusChangedAt: changedOn,
     };
 
     startTransition(async () => {

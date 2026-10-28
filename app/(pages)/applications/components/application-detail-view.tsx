@@ -91,6 +91,7 @@ export interface ApplicationDetailViewProps {
   history: TimelineEntry[];
   isLoadingHistory: boolean;
   onDeleteTimelineEntry: (id: string) => void;
+  onUpdateTimelineDate?: (id: string, day: string) => Promise<void>;
   onUpdateNotes?: (notes: string) => Promise<void>;
   onUpdateDraftField?: (field: string, value: unknown) => void;
   /** Saves inline edits; called when the user leaves a field. */
@@ -114,6 +115,7 @@ export function ApplicationDetailView({
   history,
   isLoadingHistory,
   onDeleteTimelineEntry,
+  onUpdateTimelineDate,
   onUpdateNotes,
   onUpdateDraftField,
   onCommitDraft,
@@ -1111,6 +1113,7 @@ export function ApplicationDetailView({
         history={history}
         isLoadingHistory={isLoadingHistory}
         onDeleteEntry={onDeleteTimelineEntry}
+        onUpdateEntryDate={onUpdateTimelineDate}
       />
 
       {/* Attach Resume Dialog */}

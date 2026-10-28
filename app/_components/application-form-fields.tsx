@@ -198,6 +198,8 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
         )}
       </div>
 
+      <StatusChangedOnField form={form} />
+
       {/* Progressive Disclosure Toggle when custom stage is hidden */}
       {!showCustomStage && (
         <button
@@ -212,6 +214,59 @@ function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
         </button>
       )}
     </div>
+  );
+}
+
+/**
+ * When the status was reached. Shown when an edit changes the status, or
+ * when a new application starts past Applied (logging an older one).
+ */
+function StatusChangedOnField({ form }: { form: UseFormReturn<FormValues> }) {
+  const initial = form.formState.defaultValues;
+  const isEditing = Boolean(form.getValues("id" as keyof FormValues));
+  const category = form.watch("statusCategory");
+  const status = form.watch("status");
+  const show = isEditing
+    ? category !== initial?.statusCategory || status !== initial?.status
+    : Boolean(category) && category !== "applied" && category !== "saved";
+  if (!show) return null;
+
+  const leavingSaved = initial?.statusCategory === "saved" && category !== "saved";
+  const today = format(new Date(), "yyyy-MM-dd");
+  return (
+    <FormField
+      control={form.control}
+      name="statusChangedAt"
+      render={({ field }) => (
+        <FormItem className="space-y-1 pt-1.5 sm:max-w-[50%]">
+          <FormLabel className="text-xs font-semibold">
+            {isEditing ? "Changed On" : "Reached This Stage On"}
+          </FormLabel>
+          <FormControl>
+            <Input
+              type="date"
+              name={field.name}
+              ref={field.ref}
+              onBlur={field.onBlur}
+              max={today}
+              value={typeof field.value === "string" && field.value ? field.value : today}
+              onChange={(e) => {
+                field.onChange(e.target.value || null);
+                // A saved job was applied to on the day it was sent
+                if (leavingSaved && e.target.value) {
+                  form.setValue("date_applied", e.target.value, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                }
+              }}
+              className="h-9"
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   );
 }
 
