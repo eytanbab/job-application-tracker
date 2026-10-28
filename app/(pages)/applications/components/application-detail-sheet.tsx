@@ -92,7 +92,19 @@ export interface ApplicationDetail {
   resumeTitle?: string | null;
   resumeFileName?: string | null;
   resumeFileSize?: string | null;
+  followUpDate?: string | null;
+  interviewAt?: Date | string | null;
+  contactName?: string | null;
+  contactEmail?: string | null;
+  referredBy?: string | null;
   [key: string]: unknown;
+}
+
+/** Compares instants by time, so a Date and its ISO string match. */
+function instantKey(value: Date | string | null | undefined): number | null {
+  if (!value) return null;
+  const time = new Date(value).getTime();
+  return Number.isNaN(time) ? null : time;
 }
 
 interface ApplicationDetailSheetProps {
@@ -194,7 +206,12 @@ export function ApplicationDetailSheet({
         (draft.link || "") !== (original.link || "") ||
         (draft.description || "") !== (original.description || "") ||
         (draft.notes || "") !== (original.notes || "") ||
-        (draft.resumeId ?? null) !== (original.resumeId ?? null)
+        (draft.resumeId ?? null) !== (original.resumeId ?? null) ||
+        (draft.followUpDate || "") !== (original.followUpDate || "") ||
+        instantKey(draft.interviewAt) !== instantKey(original.interviewAt) ||
+        (draft.contactName || "") !== (original.contactName || "") ||
+        (draft.contactEmail || "") !== (original.contactEmail || "") ||
+        (draft.referredBy || "") !== (original.referredBy || "")
       );
     },
     [],

@@ -103,6 +103,18 @@ const formSchema = z.object({
   year: z.string().optional(),
   salary: z.string().nullable().optional(),
   resumeId: z.string().nullable().optional(),
+  followUpDate: z.string().nullable().optional(),
+  interviewAt: z.union([z.date(), z.string()]).nullable().optional(),
+  contactName: z.string().nullable().optional(),
+  contactEmail: z
+    .string()
+    .trim()
+    .nullable()
+    .optional()
+    .refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+      message: "Enter a valid email.",
+    }),
+  referredBy: z.string().nullable().optional(),
 });
 
 export const ApplicationForm = ({
@@ -255,6 +267,11 @@ export const ApplicationForm = ({
       status: resolvedStatus,
       salary: values.salary?.trim() || "",
       resumeId: values.resumeId || null,
+      followUpDate: values.followUpDate || null,
+      interviewAt: values.interviewAt || null,
+      contactName: values.contactName?.trim() || null,
+      contactEmail: values.contactEmail?.trim() || null,
+      referredBy: values.referredBy?.trim() || null,
     };
 
     startTransition(async () => {

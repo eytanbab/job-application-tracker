@@ -23,6 +23,11 @@ import {
   Trash2,
   Plus,
   RefreshCw,
+  BellRing,
+  CalendarClock,
+  UserRound,
+  Mail,
+  Handshake,
 } from "lucide-react";
 import {
   Select,
@@ -31,7 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatDate, parseISO } from "date-fns";
+import { format, formatDate, isBefore, parseISO, startOfToday } from "date-fns";
 import {
   statusOptions,
   statusLabels,
@@ -51,6 +56,7 @@ import {
   AttachResumeDialog,
   ResumeMeta,
 } from "./attach-resume-dialog";
+import { InlineDetailField } from "./inline-detail-field";
 
 export interface ApplicationDetailViewProps {
   currentApp: {
@@ -70,6 +76,11 @@ export interface ApplicationDetailViewProps {
     resumeTitle?: string | null;
     resumeFileName?: string | null;
     resumeFileSize?: string | null;
+    followUpDate?: string | null;
+    interviewAt?: Date | string | null;
+    contactName?: string | null;
+    contactEmail?: string | null;
+    referredBy?: string | null;
     [key: string]: unknown;
   };
   currentKind: StatusKind;
@@ -347,6 +358,13 @@ export function ApplicationDetailView({
       });
     }
   };
+
+  const interviewAt = currentApp.interviewAt
+    ? new Date(currentApp.interviewAt)
+    : null;
+  const hasInterviewAt = interviewAt !== null && !Number.isNaN(interviewAt.getTime());
+  const followUp = currentApp.followUpDate ? parseISO(currentApp.followUpDate) : null;
+  const isFollowUpDue = followUp !== null && !isBefore(startOfToday(), followUp);
 
   const formattedAppliedDate = currentApp.date_applied
     ? formatDate(parseISO(currentApp.date_applied), "MMM d, yyyy")
@@ -631,6 +649,84 @@ export function ApplicationDetailView({
             </p>
           )}
         </div>
+      </div>
+
+      {/* Next steps and the people involved */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm bg-card p-3.5 border border-border/30 rounded-xl">
+        <InlineDetailField
+          label="Follow Up On"
+          icon={BellRing}
+          type="date"
+          inputValue={currentApp.followUpDate ?? ""}
+          display={
+            followUp ? (
+              <span className={cn(isFollowUpDue && "text-amber-700 dark:text-amber-300")}>
+                {formatDate(followUp, "MMM d, yyyy")}
+                {isFollowUpDue && " (due)"}
+              </span>
+            ) : null
+          }
+          onChange={
+            onUpdateDraftField &&
+            ((value) => onUpdateDraftField("followUpDate", value || null))
+          }
+        />
+        <InlineDetailField
+          label="Next Interview"
+          icon={CalendarClock}
+          type="datetime-local"
+          inputValue={hasInterviewAt ? format(interviewAt!, "yyyy-MM-dd'T'HH:mm") : ""}
+          display={hasInterviewAt ? formatDate(interviewAt!, "MMM d, yyyy, h:mm a") : null}
+          onChange={
+            onUpdateDraftField &&
+            ((value) => onUpdateDraftField("interviewAt", value ? new Date(value) : null))
+          }
+        />
+        <InlineDetailField
+          label="Referred By"
+          icon={Handshake}
+          inputValue={currentApp.referredBy ?? ""}
+          display={currentApp.referredBy || null}
+          placeholder="Name of the referrer"
+          onChange={
+            onUpdateDraftField &&
+            ((value) => onUpdateDraftField("referredBy", value))
+          }
+        />
+        <InlineDetailField
+          label="Contact"
+          icon={UserRound}
+          inputValue={currentApp.contactName ?? ""}
+          display={currentApp.contactName || null}
+          placeholder="e.g. Dana Levi, recruiter"
+          onChange={
+            onUpdateDraftField &&
+            ((value) => onUpdateDraftField("contactName", value))
+          }
+        />
+        <InlineDetailField
+          label="Contact Email"
+          icon={Mail}
+          type="email"
+          className="col-span-2"
+          inputValue={currentApp.contactEmail ?? ""}
+          display={
+            currentApp.contactEmail ? (
+              <a
+                href={`mailto:${currentApp.contactEmail}`}
+                onClick={(e) => e.stopPropagation()}
+                className="text-primary hover:underline"
+              >
+                {currentApp.contactEmail}
+              </a>
+            ) : null
+          }
+          placeholder="e.g. dana@acme.com"
+          onChange={
+            onUpdateDraftField &&
+            ((value) => onUpdateDraftField("contactEmail", value))
+          }
+        />
       </div>
 
       {/* Applied Resume Section */}
