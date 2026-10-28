@@ -296,6 +296,7 @@ export const ApplicationForm = ({
   };
 
   const handleSubmit = (values: FormValues) => {
+    form.clearErrors("root");
     const formattedDate = safeFormatDate(values.date_applied, "yyyy-MM-dd");
     const cat = (
       values.statusCategory && isStatusKind(values.statusCategory)
@@ -342,6 +343,9 @@ export const ApplicationForm = ({
         onClose();
       } catch (err) {
         console.error("Failed to save application:", err);
+        form.setError("root", {
+          message: "Couldn't save the application. Your entries are still here, so you can try again.",
+        });
       }
     });
   };
@@ -489,6 +493,15 @@ export const ApplicationForm = ({
               />
             </div>
           </div>
+
+          {form.formState.errors.root?.message && (
+            <p
+              role="alert"
+              className="px-4 sm:px-6 pt-2 text-xs text-destructive shrink-0"
+            >
+              {form.formState.errors.root.message}
+            </p>
+          )}
 
           {/* Grounded bottom action bar */}
           <div className="px-4 sm:px-6 py-3 border-t border-border/30 bg-card shrink-0 flex flex-col sm:flex-row gap-2 w-full z-10">
