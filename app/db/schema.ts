@@ -54,6 +54,13 @@ export const jobApplications = pgTable(
     resumeId: uuid("resume_id").references(() => documents.id, {
       onDelete: "set null",
     }),
+    // When the user plans to chase this application; null means no plan.
+    followUpDate: date("follow_up_date"),
+    // The next scheduled interview, with its time.
+    interviewAt: timestamp("interview_at", { withTimezone: true }),
+    contactName: text("contact_name"),
+    contactEmail: text("contact_email"),
+    referredBy: text("referred_by"),
   },
   (table) => [
     index("job_apps_user_id_idx").on(table.userId),

@@ -9,6 +9,7 @@ import {
   userPreferences,
 } from "@/app/db/schema";
 import { mockStore } from "@/lib/mock-data/mock-store";
+import type { MockApplication } from "@/lib/mock-data/mock-applications";
 import { s3Client } from "@/lib/s3-client";
 import type { UserPreferences } from "@/lib/preference-options";
 import { inRange } from "@/lib/analytics/range";
@@ -64,13 +65,25 @@ function toExportedDocument(doc: DocumentRow): ExportedDocument {
 
 // --- Export ---
 
+/** A demo-store row with the columns it may leave out set to null. */
+function withOptionalFields(a: MockApplication): ApplicationRow {
+  return {
+    ...a,
+    resumeId: a.resumeId ?? null,
+    followUpDate: a.followUpDate ?? null,
+    interviewAt: a.interviewAt ?? null,
+    contactName: a.contactName ?? null,
+    contactEmail: a.contactEmail ?? null,
+    referredBy: a.referredBy ?? null,
+  };
+}
+
 export async function collectUserData(userId: string): Promise<UserDataExport> {
   if (isMockDb) {
     const data = mockStore.exportUserData(userId);
     return {
       applications: data.applications.map((a) => ({
-        ...a,
-        resumeId: a.resumeId ?? null,
+        ...withOptionalFields(a),
       })),
       statusHistory: data.statusHistory,
       documents: data.documents.map(toExportedDocument),
@@ -130,7 +143,7 @@ export async function collectApplications(
     return mockStore
       .exportUserData(userId)
       .applications.filter((a) => inRange(a.date_applied, range))
-      .map((a) => ({ ...a, resumeId: a.resumeId ?? null }))
+      .map(withOptionalFields)
       .sort((a, b) => a.date_applied.localeCompare(b.date_applied));
   }
 
@@ -161,6 +174,11 @@ const CSV_COLUMNS: { header: string; value: (a: ApplicationRow) => unknown }[] =
   { header: "description", value: (a) => a.description },
   { header: "notes", value: (a) => a.notes },
   { header: "resume_id", value: (a) => a.resumeId },
+  { header: "follow_up_date", value: (a) => a.followUpDate },
+  { header: "interview_at", value: (a) => a.interviewAt },
+  { header: "contact_name", value: (a) => a.contactName },
+  { header: "contact_email", value: (a) => a.contactEmail },
+  { header: "referred_by", value: (a) => a.referredBy },
   { header: "created_at", value: (a) => a.createdAt },
 ];
 
