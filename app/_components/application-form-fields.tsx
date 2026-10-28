@@ -44,6 +44,7 @@ import { FormValues } from "./application-form";
 import { ComboboxInput } from "@/components/ui/combobox-input";
 import { ResumePicker } from "./resume-picker";
 import { SalaryFormField } from "./salary-form-field";
+import { FillFromLinkButton } from "./fill-from-link-button";
 
 const DEFAULT_EMPTY_ARRAY: string[] = [];
 
@@ -736,7 +737,10 @@ export function ApplicationFormFields({
               name="link"
               render={({ field }) => (
                 <FormItem className="space-y-1">
-                  <FormLabel className="text-xs font-semibold">Job Posting URL</FormLabel>
+                  <div className="flex items-center justify-between gap-2">
+                    <FormLabel className="text-xs font-semibold">Job Posting URL</FormLabel>
+                    {isEditing && <FillFromLinkButton form={form} />}
+                  </div>
                   <FormControl>
                     <Input
                       placeholder="https://www.linkedin.com/jobs/view/..."
