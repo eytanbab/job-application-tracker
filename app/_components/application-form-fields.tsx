@@ -54,6 +54,20 @@ interface ApplicationFormFieldsProps {
   userPlatforms?: string[];
   onUploadingResumeChange?: (isUploading: boolean) => void;
   onDocumentUploaded?: (docId: string) => void;
+  /** Fields the link autofill didn't find, to point out while still empty. */
+  missingFromPosting?: ReadonlySet<keyof FormValues>;
+}
+
+const NO_MISSING_FIELDS: ReadonlySet<keyof FormValues> = new Set();
+
+/** Says a field is empty because the posting didn't give it, not by mistake. */
+function NotInPostingHint({ show }: { show: boolean }) {
+  if (!show) return null;
+  return (
+    <p className="text-[11px] text-amber-700 dark:text-amber-300">
+      Not found in the posting. Fill it in here.
+    </p>
+  );
 }
 
 function StatusFormFields({ form }: { form: UseFormReturn<FormValues> }) {
@@ -532,7 +546,10 @@ export function ApplicationFormFields({
   userPlatforms = DEFAULT_EMPTY_ARRAY,
   onUploadingResumeChange,
   onDocumentUploaded,
+  missingFromPosting = NO_MISSING_FIELDS,
 }: ApplicationFormFieldsProps) {
+  const notInPosting = (name: keyof FormValues, value: unknown) =>
+    missingFromPosting.has(name) && !String(value ?? "").trim();
   const mergedLocations = useMemo(
     () => mergeWithDefaultOptions(userLocations, locationOptions),
     [userLocations],
@@ -594,6 +611,7 @@ export function ApplicationFormFields({
               />
             </FormControl>
             <FormMessage />
+            <NotInPostingHint show={notInPosting("role_name", field.value)} />
           </FormItem>
         )}
       />
@@ -615,6 +633,7 @@ export function ApplicationFormFields({
               />
             </FormControl>
             <FormMessage />
+            <NotInPostingHint show={notInPosting("company_name", field.value)} />
           </FormItem>
         )}
       />
@@ -640,6 +659,7 @@ export function ApplicationFormFields({
               />
             </FormControl>
             <FormMessage />
+            <NotInPostingHint show={notInPosting("location", field.value)} />
           </FormItem>
         )}
       />
@@ -665,6 +685,7 @@ export function ApplicationFormFields({
               />
             </FormControl>
             <FormMessage />
+            <NotInPostingHint show={notInPosting("platform", field.value)} />
           </FormItem>
         )}
       />
@@ -705,7 +726,10 @@ export function ApplicationFormFields({
               )}
             </div>
 
-            <SalaryFormField form={form} />
+            <SalaryFormField
+              form={form}
+              hint={<NotInPostingHint show={notInPosting("salary", form.watch("salary"))} />}
+            />
 
             <FormField
               control={form.control}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import {
   FormControl,
@@ -41,7 +41,14 @@ const PERIOD_LABELS: Record<SalaryInputPeriod, string> = {
  * analytics page reads ("$120,000 - $150,000"). Text that doesn't fit that
  * shape, such as "$120k + bonus", stays editable as free text.
  */
-export function SalaryFormField({ form }: { form: UseFormReturn<FormValues> }) {
+export function SalaryFormField({
+  form,
+  hint,
+}: {
+  form: UseFormReturn<FormValues>;
+  /** Shown under the field, such as a note that autofill didn't find it. */
+  hint?: ReactNode;
+}) {
   const value = form.watch("salary") ?? "";
   const [parts, setParts] = useState<SalaryParts | null>(() => salaryPartsFrom(value));
   // The text this field wrote last, to tell its own changes from autofill.
@@ -153,6 +160,7 @@ export function SalaryFormField({ form }: { form: UseFormReturn<FormValues> }) {
             </FormControl>
           )}
           <FormMessage />
+          {hint}
         </FormItem>
       )}
     />

@@ -237,9 +237,14 @@ export const ApplicationForm = ({
     null,
   );
 
+  // Fields the last autofill came back without, to point them out instead of
+  // flagging them as errors before the user has typed anything.
+  const [missingFromPosting, setMissingFromPosting] = useState<
+    ReadonlySet<keyof FormValues>
+  >(() => new Set());
+
   // Fields autofilled while the link step is showing aren't mounted yet, so
-  // their validation is deferred until the manual form renders. This flags
-  // anything the extraction couldn't find (e.g. an empty location).
+  // their validation is deferred until the manual form renders.
   const pendingValidationRef = useRef<(keyof FormValues)[] | null>(null);
   useEffect(() => {
     if (entryMode === "manual" && pendingValidationRef.current) {
@@ -258,9 +263,11 @@ export const ApplicationForm = ({
         shouldTouch: true,
       });
     });
-    pendingValidationRef.current = Object.keys(
-      autoFillValues,
-    ) as (keyof FormValues)[];
+    const keys = Object.keys(autoFillValues) as (keyof FormValues)[];
+    const isEmpty = (key: keyof FormValues) =>
+      !String(autoFillValues[key] ?? "").trim();
+    pendingValidationRef.current = keys.filter((key) => !isEmpty(key));
+    setMissingFromPosting(new Set(keys.filter(isEmpty)));
     setExtractedFromDomain(domain);
     rememberEntryMode("link");
     setEntryMode("manual");
@@ -340,6 +347,9 @@ export const ApplicationForm = ({
   };
 
   const { isDirty } = form.formState;
+  const stillMissing = [...missingFromPosting].filter(
+    (key) => !String(form.watch(key) ?? "").trim(),
+  ).length;
   const isSaveDisabled =
     isPending || isUploadingResume || (isEditing && !isDirty);
 
@@ -430,6 +440,8 @@ export const ApplicationForm = ({
                         <strong className="font-semibold text-emerald-800 dark:text-emerald-200">
                           {extractedFromDomain}
                         </strong>
+                        {stillMissing > 0 &&
+                          ` · ${stillMissing} ${stillMissing === 1 ? "field" : "fields"} to fill in`}
                       </span>
                     </div>
                     <button
@@ -473,6 +485,7 @@ export const ApplicationForm = ({
                 onDocumentUploaded={(id) =>
                   setSessionUploadedDocIds((prev) => [...prev, id])
                 }
+                missingFromPosting={extractedFromDomain ? missingFromPosting : undefined}
               />
             </div>
           </div>
