@@ -15,8 +15,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { extractDomainFromUrl, detectPlatformFromUrl } from "@/lib/utils";
 import { FormValues } from "./application-form";
-import { AiData } from "@/lib/types";
-import { formatQuotaExceededMessage } from "@/lib/ai-quota";
+import { extractJobDetails } from "./extract-job-details";
 
 export interface LinkAutofillBarProps {
   onAutoFill: (values: Partial<FormValues>, domain: string) => void;
@@ -27,9 +26,6 @@ export interface LinkAutofillBarProps {
   /** Whether autofill needs a signed-in user (false in the local demo). */
   aiRequiresSignIn?: boolean;
 }
-
-const formatLocalTime = (date: Date) =>
-  date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
 export function LinkAutofillBar({
   onAutoFill,
@@ -69,111 +65,47 @@ export function LinkAutofillBar({
     const trimmed = url.trim();
     if (!trimmed || isExtracting || isPending || needsSignIn) return;
 
-    const validUrl = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-
     setIsExtracting(true);
     setIsSlow(false);
     setExtractError(null);
 
-    const domain = extractDomainFromUrl(validUrl);
     const controller = new AbortController();
     abortRef.current = controller;
 
     try {
-      const response = await fetch("/api/extract", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: validUrl }),
-        signal: controller.signal,
-      });
-
-      if (response.status === 401) {
+      const result = await extractJobDetails(trimmed, controller.signal);
+      if (result.ok) {
+        onAutoFill(
+          { ...result.values, status: "Applied", statusCategory: "applied" },
+          result.domain,
+        );
+        toast({
+          title: "Job details extracted",
+          description: `Autofilled from ${result.domain}. Review and save your application.`,
+        });
+      } else if (result.reason === "sign-in") {
         setAuthRejected(true);
         setExtractError(
           "Sign in to autofill from this link, or enter the details manually.",
         );
-        return;
-      }
-
-      if (response.status === 429) {
-        const body: AiData = await response.json();
-        const resetAt =
-          body.status === "fail" && body.resetAt ? new Date(body.resetAt) : null;
+      } else if (result.reason === "quota") {
         toast({
           title: "Daily autofill limit reached",
           description:
-            resetAt && body.status === "fail" && body.limit !== undefined
-              ? formatQuotaExceededMessage(
-                  "extract",
-                  body.limit,
-                  resetAt,
-                  new Date(),
-                  formatLocalTime,
-                )
-              : "You've used today's AI autofills. Your link is kept so you can enter the details manually.",
+            result.message ??
+            "You've used today's AI autofills. Your link is kept so you can enter the details manually.",
         });
-        onExtractionFailed(validUrl);
-        return;
-      }
-
-      if (!response.ok) {
+        onExtractionFailed(result.url);
+      } else if (result.reason === "failed") {
         toast({
           title: "Could not auto-extract details",
           description:
             "Preserved your link in the form so you can enter details manually.",
           variant: "default",
         });
-        onExtractionFailed(validUrl);
-        return;
+        onExtractionFailed(result.url);
       }
-
-      const aiData: AiData = await response.json();
-
-      if (aiData.status === "fail" || !aiData.application) {
-        toast({
-          title: "Could not auto-extract details",
-          description:
-            "Preserved your link in the form so you can enter details manually.",
-          variant: "default",
-        });
-        onExtractionFailed(validUrl);
-        return;
-      }
-
-      const domainName = domain || "job posting";
-      const inferredPlatform =
-        aiData.application.platform?.trim() || detectPlatformFromUrl(validUrl);
-
-      const extractedValues: Partial<FormValues> = {
-        role_name: aiData.application.role_name || "",
-        company_name: aiData.application.company_name || "",
-        link: validUrl,
-        platform: inferredPlatform,
-        // Leave unknown locations empty so the required-field check asks
-        // the user, rather than presenting a guess as extracted data.
-        location: aiData.application.location || "",
-        description: aiData.application.description || "",
-        salary: aiData.application.salary?.trim() || "",
-        status: "Applied",
-        statusCategory: "applied",
-      };
-
-      onAutoFill(extractedValues, domainName);
-      toast({
-        title: "Job details extracted",
-        description: `Autofilled from ${domainName}. Review and save your application.`,
-      });
-    } catch (err) {
-      // The user cancelled or switched to manual entry; nothing to report
-      if (controller.signal.aborted) return;
-      console.error("Autofill extraction error:", err);
-      toast({
-        title: "Could not auto-extract details",
-        description:
-          "Preserved your link in the form so you can enter details manually.",
-        variant: "default",
-      });
-      onExtractionFailed(validUrl);
+      // "aborted": the user cancelled or switched to manual entry
     } finally {
       if (abortRef.current === controller) abortRef.current = null;
       setIsExtracting(false);
