@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { mockStore } from "@/lib/mock-data/mock-store";
 import {
   createApplication,
+  findSimilarApplications,
   getApplicationHistory,
   updateApplication,
   updateStatusHistoryDate,
@@ -176,5 +177,29 @@ describe("status change dates (mock store)", () => {
     await expect(
       updateStatusHistoryDate(review.id, new Date(Date.now() + 86_400_000)),
     ).rejects.toThrow("Pick a date that isn't in the future.");
+  });
+});
+
+describe("findSimilarApplications (mock store)", () => {
+  beforeEach(() => {
+    mockStore.reset();
+  });
+
+  it("finds the same link or the same role at the same company", async () => {
+    const [{ insertedId }] = await createApplication({
+      ...valid,
+      role_name: "Platform Engineer",
+      company_name: "Zeta Labs",
+      link: "https://zeta.dev/jobs/9",
+    } as never);
+
+    const byLink = await findSimilarApplications({ link: "zeta.dev/jobs/9/?utm_source=x" });
+    expect(byLink).toMatchObject([{ id: insertedId, reason: "link" }]);
+
+    const byName = await findSimilarApplications({ role_name: "platform engineer", company_name: "Zeta Labs." });
+    expect(byName).toMatchObject([{ id: insertedId, reason: "role" }]);
+
+    expect(await findSimilarApplications({ role_name: "Designer", company_name: "Zeta Labs" })).toEqual([]);
+    expect(await findSimilarApplications({ link: "zeta.dev/jobs/9", excludeId: insertedId })).toEqual([]);
   });
 });

@@ -64,6 +64,12 @@ import {
 import { groupHistory } from "@/lib/analytics/facts";
 import { dateAfterStatusChange } from "@/lib/applications/saved";
 import { clampBetweenNeighbours, statusChangeTime } from "@/lib/applications/history";
+import {
+  duplicateReason,
+  jobLinkPath,
+  nameKey,
+  type DuplicateReason,
+} from "@/lib/applications/duplicates";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = insertApplicationSchema
@@ -565,6 +571,79 @@ export async function getUserPlatforms(): Promise<string[]> {
     platforms.map((p) => (p ?? "").trim().toLowerCase()).filter(Boolean),
   );
   return Array.from(unique).sort((a, b) => a.localeCompare(b));
+}
+
+export interface SimilarApplication {
+  id: string;
+  role_name: string;
+  company_name: string;
+  date_applied: string;
+  status: string;
+  statusCategory: string;
+  reason: DuplicateReason;
+}
+
+/**
+ * The caller's applications that look like the one being entered: the same
+ * job link, or the same role at the same company. At most three.
+ */
+export async function findSimilarApplications(entry: {
+  link?: string | null;
+  role_name?: string | null;
+  company_name?: string | null;
+  excludeId?: string | null;
+}): Promise<SimilarApplication[]> {
+  const userId = await getCurrentUserIdOrThrow();
+  const path = jobLinkPath(entry.link);
+  const company = nameKey(entry.company_name);
+  if (!path && !(company && nameKey(entry.role_name))) return [];
+
+  const candidates = isMockDb
+    ? mockStore.getApplications(userId)
+    : await db
+        .select({
+          id: jobApplications.id,
+          role_name: jobApplications.role_name,
+          company_name: jobApplications.company_name,
+          link: jobApplications.link,
+          date_applied: jobApplications.date_applied,
+          status: jobApplications.status,
+          statusCategory: jobApplications.statusCategory,
+        })
+        .from(jobApplications)
+        .where(
+          and(
+            eq(jobApplications.userId, userId),
+            or(
+              company
+                ? sql`regexp_replace(lower(${jobApplications.company_name}), '[^[:alnum:]]+', '', 'g') = ${company}`
+                : undefined,
+              path
+                ? ilike(jobApplications.link, `%${escapeLikePattern(path)}%`)
+                : undefined,
+            ),
+          ),
+        )
+        .orderBy(desc(jobApplications.date_applied))
+        .limit(50);
+
+  const similar: SimilarApplication[] = [];
+  for (const row of candidates) {
+    if (row.id === entry.excludeId) continue;
+    const reason = duplicateReason(entry, row);
+    if (!reason) continue;
+    similar.push({
+      id: row.id,
+      role_name: row.role_name,
+      company_name: row.company_name,
+      date_applied: row.date_applied,
+      status: getStatusDisplay(row.status, row.statusCategory),
+      statusCategory: getStatusKind(row.status, row.statusCategory),
+      reason,
+    });
+    if (similar.length === 3) break;
+  }
+  return similar;
 }
 
 // Create a new application for the current user
